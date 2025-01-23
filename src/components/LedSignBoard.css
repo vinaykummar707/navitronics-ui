@@ -1,0 +1,323 @@
+@font-face {
+  font-family: "Bus Stop";
+  src: url("../assets/fonts/BusStopRegular-5yaxv.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+.sign-board-container {
+  /* display: flex;
+    flex-direction: column;
+    align-items: center; */
+  /* padding: 10px; */
+  /* background-color: #1a1a1a; */
+  /* min-height: 100vh; */
+}
+
+.led-sign-board {
+  display: flex;
+  background-color: #000;
+  border: 6px solid #2a2a2a;
+  border-radius: 16px;
+  /* width: 90%; */
+  /* max-width: 1000px; */
+  margin: 10px auto;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.led-sign-board::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(circle at center, #111 1px, transparent 1px),
+    radial-gradient(circle at center, #111 1px, transparent 1px);
+  background-size: 8px 8px;
+  background-position: 0 0, 4px 4px;
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.led-sign-board::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    45deg,
+    transparent 48%,
+    rgba(255, 165, 0, 0.05) 50%,
+    transparent 52%
+  );
+  background-size: 8px 8px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.left-half {
+  flex: 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 3px solid #2a2a2a;
+  position: relative;
+  z-index: 3;
+  padding: 0px 10px;
+}
+
+.right-half {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  z-index: 3;
+}
+
+.top-section,
+.bottom-section {
+  flex: 1;
+  overflow: hidden;
+
+  padding: 10px;
+  position: relative;
+}
+
+.bottom-section {
+  /* border-top: 2px solid #2a2a2a; */
+  display: flex;
+  align-items: center;
+}
+
+.led-display {
+  font-family: "Bus Stop", monospace;
+  font-size: 30px;
+  color: #ffa500;
+  text-shadow: 0 0 10px rgba(255, 165, 0, 0.8), 0 0 20px rgba(255, 165, 0, 0.4);
+  letter-spacing: 4px;
+  position: relative;
+  z-index: 3;
+  padding: 0;
+  font-weight: normal;
+}
+
+.marquee {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.flicker {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.marquee span {
+  display: inline-block;
+  font-family: "Bus Stop", monospace;
+  font-size: 30px;
+  text-transform: uppercase;
+  color: #ffa500;
+  text-shadow: 0 0 10px rgba(255, 165, 0, 0.8), 0 0 20px rgba(255, 165, 0, 0.4);
+  letter-spacing: 2px;
+  position: relative;
+  z-index: 3;
+  white-space: nowrap;
+  font-weight: normal;
+}
+
+.flicker span {
+  display: inline-block;
+  font-family: "Bus Stop", monospace;
+  font-size: 30px;
+  text-transform: uppercase;
+  color: #ffa500;
+  text-shadow: 0 0 10px rgba(255, 165, 0, 0.8), 0 0 20px rgba(255, 165, 0, 0.4);
+  letter-spacing: 2px;
+  position: relative;
+  z-index: 3;
+  white-space: nowrap;
+  font-weight: normal;
+}
+
+.marquee-left span {
+  display: inline-block;
+  font-family: "Bus Stop", monospace;
+  font-size: 30px;
+  text-transform: uppercase;
+  color: #ffa500;
+  text-shadow: 0 0 10px rgba(255, 165, 0, 0.8), 0 0 20px rgba(255, 165, 0, 0.4);
+  letter-spacing: 2px;
+  position: relative;
+  z-index: 3;
+  white-space: nowrap;
+  font-weight: normal;
+}
+
+.flicker:not(.paused) span {
+  animation: flicker var(--scroll-speed, 10s) linear infinite;
+}
+
+.marquee:not(.paused) span {
+  animation: marquee var(--scroll-speed, 10s) linear infinite;
+}
+
+.marquee-left:not(.paused) span {
+  animation: marquee-left var(--scroll-speed, 10s) linear infinite;
+}
+
+.marquee.paused {
+  padding: 0 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.flicker.paused {
+  padding: 0 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.marquee.paused::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* .marquee.paused span {
+	animation: none;
+	padding-right: 20px;
+} */
+
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-200%);
+  }
+}
+
+@keyframes marquee-left {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes flicker {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.controls {
+  background: #2a2a2a;
+  padding: 15px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 1000px;
+  margin-top: 15px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.controls-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 15px;
+  background: #222;
+  padding: 15px;
+  border-radius: 5px;
+  border: 1px solid #333;
+}
+
+.bus-number-section {
+  padding: 10px;
+  border-right: 1px solid #333;
+}
+
+.message-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.control-section {
+  padding: 10px;
+}
+
+.control-section h3 {
+  color: #ffa500;
+  margin: 0 0 12px 0;
+  font-family: "Bus Stop", monospace;
+  font-size: 16px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.control-group {
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.control-group label {
+  color: #ffa500;
+  min-width: 60px;
+  font-family: monospace;
+  font-size: 13px;
+}
+
+.control-group input[type="text"] {
+  padding: 6px;
+  border: 2px solid #333;
+  border-radius: 3px;
+  background: #1a1a1a;
+  color: #ffa500;
+  font-family: monospace;
+  font-size: 14px;
+  width: 100%;
+}
+
+.control-group input[type="range"] {
+  flex: 1;
+  max-width: 120px;
+  accent-color: #ffa500;
+}
+
+.control-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #ffa500;
+  cursor: pointer;
+}
+
+.control-group span {
+  color: #ffa500;
+  font-family: monospace;
+  min-width: 25px;
+  font-size: 13px;
+}

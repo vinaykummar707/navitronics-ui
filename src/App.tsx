@@ -13,6 +13,8 @@ import Roles from './pages/Roles';
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
+import { CreateRoute } from './pages/CreateRoute';
+import EntryPage from './components/EntryPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,7 +29,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <div className="h-screen w-screen bg-gray-100">
+        <div className="h-screen flex flex-col w-screen overflow-hidden bg-gray-100">
           <Navbar />
           <Routes>
             <Route path="/" element={<Home />} />
@@ -36,6 +38,12 @@ function App() {
             <Route path="/depots" element={<Depots />} />
             <Route path="/users" element={<Users />} />
             <Route path="/routes" element={<AppRoutes />} />
+            <Route
+              path="/create-route"
+              element={
+                <CreateRoute />
+              }
+            />
             <Route path="/settings" element={<Settings />} />
             <Route path="/roles" element={<Roles />} />
           </Routes>

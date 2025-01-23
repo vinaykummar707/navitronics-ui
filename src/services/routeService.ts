@@ -8,4 +8,8 @@ export const routeService = {
     const response = await axiosInstance.get(`${BASE_PATH}/getAllRoutes?organizationId=${organizationId}&areaId=${areaId}&depotId=${depotId}`);
     return response.data['data'];
   },
+  create: async (routeData: any): Promise<any> => {
+    const response = await axiosInstance.post(`${BASE_PATH}/create`, routeData);
+    return response.data['data'];
+  }
 };

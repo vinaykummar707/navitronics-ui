@@ -1,14 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { routeService } from '../services/routeService';
 import { areaService } from '../services/areaService';
 import { depotService } from '../services/depotService';
 import { useOrganizationStore } from '../store/useOrganizationStore';
+import { useNavigate } from 'react-router-dom';
 
 const Routes = () => {
   const [selectedAreaId, setSelectedAreaId] = useState<string>('');
   const [selectedDepotId, setSelectedDepotId] = useState<string>('');
   const { selectedOrganization } = useOrganizationStore();
+  const navigate = useNavigate();
+
+  // Reset selections when organization changes
+  useEffect(() => {
+    setSelectedAreaId('');
+    setSelectedDepotId('');
+  }, [selectedOrganization?.organizationId]);
 
   // Queries
   const { data: areas } = useQuery({
@@ -19,23 +27,21 @@ const Routes = () => {
   });
 
   const { data: depots } = useQuery({
-    queryKey: ['depots', selectedAreaId],
+    queryKey: ['depots', selectedOrganization?.organizationId, selectedAreaId],
     queryFn: () => depotService.getAll(selectedAreaId),
-    enabled: !!selectedAreaId,
+    enabled: !!selectedOrganization && !!selectedAreaId,
   });
 
   const { data: routes, isLoading } = useQuery({
-    queryKey: ['routes', selectedAreaId, selectedDepotId],
-    queryFn: () => routeService.getAll(selectedOrganization?.organizationId,selectedAreaId, selectedDepotId),
-    enabled: !!selectedAreaId && !!selectedDepotId,
+    queryKey: ['routes', selectedOrganization?.organizationId, selectedAreaId, selectedDepotId],
+    queryFn: () => routeService.getAll(selectedOrganization?.organizationId || '', selectedAreaId, selectedDepotId),
+    enabled: !!selectedOrganization && !!selectedAreaId && !!selectedDepotId,
   });
 
   if (!selectedOrganization) {
     return (
       <div className="container mx-auto p-4">
-        <div className="text-center text-gray-500">
-          Please select an organization from the navbar to view routes
-        </div>
+        <div className="text-center text-gray-500">Please select an organization first</div>
       </div>
     );
   }
@@ -45,29 +51,38 @@ const Routes = () => {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">Routes</h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-600">
             Organization: {selectedOrganization.organizationName}
           </p>
         </div>
+        <button
+          onClick={() => navigate('/create-route', { state: { areaId: selectedAreaId, depotId: selectedDepotId } })}
+          disabled={!selectedAreaId || !selectedDepotId}
+          className={`bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+            (!selectedAreaId || !selectedDepotId) ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
+          Create Route
+        </button>
       </div>
 
       {/* Area and Depot Selection */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div>
-          <label htmlFor="areaSelect" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="area" className="block text-sm font-medium text-gray-700">
             Select Area
           </label>
           <select
-            id="areaSelect"
+            id="area"
             value={selectedAreaId}
             onChange={(e) => {
               setSelectedAreaId(e.target.value);
-              setSelectedDepotId(''); // Reset depot selection when area changes
+              setSelectedDepotId(''); // Reset depot when area changes
             }}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           >
             <option value="">Select Area</option>
-            {areas?.map((area) => (
+            {areas?.map((area: any) => (
               <option key={area.areaId} value={area.areaId}>
                 {area.areaName}
               </option>
@@ -76,18 +91,18 @@ const Routes = () => {
         </div>
 
         <div>
-          <label htmlFor="depotSelect" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="depot" className="block text-sm font-medium text-gray-700">
             Select Depot
           </label>
           <select
-            id="depotSelect"
+            id="depot"
             value={selectedDepotId}
             onChange={(e) => setSelectedDepotId(e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             disabled={!selectedAreaId}
           >
             <option value="">Select Depot</option>
-            {depots?.map((depot) => (
+            {depots?.map((depot: any) => (
               <option key={depot.depotId} value={depot.depotId}>
                 {depot.depotName}
               </option>
@@ -96,7 +111,7 @@ const Routes = () => {
         </div>
       </div>
 
-      {/* Routes List */}
+      {/* Routes Display */}
       {selectedAreaId && selectedDepotId ? (
         isLoading ? (
           <div className="flex items-center justify-center h-48">
