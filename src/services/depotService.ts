@@ -10,7 +10,7 @@ export const depotService = {
   },
 
   create: async (data: CreateDepotDto): Promise<Depot> => {
-    const response = await axiosInstance.post(`${BASE_PATH}/createDepot`, data);
+    const response = await axiosInstance.post(`${BASE_PATH}/create`, data);
     return response.data;
   },
 

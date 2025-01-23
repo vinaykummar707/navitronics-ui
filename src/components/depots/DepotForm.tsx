@@ -1,75 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Depot, CreateDepotDto } from '../../types/depot';
-import { Area } from '../../types/area';
-import { useQuery } from '@tanstack/react-query';
-import { areaService } from '../../services/areaService';
-import { useOrganizationStore } from '../../store/useOrganizationStore';
 
 interface DepotFormProps {
   initialData?: Depot;
+  selectedAreaId: string;
   onSubmit: (data: CreateDepotDto) => void;
   onCancel: () => void;
 }
 
-export const DepotForm = ({ initialData, onSubmit, onCancel }: DepotFormProps) => {
-  const { selectedOrganization } = useOrganizationStore();
+export const DepotForm = ({ initialData, selectedAreaId, onSubmit, onCancel }: DepotFormProps) => {
   const [formData, setFormData] = useState<CreateDepotDto>({
     depotName: initialData?.depotName || '',
-    areaId: initialData?.areaId || '',
-    organizationId: selectedOrganization?.organizationId || '',
+    areaId: selectedAreaId,
+    active: initialData?.active ?? true,
+    deleted: initialData?.deleted ?? false,
   });
-
-  const { data: areas } = useQuery({
-    queryKey: ['areas', selectedOrganization?.organizationId],
-    queryFn: () =>
-      selectedOrganization ? areaService.getAll(selectedOrganization.organizationId) : Promise.resolve([]),
-    enabled: !!selectedOrganization,
-  });
-
-  useEffect(() => {
-    if (selectedOrganization) {
-      setFormData(prev => ({
-        ...prev,
-        organizationId: selectedOrganization.organizationId,
-      }));
-    }
-  }, [selectedOrganization]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
   };
 
-  if (!selectedOrganization) {
-    return (
-      <div className="text-center text-gray-500">
-        Please select an organization from the navbar first
-      </div>
-    );
-  }
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="areaId" className="block text-sm font-medium text-gray-700">
-          Area *
-        </label>
-        <select
-          id="areaId"
-          value={formData.areaId}
-          onChange={(e) => setFormData({ ...formData, areaId: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          required
-        >
-          <option value="">Select Area</option>
-          {areas?.map((area: Area) => (
-            <option key={area.areaId} value={area.areaId}>
-              {area.areaName}
-            </option>
-          ))}
-        </select>
-      </div>
-
       <div>
         <label htmlFor="depotName" className="block text-sm font-medium text-gray-700">
           Depot Name *
@@ -82,6 +35,19 @@ export const DepotForm = ({ initialData, onSubmit, onCancel }: DepotFormProps) =
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           required
         />
+      </div>
+
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id="active"
+          checked={formData.active}
+          onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+        />
+        <label htmlFor="active" className="ml-2 block text-sm text-gray-900">
+          Active
+        </label>
       </div>
 
       <div className="flex justify-end space-x-3">

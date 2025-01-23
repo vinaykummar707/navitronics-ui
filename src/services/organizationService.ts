@@ -5,7 +5,7 @@ const BASE_PATH = '/organization';
 
 export const organizationService = {
   getAll: async (): Promise<Organization[]> => {
-    const response = await axiosInstance.get(`${BASE_PATH}/getOrganizationList`);
+    const response = await axiosInstance.get(`${BASE_PATH}/getAllActiveOrganizationDetails`);
     return response.data['data'];
   },
 
@@ -25,6 +25,6 @@ export const organizationService = {
   },
 
   delete: async (organizationId: string): Promise<void> => {
-    await axiosInstance.delete(`${BASE_PATH}/deleteOrganization/${organizationId}`);
+    await axiosInstance.delete(`${BASE_PATH}/delete/${organizationId}`);
   },
 };

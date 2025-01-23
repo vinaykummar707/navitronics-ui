@@ -5,12 +5,12 @@ const BASE_PATH = '/area';
 
 export const areaService = {
   getAll: async (organizationId: string): Promise<Area[]> => {
-    const response = await axiosInstance.get(`${BASE_PATH}/getAllAreas/${organizationId}`);
+    const response = await axiosInstance.get(`${BASE_PATH}/getAllActiveAreas/${organizationId}`);
     return response.data['data'];
   },
 
   create: async (data: CreateAreaDto): Promise<Area> => {
-    const response = await axiosInstance.post(`${BASE_PATH}/createArea`, data);
+    const response = await axiosInstance.post(`${BASE_PATH}/create`, data);
     return response.data;
   },
 

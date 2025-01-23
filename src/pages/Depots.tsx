@@ -2,17 +2,17 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { depotService } from '../services/depotService';
 import { areaService } from '../services/areaService';
-import { Depot, UpdateDepotDto } from '../types/depot';
+import { useOrganizationStore } from '../store/useOrganizationStore';
+import { Depot, CreateDepotDto, UpdateDepotDto } from '../types/depot';
 import { DepotForm } from '../components/depots/DepotForm';
 import { Dialog } from '@headlessui/react';
-import { useOrganizationStore } from '../store/useOrganizationStore';
 
 const Depots = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingDepot, setEditingDepot] = useState<Depot | null>(null);
   const [selectedAreaId, setSelectedAreaId] = useState<string>('');
-  const queryClient = useQueryClient();
   const { selectedOrganization } = useOrganizationStore();
+  const queryClient = useQueryClient();
 
   // Queries
   const { data: areas } = useQuery({
@@ -30,7 +30,7 @@ const Depots = () => {
 
   // Mutations
   const createMutation = useMutation({
-    mutationFn: depotService.create,
+    mutationFn: (data: CreateDepotDto) => depotService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['depots', selectedAreaId] });
       setIsCreateModalOpen(false);
@@ -47,7 +47,7 @@ const Depots = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: depotService.delete,
+    mutationFn: (depotId: string) => depotService.delete(depotId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['depots', selectedAreaId] });
     },
@@ -75,6 +75,7 @@ const Depots = () => {
         <button
           onClick={() => setIsCreateModalOpen(true)}
           className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          disabled={!selectedAreaId}
         >
           Create Depot
         </button>
@@ -166,6 +167,7 @@ const Depots = () => {
           <Dialog.Panel className="mx-auto max-w-md rounded bg-white p-6">
             <Dialog.Title className="text-lg font-medium mb-4">Create Depot</Dialog.Title>
             <DepotForm
+              selectedAreaId={selectedAreaId}
               onSubmit={(data) => createMutation.mutate(data)}
               onCancel={() => setIsCreateModalOpen(false)}
             />
@@ -186,11 +188,13 @@ const Depots = () => {
             {editingDepot && (
               <DepotForm
                 initialData={editingDepot}
+                selectedAreaId={selectedAreaId}
                 onSubmit={(data) =>
                   updateMutation.mutate({
                     data: {
                       ...data,
-                      depotId: editingDepot.depotId,
+                      active: editingDepot.active,
+                      deleted: editingDepot.deleted,
                     },
                     depotId: editingDepot.depotId,
                   })

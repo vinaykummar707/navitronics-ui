@@ -3,7 +3,7 @@ import { OrganizationSelector } from './common/OrganizationSelector';
 
 const Navbar = () => {
   return (
-    <nav className="bg-gray-800 text-white p-4">
+    <nav className="bg-gray-200 p-4">
       <div className="container mx-auto">
         <div className="flex flex-wrap items-center justify-between">
           <div className="flex items-center space-x-6">
@@ -34,7 +34,9 @@ const Navbar = () => {
               </Link>
             </div>
           </div>
-          <OrganizationSelector />
+          <div className="flex items-center space-x-4">
+            <OrganizationSelector />
+          </div>
         </div>
       </div>
     </nav>
