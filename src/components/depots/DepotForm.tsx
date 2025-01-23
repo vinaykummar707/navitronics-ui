@@ -4,16 +4,16 @@ import { Depot, CreateDepotDto } from '../../types/depot';
 interface DepotFormProps {
   initialData?: Depot;
   selectedAreaId: string;
+  selectedOrganizationId: string;
   onSubmit: (data: CreateDepotDto) => void;
   onCancel: () => void;
 }
 
-export const DepotForm = ({ initialData, selectedAreaId, onSubmit, onCancel }: DepotFormProps) => {
+export const DepotForm = ({ initialData, selectedAreaId, selectedOrganizationId, onSubmit, onCancel }: DepotFormProps) => {
   const [formData, setFormData] = useState<CreateDepotDto>({
     depotName: initialData?.depotName || '',
     areaId: selectedAreaId,
-    active: initialData?.active ?? true,
-    deleted: initialData?.deleted ?? false,
+    organizationId: selectedOrganizationId,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -37,18 +37,7 @@ export const DepotForm = ({ initialData, selectedAreaId, onSubmit, onCancel }: D
         />
       </div>
 
-      <div className="flex items-center">
-        <input
-          type="checkbox"
-          id="active"
-          checked={formData.active}
-          onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
-          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-        />
-        <label htmlFor="active" className="ml-2 block text-sm text-gray-900">
-          Active
-        </label>
-      </div>
+     
 
       <div className="flex justify-end space-x-3">
         <button

@@ -4,11 +4,13 @@ import { organizationService } from '../services/organizationService';
 import { Organization, UpdateOrganizationDto } from '../types/organization';
 import { OrganizationForm } from '../components/organizations/OrganizationForm';
 import { Dialog } from '@headlessui/react';
+import { useOrganizationStore } from '../store/useOrganizationStore';
 
 const Organizations = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingOrganization, setEditingOrganization] = useState<Organization | null>(null);
   const queryClient = useQueryClient();
+  const { selectedOrganization, setSelectedOrganization } = useOrganizationStore();
 
   // Queries
   const { data: organizations, isLoading } = useQuery({
@@ -26,7 +28,7 @@ const Organizations = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({  data }: { data: UpdateOrganizationDto }) =>
+    mutationFn: ({ data }: { data: UpdateOrganizationDto }) =>
       organizationService.update(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
@@ -36,7 +38,12 @@ const Organizations = () => {
 
   const deleteMutation = useMutation({
     mutationFn: organizationService.delete,
-    onSuccess: () => {
+    onSuccess: (_, deletedOrganizationId) => {
+      // Clear selected organization if it was deleted
+      if (selectedOrganization?.organizationId === deletedOrganizationId) {
+        setSelectedOrganization(null);
+      }
+      setEditingOrganization(null);
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
     },
   });
@@ -62,50 +69,56 @@ const Organizations = () => {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {organizations && organizations?.length > 0 && organizations?.map((org) => (
-          <div
-            key={org.organizationId}
-            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-xl font-semibold">{org.organizationName}</h3>
-              <span className={`px-2 py-1 rounded text-sm ${
-                org.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-              }`}>
-                {org.active ? 'Active' : 'Inactive'}
-              </span>
+        {organizations && organizations.length > 0 ? (
+          organizations.map((org) => (
+            <div
+              key={org.organizationId}
+              className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-semibold">{org.organizationName}</h3>
+                <span
+                  className={`px-2 py-1 rounded text-sm ${
+                    org.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}
+                >
+                  {org.active ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+              <div className="space-y-2 text-gray-600">
+                <p>
+                  <span className="font-medium">Contact:</span> {org.contactPerson}
+                </p>
+                <p>
+                  <span className="font-medium">Email:</span> {org.emailId}
+                </p>
+                <p>
+                  <span className="font-medium">Phone:</span> {org.phoneNumber}
+                </p>
+              </div>
+              <div className="flex justify-end space-x-2 mt-4">
+                <button
+                  onClick={() => setEditingOrganization(org)}
+                  className="text-indigo-600 hover:text-indigo-800"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm('Are you sure you want to delete this organization?')) {
+                      deleteMutation.mutate(org.organizationId);
+                    }
+                  }}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-            <div className="space-y-2 text-gray-600">
-              <p>
-                <span className="font-medium">Contact:</span> {org.contactPerson}
-              </p>
-              <p>
-                <span className="font-medium">Email:</span> {org.emailId}
-              </p>
-              <p>
-                <span className="font-medium">Phone:</span> {org.phoneNumber}
-              </p>
-            </div>
-            <div className="flex justify-end space-x-2 mt-4">
-              <button
-                onClick={() => setEditingOrganization(org)}
-                className="text-indigo-600 hover:text-indigo-800"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => {
-                  if (confirm('Are you sure you want to delete this organization?')) {
-                    deleteMutation.mutate(org.organizationId);
-                  }
-                }}
-                className="text-red-600 hover:text-red-800"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          <div className="col-span-full text-center text-gray-500">No organizations found</div>
+        )}
       </div>
 
       {/* Create Modal */}
@@ -141,10 +154,12 @@ const Organizations = () => {
                 initialData={editingOrganization}
                 onSubmit={(data) =>
                   updateMutation.mutate({
-                   data: {
-                    organizationId: editingOrganization.organizationId,
-                    ...data
-                   }
+                    data: {
+                      organizationId: editingOrganization.organizationId,
+                      active: editingOrganization.active,
+                      deleted:editingOrganization.deleted,
+                      ...data,
+                    },
                   })
                 }
                 onCancel={() => setEditingOrganization(null)}

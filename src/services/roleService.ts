@@ -5,7 +5,7 @@ const BASE_PATH = '/roles';
 
 export const roleService = {
   getAll: async (): Promise<Role[]> => {
-    const response = await axiosInstance.get(`${BASE_PATH}/getAllRoles`);
+    const response = await axiosInstance.get(`${BASE_PATH}/active/getAllRoles`);
     return response.data['data'];
   },
 

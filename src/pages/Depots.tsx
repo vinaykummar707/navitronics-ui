@@ -168,6 +168,7 @@ const Depots = () => {
             <Dialog.Title className="text-lg font-medium mb-4">Create Depot</Dialog.Title>
             <DepotForm
               selectedAreaId={selectedAreaId}
+              selectedOrganizationId={selectedOrganization.organizationId}
               onSubmit={(data) => createMutation.mutate(data)}
               onCancel={() => setIsCreateModalOpen(false)}
             />
