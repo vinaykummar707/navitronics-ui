@@ -127,7 +127,7 @@ const Bus = memo(
           <div className="grid grid-cols-2  gap-x-4 w-full gap-y-4">
             {Object.keys(config).map((side) => (
               <div
-                className="flex flex-col w-full bg-neutral-200 p-4  rounded-lg  gap-2"
+                className="flex flex-col w-full bg-neutral-50 p-4  rounded-lg  gap-2"
                 key={side}
               >
                 <h3 className="text-sm font-bold">
@@ -189,7 +189,7 @@ const Bus = memo(
         return (
           <div className="flex flex-col gap-2">
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1">
+              {/* <div className="flex flex-col gap-1">
                 <label className="text-sm text-neutral-900" htmlFor="">
                   Text
                 </label>
@@ -200,7 +200,7 @@ const Bus = memo(
                   onChange={(e) => updateConfig("text", e.target.value)}
                   className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg"
                 />
-              </div>
+              </div> */}
 
               <div className="flex flex-col gap-1">
                 <label className="text-sm text-neutral-900" htmlFor="">
@@ -253,7 +253,7 @@ const Bus = memo(
       } else if (boardFormatType === "sideWithSingleText") {
         return (
           <div className="grid grid-cols-2 gap-4">
-            {!route.splitRoute && (
+            {/* {!route.splitRoute && (
               <div className="flex flex-col gap-1">
                 <label className="text-sm text-neutral-900" htmlFor="">
                   Route Number
@@ -267,8 +267,8 @@ const Bus = memo(
                   className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg"
                 />
               </div>
-            )}
-            {route.splitRoute && (
+            )} */}
+            {/* {route.splitRoute && (
               <>
                 <div className="flex flex-col gap-1">
                   <label className="text-sm text-neutral-900" htmlFor="">
@@ -310,7 +310,7 @@ const Bus = memo(
                 onChange={(e) => updateConfig("text", e.target.value)}
                 className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg"
               />
-            </div>
+            </div> */}
 
             <div className="flex flex-col gap-1">
               <label className="text-sm text-neutral-900" htmlFor="">
@@ -362,7 +362,7 @@ const Bus = memo(
       } else if (boardFormatType === "sideWithTwoTexts") {
         return (
           <div className="flex flex-col gap-2">
-            {!route.splitRoute && (
+            {/* {!route.splitRoute && (
               <div className="flex flex-col gap-1">
                 <label className="text-sm text-neutral-900" htmlFor="">
                   Side Text
@@ -407,8 +407,10 @@ const Bus = memo(
                   />
                 </div>
               </>
-            )}
+            )} */}
             <div className="grid grid-cols-2 gap-4">
+
+              
               <div className="flex flex-col gap-1">
                 <label className="text-sm text-neutral-900" htmlFor="">
                   Upper Half Text

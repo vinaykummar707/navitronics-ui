@@ -1,22 +1,26 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { roleService } from '../services/roleService';
-import { Role, UpdateRoleDto } from '../types/role';
+import { Role } from '../types/role';
 import { RoleForm } from '../components/roles/RoleForm';
 import { Dialog } from '@headlessui/react';
+import { useOrganizationStore } from '../store/useOrganizationStore';
+import { Icon } from '@iconify-icon/react';
+import { Container } from '@chakra-ui/react';
 
 const Roles = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
+  const { selectedOrganization } = useOrganizationStore();
   const queryClient = useQueryClient();
 
-  // Queries
   const { data: roles, isLoading } = useQuery({
-    queryKey: ['roles'],
-    queryFn: roleService.getAll,
+    queryKey: ['roles', selectedOrganization?.organizationId],
+    queryFn: () =>
+      selectedOrganization ? roleService.getAll(selectedOrganization.organizationId) : Promise.resolve([]),
+    enabled: !!selectedOrganization,
   });
 
-  // Mutations
   const createMutation = useMutation({
     mutationFn: roleService.create,
     onSuccess: () => {
@@ -26,8 +30,7 @@ const Roles = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ data, roleId }: { data: UpdateRoleDto; roleId: string }) =>
-      roleService.update(data, roleId),
+    mutationFn: roleService.update,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
       setEditingRole(null);
@@ -41,24 +44,24 @@ const Roles = () => {
     },
   });
 
-  const handleStatusChange = (role: Role, active: boolean) => {
-    updateMutation.mutate({
-      data: {
-        roleName: role.roleName,
-        active,
-        deleted: role.deleted,
-      },
-      roleId: role.id,
-    });
-  };
+  if (!selectedOrganization) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="text-center text-stone-500">Please select an organization first</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-4">
+    <Container maxW={'6xl'} className="py-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Roles</h1>
+        <div>
+          <h1 className="text-xl font-bold">Roles</h1>
+         
+        </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          className="bg-indigo-600 text-white text-sm px-3 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
           Create Role
         </button>
@@ -69,50 +72,84 @@ const Roles = () => {
           <div className="text-lg">Loading...</div>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {roles && roles.length > 0 ? (
-            roles.map((role) => (
-              <div
-                key={role.id}
-                className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-semibold">{role.roleName}</h3>
-                  <div className="flex items-center space-x-2">
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={role.active}
-                        onChange={(e) => handleStatusChange(role, e.target.checked)}
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                    </label>
-                  </div>
-                </div>
-                <div className="flex justify-end space-x-2 mt-4">
-                  <button
-                    onClick={() => setEditingRole(role)}
-                    className="text-indigo-600 hover:text-indigo-800"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (confirm('Are you sure you want to delete this role?')) {
-                        deleteMutation.mutate(role.id);
-                      }
-                    }}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="col-span-full text-center text-gray-500">No roles found</div>
-          )}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <table className="min-w-full divide-y divide-stone-200">
+            <thead className="bg-stone-50">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  Role Name
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  Description
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  Created By
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  Created At
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-stone-200">
+              {roles && roles.length > 0 ? (
+                roles.map((role) => (
+                  <tr key={role.roleId} className="hover:bg-stone-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-stone-900">{role.roleName}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-stone-500">{role.description}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-stone-500">{role.createdBy}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-stone-500">
+                        {new Date(role.createdAt).toLocaleDateString()}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        role.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {role.active ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => setEditingRole(role)}
+                        className="text-indigo-600 hover:text-indigo-900 mr-4"
+                      >
+                        <Icon icon="solar:pen-bold" className="inline-block" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm('Are you sure you want to delete this role?')) {
+                            deleteMutation.mutate(role.roleId);
+                          }
+                        }}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        <Icon icon="solar:trash-bin-trash-bold" className="inline-block" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-4 text-center text-stone-500">
+                    No roles found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -147,23 +184,14 @@ const Roles = () => {
             {editingRole && (
               <RoleForm
                 initialData={editingRole}
-                onSubmit={(data) =>
-                  updateMutation.mutate({
-                    data: {
-                      ...data,
-                      active: editingRole.active,
-                      deleted: editingRole.deleted,
-                    },
-                    roleId: editingRole.id,
-                  })
-                }
+                onSubmit={(data) => updateMutation.mutate(data)}
                 onCancel={() => setEditingRole(null)}
               />
             )}
           </Dialog.Panel>
         </div>
       </Dialog>
-    </div>
+    </Container>
   );
 };
 

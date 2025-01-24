@@ -1,44 +1,53 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { OrganizationSelector } from './common/OrganizationSelector';
+import { Container } from '@chakra-ui/react';
 
 const Navbar = () => {
+
+  const location = useLocation();
+
   return (
-    <nav className="bg-gray-200 p-4">
-      <div className="container mx-auto">
-        <div className="flex flex-wrap items-center justify-between">
-          <div className="flex items-center space-x-6">
-            <Link to="/" className="text-xl font-bold">
+    <nav className="bg-white  border-b px-4 py-3">
+
+      <Container maxW={'6xl'} className='flex  justify-between items-center'>
+      <Link to="/" className="text-lg">
               Navitronics
             </Link>
-            <div className="flex gap-4">
-              <Link to="/organizations" className="hover:text-gray-300 transition-colors">
+        <div className="flex items-center space-x-6">
+           
+            <div className="flex gap-6">
+              <Link to="/organizations" className={`text-sm text-neutral-400 hover:text-neutral-700 ${location.pathname === "/organizations" ? 'text-blue-500 font-medium' : ''}`}>
                 Organizations
               </Link>
-              <Link to="/areas" className="hover:text-gray-300 transition-colors">
+              <Link to="/areas" className="text-sm text-neutral-400 hover:text-neutral-700">
                 Areas
               </Link>
-              <Link to="/depots" className="hover:text-gray-300 transition-colors">
+              <Link to="/depots" className="text-sm text-neutral-400 hover:text-neutral-700">
                 Depots
               </Link>
-              <Link to="/users" className="hover:text-gray-300 transition-colors">
-                Users
-              </Link>
-              <Link to="/roles" className="hover:text-gray-300 transition-colors">
-                Roles
-              </Link>
-              <Link to="/routes" className="hover:text-gray-300 transition-colors">
+              <Link to="/routes" className="text-sm text-neutral-400 hover:text-neutral-700">
                 Routes
               </Link>
-              <Link to="/settings" className="hover:text-gray-300 transition-colors">
-                Settings
+              <Link to="/roles" className="text-sm text-neutral-400 hover:text-neutral-700">
+                Roles
               </Link>
+              <Link to="/users" className="text-sm text-neutral-400 hover:text-neutral-700">
+                Users
+              </Link>
+            
+           
+              {/* <Link to="/settings" className="text-sm text-neutral-500 hover:text-neutral-700">
+                Settings
+              </Link> */}
             </div>
           </div>
-          <div className="flex items-center space-x-4">
+
+        <div className="flex items-center space-x-4">
             <OrganizationSelector />
           </div>
-        </div>
-      </div>
+      </Container>
+        
+       
     </nav>
   );
 };

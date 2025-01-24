@@ -30,7 +30,7 @@ const BusRoutes = ({ route, onRouteChange }) => {
                 maxLength={7}
                 value={route.routeNumber}
                 onChange={onRouteChange}
-                className="form-input w-full px-3 py-2 rounded-md border-neutral-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900"
+                className="form-input w-full px-3 py-2 rounded-md border-neutral-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-stone-900"
                 required
               />
             </div>
@@ -48,7 +48,7 @@ const BusRoutes = ({ route, onRouteChange }) => {
                   value={route.routeNumberUpperHalf}
                   onChange={onRouteChange}
                   maxLength={4}
-                  className="form-input w-full px-3 py-2 rounded-md border-neutral-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900"
+                  className="form-input w-full px-3 py-2 rounded-md border-neutral-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-stone-900"
                   required
                 />
               </div>
@@ -63,7 +63,7 @@ const BusRoutes = ({ route, onRouteChange }) => {
                   value={route.routeNumberLowerHalf}
                   onChange={onRouteChange}
                   maxLength={4}
-                  className="form-input w-full px-3 py-2 rounded-md border-neutral-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900"
+                  className="form-input w-full px-3 py-2 rounded-md border-neutral-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-stone-900"
                   required
                 />
               </div>
@@ -79,7 +79,7 @@ const BusRoutes = ({ route, onRouteChange }) => {
               name="source"
               value={route.source}
               onChange={onRouteChange}
-              className="form-input w-full px-3 py-2 rounded-md border-neutral-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900"
+              className="form-input w-full px-3 py-2 rounded-md border-neutral-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-stone-900"
               required
             />
           </div>
@@ -93,7 +93,7 @@ const BusRoutes = ({ route, onRouteChange }) => {
               name="destination"
               value={route.destination}
               onChange={onRouteChange}
-              className="form-input w-full px-3 py-2 rounded-md border-neutral-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900"
+              className="form-input w-full px-3 py-2 rounded-md border-neutral-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-stone-900"
               required
             />
           </div>
@@ -107,7 +107,7 @@ const BusRoutes = ({ route, onRouteChange }) => {
               name="separation"
               value={route.separation}
               onChange={onRouteChange}
-              className="form-input w-full px-3 py-2 rounded-md border-neutral-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900"
+              className="form-input w-full px-3 py-2 rounded-md border-neutral-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-stone-900"
               required
             >
               <option value="-">-</option>
@@ -125,7 +125,7 @@ const BusRoutes = ({ route, onRouteChange }) => {
               name="via"
               value={route.via}
               onChange={onRouteChange}
-              className="form-input w-full px-3 py-2 rounded-md border-neutral-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900"
+              className="form-input w-full px-3 py-2 rounded-md border-neutral-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-stone-900"
               required
             />
           </div>

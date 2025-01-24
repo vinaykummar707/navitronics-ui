@@ -11,7 +11,7 @@ export const OrganizationSelector = () => {
   });
 
   return (
-    <div className="relative">
+    <div className="">
       <select
         value={selectedOrganization?.organizationId || ''}
         onChange={(e) => {
@@ -20,7 +20,7 @@ export const OrganizationSelector = () => {
           );
           setSelectedOrganization(selected || null);
         }}
-        className="block w-64 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-white"
+        className=" border text-sm border-neutral-300 text-neutral-900 p-2 rounded-lg"
       >
         <option value="">Select Organization</option>
         {organizations?.map((org) => (

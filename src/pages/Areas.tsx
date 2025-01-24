@@ -5,21 +5,22 @@ import { Area, UpdateAreaDto } from '../types/area';
 import { AreaForm } from '../components/areas/AreaForm';
 import { Dialog } from '@headlessui/react';
 import { useOrganizationStore } from '../store/useOrganizationStore';
+import { Icon } from '@iconify-icon/react';
+import { Container } from '@chakra-ui/react';
 
 const Areas = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingArea, setEditingArea] = useState<Area | null>(null);
-  const queryClient = useQueryClient();
   const { selectedOrganization } = useOrganizationStore();
+  const queryClient = useQueryClient();
 
-  // Queries
   const { data: areas, isLoading } = useQuery({
     queryKey: ['areas', selectedOrganization?.organizationId],
-    queryFn: () => selectedOrganization ? areaService.getAll(selectedOrganization.organizationId) : Promise.resolve([]),
+    queryFn: () =>
+      selectedOrganization ? areaService.getAll(selectedOrganization.organizationId) : Promise.resolve([]),
     enabled: !!selectedOrganization,
   });
 
-  // Mutations
   const createMutation = useMutation({
     mutationFn: areaService.create,
     onSuccess: () => {
@@ -29,7 +30,7 @@ const Areas = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ data, areaId }: { data: UpdateAreaDto; areaId: string }) => 
+    mutationFn: ({ data, areaId }: { data: UpdateAreaDto; areaId: string }) =>
       areaService.update(data, areaId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['areas', selectedOrganization?.organizationId] });
@@ -47,25 +48,23 @@ const Areas = () => {
   if (!selectedOrganization) {
     return (
       <div className="container mx-auto p-4">
-        <div className="text-center text-gray-500">
-          Please select an organization from the navbar to view areas
-        </div>
+        <div className="text-center text-stone-500">Please select an organization first</div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4">
+    <Container maxW={'6xl'} py={4}>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Areas</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-xl font-bold">Areas</h1>
+          {/* <p className="text-stone-600">
             Organization: {selectedOrganization.organizationName}
-          </p>
+          </p> */}
         </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          className="bg-indigo-600 text-white px-3 py-1.5 text-sm rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
           Create Area
         </button>
@@ -76,55 +75,78 @@ const Areas = () => {
           <div className="text-lg">Loading...</div>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {areas && areas.length > 0 ? (
-            areas.map((area) => (
-              <div
-                key={area.areaId}
-                className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-semibold">{area.areaName}</h3>
-                  <span
-                    className={`px-2 py-1 rounded text-sm ${
-                      area.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    {area.active ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-                <p className="text-gray-600 mb-4">
-                  <span className="font-medium">Created by:</span> {area.createdBy}
-                </p>
-                <p className="text-gray-600 mb-4">
-                  <span className="font-medium">Created at:</span>{' '}
-                  {new Date(area.createdAt || '').toLocaleDateString()}
-                </p>
-                <div className="flex justify-end space-x-2 mt-4">
-                  <button
-                    onClick={() => setEditingArea(area)}
-                    className="text-indigo-600 hover:text-indigo-800"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (confirm('Are you sure you want to delete this area?')) {
-                        deleteMutation.mutate(area.areaId!);
-                      }
-                    }}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="col-span-full text-center text-gray-500">
-              No areas found for this organization
-            </div>
-          )}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <table className="min-w-full divide-y divide-stone-200">
+            <thead className="bg-stone-50">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  Area Name
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  Created By
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  Created At
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-stone-200">
+              {areas && areas.length > 0 ? (
+                areas.map((area) => (
+                  <tr key={area.areaId} className="hover:bg-stone-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-stone-900">{area.areaName}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-stone-500">{area.createdBy}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-stone-500">
+                        {new Date(area.createdAt).toLocaleDateString()}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        area.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {area.active ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => setEditingArea(area)}
+                        className="text-indigo-600 hover:text-indigo-900 mr-4"
+                      >
+                        <Icon icon="solar:pen-bold" className="inline-block" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm('Are you sure you want to delete this area?')) {
+                            deleteMutation.mutate(area.areaId);
+                          }
+                        }}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        <Icon icon="solar:trash-bin-trash-bold" className="inline-block" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="px-6 py-4 text-center text-stone-500">
+                    No areas found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -180,7 +202,7 @@ const Areas = () => {
           </Dialog.Panel>
         </div>
       </Dialog>
-    </div>
+    </Container>
   );
 };
 

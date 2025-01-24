@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { routeService } from '../services/routeService';
 import { areaService } from '../services/areaService';
 import { depotService } from '../services/depotService';
 import { useOrganizationStore } from '../store/useOrganizationStore';
 import { useNavigate } from 'react-router-dom';
+import { Icon } from '@iconify-icon/react';
+import { Container } from '@chakra-ui/react';
 
 const Routes = () => {
   const [selectedAreaId, setSelectedAreaId] = useState<string>('');
   const [selectedDepotId, setSelectedDepotId] = useState<string>('');
   const { selectedOrganization } = useOrganizationStore();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   // Reset selections when organization changes
@@ -27,39 +30,57 @@ const Routes = () => {
   });
 
   const { data: depots } = useQuery({
-    queryKey: ['depots', selectedOrganization?.organizationId, selectedAreaId],
+    queryKey: ['depots', selectedAreaId],
     queryFn: () => depotService.getAll(selectedAreaId),
-    enabled: !!selectedOrganization && !!selectedAreaId,
+    enabled: !!selectedAreaId,
   });
 
   const { data: routes, isLoading } = useQuery({
-    queryKey: ['routes', selectedOrganization?.organizationId, selectedAreaId, selectedDepotId],
-    queryFn: () => routeService.getAll(selectedOrganization?.organizationId || '', selectedAreaId, selectedDepotId),
-    enabled: !!selectedOrganization && !!selectedAreaId && !!selectedDepotId,
+    queryKey: ['routes', selectedDepotId],
+    queryFn: () => routeService.getAll(selectedOrganization?.organizationId, selectedAreaId, selectedDepotId),
+    enabled: !!selectedDepotId,
+  });
+
+  // Auto-select first area and depot
+  useEffect(() => {
+    if (areas && areas.length > 0 && !selectedAreaId) {
+      setSelectedAreaId(areas[0].areaId);
+    }
+  }, [areas]);
+
+  useEffect(() => {
+    if (depots && depots.length > 0 && !selectedDepotId) {
+      setSelectedDepotId(depots[0].depotId);
+    }
+  }, [depots]);
+
+  const deleteMutation = useMutation({
+    mutationFn: routeService.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['routes'] });
+    },
   });
 
   if (!selectedOrganization) {
     return (
       <div className="container mx-auto p-4">
-        <div className="text-center text-gray-500">Please select an organization first</div>
+        <div className="text-center text-stone-500">Please select an organization first</div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
+    <Container maxW={'6xl'} className="py-4">
+      <div className="flex justify-between items-center mb-2">
         <div>
-          <h1 className="text-3xl font-bold">Routes</h1>
-          <p className="text-gray-600">
-            Organization: {selectedOrganization.organizationName}
-          </p>
+          <h1 className="text-xl font-bold">Routes</h1>
+         
         </div>
         <button
           onClick={() => navigate('/create-route', { state: { areaId: selectedAreaId, depotId: selectedDepotId } })}
-          disabled={!selectedAreaId || !selectedDepotId}
-          className={`bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-            (!selectedAreaId || !selectedDepotId) ? 'opacity-50 cursor-not-allowed' : ''
+          disabled={!selectedDepotId}
+          className={`bg-indigo-600 text-white text-sm px-3 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+            !selectedDepotId ? 'opacity-50 cursor-not-allowed' : ''
           }`}
         >
           Create Route
@@ -67,22 +88,22 @@ const Routes = () => {
       </div>
 
       {/* Area and Depot Selection */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="flex gap-2 mb-4">
         <div>
-          <label htmlFor="area" className="block text-sm font-medium text-gray-700">
+          {/* <label htmlFor="area" className="block text-sm font-medium text-stone-700">
             Select Area
-          </label>
+          </label> */}
           <select
             id="area"
             value={selectedAreaId}
             onChange={(e) => {
               setSelectedAreaId(e.target.value);
-              setSelectedDepotId(''); // Reset depot when area changes
+              setSelectedDepotId('');
             }}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="border text-sm border-neutral-300 text-neutral-900 p-2 rounded-lg "
           >
             <option value="">Select Area</option>
-            {areas?.map((area: any) => (
+            {areas?.map((area) => (
               <option key={area.areaId} value={area.areaId}>
                 {area.areaName}
               </option>
@@ -91,18 +112,17 @@ const Routes = () => {
         </div>
 
         <div>
-          <label htmlFor="depot" className="block text-sm font-medium text-gray-700">
+          {/* <label htmlFor="depot" className="block text-sm font-medium text-stone-700">
             Select Depot
-          </label>
+          </label> */}
           <select
             id="depot"
             value={selectedDepotId}
             onChange={(e) => setSelectedDepotId(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            disabled={!selectedAreaId}
+            className="border text-sm border-neutral-300 text-neutral-900 p-2 rounded-lg "
           >
             <option value="">Select Depot</option>
-            {depots?.map((depot: any) => (
+            {depots?.map((depot) => (
               <option key={depot.depotId} value={depot.depotId}>
                 {depot.depotName}
               </option>
@@ -112,66 +132,94 @@ const Routes = () => {
       </div>
 
       {/* Routes Display */}
-      {selectedAreaId && selectedDepotId ? (
+      {selectedDepotId ? (
         isLoading ? (
           <div className="flex items-center justify-center h-48">
             <div className="text-lg">Loading...</div>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {routes && routes.length > 0 ? (
-              routes.map((route) => (
-                <div
-                  key={route.routeNumber}
-                  className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-semibold">Route {route.routeNumber}</h3>
-                    <span
-                      className={`px-2 py-1 rounded text-sm ${
-                        route.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {route.active ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
-                  <div className="space-y-2">
-                    <p>
-                      <span className="font-medium">Source:</span> {route.source}
-                    </p>
-                    <p>
-                      <span className="font-medium">Destination:</span> {route.destination}
-                    </p>
-                    <p>
-                      <span className="font-medium">Via:</span> {route.via}
-                    </p>
-                    <p>
-                      <span className="font-medium">Separation:</span> {route.separation}
-                    </p>
-                    <p>
-                      <span className="font-medium">Route Number:</span>{' '}
-                      {route.routeNumberUpperHalf}/{route.routeNumberLowerHalf}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Created by {route.createdBy} on{' '}
-                      {new Date(route.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="col-span-full text-center text-gray-500">
-                No routes found for this depot
-              </div>
-            )}
+          <div className="bg-white rounded-lg  shadow overflow-hidden">
+            <table className="min-w-full divide-y divide-stone-200">
+              <thead className="bg-stone-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                    Route Number
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                    Source
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                    Destination
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                   Via
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-stone-200">
+                {routes && routes.length > 0 ? (
+                  routes.map((route) => (
+                    <tr key={route.routeId} className="hover:bg-stone-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-stone-900">{route.routeNumber}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-stone-500">{route.source}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-stone-500">{route.destination}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-stone-500">{route.via}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          route.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {route.active ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => navigate(`/edit-route/${route.routeId}`)}
+                          className="text-indigo-600 hover:text-indigo-900 mr-4"
+                        >
+                          <Icon icon="solar:pen-bold" className="inline-block" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm('Are you sure you want to delete this route?')) {
+                              deleteMutation.mutate(route.routeId);
+                            }
+                          }}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <Icon icon="solar:trash-bin-trash-bold" className="inline-block" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-4 text-center text-stone-500">
+                      No routes found for this depot
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         )
       ) : (
-        <div className="text-center text-gray-500">
-          Please select both an area and a depot to view routes
-        </div>
+        <div className="text-center text-stone-500">Please select a depot to view routes</div>
       )}
-    </div>
+    </Container>
   );
 };
 

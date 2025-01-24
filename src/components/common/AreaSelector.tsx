@@ -22,7 +22,7 @@ export const AreaSelector = () => {
         const area = areas?.find((a) => a.areaId === selectedAreaId) || null;
         setSelectedArea(area);
       }}
-      className="block w-48 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+      className="block w-48 rounded-md border-stone-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
       disabled={!selectedOrganization}
     >
       <option value="">Select Area</option>

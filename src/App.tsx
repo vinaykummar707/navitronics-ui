@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import Navbar from './components/Navbar';
@@ -15,6 +15,8 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import { CreateRoute } from './pages/CreateRoute';
 import EntryPage from './components/EntryPage';
+import { HomeChakra } from './components/Navbar-chakra';
+import { Container, Flex } from '@chakra-ui/react';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,11 +30,14 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <div className="h-screen flex flex-col w-screen overflow-hidden bg-gray-100">
+      <BrowserRouter>
+        <div className="h-screen flex flex-col  w-screen overflow-hidden bg-stone-100">
           <Navbar />
+          <Flex  className='overflow-hidden'>
+
+        
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Organizations />} />
             <Route path="/organizations" element={<Organizations />} />
             <Route path="/areas" element={<Areas />} />
             <Route path="/depots" element={<Depots />} />
@@ -47,8 +52,10 @@ function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/roles" element={<Roles />} />
           </Routes>
+          </Flex>
         </div>
-      </Router>
+      </BrowserRouter>
+
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

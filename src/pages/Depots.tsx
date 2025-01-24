@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { depotService } from '../services/depotService';
 import { areaService } from '../services/areaService';
 import { useOrganizationStore } from '../store/useOrganizationStore';
-import { Depot, CreateDepotDto, UpdateDepotDto } from '../types/depot';
-import { DepotForm } from '../components/depots/DepotForm';
 import { Dialog } from '@headlessui/react';
+import { DepotForm } from '../components/depots/DepotForm';
+import { Depot } from '../types/depot';
+import { Icon } from '@iconify-icon/react';
+import { Container } from '@chakra-ui/react';
 
 const Depots = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -13,6 +15,11 @@ const Depots = () => {
   const [selectedAreaId, setSelectedAreaId] = useState<string>('');
   const { selectedOrganization } = useOrganizationStore();
   const queryClient = useQueryClient();
+
+  // Reset area selection when organization changes
+  useEffect(() => {
+    setSelectedAreaId('');
+  }, [selectedOrganization?.organizationId]);
 
   // Queries
   const { data: areas } = useQuery({
@@ -22,75 +29,79 @@ const Depots = () => {
     enabled: !!selectedOrganization,
   });
 
+  // Auto-select first area when areas are loaded
+  useEffect(() => {
+    if (areas && areas.length > 0 && !selectedAreaId) {
+      setSelectedAreaId(areas[0].areaId);
+    }
+  }, [areas]);
+
   const { data: depots, isLoading } = useQuery({
-    queryKey: ['depots', selectedAreaId],
+    queryKey: ['depots', selectedOrganization?.organizationId, selectedAreaId],
     queryFn: () => depotService.getAll(selectedAreaId),
-    enabled: !!selectedAreaId,
+    enabled: !!selectedOrganization && !!selectedAreaId,
   });
 
   // Mutations
   const createMutation = useMutation({
-    mutationFn: (data: CreateDepotDto) => depotService.create(data),
+    mutationFn: depotService.create,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['depots', selectedAreaId] });
+      queryClient.invalidateQueries({ queryKey: ['depots'] });
       setIsCreateModalOpen(false);
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ data, depotId }: { data: UpdateDepotDto; depotId: string }) =>
-      depotService.update(data, depotId),
+    mutationFn: depotService.update,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['depots', selectedAreaId] });
+      queryClient.invalidateQueries({ queryKey: ['depots'] });
       setEditingDepot(null);
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (depotId: string) => depotService.delete(depotId),
+    mutationFn: depotService.delete,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['depots', selectedAreaId] });
+      queryClient.invalidateQueries({ queryKey: ['depots'] });
     },
   });
 
   if (!selectedOrganization) {
     return (
       <div className="container mx-auto p-4">
-        <div className="text-center text-gray-500">
-          Please select an organization from the navbar to view depots
-        </div>
+        <div className="text-center text-stone-500">Please select an organization first</div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
+    <Container display={'flex'} flexDirection={'column'} alignItems={'start'} maxW={'6xl'} py={4}>
+      <div className="flex justify-between items-center mb-2 w-full">
         <div>
-          <h1 className="text-3xl font-bold">Depots</h1>
-          <p className="text-gray-600 mt-1">
-            Organization: {selectedOrganization.organizationName}
-          </p>
+          <h1 className="text-xl font-bold">Depots</h1>
+          
         </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           disabled={!selectedAreaId}
+          className={`bg-indigo-600 text-white text-sm px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+            !selectedAreaId ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
         >
           Create Depot
         </button>
       </div>
 
       {/* Area Selection */}
-      <div className="mb-6">
-        <label htmlFor="areaSelect" className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="mb-4 flex flex-col items-start justify-start">
+        {/* <label htmlFor="area" className="block text-sm font-medium text-stone-700">
           Select Area
-        </label>
+        </label> */}
         <select
-          id="areaSelect"
+          id="area"
           value={selectedAreaId}
           onChange={(e) => setSelectedAreaId(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className="border text-sm border-neutral-300 text-neutral-900 p-2 rounded-lg "
         >
           <option value="">Select Area</option>
           {areas?.map((area) => (
@@ -101,59 +112,78 @@ const Depots = () => {
         </select>
       </div>
 
-      {/* Depots List */}
+      {/* Depots Display */}
       {selectedAreaId ? (
         isLoading ? (
           <div className="flex items-center justify-center h-48">
             <div className="text-lg">Loading...</div>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {depots && depots.length > 0 ? (
-              depots.map((depot) => (
-                <div
-                  key={depot.depotId}
-                  className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-semibold">{depot.depotName}</h3>
-                    <span
-                      className={`px-2 py-1 rounded text-sm ${
-                        depot.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {depot.active ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
-                  <div className="flex justify-end space-x-2 mt-4">
-                    <button
-                      onClick={() => setEditingDepot(depot)}
-                      className="text-indigo-600 hover:text-indigo-800"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm('Are you sure you want to delete this depot?')) {
-                          deleteMutation.mutate(depot.depotId);
-                        }
-                      }}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="col-span-full text-center text-gray-500">
-                No depots found for this area
-              </div>
-            )}
+          <div className="bg-white rounded-lg shadow overflow-hidden w-full">
+            <table className="min-w-full divide-y divide-stone-200">
+              <thead className="bg-stone-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                    Depot Name
+                  </th>
+                  
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-stone-200">
+                {depots && depots.length > 0 ? (
+                  depots.map((depot) => (
+                    <tr key={depot.depotId} className="hover:bg-stone-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-stone-900">{depot.depotName}</div>
+                      </td>
+                     
+                    
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          depot.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {depot.active ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => setEditingDepot(depot)}
+                          className="text-indigo-600 hover:text-indigo-900 mr-4"
+                        >
+                          <Icon icon="solar:pen-bold" className="inline-block" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm('Are you sure you want to delete this depot?')) {
+                              deleteMutation.mutate(depot.depotId);
+                            }
+                          }}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <Icon icon="solar:trash-bin-trash-bold" className="inline-block" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-4 text-center text-stone-500">
+                      No depots found for this area
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         )
       ) : (
-        <div className="text-center text-gray-500">Please select an area to view depots</div>
+        <div className="text-center text-stone-500">Please select an area to view depots</div>
       )}
 
       {/* Create Modal */}
@@ -190,23 +220,15 @@ const Depots = () => {
               <DepotForm
                 initialData={editingDepot}
                 selectedAreaId={selectedAreaId}
-                onSubmit={(data) =>
-                  updateMutation.mutate({
-                    data: {
-                      ...data,
-                      active: editingDepot.active,
-                      deleted: editingDepot.deleted,
-                    },
-                    depotId: editingDepot.depotId,
-                  })
-                }
+                selectedOrganizationId={selectedOrganization.organizationId}
+                onSubmit={(data) => updateMutation.mutate(data)}
                 onCancel={() => setEditingDepot(null)}
               />
             )}
           </Dialog.Panel>
         </div>
       </Dialog>
-    </div>
+    </Container>
   );
 };
 
