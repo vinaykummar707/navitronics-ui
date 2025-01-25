@@ -31,7 +31,7 @@ export const OrganizationForm = ({ initialData, onSubmit, onCancel }: Organizati
           id="organizationName"
           value={formData.organizationName}
           onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
-          className="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
           required
         />
       </div>
@@ -45,7 +45,7 @@ export const OrganizationForm = ({ initialData, onSubmit, onCancel }: Organizati
           id="emailId"
           value={formData.emailId}
           onChange={(e) => setFormData({ ...formData, emailId: e.target.value })}
-          className="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
           required
         />
       </div>
@@ -59,7 +59,7 @@ export const OrganizationForm = ({ initialData, onSubmit, onCancel }: Organizati
           id="phoneNumber"
           value={formData.phoneNumber}
           onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-          className="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+         className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
           required
         />
       </div>
@@ -73,7 +73,7 @@ export const OrganizationForm = ({ initialData, onSubmit, onCancel }: Organizati
           id="contactPerson"
           value={formData.contactPerson}
           onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-          className="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
           required
         />
       </div>

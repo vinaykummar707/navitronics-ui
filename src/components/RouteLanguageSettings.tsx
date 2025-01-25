@@ -7,7 +7,7 @@ const RouteLanguageSettings = ({
 }) => {
   return (
     <div className="">
-      <div className="flex flex-col gap-8 p-4 bg-white w-full items-start rounded-lg border border-neutral-300">
+      <div className="flex flex-col gap-8 p-6 bg-white w-full items-start rounded-lg border border-neutral-300">
         <h1 className="text-lg text-neutral-800 font-bold">
           Route Language Settings
         </h1>
@@ -19,7 +19,7 @@ const RouteLanguageSettings = ({
           >
             <div className="flex flex-col gap-3">
               <label
-                className="text-sm font-semibold text-neutral-900"
+                className="text-sm text-neutral-500"
                 htmlFor=""
               >
                 {`Language ${index + 1}`}
@@ -43,7 +43,7 @@ const RouteLanguageSettings = ({
 
             {/* <div className="flex flex-col gap-3">
 							<label
-								className="text-sm font-semibold text-neutral-900"
+								className="text-sm text-neutral-500"
 								htmlFor=""
 							>
 								Font
@@ -71,7 +71,7 @@ const RouteLanguageSettings = ({
 
             <div className="flex flex-col gap-3">
               <label
-                className="text-sm font-semibold text-neutral-900"
+                className="text-sm text-neutral-500"
                 htmlFor=""
               >
                 Font Weight
@@ -99,7 +99,7 @@ const RouteLanguageSettings = ({
 
             <div className="flex flex-col gap-3">
               <label
-                className="text-sm font-semibold text-neutral-900"
+                className="text-sm text-neutral-500"
                 htmlFor=""
               >
                 Font Size

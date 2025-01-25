@@ -8,8 +8,9 @@ import SimulationDialog from "./SimulationDialog";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { routeService } from "@/services/routeService";
+import { Container } from "@chakra-ui/react";
 
-const EntryPage = ({areaId, depotId}) => {
+const EntryPage = ({ areaId, depotId }) => {
   const [route, setRoute] = useState({
     routeNumber: "300",
     source: "UPPAL",
@@ -44,16 +45,16 @@ const EntryPage = ({areaId, depotId}) => {
       fontSize: 16,
       fontWeight: "regular",
     },
-    {
-      language: "Hindi",
-      fontSize: 16,
-      fontWeight: "regular",
-    },
-    {
-      language: "Telugu",
-      fontSize: 16,
-      fontWeight: "regular",
-    },
+    // {
+    //   language: "Hindi",
+    //   fontSize: 16,
+    //   fontWeight: "regular",
+    // },
+    // {
+    //   language: "Telugu",
+    //   fontSize: 16,
+    //   fontWeight: "regular",
+    // },
   ]);
 
   const [selectedBoardLanguage, setSelectedBoardLanguage] = useState(
@@ -155,13 +156,13 @@ const EntryPage = ({areaId, depotId}) => {
   const createRouteMutation = useMutation({
     mutationFn: routeService.create,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['routes'] });
-      navigate('/routes');
+      queryClient.invalidateQueries({ queryKey: ["routes"] });
+      navigate("/routes");
     },
     onError: (error) => {
-      console.error('Error creating route:', error);
+      console.error("Error creating route:", error);
       // Handle error appropriately
-    }
+    },
   });
 
   const handleSubmit = (data: any) => {
@@ -234,8 +235,6 @@ const EntryPage = ({areaId, depotId}) => {
 
     setShowSimulation(true);
 
-    handleSubmit({ ...route, displayConfig: config, areaId, depotId });
-
     // generateJson({ ...route, displayConfig: config }); // The final config will be in the correct format now
   }
 
@@ -275,11 +274,12 @@ const EntryPage = ({areaId, depotId}) => {
     setSelectedBoardLanguage(target.value);
   };
 
-
-
+  const handleSaveToDatabase = () => {
+    handleSubmit({ ...finalObj, areaId, depotId });
+  };
 
   return (
-    <div className="p-4 flex flex-col gap-4 overflow-scroll">
+    <Container maxW={"6xl"} className="p-4 flex flex-col gap-4 overflow-scroll">
       <BusRoutes route={route} onRouteChange={handleRouteChange} />
       <RouteLanguageSettings
         languageOptions={languageOptions}
@@ -301,6 +301,7 @@ const EntryPage = ({areaId, depotId}) => {
           showSimulation={showSimulation}
           displayConfig={finalObj["displayConfig"]}
           closeSimulation={() => setShowSimulation(false)}
+          saveToDatabase={handleSaveToDatabase}
         />
       )}
       <div className="grid grid-cols-6 gap-x-4">
@@ -308,12 +309,10 @@ const EntryPage = ({areaId, depotId}) => {
           onClick={showFinalJson}
           className=" px-4 py-2 bg-indigo-600 text-white text-md rounded-lg"
         >
-          Save route
+          Start Simulation
         </button>
-
-      
       </div>
-    </div>
+    </Container>
   );
 };
 

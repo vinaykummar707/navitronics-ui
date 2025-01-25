@@ -53,7 +53,7 @@ const Organizations = () => {
   return (
     <Container maxW={'6xl'} py={4}>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-lg font-bold">Organizations</h1>
+        <h1 className="text-lg font-">Organizations</h1>
         <button
           onClick={() => setIsCreateModalOpen(true)}
           className="bg-indigo-600 text-sm text-white flex items-center px-3 text-sm py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
@@ -96,9 +96,9 @@ const Organizations = () => {
                 organizations.map((org) => (
                   <tr key={org.organizationId} className="">
                     <td className="px-6 py-4 gap-3 whitespace-nowrap flex items-center">
-                      <div className="size-7 bg-red-500 text-sm text-white flex items-center justify-center flex-shrink-0  rounded-full">
+                      {/* <div className="size-7 bg-red-500 text-sm text-white flex items-center justify-center flex-shrink-0  rounded-full">
                       {org.organizationName.charAt(0).toUpperCase()}
-                      </div>
+                      </div> */}
                       <div className="text-sm font-medium text-stone-900">{org.organizationName}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -157,7 +157,7 @@ const Organizations = () => {
       >
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="mx-auto max-w-md rounded bg-white p-6">
+          <Dialog.Panel className="mx-auto max-w-md rounded w-[400px] bg-white p-6">
             <Dialog.Title className="text-lg font-medium mb-4">Create Organization</Dialog.Title>
             <OrganizationForm
               onSubmit={(data) => createMutation.mutate(data)}

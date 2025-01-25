@@ -127,12 +127,16 @@ const Bus = memo(
           <div className="grid grid-cols-2  gap-x-4 w-full gap-y-4">
             {Object.keys(config).map((side) => (
               <div
-                className="flex flex-col w-full bg-neutral-50 p-4  rounded-lg  gap-2"
+                className="flex flex-col w-full border shadow-sm p-6  rounded-lg  gap-2"
                 key={side}
               >
                 <h3 className="text-sm font-bold">
                   {side.toUpperCase()} DISPLAY
                 </h3>
+                <div className="flex flex-col gap-2">
+                <label className="text-sm text-neutral-500" htmlFor="">
+                 Select Board Type
+                </label>
                 <select
                   value={config[side].boardFormatType}
                   onChange={(e) =>
@@ -146,6 +150,8 @@ const Bus = memo(
                     </option>
                   ))}
                 </select>
+              </div>
+                
                 <DisplayForm
                   config={config[side]}
                   onConfigChange={(key, value) =>
@@ -189,8 +195,8 @@ const Bus = memo(
         return (
           <div className="flex flex-col gap-2">
             <div className="grid grid-cols-2 gap-4">
-              {/* <div className="flex flex-col gap-1">
-                <label className="text-sm text-neutral-900" htmlFor="">
+             <div className="flex flex-col gap-1">
+                <label className="text-sm text-neutral-500" htmlFor="">
                   Text
                 </label>
                 <input
@@ -200,10 +206,10 @@ const Bus = memo(
                   onChange={(e) => updateConfig("text", e.target.value)}
                   className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg"
                 />
-              </div> */}
+              </div> 
 
               <div className="flex flex-col gap-1">
-                <label className="text-sm text-neutral-900" htmlFor="">
+                <label className="text-sm text-neutral-500" htmlFor="">
                   Scroll Type
                 </label>
                 <select
@@ -219,7 +225,7 @@ const Bus = memo(
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-sm text-neutral-900" htmlFor="">
+                <label className="text-sm text-neutral-500" htmlFor="">
                   Scroll Speed
                 </label>
                 <input
@@ -234,7 +240,7 @@ const Bus = memo(
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-sm text-neutral-900" htmlFor="">
+                <label className="text-sm text-neutral-500" htmlFor="">
                   Position
                 </label>
                 <select
@@ -253,9 +259,9 @@ const Bus = memo(
       } else if (boardFormatType === "sideWithSingleText") {
         return (
           <div className="grid grid-cols-2 gap-4">
-            {/* {!route.splitRoute && (
+            {!route.splitRoute && (
               <div className="flex flex-col gap-1">
-                <label className="text-sm text-neutral-900" htmlFor="">
+                <label className="text-sm text-neutral-500" htmlFor="">
                   Route Number
                 </label>
                 <input
@@ -267,11 +273,11 @@ const Bus = memo(
                   className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg"
                 />
               </div>
-            )} */}
-            {/* {route.splitRoute && (
+            )} 
+             {route.splitRoute && (
               <>
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm text-neutral-900" htmlFor="">
+                  <label className="text-sm text-neutral-500" htmlFor="">
                     Route Number Upper Half
                   </label>
                   <input
@@ -285,7 +291,7 @@ const Bus = memo(
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm text-neutral-900" htmlFor="">
+                  <label className="text-sm text-neutral-500" htmlFor="">
                     Route Number Lower Half
                   </label>
                   <input
@@ -300,7 +306,7 @@ const Bus = memo(
               </>
             )}
             <div className="flex flex-col gap-1">
-              <label className="text-sm text-neutral-900" htmlFor="">
+              <label className="text-sm text-neutral-500" htmlFor="">
                 Text
               </label>
               <input
@@ -310,10 +316,10 @@ const Bus = memo(
                 onChange={(e) => updateConfig("text", e.target.value)}
                 className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg"
               />
-            </div> */}
+            </div> 
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm text-neutral-900" htmlFor="">
+              <label className="text-sm text-neutral-500" htmlFor="">
                 Scroll Type
               </label>
               <select
@@ -329,7 +335,7 @@ const Bus = memo(
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm text-neutral-900" htmlFor="">
+              <label className="text-sm text-neutral-500" htmlFor="">
                 Scroll Speed
               </label>
               <input
@@ -344,7 +350,7 @@ const Bus = memo(
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm text-neutral-900" htmlFor="">
+              <label className="text-sm text-neutral-500" htmlFor="">
                 position
               </label>
               <select
@@ -362,9 +368,9 @@ const Bus = memo(
       } else if (boardFormatType === "sideWithTwoTexts") {
         return (
           <div className="flex flex-col gap-2">
-            {/* {!route.splitRoute && (
+             {!route.splitRoute && (
               <div className="flex flex-col gap-1">
-                <label className="text-sm text-neutral-900" htmlFor="">
+                <label className="text-sm text-neutral-500" htmlFor="">
                   Side Text
                 </label>
                 <input
@@ -380,7 +386,7 @@ const Bus = memo(
             {route.splitRoute && (
               <>
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm text-neutral-900" htmlFor="">
+                  <label className="text-sm text-neutral-500" htmlFor="">
                     Route Upper Half Text
                   </label>
                   <input
@@ -394,7 +400,7 @@ const Bus = memo(
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm text-neutral-900" htmlFor="">
+                  <label className="text-sm text-neutral-500" htmlFor="">
                     Route Lower Half Text
                   </label>
                   <input
@@ -407,12 +413,15 @@ const Bus = memo(
                   />
                 </div>
               </>
-            )} */}
-            <div className="grid grid-cols-2 gap-4">
+            )} 
+
+            <h1 className="text-sm  my-2 font-bold">Upper Half Settings </h1>
+            <div className="grid grid-cols-2 p- gap-4">
 
               
+              
               <div className="flex flex-col gap-1">
-                <label className="text-sm text-neutral-900" htmlFor="">
+                <label className="text-sm text-neutral-500" htmlFor="">
                   Upper Half Text
                 </label>
                 <input
@@ -427,7 +436,7 @@ const Bus = memo(
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-sm text-neutral-900" htmlFor="">
+                <label className="text-sm text-neutral-500" htmlFor="">
                   Upper Half Scroll Type
                 </label>
                 <select
@@ -445,7 +454,7 @@ const Bus = memo(
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-sm text-neutral-900" htmlFor="">
+                <label className="text-sm text-neutral-500" htmlFor="">
                   Upper Half Scroll Speed
                 </label>
                 <input
@@ -460,7 +469,7 @@ const Bus = memo(
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-sm text-neutral-900" htmlFor="">
+                <label className="text-sm text-neutral-500" htmlFor="">
                   Upper Half Position
                 </label>
                 <select
@@ -476,9 +485,13 @@ const Bus = memo(
                 </select>
               </div>
             </div>
+
+            <h1 className="text-sm  my-2 font-bold">Lower Half Settings </h1>
+
+
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
-                <label className="text-sm text-neutral-900" htmlFor="">
+                <label className="text-sm text-neutral-500" htmlFor="">
                   Lower Half Text
                 </label>
                 <input
@@ -493,7 +506,7 @@ const Bus = memo(
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-sm text-neutral-900" htmlFor="">
+                <label className="text-sm text-neutral-500" htmlFor="">
                   Lower Half Scroll Type
                 </label>
                 <select
@@ -511,7 +524,7 @@ const Bus = memo(
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-sm text-neutral-900" htmlFor="">
+                <label className="text-sm text-neutral-500" htmlFor="">
                   Lower Half Scroll Speed
                 </label>
                 <input
@@ -526,7 +539,7 @@ const Bus = memo(
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-sm text-neutral-900" htmlFor="">
+                <label className="text-sm text-neutral-500" htmlFor="">
                   Lower Half Position
                 </label>
                 <select

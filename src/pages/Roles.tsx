@@ -56,7 +56,7 @@ const Roles = () => {
     <Container maxW={'6xl'} className="py-4">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-xl font-bold">Roles</h1>
+          <h1 className="text-lg font-=">Roles</h1>
          
         </div>
         <button
@@ -79,15 +79,8 @@ const Roles = () => {
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
                   Role Name
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                  Description
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                  Created By
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                  Created At
-                </th>
+              
+               
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
                   Status
                 </th>
@@ -103,17 +96,7 @@ const Roles = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-stone-900">{role.roleName}</div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-stone-500">{role.description}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-stone-500">{role.createdBy}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-stone-500">
-                        {new Date(role.createdAt).toLocaleDateString()}
-                      </div>
-                    </td>
+                   
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         role.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'

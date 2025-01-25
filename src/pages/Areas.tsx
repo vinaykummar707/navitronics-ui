@@ -57,7 +57,7 @@ const Areas = () => {
     <Container maxW={'6xl'} py={4}>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-xl font-bold">Areas</h1>
+          <h1 className="text-xl font-">Areas</h1>
           {/* <p className="text-stone-600">
             Organization: {selectedOrganization.organizationName}
           </p> */}

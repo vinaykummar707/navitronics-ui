@@ -78,7 +78,7 @@ const Depots = () => {
     <Container display={'flex'} flexDirection={'column'} alignItems={'start'} maxW={'6xl'} py={4}>
       <div className="flex justify-between items-center mb-2 w-full">
         <div>
-          <h1 className="text-xl font-bold">Depots</h1>
+          <h1 className="text-lg font-">Depots</h1>
           
         </div>
         <button

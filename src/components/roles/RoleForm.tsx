@@ -28,7 +28,7 @@ export const RoleForm = ({ initialData, onSubmit, onCancel }: RoleFormProps) => 
           id="roleName"
           value={formData.roleName}
           onChange={(e) => setFormData({ roleName: e.target.value })}
-          className="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
           required
         />
       </div>

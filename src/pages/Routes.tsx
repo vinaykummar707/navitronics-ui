@@ -1,43 +1,50 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { routeService } from '../services/routeService';
-import { areaService } from '../services/areaService';
-import { depotService } from '../services/depotService';
-import { useOrganizationStore } from '../store/useOrganizationStore';
-import { useNavigate } from 'react-router-dom';
-import { Icon } from '@iconify-icon/react';
-import { Container } from '@chakra-ui/react';
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { routeService } from "../services/routeService";
+import { areaService } from "../services/areaService";
+import { depotService } from "../services/depotService";
+import { useOrganizationStore } from "../store/useOrganizationStore";
+import { useNavigate } from "react-router-dom";
+import { Icon } from "@iconify-icon/react";
+import { Container, Group } from "@chakra-ui/react";
 
 const Routes = () => {
-  const [selectedAreaId, setSelectedAreaId] = useState<string>('');
-  const [selectedDepotId, setSelectedDepotId] = useState<string>('');
+  const [selectedAreaId, setSelectedAreaId] = useState<string>("");
+  const [selectedDepotId, setSelectedDepotId] = useState<string>("");
   const { selectedOrganization } = useOrganizationStore();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   // Reset selections when organization changes
   useEffect(() => {
-    setSelectedAreaId('');
-    setSelectedDepotId('');
+    setSelectedAreaId("");
+    setSelectedDepotId("");
   }, [selectedOrganization?.organizationId]);
 
   // Queries
   const { data: areas } = useQuery({
-    queryKey: ['areas', selectedOrganization?.organizationId],
+    queryKey: ["areas", selectedOrganization?.organizationId],
     queryFn: () =>
-      selectedOrganization ? areaService.getAll(selectedOrganization.organizationId) : Promise.resolve([]),
+      selectedOrganization
+        ? areaService.getAll(selectedOrganization.organizationId)
+        : Promise.resolve([]),
     enabled: !!selectedOrganization,
   });
 
   const { data: depots } = useQuery({
-    queryKey: ['depots', selectedAreaId],
+    queryKey: ["depots", selectedAreaId],
     queryFn: () => depotService.getAll(selectedAreaId),
     enabled: !!selectedAreaId,
   });
 
   const { data: routes, isLoading } = useQuery({
-    queryKey: ['routes', selectedDepotId],
-    queryFn: () => routeService.getAll(selectedOrganization?.organizationId, selectedAreaId, selectedDepotId),
+    queryKey: ["routes", selectedDepotId],
+    queryFn: () =>
+      routeService.getAll(
+        selectedOrganization?.organizationId,
+        selectedAreaId,
+        selectedDepotId
+      ),
     enabled: !!selectedDepotId,
   });
 
@@ -55,36 +62,90 @@ const Routes = () => {
   }, [depots]);
 
   const deleteMutation = useMutation({
-    mutationFn: routeService.delete,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['routes'] });
+    mutationFn: routeService.getAllWithConfig,
+    onSuccess: (data) => {
+      console.log(data);
+    },
+    onError: (error) => {
+      console.error("Error creating route:", error);
+      // Handle error appropriately
+    },
+  });
+
+  const generateJson = (data: any) => {
+    // Convert to JSON string with proper formatting
+    const jsonString = JSON.stringify(data, null, 2);
+
+    // Create blob and download link
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    // Create temporary link and trigger download
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `route_config_${selectedDepotId || "new"}_${
+      new Date().toISOString().split("T")[0]
+    }.json`;
+    document.body.appendChild(link);
+    link.click();
+
+    // Cleanup
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    // Also log to console for reference
+    console.log("Configuration Saved:", data);
+  };
+
+  const getAllWithConfigMutation = useMutation({
+    mutationFn: routeService.getAllWithConfig,
+    onSuccess: (data) => {
+      console.log(data);
+      generateJson(data);
     },
   });
 
   if (!selectedOrganization) {
     return (
       <div className="container mx-auto p-4">
-        <div className="text-center text-stone-500">Please select an organization first</div>
+        <div className="text-center text-stone-500">
+          Please select an organization first
+        </div>
       </div>
     );
   }
 
   return (
-    <Container maxW={'6xl'} className="py-4">
+    <Container maxW={"6xl"} className="py-4">
       <div className="flex justify-between items-center mb-2">
         <div>
-          <h1 className="text-xl font-bold">Routes</h1>
-         
+          <h1 className="text-lg font-">Routes</h1>
         </div>
-        <button
-          onClick={() => navigate('/create-route', { state: { areaId: selectedAreaId, depotId: selectedDepotId } })}
-          disabled={!selectedDepotId}
-          className={`bg-indigo-600 text-white text-sm px-3 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-            !selectedDepotId ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
-        >
-          Create Route
-        </button>
+
+        <Group>
+          <button
+            onClick={() =>
+              navigate("/create-route", {
+                state: { areaId: selectedAreaId, depotId: selectedDepotId },
+              })
+            }
+            disabled={!selectedDepotId}
+            className={`bg-indigo-600 text-white text-sm px-3 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+              !selectedDepotId ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            Create Route
+          </button>
+          <button
+            onClick={() => getAllWithConfigMutation.mutate(selectedDepotId)}
+            disabled={!selectedDepotId}
+            className={`bg-green-600 text-white text-sm px-3 py-2 rounded-md hover:bg-green-700  ${
+              !selectedDepotId ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            {getAllWithConfigMutation.isPending ? "Exporting..." : 'Export All Routes'}
+          </button>
+        </Group>
       </div>
 
       {/* Area and Depot Selection */}
@@ -98,7 +159,7 @@ const Routes = () => {
             value={selectedAreaId}
             onChange={(e) => {
               setSelectedAreaId(e.target.value);
-              setSelectedDepotId('');
+              setSelectedDepotId("");
             }}
             className="border text-sm border-neutral-300 text-neutral-900 p-2 rounded-lg "
           >
@@ -142,22 +203,40 @@ const Routes = () => {
             <table className="min-w-full divide-y divide-stone-200">
               <thead className="bg-stone-50">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
+                  >
                     Route Number
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
+                  >
                     Source
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
+                  >
                     Destination
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                   Via
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
+                  >
+                    Via
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
+                  >
                     Status
                   </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider"
+                  >
                     Actions
                   </th>
                 </tr>
@@ -167,47 +246,74 @@ const Routes = () => {
                   routes.map((route) => (
                     <tr key={route.routeId} className="hover:bg-stone-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-stone-900">{route.routeNumber}</div>
+                        <div className="text-sm font-medium text-stone-900">
+                          {route.routeNumber}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-stone-500">{route.source}</div>
+                        <div className="text-sm text-stone-500">
+                          {route.source}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-stone-500">{route.destination}</div>
+                        <div className="text-sm text-stone-500">
+                          {route.destination}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-stone-500">{route.via}</div>
+                        <div className="text-sm text-stone-500">
+                          {route.via}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          route.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                          {route.active ? 'Active' : 'Inactive'}
+                        <span
+                          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            route.active
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {route.active ? "Active" : "Inactive"}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
-                          onClick={() => navigate(`/edit-route/${route.routeId}`)}
+                          onClick={() =>
+                            navigate(`/edit-route/${route.routeId}`)
+                          }
                           className="text-indigo-600 hover:text-indigo-900 mr-4"
                         >
-                          <Icon icon="solar:pen-bold" className="inline-block" />
+                          <Icon
+                            icon="solar:pen-bold"
+                            className="inline-block"
+                          />
                         </button>
                         <button
                           onClick={() => {
-                            if (confirm('Are you sure you want to delete this route?')) {
+                            if (
+                              confirm(
+                                "Are you sure you want to delete this route?"
+                              )
+                            ) {
                               deleteMutation.mutate(route.routeId);
                             }
                           }}
                           className="text-red-600 hover:text-red-900"
                         >
-                          <Icon icon="solar:trash-bin-trash-bold" className="inline-block" />
+                          <Icon
+                            icon="solar:trash-bin-trash-bold"
+                            className="inline-block"
+                          />
                         </button>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-stone-500">
+                    <td
+                      colSpan={6}
+                      className="px-6 py-4 text-center text-stone-500"
+                    >
                       No routes found for this depot
                     </td>
                   </tr>
@@ -217,7 +323,9 @@ const Routes = () => {
           </div>
         )
       ) : (
-        <div className="text-center text-stone-500">Please select a depot to view routes</div>
+        <div className="text-center text-stone-500">
+          Please select a depot to view routes
+        </div>
       )}
     </Container>
   );

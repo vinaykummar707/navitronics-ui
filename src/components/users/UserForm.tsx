@@ -57,7 +57,7 @@ export const UserForm = ({ initialData, onSubmit, onCancel, selectedOrganization
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 w-[400px]">
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-stone-700">
           Name
@@ -67,7 +67,7 @@ export const UserForm = ({ initialData, onSubmit, onCancel, selectedOrganization
           id="name"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
           required
         />
       </div>
@@ -81,7 +81,7 @@ export const UserForm = ({ initialData, onSubmit, onCancel, selectedOrganization
           id="userName"
           value={formData.userName}
           onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
-          className="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
           required
         />
       </div>
@@ -96,7 +96,7 @@ export const UserForm = ({ initialData, onSubmit, onCancel, selectedOrganization
             id="password"
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            className="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
             required={!initialData}
           />
         </div>
@@ -110,7 +110,7 @@ export const UserForm = ({ initialData, onSubmit, onCancel, selectedOrganization
           id="roleId"
           value={formData.roleId}
           onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
-          className="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
           required
         >
           <option value="">Select Role</option>
@@ -133,7 +133,7 @@ export const UserForm = ({ initialData, onSubmit, onCancel, selectedOrganization
             setSelectedAreaId(e.target.value);
             setFormData({ ...formData, areaId: e.target.value });
           }}
-          className="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
           required
         >
           <option value="">Select Area</option>
@@ -153,7 +153,7 @@ export const UserForm = ({ initialData, onSubmit, onCancel, selectedOrganization
           id="depotId"
           value={formData.depotId}
           onChange={(e) => setFormData({ ...formData, depotId: e.target.value })}
-          className="mt-1 block w-full rounded-md border-stone-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
           required
           disabled={!formData.areaId}
         >

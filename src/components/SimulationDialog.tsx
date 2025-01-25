@@ -3,27 +3,38 @@ import * as Dialog from "@radix-ui/react-dialog";
 import FullScreenBoard from "./FullScreenBoard";
 import SideWithSingleTextBoard from "./SideWithSingleTextBoard";
 import SideWithTwoTextsBoard from "./SideWithTwoHalfsBoard";
+import { Group } from "@chakra-ui/react";
 
 const SimulationDialog = ({
   displayConfig,
   showSimulation,
   route,
   closeSimulation,
+  saveToDatabase,
 }) => {
   const [selectedLanguage, setSelectedLanguage] = useState("English");
 
   return (
-    <Dialog.Root open={showSimulation}>
+    <Dialog.Root  open={showSimulation}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 overflow-hidden  bg-neutral-900 opacity-85 data-[state=open]:animate-overlayShow" />
-        <Dialog.Content className="fixed overflow-scroll left-1/2 top-1/2 h-[500px]  flex flex-col gap-4 items-center  -translate-x-1/2 -translate-y-1/2 rounded-md bg-white p-[25px] shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,_hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] focus:outline-none data-[state=open]:animate-contentShow">
-          <div className="flex flex-row-reverse w-full items-center justify-between">
-            <button
-              onClick={closeSimulation}
-              className=" px-4 py-2 bg-red-600 text-white text-md rounded-lg"
-            >
-              Stop Simulation
-            </button>
+        <Dialog.Content className="fixed overflow-scroll left-1/2 top-1/2 h-[600px]   flex flex-col gap-4 items-center  -translate-x-1/2 -translate-y-1/2 rounded-md bg-white p-[25px] shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,_hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] focus:outline-none data-[state=open]:animate-contentShow">
+          <div className="flex flex-row-reverse items-center w-full justify-between">
+            <Group>
+              <button
+                onClick={closeSimulation}
+                className=" px-4 py-2 bg-red-600 text-white text-md rounded-lg"
+              >
+                Stop Simulation
+              </button>
+              <button
+                onClick={saveToDatabase}
+                className="px-4 py-2 bg-indigo-600 text-white text-md rounded-lg"
+              >
+                Save Route
+              </button>
+            </Group>
+
             <div className="flex flex-col gap-1">
               <label className="text-sm text-neutral-800" htmlFor="">
                 Select Language
@@ -32,7 +43,7 @@ const SimulationDialog = ({
               <select
                 value={selectedLanguage}
                 onChange={(e) => setSelectedLanguage(e.target.value)}
-                className="border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg"
+                className="border-neutral-300 border text-neutral-900 text-sm p-2 rounded-lg"
               >
                 {Object.keys(displayConfig).map((language) => (
                   <option key={language} value={language}>
