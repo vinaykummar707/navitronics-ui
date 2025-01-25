@@ -12,7 +12,7 @@ const Navbar = () => {
       <Container maxW={'6xl'} className='flex  justify-between items-center'>
         <Link to="/" className="text-xl gap-2 items-center flex font-bold">
               <img className='size-16' src="https://raw.githubusercontent.com/RFCHH/pis-frontend/refs/heads/main/src/Assests/Navitronix.png?token=GHSAT0AAAAAAC2DPAWM5TZFDVR67PBMCMOOZ4U7DEA" alt="" srcset="" />
-              Navitronics
+              Navitronix
             </Link>
         <div className="flex items-center space-x-6">
            
