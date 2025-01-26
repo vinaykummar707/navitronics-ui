@@ -30,4 +30,8 @@ export const routeService = {
     );
     return response.data["data"];
   },
+  delete: async (routeId: string): Promise<any> => {
+    const response = await axiosInstance.delete(`${BASE_PATH}/delete/${routeId}`);
+    return response.data;
+  },
 };

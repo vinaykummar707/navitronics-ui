@@ -12,6 +12,7 @@ function Login() {
   const [error, setError] = useState('');
 
   const login = useAuthStore((state) => state.login);
+  const user  = useAuthStore((state) => state.user);
   const navigate = useNavigate();
 
 
@@ -21,35 +22,44 @@ function Login() {
   
    
     const params = new URLSearchParams();
-    params.append('userId', userId);
+    params.append('userName', userId);
     params.append('password', password);
   
   
     const url = `/authentication/login?${params.toString()}`;
-    login({ username: "john_doe", role: "admin" }); // Set the user as authenticated
-      navigate("/home"); // Redirect to home
-    // try {
-    //   const response = await axios.post(url); 
+ 
+    try {
+      const response = await axios.post(url); 
   
-    //   // Handle successful response
-    //   console.log('Login successful:', response.data);
+      // Handle successful response
+      console.log('Login successful:', response.data);
   
-    //   // Save the response data to local storage
-    //   // const { userId, token, refreshToken, organizationId, userRole } = response.data;
+      // Save the response data to local storage
+      // const { userId, token, refreshToken, organizationId, userRole } = response.data;
       
-    //   // localStorage.setItem('userId', userId);
-    //   // localStorage.setItem('token', token);
-    //   // localStorage.setItem('refreshToken', refreshToken);
-    //   // localStorage.setItem('organizationId', organizationId);
-    //   // localStorage.setItem('userRole', userRole);
+      // localStorage.setItem('userId', userId);
+      // localStorage.setItem('token', token);
+      // localStorage.setItem('refreshToken', refreshToken);
+      // localStorage.setItem('organizationId', organizationId);
+      // localStorage.setItem('userRole', userRole);
   
-    //   console.log(response.data)
-    
-  
-    // } catch (error) {
-    //   console.error('Login error:', error);
-    //   setError('Invalid credentials. Please try again.');  
+      console.log(response.data)
+      login(response.data); // Set the user as authenticated
+     // Navigate based on user role
+    //  if (user.userRole === 'organization_admin') {
+    //   navigate('/home/organizations');
+    // } else if (user.userRole === 'area_admin') {
+    //   navigate('/home/areas');
+    // } else if (user.userRole === 'depot_admin') {
+    //   navigate('/home/depots');
+    // } else {
+      navigate('/home'); // Default navigation if role is not recognized
     // }
+  
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('Invalid credentials. Please try again.');  
+    }
   };
   
 
@@ -92,7 +102,7 @@ function Login() {
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
                 placeholder="Enter User ID"
-                className="bg-custom-blue-dark . placeholder-white px-4 py-3 w-full rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-purple-400"
+                className="bg-custom-blue-dark text-white placeholder-white px-4 py-3 w-full rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-purple-400"
               />
             </div>
 

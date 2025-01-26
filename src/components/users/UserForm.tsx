@@ -111,7 +111,6 @@ export const UserForm = ({ initialData, onSubmit, onCancel, selectedOrganization
           value={formData.roleId}
           onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
         className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
-          required
         >
           <option value="">Select Role</option>
           {roles?.map((role) => (
@@ -134,7 +133,6 @@ export const UserForm = ({ initialData, onSubmit, onCancel, selectedOrganization
             setFormData({ ...formData, areaId: e.target.value });
           }}
         className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
-          required
         >
           <option value="">Select Area</option>
           {areas?.map((area) => (
@@ -154,7 +152,6 @@ export const UserForm = ({ initialData, onSubmit, onCancel, selectedOrganization
           value={formData.depotId}
           onChange={(e) => setFormData({ ...formData, depotId: e.target.value })}
         className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
-          required
           disabled={!formData.areaId}
         >
           <option value="">Select Depot</option>

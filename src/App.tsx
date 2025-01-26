@@ -33,41 +33,43 @@ const queryClient = new QueryClient({
 
 function App() {
 
+  const user = useAuthStore((state) => state.user);
+    // Define role-based access mapping
+    const accessControl = {
+      organizations: ['organization_admin', 'master'],
+      areas: ['area_admin', 'organization_admin', 'master'],
+      depots: ['depot_admin', 'area_admin', 'organization_admin', 'master'],
+      users: ['organization_admin', 'master'],
+      roles: ['organization_admin', 'master'],
+    };
+  
+    const canAccess = (route) => {
+      return accessControl[route]?.includes(user?.userRole);
+    };
+
   return (
-    <QueryClientProvider client={queryClient}>
+  <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
-          {/* Redirect "/" to "/home" */}
           <Route path="/" element={<Navigate to="/home" replace />} />
 
           {/* Protected Routes */}
-          <Route
-            path="/home"
-            element={
-                <HomePage />
-            }
-          >
-            {/* Nested routes with relative paths */}
-            <Route index element={<Organizations />} />
-            <Route path="organizations" element={<Organizations />} />
-            <Route path="areas" element={<Areas />} />
-            <Route path="depots" element={<Depots />} />
-            <Route path="users" element={<Users />} />
+          <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>}>
+            {canAccess('organizations') && <Route path="organizations" element={<Organizations />} />}
+            {canAccess('areas') && <Route path="areas" element={<Areas />} />}
+            {canAccess('depots') && <Route path="depots" element={<Depots />} />}
+            {canAccess('users') && <Route path="users" element={<Users />} />}
+            {canAccess('roles') && <Route path="roles" element={<Roles />} />}
             <Route path="routes" element={<AppRoutes />} />
-            <Route path="create-route" element={<EntryPage />} />
+            <Route path="create-route" element={<CreateRoute />} />
             <Route path="settings" element={<Settings />} />
-            <Route path="roles" element={<Roles />} />
           </Route>
 
-          {/* Login Route */}
-
+          {/* Public Routes */}
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         </Routes>
       </Router>
-
       <ReactQueryDevtools initialIsOpen={false} />
-
-
     </QueryClientProvider>
   );
 }

@@ -5,7 +5,7 @@ const BASE_PATH = '/depots';
 
 export const depotService = {
   getAll: async (areaId: string): Promise<Depot[]> => {
-    const response = await axiosInstance.get(`${BASE_PATH}/getAllDepots/${areaId}`);
+    const response = await axiosInstance.get(`${BASE_PATH}/getAllActiveDepots/${areaId}`);
     return response.data['data'];
   },
 

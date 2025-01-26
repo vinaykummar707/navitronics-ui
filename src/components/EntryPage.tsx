@@ -291,7 +291,7 @@ const EntryPage = () => {
   };
 
   return (
-    <Container maxW={"8xl"} className="p-4 flex flex-col gap-4 overflow-y-auto">
+    <Container fluid className="p-4 flex flex-col gap-4 overflow-y-auto">
       <BusRoutes route={route} onRouteChange={handleRouteChange} />
       <RouteLanguageSettings
         languageOptions={languageOptions}

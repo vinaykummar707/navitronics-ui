@@ -7,12 +7,14 @@ import { Dialog } from '@headlessui/react';
 import { useOrganizationStore } from '../store/useOrganizationStore';
 import { Icon } from '@iconify-icon/react';
 import { Container } from '@chakra-ui/react';
+import useAuthStore from '@/store/authStore';
 
 const Areas = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingArea, setEditingArea] = useState<Area | null>(null);
   const { selectedOrganization } = useOrganizationStore();
   const queryClient = useQueryClient();
+  const user = useAuthStore((state) => state.user);
 
   const { data: areas, isLoading } = useQuery({
     queryKey: ['areas', selectedOrganization?.organizationId],
@@ -20,6 +22,9 @@ const Areas = () => {
       selectedOrganization ? areaService.getAll(selectedOrganization.organizationId) : Promise.resolve([]),
     enabled: !!selectedOrganization,
   });
+
+  const filteredAreas = user.area && user.userRole === 'area_admin' ? areas?.filter(area => area.areaId === user.area.areaId) : areas;
+
 
   const createMutation = useMutation({
     mutationFn: areaService.create,
@@ -54,20 +59,19 @@ const Areas = () => {
   }
 
   return (
-    <Container maxW={'8xl'} py={4}>
+    <Container fluid py={4}>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-xl font-">Areas</h1>
           {/* <p className="text-stone-600">
             Organization: {selectedOrganization.organizationName}
           </p> */}
         </div>
-        <button
+     {user.userRole === 'organization_admin' &&   <button
           onClick={() => setIsCreateModalOpen(true)}
           className="bg-indigo-600 text-white px-3 py-1.5 text-sm rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
           Create Area
-        </button>
+        </button>}
       </div>
 
       {isLoading ? (
@@ -97,8 +101,8 @@ const Areas = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-stone-200">
-              {areas && areas.length > 0 ? (
-                areas.map((area) => (
+              {filteredAreas && filteredAreas.length > 0 ? (
+                filteredAreas.map((area) => (
                   <tr key={area.areaId} className="hover:bg-stone-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-stone-900">{area.areaName}</div>

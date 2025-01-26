@@ -7,6 +7,8 @@ import { useOrganizationStore } from "../store/useOrganizationStore";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "@iconify-icon/react";
 import { Container, Group } from "@chakra-ui/react";
+import { AreaSelector } from "@/components/common/AreaSelector";
+import useAuthStore from "@/store/authStore";
 
 const Routes = () => {
   const [selectedAreaId, setSelectedAreaId] = useState<string>("");
@@ -14,6 +16,7 @@ const Routes = () => {
   const { selectedOrganization } = useOrganizationStore();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
 
   // Reset selections when organization changes
   useEffect(() => {
@@ -30,12 +33,15 @@ const Routes = () => {
         : Promise.resolve([]),
     enabled: !!selectedOrganization,
   });
+   const filteredAreas = user.area && (user.userRole === 'area_admin' || user.userRole === 'depot_admin') ? areas?.filter(area => area.areaId === user.area.areaId) : areas;
 
   const { data: depots } = useQuery({
     queryKey: ["depots", selectedAreaId],
     queryFn: () => depotService.getAll(selectedAreaId),
     enabled: !!selectedAreaId,
   });
+
+  const filteredDepots = user.depot && user.userRole === 'depot_admin' ? depots?.filter(depot => depot.depotId === user.depot.depotId) : depots;
 
   const { data: routes, isLoading } = useQuery({
     queryKey: ["routes", selectedDepotId],
@@ -62,7 +68,7 @@ const Routes = () => {
   }, [depots]);
 
   const deleteMutation = useMutation({
-    mutationFn: routeService.getAllWithConfig,
+    mutationFn: routeService.delete,
     onSuccess: (data) => {
       console.log(data);
     },
@@ -122,12 +128,50 @@ const Routes = () => {
     );
   }
 
+  const filteredRoutes = routes?.filter((route) => !route.deleted);
+
   return (
-    <Container maxW={"8xl"} className="py-4">
+    <Container fluid className="py-4">
       <div className="flex justify-between items-center mb-2">
+      <div className="flex gap-2 mb-4">
+      <div className="mb-4 flex flex-col items-start justify-start">
+        <label htmlFor="area" className="block text-sm font-medium text-stone-700">
+          Select Area
+        </label>
+        <select
+          id="area"
+          value={selectedAreaId}
+          onChange={(e) => setSelectedAreaId(e.target.value)}
+          className="border text-sm border-neutral-300 text-neutral-900 p-2 rounded-lg "
+        >
+          <option value="">Select Area</option>
+          {filteredAreas?.map((area) => (
+            <option key={area.areaId} value={area.areaId}>
+              {area.areaName}
+            </option>
+          ))}
+        </select>
+      </div>
+
         <div>
-          <h1 className="text-lg font-">Routes</h1>
+          <label htmlFor="depot" className="block text-sm font-medium text-stone-700">
+            Select Depot
+          </label>
+          <select
+            id="depot"
+            value={selectedDepotId}
+            onChange={(e) => setSelectedDepotId(e.target.value)}
+            className="border text-sm border-neutral-300 text-neutral-900 p-2 rounded-lg "
+          >
+            <option value="">Select Depot</option>
+            {filteredDepots?.map((depot) => (
+              <option key={depot.depotId} value={depot.depotId}>
+                {depot.depotName}
+              </option>
+            ))}
+          </select>
         </div>
+      </div>
 
         <Group>
           <button
@@ -156,48 +200,7 @@ const Routes = () => {
       </div>
 
       {/* Area and Depot Selection */}
-      <div className="flex gap-2 mb-4">
-        <div>
-          {/* <label htmlFor="area" className="block text-sm font-medium text-stone-700">
-            Select Area
-          </label> */}
-          <select
-            id="area"
-            value={selectedAreaId}
-            onChange={(e) => {
-              setSelectedAreaId(e.target.value);
-              setSelectedDepotId("");
-            }}
-            className="border text-sm border-neutral-300 text-neutral-900 p-2 rounded-lg "
-          >
-            <option value="">Select Area</option>
-            {areas?.map((area) => (
-              <option key={area.areaId} value={area.areaId}>
-                {area.areaName}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          {/* <label htmlFor="depot" className="block text-sm font-medium text-stone-700">
-            Select Depot
-          </label> */}
-          <select
-            id="depot"
-            value={selectedDepotId}
-            onChange={(e) => setSelectedDepotId(e.target.value)}
-            className="border text-sm border-neutral-300 text-neutral-900 p-2 rounded-lg "
-          >
-            <option value="">Select Depot</option>
-            {depots?.map((depot) => (
-              <option key={depot.depotId} value={depot.depotId}>
-                {depot.depotName}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      
 
       {/* Routes Display */}
       {selectedDepotId ? (
@@ -249,9 +252,9 @@ const Routes = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-stone-200">
-                {routes && routes.length > 0 ? (
-                  routes.map((route) => (
-                    <tr key={route.routeId} className="hover:bg-stone-50">
+                {filteredRoutes && filteredRoutes.length > 0 ? (
+                  filteredRoutes.map((route) => (
+                    <tr key={route?.id} className="hover:bg-stone-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-stone-900">
                           {route.routeNumber}
@@ -297,7 +300,7 @@ const Routes = () => {
                         </button>
                         <button
                           onClick={() =>
-                            navigate(`/edit-route/${route.routeId}`)
+                            navigate(`/edit-route/${route.id}`)
                           }
                           className="text-indigo-600 hover:text-indigo-900 mr-4"
                         >
@@ -313,7 +316,7 @@ const Routes = () => {
                                 "Are you sure you want to delete this route?"
                               )
                             ) {
-                              deleteMutation.mutate(route.routeId);
+                              deleteMutation.mutate(route.id);
                             }
                           }}
                           className="text-red-600 hover:text-red-900"

@@ -14,21 +14,12 @@ export const DepotForm = ({ initialData, selectedAreaId, selectedOrganizationId,
     depotName: initialData?.depotName || '',
     areaId: selectedAreaId,
     organizationId: selectedOrganizationId,
-    active: initialData?.active || true,
-    deleted: initialData?.deleted || false,
+    
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
-  };
-
-  const handleActiveChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, active: e.target.checked });
-  };
-
-  const handleDeletedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, deleted: e.target.checked });
   };
 
   return (
@@ -42,32 +33,12 @@ export const DepotForm = ({ initialData, selectedAreaId, selectedOrganizationId,
           id="depotName"
           value={formData.depotName}
           onChange={(e) => setFormData({ ...formData, depotName: e.target.value })}
-          className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
+         className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
           required
         />
       </div>
 
-      <div className="flex space-x-3">
-        <label className="block text-sm font-medium text-stone-700" htmlFor="active">Active</label>
-        <input
-          type="checkbox"
-          id="active"
-          checked={formData.active}
-          onChange={handleActiveChange}
-          className="text-indigo-600"
-        />
-      </div>
-
-      <div className="flex space-x-3">
-        <label className="block text-sm font-medium text-stone-700" htmlFor="deleted">Deleted</label>
-        <input
-          type="checkbox"
-          id="deleted"
-          checked={formData.deleted}
-          onChange={handleDeletedChange}
-          className="text-indigo-600"
-        />
-      </div>
+     
 
       <div className="flex justify-end space-x-3">
         <button

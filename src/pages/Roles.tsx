@@ -53,7 +53,7 @@ const Roles = () => {
   }
 
   return (
-    <Container maxW={'8xl'} className="py-4">
+    <Container fluid className="py-4">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-lg font-=">Roles</h1>
@@ -114,7 +114,7 @@ const Roles = () => {
                       <button
                         onClick={() => {
                           if (confirm('Are you sure you want to delete this role?')) {
-                            deleteMutation.mutate(role.roleId);
+                            deleteMutation.mutate(role.id);
                           }
                         }}
                         className="text-red-600 hover:text-red-900"

@@ -1,19 +1,18 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { OrganizationSelector } from './common/OrganizationSelector';
 import { Container } from '@chakra-ui/react';
 import useAuthStore from '@/store/authStore';
 
-const Navbar = () => {
+const NavbarTwo = () => {
 
   const location = useLocation();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
-  const navigate = useNavigate()
 
   const accessControl = {
     organizations: ['organization_admin', 'master'],
     users: ['organization_admin', 'master'],
-    roles: ['organization_admin', 'master'],
+    roles: [ 'master'],
     areas: ['area_admin', 'organization_admin', 'master'],
     depots: ['depot_admin', 'area_admin', 'organization_admin', 'master'],
   };
@@ -23,14 +22,11 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white  border-b  ">
+    <nav className="bg-white  border-b  py-3">
 
       <Container fluid className='flex  justify-between items-center'>
-        <Link to="/" className="text-xl gap-2 items-center flex font-bold">
-          <img className='size-16' src="/src/assets/Navitronix.png" alt="" srcSet="" />
-          Navitronix
-        </Link>
-        {/* <div className="flex items-center space-x-6">
+   
+        <div className="flex items-center space-x-6">
 
           <div className="flex items-center gap-8">
             {canAccess('organizations') && (
@@ -64,26 +60,24 @@ const Navbar = () => {
 
             {/* <Link to="/settings" className="text-sm text-neutral-1000 hover:text-neutral-700">
                 Settings
-              </Link> 
+              </Link> */}
           </div>
-        </div> */}
+        </div>
 
         <div className="flex items-center space-x-2">
-          {/* <OrganizationSelector /> */}
-          <button
+          <OrganizationSelector />
+          {/* <button
+            onClick={logout}
             className="border-neutral-200 bg-neutral-100 border rounded-md flex flex-col px-3 py-2 text-sm "
           >
             <span>{user.userName} - {user.userRole}</span>
-          </button>
-          <button
-            onClick={() => {
-              logout();
-              navigate('/login')
-            }}
+          </button> */}
+          {/* <button
+            onClick={logout}
             className="bg-red-600 text-white px-3 py-1.5 text-sm rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           >
             Logout
-          </button>
+          </button> */}
         </div>
       </Container>
 
@@ -92,4 +86,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default NavbarTwo;

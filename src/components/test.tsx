@@ -72,10 +72,10 @@ const Bus = memo(
     };
     const BusBoardConfigurator = () => {
       const [config, setConfig] = useState({
-        front: defaultConfig("SingleLineBoard"),
-        side: defaultConfig("SingleLineBoard"),
-        rear: defaultConfig("SingleLineBoard"),
-        internal: defaultConfig("SingleLineBoard"),
+        front: defaultConfig("ThreeTextsBoard"),
+        side: defaultConfig("ThreeTextsBoard"),
+        rear: defaultConfig("ThreeTextsBoard"),
+        internal: defaultConfig("ThreeTextsBoard"),
       });
 
       // const [selectedLanguage, setSelectedLanguage] = useState();

@@ -8,6 +8,8 @@ import { DepotForm } from '../components/depots/DepotForm';
 import { Depot } from '../types/depot';
 import { Icon } from '@iconify-icon/react';
 import { Container } from '@chakra-ui/react';
+import useAuthStore from '@/store/authStore';
+import { AreaSelector } from '@/components/common/AreaSelector';
 
 const Depots = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -15,7 +17,7 @@ const Depots = () => {
   const [selectedAreaId, setSelectedAreaId] = useState<string>('');
   const { selectedOrganization } = useOrganizationStore();
   const queryClient = useQueryClient();
-
+  const user = useAuthStore((state) => state.user);
   // Reset area selection when organization changes
   useEffect(() => {
     setSelectedAreaId('');
@@ -29,6 +31,9 @@ const Depots = () => {
     enabled: !!selectedOrganization,
   });
 
+
+  const filteredAreas = user.area && (user.userRole === 'area_admin' || user.userRole === 'depot_admin') ? areas?.filter(area => area.areaId === user.area.areaId) : areas;
+
   // Auto-select first area when areas are loaded
   useEffect(() => {
     if (areas && areas.length > 0 && !selectedAreaId) {
@@ -41,6 +46,8 @@ const Depots = () => {
     queryFn: () => depotService.getAll(selectedAreaId),
     enabled: !!selectedOrganization && !!selectedAreaId,
   });
+
+  const filteredDepots = user.depot && user.userRole === 'depot_admin' ? depots?.filter(depot => depot.depotId === user.depot.depotId) : depots;
 
   // Mutations
   const createMutation = useMutation({
@@ -75,28 +82,12 @@ const Depots = () => {
   }
 
   return (
-    <Container display={'flex'} flexDirection={'column'} alignItems={'start'} maxW={'8xl'} py={4}>
+    <Container display={'flex'} flexDirection={'column'} alignItems={'start'} fluid py={4}>
       <div className="flex justify-between items-center mb-2 w-full">
-        <div>
-          <h1 className="text-lg font-">Depots</h1>
-          
-        </div>
-        <button
-          onClick={() => setIsCreateModalOpen(true)}
-          disabled={!selectedAreaId}
-          className={`bg-indigo-600 text-white text-sm px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-            !selectedAreaId ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
-        >
-          Create Depot
-        </button>
-      </div>
-
-      {/* Area Selection */}
       <div className="mb-4 flex flex-col items-start justify-start">
-        {/* <label htmlFor="area" className="block text-sm font-medium text-stone-700">
+        <label htmlFor="area" className="block text-sm font-medium text-stone-700">
           Select Area
-        </label> */}
+        </label>
         <select
           id="area"
           value={selectedAreaId}
@@ -104,13 +95,26 @@ const Depots = () => {
           className="border text-sm border-neutral-300 text-neutral-900 p-2 rounded-lg "
         >
           <option value="">Select Area</option>
-          {areas?.map((area) => (
+          {filteredAreas?.map((area) => (
             <option key={area.areaId} value={area.areaId}>
               {area.areaName}
             </option>
           ))}
         </select>
       </div>
+        {(user.userRole === 'organization_admin' || user.userRole === 'area_admin' || user.userRole === 'master') && <button
+          onClick={() => setIsCreateModalOpen(true)}
+          disabled={!selectedAreaId}
+          className={`bg-indigo-600 text-white text-sm px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+            !selectedAreaId ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
+          Create Depot
+        </button>}
+      </div>
+
+      {/* Area Selection */}
+     
 
       {/* Depots Display */}
       {selectedAreaId ? (
@@ -136,8 +140,8 @@ const Depots = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-stone-200">
-                {depots && depots.length > 0 ? (
-                  depots.map((depot) => (
+                {filteredDepots && filteredDepots.length > 0 ? (
+                  filteredDepots.map((depot) => (
                     <tr key={depot.depotId} className="hover:bg-stone-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-stone-900">{depot.depotName}</div>
