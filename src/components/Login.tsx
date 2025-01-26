@@ -67,19 +67,19 @@ function Login() {
     <div
       className="relative min-h-screen w-full flex items-center justify-center"
       style={{
-        backgroundImage: `url(src/assets/BackGround.png)`, 
+        backgroundImage: `url(/assets/BackGround.png)`, 
         backgroundSize: 'cover',  
         backgroundPosition: 'center', 
       }}
     >
       <div className="absolute top-10 left-10">
-        <img src='src/assets/Navitronix.png' alt="Logo" className="h-36" />
+        <img src='/assets/Navitronix.png' alt="Logo" className="h-36" />
       </div>
 
       <div className="flex items-center justify-between w-full max-w-7xl">
         <div className="w-1/2">
           <img
-            src='src/assets/BusImage.png'
+            src='/assets/BusImage.png'
             alt="Our Vision"
             className="h-full w-full object-cover "
           />
