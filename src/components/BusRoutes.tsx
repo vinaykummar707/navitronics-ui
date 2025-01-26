@@ -4,7 +4,7 @@ import { getDepos } from "../services/api";
 const BusRoutes = ({ route, onRouteChange }) => {
   return (
     <div className="">
-      <div className="flex flex-col gap-4 p-6 bg-white w-full items-start rounded-lg border">
+      <div className="flex flex-col gap-4 p-6 bg-white w-full items-start rounded-lg border border-neutral-300">
         <h1 className="text-lg font-bold">Create Route</h1>
         <div className="flex flex-row-reverse gap-1">
           <label className="text-sm text-neutral-500" htmlFor="">

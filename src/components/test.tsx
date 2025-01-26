@@ -13,9 +13,9 @@ const Bus = memo(
     onBoardLanugageChange,
   }) => {
     const boardFormatTypes = [
-      "Fullscreen",
-      "sideWithSingleText",
-      "sideWithTwoTexts",
+      "SingleLineBoard",
+      "TwoTextsBoard",
+      "ThreeTextsBoard",
     ];
 
     useEffect(() => {
@@ -24,28 +24,36 @@ const Bus = memo(
 
     const defaultConfig = (boardFormatType) => {
       switch (boardFormatType) {
-        case "Fullscreen":
+        case "SingleLineBoard":
           return {
-            boardFormatType: "Fullscreen",
-            text: `${route.source} ${route.separation} ${route.destination}`,
+            boardFormatType: "SingleLineBoard",
+            text: `${
+              route.splitRoute
+                ? route.routeNumberUpperHalf + route.routeNumberLowerHalf
+                : route.routeNumber
+            } | ${route.source} ${route.separation} ${route.destination} | ${
+              route.via
+            }`,
             scrollType: "Fixed",
             scrollSpeed: 0,
             position: "Center",
           };
-        case "sideWithSingleText":
+        case "TwoTextsBoard":
           return {
-            boardFormatType: "sideWithSingleText",
-            sideText: route.routeNumber,
-            text: `${route.source} ${route.separation} ${route.destination} ${route.via}`,
+            boardFormatType: "TwoTextsBoard",
+            sideText: route.splitRoute
+              ? route.routeNumberUpperHalf + route.routeNumberLowerHalf
+              : route.routeNumber,
+            text: `${route.source} ${route.separation} ${route.destination} | ${route.via}`,
             scrollType: "Fixed",
             scrollSpeed: 0,
             position: "Center",
             routeUpperHalfText: route.routeNumberUpperHalf,
             routeLowerHalfText: route.routeNumberLowerHalf,
           };
-        case "sideWithTwoTexts":
+        case "ThreeTextsBoard":
           return {
-            boardFormatType: "sideWithTwoTexts",
+            boardFormatType: "ThreeTextsBoard",
             sideText: route.routeNumber,
             upperHalfText: `${route.source} ${route.separation} ${route.destination}`,
             upperHalfScrollType: "Fixed",
@@ -64,10 +72,10 @@ const Bus = memo(
     };
     const BusBoardConfigurator = () => {
       const [config, setConfig] = useState({
-        front: defaultConfig("sideWithTwoTexts"),
-        side: defaultConfig("sideWithTwoTexts"),
-        rear: defaultConfig("sideWithTwoTexts"),
-        internal: defaultConfig("sideWithTwoTexts"),
+        front: defaultConfig("SingleLineBoard"),
+        side: defaultConfig("SingleLineBoard"),
+        rear: defaultConfig("SingleLineBoard"),
+        internal: defaultConfig("SingleLineBoard"),
       });
 
       // const [selectedLanguage, setSelectedLanguage] = useState();
@@ -127,31 +135,31 @@ const Bus = memo(
           <div className="grid grid-cols-2  gap-x-4 w-full gap-y-4">
             {Object.keys(config).map((side) => (
               <div
-                className="flex flex-col w-full border shadow-sm p-6  rounded-lg  gap-2"
+                className="flex flex-col w-full border shadow-sm p-4  rounded-lg  gap-2"
                 key={side}
               >
                 <h3 className="text-sm font-bold">
                   {side.toUpperCase()} DISPLAY
                 </h3>
                 <div className="flex flex-col gap-2">
-                <label className="text-sm text-neutral-500" htmlFor="">
-                 Select Board Type
-                </label>
-                <select
-                  value={config[side].boardFormatType}
-                  onChange={(e) =>
-                    handleChange(side, "boardFormatType", e.target.value)
-                  }
-                  className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg"
-                >
-                  {boardFormatTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-                
+                  <label className="text-sm text-neutral-500" htmlFor="">
+                    Select Board Type
+                  </label>
+                  <select
+                    value={config[side].boardFormatType}
+                    onChange={(e) =>
+                      handleChange(side, "boardFormatType", e.target.value)
+                    }
+                    className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg"
+                  >
+                    {boardFormatTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <DisplayForm
                   config={config[side]}
                   onConfigChange={(key, value) =>
@@ -191,11 +199,11 @@ const Bus = memo(
         onConfigChange(key, value);
       };
 
-      if (boardFormatType === "Fullscreen") {
+      if (boardFormatType === "SingleLineBoard") {
         return (
           <div className="flex flex-col gap-2">
             <div className="grid grid-cols-2 gap-4">
-             <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1">
                 <label className="text-sm text-neutral-500" htmlFor="">
                   Text
                 </label>
@@ -206,7 +214,7 @@ const Bus = memo(
                   onChange={(e) => updateConfig("text", e.target.value)}
                   className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg"
                 />
-              </div> 
+              </div>
 
               <div className="flex flex-col gap-1">
                 <label className="text-sm text-neutral-500" htmlFor="">
@@ -256,7 +264,7 @@ const Bus = memo(
             </div>
           </div>
         );
-      } else if (boardFormatType === "sideWithSingleText") {
+      } else if (boardFormatType === "TwoTextsBoard") {
         return (
           <div className="grid grid-cols-2 gap-4">
             {!route.splitRoute && (
@@ -273,8 +281,8 @@ const Bus = memo(
                   className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg"
                 />
               </div>
-            )} 
-             {route.splitRoute && (
+            )}
+            {route.splitRoute && (
               <>
                 <div className="flex flex-col gap-1">
                   <label className="text-sm text-neutral-500" htmlFor="">
@@ -316,7 +324,7 @@ const Bus = memo(
                 onChange={(e) => updateConfig("text", e.target.value)}
                 className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg"
               />
-            </div> 
+            </div>
 
             <div className="flex flex-col gap-1">
               <label className="text-sm text-neutral-500" htmlFor="">
@@ -365,10 +373,10 @@ const Bus = memo(
             </div>
           </div>
         );
-      } else if (boardFormatType === "sideWithTwoTexts") {
+      } else if (boardFormatType === "ThreeTextsBoard") {
         return (
           <div className="flex flex-col gap-2">
-             {!route.splitRoute && (
+            {!route.splitRoute && (
               <div className="flex flex-col gap-1">
                 <label className="text-sm text-neutral-500" htmlFor="">
                   Side Text
@@ -413,13 +421,10 @@ const Bus = memo(
                   />
                 </div>
               </>
-            )} 
+            )}
 
             <h1 className="text-sm  my-2 font-bold">Upper Half Settings </h1>
             <div className="grid grid-cols-2 p- gap-4">
-
-              
-              
               <div className="flex flex-col gap-1">
                 <label className="text-sm text-neutral-500" htmlFor="">
                   Upper Half Text
@@ -487,7 +492,6 @@ const Bus = memo(
             </div>
 
             <h1 className="text-sm  my-2 font-bold">Lower Half Settings </h1>
-
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">

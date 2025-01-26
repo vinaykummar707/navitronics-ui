@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import BusRoutes from "./BusRoutes";
-import RouteDisplaySettings from "./RouteDisplaySettings";
 import RouteLanguageSettings from "./RouteLanguageSettings";
 import axios from "axios";
 import Bus from "./test";
@@ -61,6 +60,17 @@ const EntryPage = ({ areaId, depotId }) => {
     languageConfig[0].language
   );
 
+/*************  ✨ Codeium Command ⭐  *************/
+/**
+ * Updates the language configuration state based on the given index and field.
+ *
+ * @param {number} index - The index of the language configuration to update.
+ * @param {string} field - The field to update in the language configuration (e.g., "language", "fontSize").
+ * @param {string | number} value - The new value to set for the specified field. If the field is "fontSize",
+ * it is converted to a number.
+ */
+
+/******  e2b51850-2820-4018-bdf2-fe9b190747f2  *******/
   const handleLanguageConfigChange = (index, field, value) => {
     if (field === "fontSize") {
       setLanguageConfig((prev) => {
@@ -260,7 +270,7 @@ const EntryPage = ({ areaId, depotId }) => {
     URL.revokeObjectURL(url);
 
     // Also log to console for reference
-    console.log("Configuration Saved:", configData);
+    // console.log("Configuration Saved:", configData);
   };
   const handleUpdateDisplaySettings = useCallback(
     (newConfig) => setDisplayConfig(newConfig),
@@ -279,7 +289,7 @@ const EntryPage = ({ areaId, depotId }) => {
   };
 
   return (
-    <Container maxW={"6xl"} className="p-4 flex flex-col gap-4 overflow-scroll">
+    <Container maxW={"6xl"} className="p-4 flex flex-col gap-4 overflow-y-auto">
       <BusRoutes route={route} onRouteChange={handleRouteChange} />
       <RouteLanguageSettings
         languageOptions={languageOptions}

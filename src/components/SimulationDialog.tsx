@@ -16,10 +16,10 @@ const SimulationDialog = ({
 
   return (
     <Dialog.Root  open={showSimulation}>
-      <Dialog.Portal>
+      <Dialog.Portal >
         <Dialog.Overlay className="fixed inset-0 overflow-hidden  bg-neutral-900 opacity-85 data-[state=open]:animate-overlayShow" />
-        <Dialog.Content className="fixed overflow-scroll left-1/2 top-1/2 h-[600px]   flex flex-col gap-4 items-center  -translate-x-1/2 -translate-y-1/2 rounded-md bg-white p-[25px] shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,_hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] focus:outline-none data-[state=open]:animate-contentShow">
-          <div className="flex flex-row-reverse items-center w-full justify-between">
+        <Dialog.Content className="fixed overflow-scroll left-1/2 top-1/2 h-[600px] w-[95%] flex flex-col gap-4 items-center  -translate-x-1/2 -translate-y-1/2 rounded-md bg-white p-[25px] shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,_hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] focus:outline-none data-[state=open]:animate-contentShow">
+          <div className="flex flex-row-reverse  w-full justify-between">
             <Group>
               <button
                 onClick={closeSimulation}
@@ -54,21 +54,21 @@ const SimulationDialog = ({
               </select>
             </div>
           </div>
-          <div className="grid grid-col-2">
+          <div className="grid grid-col-1 w-full">
             {Object.keys(displayConfig[selectedLanguage]).map((side) => {
               return (
                 <div key={side}>
-                  <h2>{side}</h2>
+                  <h2 className="text-sm uppercase">{side} Boaed</h2>
 
                   {displayConfig[selectedLanguage][side].boardFormatType ===
-                    "Fullscreen" && (
+                    "SingleLineBoard" && (
                     <FullScreenBoard
                       formData={displayConfig[selectedLanguage][side]}
                     />
                   )}
 
                   {displayConfig[selectedLanguage][side].boardFormatType ===
-                    "sideWithSingleText" && (
+                    "TwoTextsBoard" && (
                     <SideWithSingleTextBoard
                       route={route}
                       formData={displayConfig[selectedLanguage][side]}
@@ -76,7 +76,7 @@ const SimulationDialog = ({
                   )}
 
                   {displayConfig[selectedLanguage][side].boardFormatType ===
-                    "sideWithTwoTexts" && (
+                    "ThreeTextsBoard" && (
                     <SideWithTwoTextsBoard
                       route={route}
                       formData={displayConfig[selectedLanguage][side]}
