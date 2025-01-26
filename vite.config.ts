@@ -6,12 +6,6 @@ import tsConfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   build: {
     chunkSizeWarningLimit: 2000,
-    assetsInlineLimit: 0, // Prevent inlining of images
-    rollupOptions: {
-      output: {
-        assetFileNames: 'assets/BackGr', // Organize assets in the dist folder
-      },
-    },
   },
   server: {
     port: 3090,

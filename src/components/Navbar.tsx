@@ -27,7 +27,7 @@ const Navbar = () => {
 
       <Container fluid className='flex  justify-between items-center'>
         <Link to="/" className="text-xl gap-2 items-center flex font-bold">
-          <img className='size-16' src="/src/assets/Navitronix.png" alt="" srcSet="" />
+          <img className='size-16' src="/assets/Navitronix.png" alt="" srcSet="" />
           Navitronix
         </Link>
         {/* <div className="flex items-center space-x-6">
