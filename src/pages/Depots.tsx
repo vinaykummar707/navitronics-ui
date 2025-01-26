@@ -75,7 +75,7 @@ const Depots = () => {
   }
 
   return (
-    <Container display={'flex'} flexDirection={'column'} alignItems={'start'} maxW={'6xl'} py={4}>
+    <Container display={'flex'} flexDirection={'column'} alignItems={'start'} maxW={'8xl'} py={4}>
       <div className="flex justify-between items-center mb-2 w-full">
         <div>
           <h1 className="text-lg font-">Depots</h1>
@@ -221,7 +221,7 @@ const Depots = () => {
                 initialData={editingDepot}
                 selectedAreaId={selectedAreaId}
                 selectedOrganizationId={selectedOrganization.organizationId}
-                onSubmit={(data) => updateMutation.mutate(data)}
+                onSubmit={(data) => updateMutation.mutate({ ...data, depotId: editingDepot.depotId })}
                 onCancel={() => setEditingDepot(null)}
               />
             )}

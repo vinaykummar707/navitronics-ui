@@ -24,4 +24,10 @@ export const routeService = {
     );
     return response.data["data"];
   },
+  getRouteWithRouteId: async (routeId: string): Promise<any> => {
+    const response = await axiosInstance.get(
+      `${BASE_PATH}/getRoutesDisplayConfig/${routeId}`
+    );
+    return response.data["data"];
+  },
 };

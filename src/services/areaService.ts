@@ -15,7 +15,7 @@ export const areaService = {
   },
 
   update: async (data: UpdateAreaDto, areaId: string): Promise<Area> => {
-    const response = await axiosInstance.patch(`${BASE_PATH}/updateArea/${areaId}`, data);
+    const response = await axiosInstance.patch(`${BASE_PATH}/update/${areaId}`, data);
     return response.data;
   },
 

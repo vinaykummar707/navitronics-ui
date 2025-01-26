@@ -53,7 +53,7 @@ const Roles = () => {
   }
 
   return (
-    <Container maxW={'6xl'} className="py-4">
+    <Container maxW={'8xl'} className="py-4">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-lg font-=">Roles</h1>

@@ -58,7 +58,7 @@ const SimulationDialog = ({
             {Object.keys(displayConfig[selectedLanguage]).map((side) => {
               return (
                 <div key={side}>
-                  <h2 className="text-sm uppercase">{side} Boaed</h2>
+                  <h2 className="text-sm uppercase">{side} Board</h2>
 
                   {displayConfig[selectedLanguage][side].boardFormatType ===
                     "SingleLineBoard" && (

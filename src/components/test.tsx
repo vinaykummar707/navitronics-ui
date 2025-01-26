@@ -31,7 +31,7 @@ const Bus = memo(
               route.splitRoute
                 ? route.routeNumberUpperHalf + route.routeNumberLowerHalf
                 : route.routeNumber
-            } | ${route.source} ${route.separation} ${route.destination} | ${
+            } / ${route.source} ${route.separation} ${route.destination} / ${
               route.via
             }`,
             scrollType: "Fixed",
@@ -44,7 +44,7 @@ const Bus = memo(
             sideText: route.splitRoute
               ? route.routeNumberUpperHalf + route.routeNumberLowerHalf
               : route.routeNumber,
-            text: `${route.source} ${route.separation} ${route.destination} | ${route.via}`,
+            text: `${route.source} ${route.separation} ${route.destination} / ${route.via}`,
             scrollType: "Fixed",
             scrollSpeed: 0,
             position: "Center",

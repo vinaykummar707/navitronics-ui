@@ -105,6 +105,13 @@ const Routes = () => {
     },
   });
 
+  const getRouteDetaildWithIdMutation = useMutation({
+    mutationFn: routeService.getRouteWithRouteId,
+    onSuccess: (data) => {
+      console.log(data);
+    },
+  });
+
   if (!selectedOrganization) {
     return (
       <div className="container mx-auto p-4">
@@ -116,7 +123,7 @@ const Routes = () => {
   }
 
   return (
-    <Container maxW={"6xl"} className="py-4">
+    <Container maxW={"8xl"} className="py-4">
       <div className="flex justify-between items-center mb-2">
         <div>
           <h1 className="text-lg font-">Routes</h1>
@@ -125,7 +132,7 @@ const Routes = () => {
         <Group>
           <button
             onClick={() =>
-              navigate("/create-route", {
+              navigate("/home/create-route", {
                 state: { areaId: selectedAreaId, depotId: selectedDepotId },
               })
             }
@@ -277,6 +284,17 @@ const Routes = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => {
+                          getRouteDetaildWithIdMutation.mutate(route.id);
+                        }}
+                          className="text-indigo-600 hover:text-indigo-900 mr-4"
+                        >
+                          <Icon
+                            icon="solar:eye-bold"
+                            className="inline-block"
+                          />
+                        </button>
                         <button
                           onClick={() =>
                             navigate(`/edit-route/${route.routeId}`)

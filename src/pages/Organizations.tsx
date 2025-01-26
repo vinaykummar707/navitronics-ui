@@ -51,9 +51,9 @@ const Organizations = () => {
   });
 
   return (
-    <Container maxW={'6xl'} py={4}>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-lg font-">Organizations</h1>
+    <Container maxW={'8xl'} py={4}>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-lg font-semibold">Organizations</h1>
         <button
           onClick={() => setIsCreateModalOpen(true)}
           className="bg-indigo-600 text-sm text-white flex items-center px-3 text-sm py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"

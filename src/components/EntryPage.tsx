@@ -4,12 +4,14 @@ import RouteLanguageSettings from "./RouteLanguageSettings";
 import axios from "axios";
 import Bus from "./test";
 import SimulationDialog from "./SimulationDialog";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { routeService } from "@/services/routeService";
 import { Container } from "@chakra-ui/react";
 
-const EntryPage = ({ areaId, depotId }) => {
+const EntryPage = () => {
+  const location = useLocation();
+  const { areaId, depotId } = location.state || {};
   const [route, setRoute] = useState({
     routeNumber: "300",
     source: "UPPAL",
@@ -167,7 +169,7 @@ const EntryPage = ({ areaId, depotId }) => {
     mutationFn: routeService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["routes"] });
-      navigate("/routes");
+      navigate("/home/routes");
     },
     onError: (error) => {
       console.error("Error creating route:", error);
@@ -289,7 +291,7 @@ const EntryPage = ({ areaId, depotId }) => {
   };
 
   return (
-    <Container maxW={"6xl"} className="p-4 flex flex-col gap-4 overflow-y-auto">
+    <Container maxW={"8xl"} className="p-4 flex flex-col gap-4 overflow-y-auto">
       <BusRoutes route={route} onRouteChange={handleRouteChange} />
       <RouteLanguageSettings
         languageOptions={languageOptions}

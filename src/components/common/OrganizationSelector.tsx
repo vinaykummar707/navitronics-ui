@@ -13,6 +13,7 @@ export const OrganizationSelector = () => {
   return (
     <div className="">
       <select
+    
         value={selectedOrganization?.organizationId || ''}
         onChange={(e) => {
           const selected = organizations?.find(

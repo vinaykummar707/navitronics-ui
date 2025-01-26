@@ -98,7 +98,7 @@
 
 .led-display {
   font-family: "Bus Stop", monospace;
-  font-size: 30px;
+  font-size: 40px;
   color: #ffa500;
   text-shadow: 0 0 10px rgba(255, 165, 0, 0.8), 0 0 20px rgba(255, 165, 0, 0.4);
   letter-spacing: 4px;
@@ -129,7 +129,7 @@
 .marquee span {
   display: inline-block;
   font-family: "Bus Stop", monospace;
-  font-size: 30px;
+  font-size: 40px;
   text-transform: uppercase;
   color: #ffa500;
   text-shadow: 0 0 10px rgba(255, 165, 0, 0.8), 0 0 20px rgba(255, 165, 0, 0.4);
@@ -143,7 +143,7 @@
 .flicker span {
   display: inline-block;
   font-family: "Bus Stop", monospace;
-  font-size: 30px;
+  font-size: 40px;
   text-transform: uppercase;
   color: #ffa500;
   text-shadow: 0 0 10px rgba(255, 165, 0, 0.8), 0 0 20px rgba(255, 165, 0, 0.4);
@@ -157,7 +157,7 @@
 .marquee-left span {
   display: inline-block;
   font-family: "Bus Stop", monospace;
-  font-size: 30px;
+  font-size: 40px;
   text-transform: uppercase;
   color: #ffa500;
   text-shadow: 0 0 10px rgba(255, 165, 0, 0.8), 0 0 20px rgba(255, 165, 0, 0.4);

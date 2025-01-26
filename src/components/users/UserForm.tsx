@@ -115,7 +115,7 @@ export const UserForm = ({ initialData, onSubmit, onCancel, selectedOrganization
         >
           <option value="">Select Role</option>
           {roles?.map((role) => (
-            <option key={role.roleId} value={role.roleId}>
+            <option key={role.roleId} value={role.id}>
               {role.roleName}
             </option>
           ))}

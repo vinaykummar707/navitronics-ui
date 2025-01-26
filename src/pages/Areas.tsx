@@ -54,7 +54,7 @@ const Areas = () => {
   }
 
   return (
-    <Container maxW={'6xl'} py={4}>
+    <Container maxW={'8xl'} py={4}>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-xl font-">Areas</h1>
