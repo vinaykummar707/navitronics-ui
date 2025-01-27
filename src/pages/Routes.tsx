@@ -201,7 +201,7 @@ const Routes = () => {
         </div>
 
         <Group>
-          <button
+         {user.userRole !== 'read_only' && <button
             onClick={() =>
               navigate("/home/create-route", {
                 state: { areaId: selectedAreaId, depotId: selectedDepotId },
@@ -212,7 +212,7 @@ const Routes = () => {
               }`}
           >
             Create Route
-          </button>
+          </button>}
           <button
             onClick={() => getAllWithConfigMutation.mutate(selectedDepotId)}
             disabled={!selectedDepotId}

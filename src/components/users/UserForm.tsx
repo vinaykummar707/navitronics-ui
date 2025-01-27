@@ -126,7 +126,7 @@ export const UserForm = ({ initialData, onSubmit, onCancel, selectedOrganization
         </select>
       </div>
 
-     {findRoleNamebyId(formData.roleId) === 'area_admin' &&  <div>
+     {(findRoleNamebyId(formData.roleId) === 'area_admin' || findRoleNamebyId(formData.roleId) === 'depot_admin') &&  <div>
         <label htmlFor="areaId" className="block text-sm font-medium text-stone-700">
           Area
         </label>
