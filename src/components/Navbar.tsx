@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { OrganizationSelector } from './common/OrganizationSelector';
 import { Container } from '@chakra-ui/react';
 import useAuthStore from '@/store/authStore';
+import { Icon } from '@iconify-icon/react/dist/iconify.mjs';
 
 const Navbar = () => {
 
@@ -70,11 +71,13 @@ const Navbar = () => {
 
         <div className="flex items-center space-x-2">
           {/* <OrganizationSelector /> */}
-          <button
-            className="border-neutral-200 bg-neutral-100 border rounded-md flex flex-col px-3 py-2 text-sm "
+          <div
+            className="border-neutral-200 gap-2  border rounded-md flex items-center px-3 py-1.5  text-sm "
           >
-            <span>{user.userName} - {user.userRole}</span>
-          </button>
+            <Icon height={16} width={16} icon="solar:user-bold" />
+            <span className='text-xs text-neutral-400 uppercase'>{user.userName} </span> /
+            <span className='text-xs text-neutral-400 uppercase'>{user.userRole} Role </span>
+          </div>
           <button
             onClick={() => {
               logout();

@@ -2,8 +2,8 @@ export interface Area {
   areaId?: string;
   areaName: string;
   organizationId: string;
-  active: boolean;
-  deleted: boolean;
+  active?: boolean;
+  deleted?: boolean;
   createdAt?: string;
   createdBy?: string;
 }
@@ -14,7 +14,6 @@ export interface CreateAreaDto {
 }
 
 export interface UpdateAreaDto {
-  areaId: string;
   areaName: string;
   organizationId: string;
   active?: boolean;

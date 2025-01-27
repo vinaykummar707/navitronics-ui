@@ -19,8 +19,8 @@ const EntryPage = () => {
     separation: "TO",
     via: "VIA: ARAMGHAR,LB NAGAR,VANASTHALIPURAM",
     splitRoute: false,
-    routeNumberUpperHalf: "300",
-    routeNumberLowerHalf: "2A",
+    routeNumberUpperHalf: "",
+    routeNumberLowerHalf: "",
   });
 
   const handleRouteChange = (e) => {
@@ -314,6 +314,7 @@ const EntryPage = () => {
           displayConfig={finalObj["displayConfig"]}
           closeSimulation={() => setShowSimulation(false)}
           saveToDatabase={handleSaveToDatabase}
+          showSaveButton={true}
         />
       )}
       <div className="grid grid-cols-6 gap-x-4">

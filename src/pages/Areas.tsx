@@ -194,8 +194,9 @@ const Areas = () => {
                   updateMutation.mutate({
                     data: {
                       ...data,
-                      areaId: editingArea.areaId!,
                       organizationId: selectedOrganization.organizationId,
+                      active:editingArea.active,
+                      deleted:editingArea.deleted
                     },
                     areaId: editingArea.areaId!,
                   })

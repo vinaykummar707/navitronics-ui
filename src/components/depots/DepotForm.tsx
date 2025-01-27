@@ -14,6 +14,8 @@ export const DepotForm = ({ initialData, selectedAreaId, selectedOrganizationId,
     depotName: initialData?.depotName || '',
     areaId: selectedAreaId,
     organizationId: selectedOrganizationId,
+    active: initialData?.active,
+    deleted: initialData?.deleted
     
   });
 

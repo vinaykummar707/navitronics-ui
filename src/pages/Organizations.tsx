@@ -119,7 +119,7 @@ const Organizations = () => {
                         {org.active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    {org.organizationName !== 'NAVITRONIX' && <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => setEditingOrganization(org)}
                         className="text-indigo-600 hover:text-indigo-900 mr-4"
@@ -136,7 +136,7 @@ const Organizations = () => {
                       >
                         <Icon icon="solar:trash-bin-trash-bold" className="inline-block" />
                       </button>
-                    </td>
+                    </td>}
                   </tr> : user.organization.organizationId === org.organizationId && <tr key={org.organizationId} className="">
                     <td className="px-6 py-4 gap-3 whitespace-nowrap flex items-center">
                       {/* <div className="size-7 bg-red-500 text-sm text-white flex items-center justify-center flex-shrink-0  rounded-full">
@@ -160,7 +160,7 @@ const Organizations = () => {
                         {org.active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                   {org.organizationName !== 'NAVITRONIX' && <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => setEditingOrganization(org)}
                         className="text-indigo-600 hover:text-indigo-900 mr-4"
@@ -177,7 +177,7 @@ const Organizations = () => {
                       >
                         <Icon icon="solar:trash-bin-trash-bold" className="inline-block" />
                       </button>
-                    </td>
+                    </td>}
                   </tr>
                 ))
               ) : (

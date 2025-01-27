@@ -56,6 +56,11 @@ export const UserForm = ({ initialData, onSubmit, onCancel, selectedOrganization
     onSubmit(formData);
   };
 
+  const findRoleNamebyId = (roleId: string) => {
+    const role = roles?.find(role => role.id === roleId);
+    return role?.roleName || '';
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 w-[400px]">
       <div>
@@ -121,7 +126,7 @@ export const UserForm = ({ initialData, onSubmit, onCancel, selectedOrganization
         </select>
       </div>
 
-      <div>
+     {findRoleNamebyId(formData.roleId) === 'area_admin' &&  <div>
         <label htmlFor="areaId" className="block text-sm font-medium text-stone-700">
           Area
         </label>
@@ -141,9 +146,9 @@ export const UserForm = ({ initialData, onSubmit, onCancel, selectedOrganization
             </option>
           ))}
         </select>
-      </div>
+      </div>}
 
-      <div>
+     {findRoleNamebyId(formData.roleId) === 'depot_admin' &&  <div>
         <label htmlFor="depotId" className="block text-sm font-medium text-stone-700">
           Depot
         </label>
@@ -161,7 +166,7 @@ export const UserForm = ({ initialData, onSubmit, onCancel, selectedOrganization
             </option>
           ))}
         </select>
-      </div>
+      </div>}
 
       <div className="flex justify-end space-x-3 pt-4">
         <button

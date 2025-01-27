@@ -22,7 +22,10 @@ export const OrganizationSelector = () => {
   }, [organizations, selectedOrganization, setSelectedOrganization]);
 
   return (
-    <div className="">
+    <div className="flex flex-col gap-1">
+      {/* <label className='text-xs text-neutral-500'>
+        Select Organization
+      </label> */}
       <select
         value={selectedOrganization?.organizationId || ''}
         onChange={(e) => {

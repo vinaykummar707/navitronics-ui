@@ -59,7 +59,7 @@ const Depots = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: depotService.update,
+    mutationFn: ({ data, depotId }: { data: any; depotId: string }) =>  depotService.update(data, depotId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['depots'] });
       setEditingDepot(null);
@@ -225,7 +225,7 @@ const Depots = () => {
                 initialData={editingDepot}
                 selectedAreaId={selectedAreaId}
                 selectedOrganizationId={selectedOrganization.organizationId}
-                onSubmit={(data) => updateMutation.mutate({ ...data, depotId: editingDepot.depotId })}
+                onSubmit={(data) => updateMutation.mutate({ data, depotId: editingDepot.depotId })}
                 onCancel={() => setEditingDepot(null)}
               />
             )}

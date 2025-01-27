@@ -5,7 +5,7 @@ const BASE_PATH = '/user';
 
 export const userService = {
   getAll: async (organizationId: string): Promise<User[]> => {
-    const response = await axiosInstance.get(`${BASE_PATH}/getAllUsers/${organizationId}`);
+    const response = await axiosInstance.get(`${BASE_PATH}/getAllActiveUsers/${organizationId}`);
     return response.data['data'];
   },
 

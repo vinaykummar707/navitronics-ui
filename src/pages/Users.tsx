@@ -177,12 +177,12 @@ const Users = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
+                      {/* <button
                         onClick={() => setEditingUser(user)}
                         className="text-indigo-600 hover:text-indigo-900 mr-4"
                       >
                         <Icon icon="solar:pen-bold" className="inline-block" />
-                      </button>
+                      </button> */}
                       <button
                         onClick={() => {
                           if (

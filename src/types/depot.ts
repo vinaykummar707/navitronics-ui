@@ -11,6 +11,8 @@ export interface CreateDepotDto {
   depotName: string;
   organizationId: string;
   areaId: string;
+  active?: boolean;
+  deleted?: boolean;
 }
 
 export interface UpdateDepotDto {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import FullScreenBoard from "./FullScreenBoard";
 import SideWithSingleTextBoard from "./SideWithSingleTextBoard";
@@ -11,8 +11,14 @@ const SimulationDialog = ({
   route,
   closeSimulation,
   saveToDatabase,
+  showSaveButton
 }) => {
   const [selectedLanguage, setSelectedLanguage] = useState("English");
+
+  useEffect(() => {
+    console.log(route);
+    
+  },[])
 
   return (
     <Dialog.Root  open={showSimulation}>
@@ -27,12 +33,12 @@ const SimulationDialog = ({
               >
                 Stop Simulation
               </button>
-              <button
+             {showSaveButton && <button
                 onClick={saveToDatabase}
                 className="px-4 py-2 bg-indigo-600 text-white text-md rounded-lg"
               >
                 Save Route
-              </button>
+              </button>}
             </Group>
 
             <div className="flex flex-col gap-1">

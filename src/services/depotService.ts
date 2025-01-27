@@ -14,7 +14,7 @@ export const depotService = {
     return response.data;
   },
 
-  update: async (data: any, depotId: string): Promise<Depot> => {
+  update: async (data: any, depotId: string): Promise<any> => {
     const response = await axiosInstance.patch(`${BASE_PATH}/update/${depotId}`, data);
     return response.data;
   },
