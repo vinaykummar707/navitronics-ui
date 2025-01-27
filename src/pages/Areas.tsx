@@ -66,7 +66,7 @@ const Areas = () => {
             Organization: {selectedOrganization.organizationName}
           </p> */}
         </div>
-     {user.userRole === 'organization_admin' &&   <button
+     {(user.userRole === 'organization_admin' || user.userRole === 'master') &&   <button
           onClick={() => setIsCreateModalOpen(true)}
           className="bg-indigo-600 text-white px-3 py-1.5 text-sm rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
