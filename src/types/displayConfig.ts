@@ -6,6 +6,10 @@ export interface Translations {
   [key: string]: string;
 }
 
+export interface BitmapTranslations {
+  [key: string]: string;
+}
+
 export interface DisplaySettings {
   scrollType: ScrollType;
   position: Position;
@@ -13,6 +17,7 @@ export interface DisplaySettings {
 }
 
 export interface TextConfig {
+  bitmaps: BitmapTranslations;
   translations: Translations;
   display: DisplaySettings;
 }

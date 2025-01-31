@@ -43,6 +43,7 @@ const PLACEHOLDER_OPTIONS = [
 
 const getDefaultTextConfig = (selectedLanguages: string[]) => ({
   translations: Object.fromEntries(selectedLanguages.map(lang => [lang, ''])),
+  bitmaps: Object.fromEntries(selectedLanguages.map(lang => [lang, ''])),
   display: { scrollType: 'left-to-right' as const, position: 'center' as const, scrollSpeed: 5 }
 });
 
@@ -125,6 +126,7 @@ export const DisplayConfigForm: React.FC = () => {
         newTexts = {
           text: {
             translations: { ...currentTranslations },
+            bitmaps: { ...currentTranslations },
             display: { scrollType: 'left-to-right' as const, position: 'center' as const, scrollSpeed: 4 }
           }
         };
@@ -133,10 +135,12 @@ export const DisplayConfigForm: React.FC = () => {
         newTexts = {
           sideText: {
             translations: { ...currentTranslations },
+            bitmaps: { ...currentTranslations },
             display: { scrollType: 'left-to-right' as const, position: 'center' as const, scrollSpeed: 5 }
           },
           text: {
             translations: { ...currentTranslations },
+            bitmaps: { ...currentTranslations },
             display: { scrollType: 'fixed' as const, position: 'right' as const, scrollSpeed: 3 }
           }
         };
@@ -145,14 +149,17 @@ export const DisplayConfigForm: React.FC = () => {
         newTexts = {
           sideText: {
             translations: { ...currentTranslations },
+            bitmaps: { ...currentTranslations },
             display: { scrollType: 'right-to-left' as const, position: 'center' as const, scrollSpeed: 6 }
           },
           upperHalfText: {
             translations: { ...currentTranslations },
+            bitmaps: { ...currentTranslations },
             display: { scrollType: 'fixed' as const, position: 'right' as const, scrollSpeed: 2 }
           },
           lowerHalfText: {
             translations: { ...currentTranslations },
+            bitmaps: { ...currentTranslations },
             display: { scrollType: 'left-to-right' as const, position: 'left' as const, scrollSpeed: 5 }
           }
         };
@@ -186,7 +193,8 @@ export const DisplayConfigForm: React.FC = () => {
             ...acc,
             [textKey]: {
               ...textConfig,
-              translations: newTranslations
+              translations: newTranslations,
+              bitmaps: newTranslations
             }
           };
         }, {});
@@ -204,10 +212,11 @@ export const DisplayConfigForm: React.FC = () => {
   ) => {
     const routeData = watch('route');
     const generatedText = generatePlaceholderText(option, routeData);
-    setValue(
-      `displayConfig.screens.${screenKey}.texts.${textKey}.translations.${lang}`,
-      generatedText.toUpperCase()
-    );
+    const upperText = generatedText.toUpperCase();
+  
+    // Update both translations and bitmaps
+    setValue(`displayConfig.screens.${screenKey}.texts.${textKey}.translations.${lang}`, upperText);
+    setValue(`displayConfig.screens.${screenKey}.texts.${textKey}.bitmaps.${lang}`, upperText);
   };
 
   const renderTextConfig = (prefix: string, textKey: string) => (
@@ -475,7 +484,15 @@ export const DisplayConfigForm: React.FC = () => {
                           ))}
                         </select>
                         <input
-                          {...register(`displayConfig.screens.${screenKey}.texts.${textKey}.translations.${lang}`)}
+                          {...register(`displayConfig.screens.${screenKey}.texts.${textKey}.translations.${lang}`, {
+                            onChange: (e) => {
+                              // Update bitmap value whenever translation changes
+                              setValue(
+                                `displayConfig.screens.${screenKey}.texts.${textKey}.bitmaps.${lang}`,
+                                e.target.value.toUpperCase()
+                              );
+                            }
+                          })}
                           defaultValue={translationValue}
                           className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
