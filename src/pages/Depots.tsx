@@ -10,6 +10,8 @@ import { Icon } from '@iconify-icon/react';
 import { Container } from '@chakra-ui/react';
 import useAuthStore from '@/store/authStore';
 import { AreaSelector } from '@/components/common/AreaSelector';
+import RBAC from '../components/RBAC';
+import { ROLES } from '../constants/roles';
 
 const Depots = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -102,15 +104,14 @@ const Depots = () => {
           ))}
         </select>
       </div>
-        {(user.userRole === 'organization_admin' || user.userRole === 'area_admin' || user.userRole === 'master') && <button
-          onClick={() => setIsCreateModalOpen(true)}
-          disabled={!selectedAreaId}
-          className={`bg-indigo-600 text-white text-sm px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-            !selectedAreaId ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
-        >
-          Create Depot
-        </button>}
+        <RBAC roles={[ROLES.ORGANIZATION_ADMIN, ROLES.AREA_ADMIN, ROLES.MASTER]}>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="bg-indigo-600 text-white px-3 py-1.5 text-sm rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          >
+            Create Depot
+          </button>
+        </RBAC>
       </div>
 
       {/* Area Selection */}

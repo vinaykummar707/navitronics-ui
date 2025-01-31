@@ -8,6 +8,8 @@ import { useOrganizationStore } from '../store/useOrganizationStore';
 import { Icon } from '@iconify-icon/react';
 import { Container } from '@chakra-ui/react';
 import useAuthStore from '@/store/authStore';
+import RBAC from '../components/RBAC';
+import { ROLES } from '../constants/roles';
 
 const Areas = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -66,12 +68,14 @@ const Areas = () => {
             Organization: {selectedOrganization.organizationName}
           </p> */}
         </div>
-     {(user.userRole === 'organization_admin' || user.userRole === 'master') &&   <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="bg-indigo-600 text-white px-3 py-1.5 text-sm rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-        >
-          Create Area
-        </button>}
+        <RBAC roles={[ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]}>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="bg-indigo-600 text-white px-3 py-1.5 text-sm rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          >
+            Create Area
+          </button>
+        </RBAC>
       </div>
 
       {isLoading ? (

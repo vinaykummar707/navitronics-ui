@@ -10,6 +10,8 @@ import { Container, Group } from "@chakra-ui/react";
 import { AreaSelector } from "@/components/common/AreaSelector";
 import useAuthStore from "@/store/authStore";
 import SimulationDialog from "@/components/SimulationDialog";
+import RBAC from '../components/RBAC';
+import { ROLES } from '../constants/roles';
 
 const Routes = () => {
   const [selectedAreaId, setSelectedAreaId] = useState<string>("");
@@ -201,18 +203,20 @@ const Routes = () => {
         </div>
 
         <Group>
-         {user.userRole !== 'read_only' && <button
-            onClick={() =>
-              navigate("/home/create-route", {
-                state: { areaId: selectedAreaId, depotId: selectedDepotId },
-              })
-            }
-            disabled={!selectedDepotId}
-            className={`bg-indigo-600 text-white text-sm px-3 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${!selectedDepotId ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-          >
-            Create Route
-          </button>}
+          <RBAC roles={[ROLES.ORGANIZATION_ADMIN, ROLES.AREA_ADMIN, ROLES.DEPOT_ADMIN, ROLES.MASTER]}>
+            <button
+              onClick={() =>
+                navigate("/home/create-route", {
+                  state: { areaId: selectedAreaId, depotId: selectedDepotId },
+                })
+              }
+              disabled={!selectedDepotId}
+              className={`bg-indigo-600 text-white text-sm px-3 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${!selectedDepotId ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+            >
+              Create Route
+            </button>
+          </RBAC>
           <button
             onClick={() => getAllWithConfigMutation.mutate(selectedDepotId)}
             disabled={!selectedDepotId}
@@ -322,34 +326,36 @@ const Routes = () => {
                             className="inline-block"
                           />
                         </button>
-                        <button
-                          onClick={() =>
-                            navigate(`/edit-route/${route.id}`)
-                          }
-                          className="text-indigo-600 hover:text-indigo-900 mr-4"
-                        >
-                          <Icon
-                            icon="solar:pen-bold"
-                            className="inline-block"
-                          />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (
-                              confirm(
-                                "Are you sure you want to delete this route?"
-                              )
-                            ) {
-                              deleteMutation.mutate(route.id);
+                        <RBAC roles={[ROLES.ORGANIZATION_ADMIN, ROLES.AREA_ADMIN, ROLES.DEPOT_ADMIN, ROLES.MASTER]}>
+                          <button
+                            onClick={() =>
+                              navigate(`/edit-route/${route.id}`)
                             }
-                          }}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <Icon
-                            icon="solar:trash-bin-trash-bold"
-                            className="inline-block"
-                          />
-                        </button>
+                            className="text-indigo-600 hover:text-indigo-900 mr-4"
+                          >
+                            <Icon
+                              icon="solar:pen-bold"
+                              className="inline-block"
+                            />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (
+                                confirm(
+                                  "Are you sure you want to delete this route?"
+                                )
+                              ) {
+                                deleteMutation.mutate(route.id);
+                              }
+                            }}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            <Icon
+                              icon="solar:trash-bin-trash-bold"
+                              className="inline-block"
+                            />
+                          </button>
+                        </RBAC>
                       </td>
                     </tr>
                   ))
