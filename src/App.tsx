@@ -20,6 +20,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { CreateRoute } from "./pages/CreateRoute";
 import PublicRoute from "./components/PublicRoute";
 import EntryPage from "./components/EntryPage";
+import DisplayConfigForm from "./components/DisplayConfigForm";
 
 
 const queryClient = new QueryClient({
@@ -61,7 +62,7 @@ function App() {
             {canAccess('users') && <Route path="users" element={<Users />} />}
             {canAccess('roles') && <Route path="roles" element={<Roles />} />}
             <Route path="routes" element={<AppRoutes />} />
-            <Route path="create-route" element={<CreateRoute />} />
+            <Route path="create-route" element={<DisplayConfigForm />} />
             <Route path="settings" element={<Settings />} />
           </Route>
 
@@ -75,3 +76,11 @@ function App() {
 }
 
 export default App;
+
+
+// {
+//   version: "",
+//   data: [
+//     {},{}
+//   ]
+// }
