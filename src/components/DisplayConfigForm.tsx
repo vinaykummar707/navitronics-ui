@@ -1,32 +1,42 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { DisplayConfig, ScreenFormat } from '../types/displayConfig';
+import { routeService } from '../services/routeService';
 
 const SCREEN_TYPES = ['front', 'side', 'rear', 'internal'] as const;
 const SCROLL_TYPES = ['left-to-right', 'right-to-left', 'fixed', 'flicker'] as const;
 const POSITIONS = ['left', 'right', 'center'] as const;
-const FORMATS = ['single', 'two', 'three'] as const;
+const FORMATS = [{
+  value: 'single',
+  label: 'Single Line Board'
+}, {
+  value: 'two',
+  label: 'Two Texts Board'
+}, {
+  value: 'three',
+  label: 'Three Texts Board'
+}] as const;
 const AVAILABLE_LANGUAGES = [
-  { code: 'en', name: 'English' },
-  { code: 'hi', name: 'Hindi' },
-  { code: 'te', name: 'Telugu' },
-  { code: 'ta', name: 'Tamil' },
-  { code: 'kn', name: 'Kannada' },
-  { code: 'ml', name: 'Malayalam' },
-  { code: 'mr', name: 'Marathi' },
-  { code: 'gu', name: 'Gujarati' },
-  { code: 'pa', name: 'Punjabi' },
-  { code: 'bn', name: 'Bengali' },
-  { code: 'or', name: 'Odia' },
-  { code: 'as', name: 'Assamese' },
-  { code: 'ur', name: 'Urdu' },
-  { code: 'sd', name: 'Sindhi' },
-  { code: 'ks', name: 'Kashmiri' },
-  { code: 'sa', name: 'Sanskrit' },
-  { code: 'ne', name: 'Nepali' },
-  { code: 'kok', name: 'Konkani' },
-  { code: 'mai', name: 'Maithili' },
-  { code: 'bho', name: 'Bhojpuri' }
+  { code: 'en', name: 'English', fontFile: 'english' },
+  { code: 'hi', name: 'Hindi', fontFile: 'mangal' },
+  { code: 'te', name: 'Telugu', fontFile: 'gautami' },
+  { code: 'ta', name: 'Tamil', fontFile: 'latha' },
+  { code: 'kn', name: 'Kannada', fontFile: 'tunga' },
+  { code: 'ml', name: 'Malayalam', fontFile: 'mangal' },
+  { code: 'mr', name: 'Marathi', fontFile: 'mangal' },
+  { code: 'gu', name: 'Gujarati', fontFile: 'shruti' },
+  { code: 'pa', name: 'Punjabi', fontFile: 'raavi' },
+  { code: 'bn', name: 'Bengali', fontFile: 'vrinda' },
+  { code: 'or', name: 'Odia', fontFile: 'Kalinga' },
+  { code: 'as', name: 'Assamese', fontFile: 'mangal' },
+  { code: 'ur', name: 'Urdu', fontFile: 'mangal' },
+  { code: 'sd', name: 'Sindhi', fontFile: 'mangal' },
+  { code: 'ks', name: 'Kashmiri', fontFile: 'mangal' },
+  { code: 'sa', name: 'Sanskrit', fontFile: 'mangal' },
+  { code: 'ne', name: 'Nepali', fontFile: 'mangal' },
+  { code: 'kok', name: 'Konkani', fontFile: 'mangal' },
+  { code: 'mai', name: 'Maithili', fontFile: 'mangal' },
+  { code: 'bho', name: 'Bhojpuri', fontFile: 'mangal' }
 ] as const;
 
 const PLACEHOLDER_OPTIONS = [
@@ -77,7 +87,7 @@ const generatePlaceholderText = (option: string, routeData: any) => {
 export const DisplayConfigForm: React.FC = () => {
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(['en']);
   const [activeTab, setActiveTab] = useState<'route' | 'languages' | typeof SCREEN_TYPES[number]>('route');
-  
+
   const { register, handleSubmit, watch, setValue } = useForm<DisplayConfig>({
     defaultValues: {
       route: {
@@ -174,10 +184,10 @@ export const DisplayConfigForm: React.FC = () => {
     const newSelectedLangs = selectedLanguages.includes(langCode)
       ? selectedLanguages.filter(lang => lang !== langCode)
       : [...selectedLanguages, langCode];
-    
+
     if (newSelectedLangs.length > 0 && newSelectedLangs.length <= 3) {
       setSelectedLanguages(newSelectedLangs);
-      
+
       // Update translations for each screen while preserving existing translations
       const formData = watch('displayConfig.screens');
       Object.entries(formData).forEach(([screenKey, screen]) => {
@@ -213,7 +223,7 @@ export const DisplayConfigForm: React.FC = () => {
     const routeData = watch('route');
     const generatedText = generatePlaceholderText(option, routeData);
     const upperText = generatedText.toUpperCase();
-  
+
     // Update both translations and bitmaps
     setValue(`displayConfig.screens.${screenKey}.texts.${textKey}.translations.${lang}`, upperText);
     setValue(`displayConfig.screens.${screenKey}.texts.${textKey}.bitmaps.${lang}`, upperText);
@@ -224,7 +234,7 @@ export const DisplayConfigForm: React.FC = () => {
       <h4 className="font-semibold mb-2 text-gray-700 capitalize">
         {textKey.replace(/([A-Z])/g, ' $1').trim()}
       </h4>
-      
+
       <div className="mb-4">
         <h5 className="font-medium mb-2 text-gray-600">Translations</h5>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -429,7 +439,7 @@ export const DisplayConfigForm: React.FC = () => {
     const screenConfig = watch(`displayConfig.screens.${screenKey}`);
     console.log(screenKey);
     console.log(screenConfig);
-    
+
     if (!screenConfig || !screenConfig.texts) {
       return null;
     }
@@ -449,7 +459,7 @@ export const DisplayConfigForm: React.FC = () => {
             className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             {FORMATS.map(format => (
-              <option key={format} value={format}>{format}</option>
+              <option key={format.label} value={format.value}>{format.label}</option>
             ))}
           </select>
         </div>
@@ -459,9 +469,9 @@ export const DisplayConfigForm: React.FC = () => {
             <h4 className="font-semibold mb-2 text-gray-700 capitalize">
               {textKey.replace(/([A-Z])/g, ' $1').trim()}
             </h4>
-            
+
             <div className="mb-4">
-           
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {selectedLanguages.map(lang => {
                   const translationValue = textConfig?.translations?.[lang] || '';
@@ -471,7 +481,7 @@ export const DisplayConfigForm: React.FC = () => {
                         {AVAILABLE_LANGUAGES.find(l => l.code === lang)?.name || lang.toUpperCase()}
                       </label>
                       <div className="grid grid-cols-2 gap-2">
-                      <select
+                        <select
                           onChange={(e) => handlePlaceholderSelect(screenKey, textKey, lang, e.target.value)}
                           className=" p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                           defaultValue=""
@@ -496,7 +506,7 @@ export const DisplayConfigForm: React.FC = () => {
                           defaultValue={translationValue}
                           className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
-                       
+
                       </div>
                     </div>
                   );
@@ -574,8 +584,70 @@ export const DisplayConfigForm: React.FC = () => {
     }
   };
 
-  const onSubmit = (data: DisplayConfig) => {
-    console.log(data);
+  const onSubmit = async (data: DisplayConfig) => {
+    // Create a deep copy of the data to avoid mutating the form state
+    const configToSave = JSON.parse(JSON.stringify(data));
+
+    // Process all screens
+    for (const screenKey of SCREEN_TYPES) {
+      const screen = configToSave.displayConfig.screens[screenKey];
+      if (!screen || !screen.texts) continue;
+
+      // Process each text section in the screen
+      for (const [textKey, textConfig] of Object.entries(screen.texts)) {
+        // Process each language's bitmap
+        for (const [lang, text] of Object.entries(textConfig.bitmaps)) {
+          if (text) {
+            try {
+              // Get the font file for the language
+              const langConfig = AVAILABLE_LANGUAGES.find(l => l.code === lang);
+              if (!langConfig) {
+                throw new Error(`Font file not found for language: ${lang}`);
+              }
+
+              // Call the generateBitmap API with the correct font file
+              const bitmapResponse = await routeService.generateBitmap(text, langConfig.fontFile, 16);
+              // Store bitmap data with metadata
+              screen.texts[textKey].bitmaps[lang] = {
+                bitmap: bitmapResponse.bitmap.join(','),
+                width: bitmapResponse.width,
+                height: bitmapResponse.height
+              };
+            } catch (error) {
+              console.error(`Error generating bitmap for ${screenKey}-${textKey}-${lang}:`, error);
+              // Keep the original text as bitmap if API fails
+              screen.texts[textKey].bitmaps[lang] = {
+                bitmap: text,
+                width: 0,
+                height: 0
+              };
+            }
+          }
+        }
+      }
+    }
+
+    // Create an array with the config object
+    const configArray = [configToSave];
+    console.log(configArray);
+
+    // Create a JSON blob and download it
+    const jsonString = JSON.stringify(configArray, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    // Create a temporary link and trigger download
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `route.json`;
+    document.body.appendChild(link);
+    link.click();
+
+    // Cleanup
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    console.log('Configuration saved and downloaded');
   };
 
   return (
@@ -591,26 +663,24 @@ export const DisplayConfigForm: React.FC = () => {
       </div>
 
       <div className="mb-6 border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
+        <nav className="-mb-px flex space-x-4">
           <button
             type="button"
             onClick={() => setActiveTab('route')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'route'
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'route'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+              }`}
           >
             Route
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('languages')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'languages'
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'languages'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+              }`}
           >
             Languages
           </button>
@@ -619,11 +689,10 @@ export const DisplayConfigForm: React.FC = () => {
               key={screenType}
               type="button"
               onClick={() => setActiveTab(screenType)}
-              className={`py-2 px-1 border-b-2 font-medium text-sm capitalize ${
-                activeTab === screenType
+              className={`py-2 px-1 border-b-2 font-medium text-sm capitalize ${activeTab === screenType
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+                }`}
             >
               {screenType}
             </button>

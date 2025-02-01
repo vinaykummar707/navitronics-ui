@@ -7,7 +7,11 @@ export interface Translations {
 }
 
 export interface BitmapTranslations {
-  [key: string]: string;
+  [key: string]: {
+    bitmap: string;
+    width: number;
+    height: number;
+  };
 }
 
 export interface DisplaySettings {

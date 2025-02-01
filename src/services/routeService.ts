@@ -34,4 +34,10 @@ export const routeService = {
     const response = await axiosInstance.delete(`${BASE_PATH}/delete/${routeId}`);
     return response.data;
   },
+
+  generateBitmap: async (text: string, fontFile: string, size: number) => {
+    const response = await axiosInstance.get(`${BASE_PATH}/generateBitmap?text=${encodeURIComponent(text)}&fontFile=${fontFile}&size=${size}`);
+    return response.data;
+  }
+
 };
