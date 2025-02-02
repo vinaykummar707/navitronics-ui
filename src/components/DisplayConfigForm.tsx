@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import {
+  AccordionItem,
+  AccordionItemContent,
+  AccordionItemTrigger,
+  AccordionRoot,
+} from "@/components/ui/accordion";
 import { DisplayConfig, ScreenFormat } from '../types/displayConfig';
 import { routeService } from '../services/routeService';
 
@@ -51,33 +57,66 @@ const PLACEHOLDER_OPTIONS = [
   { value: 'routeNumber-source-destination-via', label: 'Route Number - Source - Destination - via' },
 ] as const;
 
-const getDefaultTextConfig = (selectedLanguages: string[]) => ({
-  translations: Object.fromEntries(selectedLanguages.map(lang => [lang, ''])),
-  bitmaps: Object.fromEntries(selectedLanguages.map(lang => [lang, ''])),
-  display: { scrollType: 'left-to-right' as const, position: 'center' as const, scrollSpeed: 5 }
+const ROUTE_SEPARATORS = [
+  { value: '-', label: 'Dash (-)' },
+  { value: 'TO', label: 'TO' },
+  { value: 'vc', label: 'Vice Verca' }
+] as const;
+
+const FONT_SIZES = [10, 12, 14, 16] as const;
+
+const getDefaultTextConfig = () => ({
+  text: '',
+  bitmap: {
+    bitmap: '',
+    width: 0,
+    height: 0
+  },
+  scrollType: 'left-to-right' as const,
+  position: 'center' as const,
+  scrollSpeed: 5,
+  fontSize: 16
 });
 
-const getFormatTexts = (format: ScreenFormat, selectedLanguages: string[]) => {
+const getFormatTexts = (format: ScreenFormat) => {
   switch (format) {
     case 'single':
       return {
-        text: getDefaultTextConfig(selectedLanguages)
+        text: getDefaultTextConfig()
       };
     case 'two':
       return {
-        sideText: getDefaultTextConfig(selectedLanguages),
-        text: getDefaultTextConfig(selectedLanguages)
+        sideText: getDefaultTextConfig(),
+        text: getDefaultTextConfig()
       };
     case 'three':
       return {
-        sideText: getDefaultTextConfig(selectedLanguages),
-        upperHalfText: getDefaultTextConfig(selectedLanguages),
-        lowerHalfText: getDefaultTextConfig(selectedLanguages)
+        sideText: getDefaultTextConfig(),
+        upperHalfText: getDefaultTextConfig(),
+        lowerHalfText: getDefaultTextConfig()
       };
     default:
       return {};
   }
 };
+
+const getDefaultScreenConfig = (format: ScreenFormat, isEnglish: boolean) => {
+  // For non-English languages, ensure format is either 'single' or 'two'
+  if (!isEnglish && format === 'three') {
+    format = 'two';
+  }
+  return {
+    format,
+    texts: getFormatTexts(format)
+  };
+};
+
+const getDefaultLanguageConfig = (isEnglish: boolean) => ({
+  front: getDefaultScreenConfig('two', isEnglish),
+  side: getDefaultScreenConfig('single', isEnglish),
+  rear: getDefaultScreenConfig('single', isEnglish),
+  internal: getDefaultScreenConfig('single', isEnglish)
+});
 
 const generatePlaceholderText = (option: string, routeData: any) => {
   const parts = option.split('-');
@@ -97,37 +136,21 @@ export const DisplayConfigForm: React.FC = () => {
         via: '',
         splitRoute: false,
         routeNumber1: '',
-        routeNumber2: ''
+        routeNumber2: '',
+        separation: '-'
       },
       displayConfig: {
-        screens: {
-          front: {
-            format: 'two',
-            texts: getFormatTexts('two', selectedLanguages)
-          },
-          side: {
-            format: 'single',
-            texts: getFormatTexts('single', selectedLanguages)
-          },
-          rear: {
-            format: 'three',
-            texts: getFormatTexts('three', selectedLanguages)
-          },
-          internal: {
-            format: 'single',
-            texts: getFormatTexts('single', selectedLanguages)
-          }
-        }
+        en: getDefaultLanguageConfig(true)
       }
     }
   });
 
   const splitRoute = watch('route.splitRoute');
 
-  const handleFormatChange = (screenKey: string, newFormat: ScreenFormat) => {
-    // Get current translations for this screen
-    const currentTexts = watch(`displayConfig.screens.${screenKey}.texts`);
-    const currentTranslations = Object.values(currentTexts)[0]?.translations || {};
+  const handleFormatChange = (screenKey: string, language: string, newFormat: ScreenFormat) => {
+    // Get current text config for this screen
+    const currentTexts = watch(`displayConfig.${language}.${screenKey}.texts`);
+    const currentText = Object.values(currentTexts)[0]?.text || '';
 
     // Create new texts configuration based on format
     let newTexts = {};
@@ -135,49 +158,67 @@ export const DisplayConfigForm: React.FC = () => {
       case 'single':
         newTexts = {
           text: {
-            translations: { ...currentTranslations },
-            bitmaps: { ...currentTranslations },
-            display: { scrollType: 'left-to-right' as const, position: 'center' as const, scrollSpeed: 4 }
+            text: currentText,
+            bitmap: { bitmap: '', width: 0, height: 0 },
+            scrollType: 'left-to-right' as const,
+            position: 'center' as const,
+            scrollSpeed: 4,
+            fontSize: 16
           }
         };
         break;
       case 'two':
         newTexts = {
           sideText: {
-            translations: { ...currentTranslations },
-            bitmaps: { ...currentTranslations },
-            display: { scrollType: 'left-to-right' as const, position: 'center' as const, scrollSpeed: 5 }
+            text: currentText,
+            bitmap: { bitmap: '', width: 0, height: 0 },
+            scrollType: 'left-to-right' as const,
+            position: 'center' as const,
+            scrollSpeed: 5,
+            fontSize: 16
           },
           text: {
-            translations: { ...currentTranslations },
-            bitmaps: { ...currentTranslations },
-            display: { scrollType: 'fixed' as const, position: 'right' as const, scrollSpeed: 3 }
+            text: currentText,
+            bitmap: { bitmap: '', width: 0, height: 0 },
+            scrollType: 'fixed' as const,
+            position: 'right' as const,
+            scrollSpeed: 3,
+            fontSize: 14
           }
         };
         break;
       case 'three':
         newTexts = {
           sideText: {
-            translations: { ...currentTranslations },
-            bitmaps: { ...currentTranslations },
-            display: { scrollType: 'right-to-left' as const, position: 'center' as const, scrollSpeed: 6 }
+            text: currentText,
+            bitmap: { bitmap: '', width: 0, height: 0 },
+            scrollType: 'right-to-left' as const,
+            position: 'center' as const,
+            scrollSpeed: 6,
+            fontSize: 16
           },
           upperHalfText: {
-            translations: { ...currentTranslations },
-            bitmaps: { ...currentTranslations },
-            display: { scrollType: 'fixed' as const, position: 'right' as const, scrollSpeed: 2 }
+            text: currentText,
+            bitmap: { bitmap: '', width: 0, height: 0 },
+            scrollType: 'fixed' as const,
+            position: 'right' as const,
+            scrollSpeed: 2,
+            fontSize: 14
           },
           lowerHalfText: {
-            translations: { ...currentTranslations },
-            bitmaps: { ...currentTranslations },
-            display: { scrollType: 'left-to-right' as const, position: 'left' as const, scrollSpeed: 5 }
+            text: currentText,
+            bitmap: { bitmap: '', width: 0, height: 0 },
+            scrollType: 'left-to-right' as const,
+            position: 'left' as const,
+            scrollSpeed: 5,
+            fontSize: 14
           }
         };
         break;
     }
 
-    setValue(`displayConfig.screens.${screenKey}.format`, newFormat);
-    setValue(`displayConfig.screens.${screenKey}.texts`, newTexts);
+    setValue(`displayConfig.${language}.${screenKey}.format`, newFormat);
+    setValue(`displayConfig.${language}.${screenKey}.texts`, newTexts);
   };
 
   const handleLanguageChange = (langCode: string) => {
@@ -188,36 +229,25 @@ export const DisplayConfigForm: React.FC = () => {
     if (newSelectedLangs.length > 0 && newSelectedLangs.length <= 3) {
       setSelectedLanguages(newSelectedLangs);
 
-      // Update translations for each screen while preserving existing translations
-      const formData = watch('displayConfig.screens');
-      Object.entries(formData).forEach(([screenKey, screen]) => {
-        const texts = screen.texts;
-        const updatedTexts = Object.entries(texts).reduce((acc, [textKey, textConfig]) => {
-          // Keep existing translations for selected languages
-          const newTranslations = newSelectedLangs.reduce((trans, lang) => ({
-            ...trans,
-            [lang]: textConfig.translations[lang] || ''
-          }), {});
+      // Add configuration for newly added language
+      if (!selectedLanguages.includes(langCode)) {
+        const isEnglish = langCode === 'en';
+        setValue(`displayConfig.${langCode}`, getDefaultLanguageConfig(isEnglish));
+      }
 
-          return {
-            ...acc,
-            [textKey]: {
-              ...textConfig,
-              translations: newTranslations,
-              bitmaps: newTranslations
-            }
-          };
-        }, {});
-
-        setValue(`displayConfig.screens.${screenKey}.texts`, updatedTexts);
-      });
+      // Remove configuration for removed language
+      if (selectedLanguages.includes(langCode)) {
+        const displayConfig = { ...watch('displayConfig') };
+        delete displayConfig[langCode];
+        setValue('displayConfig', displayConfig);
+      }
     }
   };
 
   const handlePlaceholderSelect = (
     screenKey: string,
     textKey: string,
-    lang: string,
+    language: string,
     option: string
   ) => {
     const routeData = watch('route');
@@ -225,99 +255,53 @@ export const DisplayConfigForm: React.FC = () => {
     const upperText = generatedText.toUpperCase();
 
     // Update both translations and bitmaps
-    setValue(`displayConfig.screens.${screenKey}.texts.${textKey}.translations.${lang}`, upperText);
-    setValue(`displayConfig.screens.${screenKey}.texts.${textKey}.bitmaps.${lang}`, upperText);
+    setValue(`displayConfig.${language}.${screenKey}.texts.${textKey}.text`, upperText);
+    setValue(`displayConfig.${language}.${screenKey}.texts.${textKey}.bitmap.bitmap`, upperText);
   };
-
-  const renderTextConfig = (prefix: string, textKey: string) => (
-    <div key={textKey} className="p-4 bg-gray-50 rounded-lg mb-4">
-      <h4 className="font-semibold mb-2 text-gray-700 capitalize">
-        {textKey.replace(/([A-Z])/g, ' $1').trim()}
-      </h4>
-
-      <div className="mb-4">
-        <h5 className="font-medium mb-2 text-gray-600">Translations</h5>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {selectedLanguages.map(lang => (
-            <div key={lang}>
-              <label className="block text-sm font-medium text-gray-600 mb-1">
-                {AVAILABLE_LANGUAGES.find(l => l.code === lang)?.name || lang.toUpperCase()}
-              </label>
-              <div className="flex flex-col gap-2">
-                <input
-                  {...register(`${prefix}.translations.${lang}`)}
-                  className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <select
-                  onChange={(e) => handlePlaceholderSelect(prefix, textKey, lang, e.target.value)}
-                  className="w-48 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  defaultValue=""
-                >
-                  <option value="">Select placeholder</option>
-                  {PLACEHOLDER_OPTIONS.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Scroll Type
-          </label>
-          <select
-            {...register(`${prefix}.display.scrollType`)}
-            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            {SCROLL_TYPES.map(type => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Position
-          </label>
-          <select
-            {...register(`${prefix}.display.position`)}
-            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            {POSITIONS.map(pos => (
-              <option key={pos} value={pos}>{pos}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Scroll Speed
-          </label>
-          <input
-            type="number"
-            {...register(`${prefix}.display.scrollSpeed`)}
-            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            min="1"
-            max="10"
-          />
-        </div>
-      </div>
-    </div>
-  );
 
   const renderRouteTab = () => (
     <div className="mb-8 p-6 bg-white rounded-xl shadow-md">
       <h3 className="text-xl font-bold mb-4 text-gray-800">
         Route Information
       </h3>
+      <div className="flex mb-4 items-center">
+          <input
+            type="checkbox"
+            {...register('route.splitRoute')}
+            id="splitRoute"
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded uppercase"
+          />
+          <label htmlFor="splitRoute" className="ml-2 block text-sm text-gray-900">
+            Split Route
+          </label>
+        </div>
+              {/* Conditional Split Route Fields */}
+      {splitRoute && (
+        <div className="mt-4 grid grid-cols-1 mb-4 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              Route Number 1
+            </label>
+            <input
+              {...register('route.routeNumber1')}
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter first route number"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              Route Number 2
+            </label>
+            <input
+              {...register('route.routeNumber2')}
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter second route number"
+            />
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
+        {!splitRoute && <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">
             Route Number
           </label>
@@ -326,7 +310,8 @@ export const DisplayConfigForm: React.FC = () => {
             className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase"
             placeholder="Enter route number"
           />
-        </div>
+        </div>}
+        
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">
             Source
@@ -357,44 +342,27 @@ export const DisplayConfigForm: React.FC = () => {
             placeholder="Enter via points"
           />
         </div>
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            {...register('route.splitRoute')}
-            id="splitRoute"
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded uppercase"
-          />
-          <label htmlFor="splitRoute" className="ml-2 block text-sm text-gray-900">
-            Split Route
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            Separator
           </label>
+          <select
+            {...register('route.separation')}
+            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            {ROUTE_SEPARATORS.map(sep => (
+              <option key={sep.value} value={sep.value}>
+                {sep.label}
+              </option>
+            ))}
+          </select>
         </div>
+        
+
+       
       </div>
 
-      {/* Conditional Split Route Fields */}
-      {splitRoute && (
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Route Number 1
-            </label>
-            <input
-              {...register('route.routeNumber1')}
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter first route number"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Route Number 2
-            </label>
-            <input
-              {...register('route.routeNumber2')}
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter second route number"
-            />
-          </div>
-        </div>
-      )}
+
     </div>
   );
 
@@ -435,56 +403,67 @@ export const DisplayConfigForm: React.FC = () => {
   );
 
   const renderScreenTab = (screenKey: typeof SCREEN_TYPES[number]) => {
-    // Watch the specific screen's configuration
-    const screenConfig = watch(`displayConfig.screens.${screenKey}`);
-    console.log(screenKey);
-    console.log(screenConfig);
-
-    if (!screenConfig || !screenConfig.texts) {
-      return null;
-    }
+    const displayConfig = watch('displayConfig');
 
     return (
-      <div className="mb-8 p-6 bg-white rounded-xl shadow-md">
+      <div className="mb-8 p-6 bg-white shadow-md rounded-xl ">
         <h3 className="text-xl font-bold mb-4 text-gray-800 capitalize">
           {screenKey} Screen Configuration
         </h3>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Format
-          </label>
-          <select
-            value={screenConfig.format || 'single'}
-            onChange={(e) => handleFormatChange(screenKey, e.target.value as ScreenFormat)}
-            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            {FORMATS.map(format => (
-              <option key={format.label} value={format.value}>{format.label}</option>
-            ))}
-          </select>
-        </div>
 
-        {Object.entries(screenConfig.texts).map(([textKey, textConfig]) => (
-          <div key={`${screenKey}-${textKey}`} className="p-4 bg-gray-50 rounded-lg mb-4">
-            <h4 className="font-semibold mb-2 text-gray-700 capitalize">
-              {textKey.replace(/([A-Z])/g, ' $1').trim()}
-            </h4>
+        <AccordionRoot variant={'subtle'} defaultValue={["en"]} collapsible>
+          {selectedLanguages.map(language => {
+            const isEnglish = language === 'en';
+            
+            // Initialize configuration for this language if it doesn't exist
+            if (!displayConfig[language]) {
+              setValue(`displayConfig.${language}`, getDefaultLanguageConfig(isEnglish));
+            }
 
-            <div className="mb-4">
+            const screenConfig = displayConfig[language]?.[screenKey];
+            if (!screenConfig || !screenConfig.texts) return null;
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {selectedLanguages.map(lang => {
-                  const translationValue = textConfig?.translations?.[lang] || '';
-                  return (
-                    <div key={`${screenKey}-${textKey}-${lang}`}>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">
-                        {AVAILABLE_LANGUAGES.find(l => l.code === lang)?.name || lang.toUpperCase()}
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
+            const langName = AVAILABLE_LANGUAGES.find(l => l.code === language)?.name || language.toUpperCase();
+
+            return (
+              <AccordionItem className='py-2 px-4  border-b'  key={language} value={language}>
+                <AccordionItemTrigger>
+                  <span className="text-lg p-2 font-semibold text-gray-700">
+                    {langName}
+                  </span>
+                </AccordionItemTrigger>
+                <AccordionItemContent className=''>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      Format
+                    </label>
+                    <select
+                      value={screenConfig.format || 'single'}
+                      onChange={(e) => handleFormatChange(screenKey, language, e.target.value as ScreenFormat)}
+                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      {FORMATS.filter(format => isEnglish || format.value !== 'three').map(format => (
+                        <option 
+                          key={format.value} 
+                          value={format.value}
+                        >
+                          {format.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {Object.entries(screenConfig.texts).map(([textKey, textConfig]) => (
+                    <div key={`${language}-${textKey}`} className=" rounded-lg mb-4">
+                      <h4 className="font-semibold mb-2 text-gray-700 capitalize">
+                        {textKey.replace(/([A-Z])/g, ' $1').trim()}
+                      </h4>
+
+                      <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <select
-                          onChange={(e) => handlePlaceholderSelect(screenKey, textKey, lang, e.target.value)}
-                          className=" p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          defaultValue=""
+                          className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          onChange={(e) => handlePlaceholderSelect(screenKey, textKey, language, e.target.value)}
+                          value=""
                         >
                           <option value="">Select placeholder</option>
                           {PLACEHOLDER_OPTIONS.map(option => (
@@ -494,73 +473,75 @@ export const DisplayConfigForm: React.FC = () => {
                           ))}
                         </select>
                         <input
-                          {...register(`displayConfig.screens.${screenKey}.texts.${textKey}.translations.${lang}`, {
-                            onChange: (e) => {
-                              // Update bitmap value whenever translation changes
-                              setValue(
-                                `displayConfig.screens.${screenKey}.texts.${textKey}.bitmaps.${lang}`,
-                                e.target.value.toUpperCase()
-                              );
-                            }
-                          })}
-                          defaultValue={translationValue}
-                          className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          {...register(`displayConfig.${language}.${screenKey}.texts.${textKey}.text`)}
+                          placeholder='Enter text here'
+                          className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
+                      </div>
 
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">
+                            Scroll Type
+                          </label>
+                          <select
+                            {...register(`displayConfig.${language}.${screenKey}.texts.${textKey}.scrollType`)}
+                            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            {SCROLL_TYPES.map(type => (
+                              <option key={type} value={type}>{type}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">
+                            Position
+                          </label>
+                          <select
+                            {...register(`displayConfig.${language}.${screenKey}.texts.${textKey}.position`)}
+                            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            {POSITIONS.map(pos => (
+                              <option key={pos} value={pos}>{pos}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">
+                            Scroll Speed
+                          </label>
+                          <input
+                            type="number"
+                            {...register(`displayConfig.${language}.${screenKey}.texts.${textKey}.scrollSpeed`)}
+                            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            min="1"
+                            max="10"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">
+                            Font Size
+                          </label>
+                          <select
+                            {...register(`displayConfig.${language}.${screenKey}.texts.${textKey}.fontSize`)}
+                            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            {FONT_SIZES.map(size => (
+                              <option key={size} value={size}>{size}px</option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Scroll Type
-                </label>
-                <select
-                  {...register(`displayConfig.screens.${screenKey}.texts.${textKey}.display.scrollType`)}
-                  defaultValue={textConfig?.display?.scrollType || 'left-to-right'}
-                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  {SCROLL_TYPES.map(type => (
-                    <option key={`${screenKey}-${textKey}-${type}`} value={type}>{type}</option>
                   ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Position
-                </label>
-                <select
-                  {...register(`displayConfig.screens.${screenKey}.texts.${textKey}.display.position`)}
-                  defaultValue={textConfig?.display?.position || 'center'}
-                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  {POSITIONS.map(pos => (
-                    <option key={`${screenKey}-${textKey}-${pos}`} value={pos}>{pos}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Scroll Speed
-                </label>
-                <input
-                  type="number"
-                  {...register(`displayConfig.screens.${screenKey}.texts.${textKey}.display.scrollSpeed`)}
-                  defaultValue={textConfig?.display?.scrollSpeed || 5}
-                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  min="1"
-                  max="10"
-                />
-              </div>
-            </div>
-          </div>
-        ))}
+                </AccordionItemContent>
+              </AccordionItem>
+            );
+          })}
+        </AccordionRoot>
       </div>
     );
   };
@@ -589,40 +570,27 @@ export const DisplayConfigForm: React.FC = () => {
     const configToSave = JSON.parse(JSON.stringify(data));
 
     // Process all screens
-    for (const screenKey of SCREEN_TYPES) {
-      const screen = configToSave.displayConfig.screens[screenKey];
-      if (!screen || !screen.texts) continue;
+    for (const language of selectedLanguages) {
+      for (const screenKey of SCREEN_TYPES) {
+        const screen = configToSave.displayConfig[language][screenKey];
+        if (!screen || !screen.texts) continue;
 
-      // Process each text section in the screen
-      for (const [textKey, textConfig] of Object.entries(screen.texts)) {
-        // Process each language's bitmap
-        for (const [lang, text] of Object.entries(textConfig.bitmaps)) {
-          if (text) {
-            try {
-              // Get the font file for the language
-              const langConfig = AVAILABLE_LANGUAGES.find(l => l.code === lang);
-              if (!langConfig) {
-                throw new Error(`Font file not found for language: ${lang}`);
-              }
-
-              // Call the generateBitmap API with the correct font file
-              const bitmapResponse = await routeService.generateBitmap(text, langConfig.fontFile, 16);
-              // Store bitmap data with metadata
-              screen.texts[textKey].bitmaps[lang] = {
-                bitmap: bitmapResponse.bitmap.join(','),
-                width: bitmapResponse.width,
-                height: bitmapResponse.height
-              };
-            } catch (error) {
-              console.error(`Error generating bitmap for ${screenKey}-${textKey}-${lang}:`, error);
-              // Keep the original text as bitmap if API fails
-              screen.texts[textKey].bitmaps[lang] = {
-                bitmap: text,
-                width: 0,
-                height: 0
-              };
-            }
+        // Process each text section in the screen
+        for (const [textKey, textConfig] of Object.entries(screen.texts)) {
+          // Process each language's bitmap
+          const langConfig = AVAILABLE_LANGUAGES.find(l => l.code === language);
+          if (!langConfig) {
+            throw new Error(`Font file not found for language: ${language}`);
           }
+
+          // Call the generateBitmap API with the correct font file
+          const bitmapResponse = await routeService.generateBitmap(textConfig.text, langConfig.fontFile, textConfig.fontSize);
+          // Store bitmap data with metadata
+          screen.texts[textKey].bitmap = {
+            bitmap: bitmapResponse.bitmap.join(','),
+            width: bitmapResponse.width,
+            height: bitmapResponse.height
+          };
         }
       }
     }

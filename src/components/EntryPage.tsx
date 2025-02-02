@@ -46,16 +46,16 @@ const EntryPage = () => {
       fontSize: 16,
       fontWeight: "regular",
     },
-    // {
-    //   language: "Hindi",
-    //   fontSize: 16,
-    //   fontWeight: "regular",
-    // },
-    // {
-    //   language: "Telugu",
-    //   fontSize: 16,
-    //   fontWeight: "regular",
-    // },
+    {
+      language: "Hindi",
+      fontSize: 16,
+      fontWeight: "regular",
+    },
+    {
+      language: "Telugu",
+      fontSize: 16,
+      fontWeight: "regular",
+    },
   ]);
 
   const [selectedBoardLanguage, setSelectedBoardLanguage] = useState(

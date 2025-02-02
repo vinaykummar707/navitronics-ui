@@ -2,28 +2,19 @@ export type ScrollType = 'left-to-right' | 'right-to-left' | 'fixed' | 'flicker'
 export type Position = 'left' | 'right' | 'center';
 export type ScreenFormat = 'single' | 'two' | 'three';
 
-export interface Translations {
-  [key: string]: string;
-}
-
 export interface BitmapTranslations {
-  [key: string]: {
     bitmap: string;
     width: number;
     height: number;
-  };
-}
-
-export interface DisplaySettings {
-  scrollType: ScrollType;
-  position: Position;
-  scrollSpeed: number;
 }
 
 export interface TextConfig {
-  bitmaps: BitmapTranslations;
-  translations: Translations;
-  display: DisplaySettings;
+  text:string;
+  bitmap: BitmapTranslations;
+  scrollType: ScrollType;
+  position: Position;
+  scrollSpeed: number;
+  fontSize: number;
 }
 
 export interface SingleScreenTexts {
@@ -61,11 +52,15 @@ export interface RouteInformation {
   splitRoute: boolean;
   routeNumber1: string;
   routeNumber2: string;
+  separation: string;
+}
+
+// Language-specific screen configurations
+export interface LanguageDisplayConfig {
+  [languageCode: string]: Screens;
 }
 
 export interface DisplayConfig {
   route: RouteInformation;
-  displayConfig: {
-    screens: Screens;
-  };
+  displayConfig: LanguageDisplayConfig;
 }
