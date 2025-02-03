@@ -13,6 +13,8 @@ const FullScreenBoard = ({ formData }: any) => {
     } else {
       setScrollEnabled(true);
     }
+
+    console.log(formData)
   }, [scrollType]);
 
   const getPositionClass = () => {

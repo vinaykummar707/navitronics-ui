@@ -8,10 +8,15 @@ import {
 } from "@/components/ui/accordion";
 import { DisplayConfig, ScreenFormat } from '../types/displayConfig';
 import { routeService } from '../services/routeService';
+import FullScreenBoard from './FullScreenBoard';
+import SideWithSingleTextBoard from './SideWithSingleTextBoard';
+import SideWithTwoTextsBoard from './SideWithTwoHalfsBoard';
+import IMEInput from './IMEInput';
+import GoogleIME from './IMEInput';
 
 const SCREEN_TYPES = ['front', 'side', 'rear', 'internal'] as const;
-const SCROLL_TYPES = ['left-to-right', 'right-to-left', 'fixed', 'flicker'] as const;
-const POSITIONS = ['left', 'right', 'center'] as const;
+const SCROLL_TYPES = ['Left To Right', 'Right To Left', 'Fixed', 'Flicker'] as const;
+const POSITIONS = ['Left', 'Right', 'Center'] as const;
 const FORMATS = [{
   value: 'single',
   label: 'Single Line Board'
@@ -51,10 +56,10 @@ const PLACEHOLDER_OPTIONS = [
   { value: 'destination', label: 'Destination' },
   { value: 'via', label: 'Via' },
   { value: 'routeNumber-source', label: 'Route Number - Source' },
-  { value: 'source-destination', label: 'Source - Destination' },
-  { value: 'source-via-destination', label: 'Source - Via - Destination' },
-  { value: 'routeNumber-source-destination', label: 'Route Number - Source - Destination' },
-  { value: 'routeNumber-source-destination-via', label: 'Route Number - Source - Destination - via' },
+  { value: 'source-separation-destination', label: 'Source - Destination' },
+  { value: 'source-separation-destination-via', label: 'Source - Destination - via' },
+  { value: 'routeNumber-source-separation-destination', label: 'Route Number - Source - Destination' },
+  { value: 'routeNumber-source-separation-destination-via', label: 'Route Number - Source - Destination - via' },
 ] as const;
 
 const ROUTE_SEPARATORS = [
@@ -72,8 +77,8 @@ const getDefaultTextConfig = () => ({
     width: 0,
     height: 0
   },
-  scrollType: 'left-to-right' as const,
-  position: 'center' as const,
+  scrollType: 'Left To Right' as const,
+  position: 'Center' as const,
   scrollSpeed: 5,
   fontSize: 16
 });
@@ -120,7 +125,7 @@ const getDefaultLanguageConfig = (isEnglish: boolean) => ({
 
 const generatePlaceholderText = (option: string, routeData: any) => {
   const parts = option.split('-');
-  return parts.map(part => routeData[part] || '').filter(Boolean).join(' - ');
+  return parts.map(part => routeData[part] || '').filter(Boolean).join(' ');
 };
 
 export const DisplayConfigForm: React.FC = () => {
@@ -160,8 +165,8 @@ export const DisplayConfigForm: React.FC = () => {
           text: {
             text: currentText,
             bitmap: { bitmap: '', width: 0, height: 0 },
-            scrollType: 'left-to-right' as const,
-            position: 'center' as const,
+            scrollType: 'Left To Right' as const,
+            position: 'Center' as const,
             scrollSpeed: 4,
             fontSize: 16
           }
@@ -172,16 +177,16 @@ export const DisplayConfigForm: React.FC = () => {
           sideText: {
             text: currentText,
             bitmap: { bitmap: '', width: 0, height: 0 },
-            scrollType: 'left-to-right' as const,
-            position: 'center' as const,
+            scrollType: 'Left To Right' as const,
+            position: 'Center' as const,
             scrollSpeed: 5,
             fontSize: 16
           },
           text: {
             text: currentText,
             bitmap: { bitmap: '', width: 0, height: 0 },
-            scrollType: 'fixed' as const,
-            position: 'right' as const,
+            scrollType: 'Fixed' as const,
+            position: 'Right' as const,
             scrollSpeed: 3,
             fontSize: 14
           }
@@ -192,24 +197,24 @@ export const DisplayConfigForm: React.FC = () => {
           sideText: {
             text: currentText,
             bitmap: { bitmap: '', width: 0, height: 0 },
-            scrollType: 'right-to-left' as const,
-            position: 'center' as const,
+            scrollType: 'Right To Left' as const,
+            position: 'Center' as const,
             scrollSpeed: 6,
             fontSize: 16
           },
           upperHalfText: {
             text: currentText,
             bitmap: { bitmap: '', width: 0, height: 0 },
-            scrollType: 'fixed' as const,
-            position: 'right' as const,
+            scrollType: 'Fixed' as const,
+            position: 'Right' as const,
             scrollSpeed: 2,
             fontSize: 14
           },
           lowerHalfText: {
             text: currentText,
             bitmap: { bitmap: '', width: 0, height: 0 },
-            scrollType: 'left-to-right' as const,
-            position: 'left' as const,
+            scrollType: 'Left To Right' as const,
+            position: 'Left' as const,
             scrollSpeed: 5,
             fontSize: 14
           }
@@ -265,17 +270,17 @@ export const DisplayConfigForm: React.FC = () => {
         Route Information
       </h3>
       <div className="flex mb-4 items-center">
-          <input
-            type="checkbox"
-            {...register('route.splitRoute')}
-            id="splitRoute"
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded uppercase"
-          />
-          <label htmlFor="splitRoute" className="ml-2 block text-sm text-gray-900">
-            Split Route
-          </label>
-        </div>
-              {/* Conditional Split Route Fields */}
+        <input
+          type="checkbox"
+          {...register('route.splitRoute')}
+          id="splitRoute"
+          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded uppercase"
+        />
+        <label htmlFor="splitRoute" className="ml-2 block text-sm text-gray-900">
+          Split Route
+        </label>
+      </div>
+      {/* Conditional Split Route Fields */}
       {splitRoute && (
         <div className="mt-4 grid grid-cols-1 mb-4 md:grid-cols-2 gap-4">
           <div>
@@ -311,7 +316,7 @@ export const DisplayConfigForm: React.FC = () => {
             placeholder="Enter route number"
           />
         </div>}
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">
             Source
@@ -357,9 +362,9 @@ export const DisplayConfigForm: React.FC = () => {
             ))}
           </select>
         </div>
-        
 
-       
+
+
       </div>
 
 
@@ -404,6 +409,8 @@ export const DisplayConfigForm: React.FC = () => {
 
   const renderScreenTab = (screenKey: typeof SCREEN_TYPES[number]) => {
     const displayConfig = watch('displayConfig');
+    const routeData = watch('route');
+
 
     return (
       <div className="mb-8 p-6 bg-white shadow-md rounded-xl ">
@@ -414,7 +421,7 @@ export const DisplayConfigForm: React.FC = () => {
         <AccordionRoot variant={'subtle'} defaultValue={["en"]} collapsible>
           {selectedLanguages.map(language => {
             const isEnglish = language === 'en';
-            
+
             // Initialize configuration for this language if it doesn't exist
             if (!displayConfig[language]) {
               setValue(`displayConfig.${language}`, getDefaultLanguageConfig(isEnglish));
@@ -426,7 +433,7 @@ export const DisplayConfigForm: React.FC = () => {
             const langName = AVAILABLE_LANGUAGES.find(l => l.code === language)?.name || language.toUpperCase();
 
             return (
-              <AccordionItem className='py-2 px-4  border-b'  key={language} value={language}>
+              <AccordionItem className='py-2 px-4  border-b' key={language} value={language}>
                 <AccordionItemTrigger>
                   <span className="text-lg p-2 font-semibold text-gray-700">
                     {langName}
@@ -434,6 +441,53 @@ export const DisplayConfigForm: React.FC = () => {
                 </AccordionItemTrigger>
                 <AccordionItemContent className=''>
                   <div className="mb-4">
+                    {screenConfig.format === 'single' && <FullScreenBoard
+                      formData={{
+                        text: displayConfig[language][screenKey].texts.text.text,
+                        scrollType: displayConfig[language][screenKey].texts.text.scrollType,
+                        scrollSpeed: displayConfig[language][screenKey].texts.text.scrollSpeed,
+                        position: displayConfig[language][screenKey].texts.text.position,
+                        fontSize: displayConfig[language][screenKey].texts.text.fontSize
+                      }}
+                    />}
+
+
+                    {screenConfig.format === 'two' && <SideWithSingleTextBoard
+                      formData={{
+                        sideText: displayConfig[language][screenKey].texts.sideText.text,
+                        text: displayConfig[language][screenKey].texts.text.text,
+                        scrollType: displayConfig[language][screenKey].texts.text.scrollType,
+                        scrollSpeed: displayConfig[language][screenKey].texts.text.scrollSpeed,
+                        position: displayConfig[language][screenKey].texts.text.position,
+                        fontSize: displayConfig[language][screenKey].texts.text.fontSize,
+                        // For split route
+                        routeNumber1: routeData.routeNumber1,
+                        routeNumber2: routeData.routeNumber2
+                      }}
+                      route={routeData} // Pass route info for route number display
+                    />}
+
+
+                    {screenConfig.format === 'three' && <SideWithTwoTextsBoard
+                      formData={{
+                        sideText: displayConfig[language][screenKey].texts.sideText.text,
+                        upperHalfText: displayConfig[language][screenKey].texts.upperHalfText.text,
+                        lowerHalfText: displayConfig[language][screenKey].texts.lowerHalfText.text,
+                        // Upper half config
+                        upperHalfScrollType: displayConfig[language][screenKey].texts.upperHalfText.scrollType,
+                        upperHalfScrollSpeed: displayConfig[language][screenKey].texts.upperHalfText.scrollSpeed,
+                        upperHalfPosition: displayConfig[language][screenKey].texts.upperHalfText.position,
+                        // Lower half config
+                        lowerHalfScrollType: displayConfig[language][screenKey].texts.lowerHalfText.scrollType,
+                        lowerHalfScrollSpeed: displayConfig[language][screenKey].texts.lowerHalfText.scrollSpeed,
+                        lowerHalfPosition: displayConfig[language][screenKey].texts.lowerHalfText.position,
+                        // Font sizes
+                        upperHalfFontSize: displayConfig[language][screenKey].texts.upperHalfText.fontSize,
+                        lowerHalfFontSize: displayConfig[language][screenKey].texts.lowerHalfText.fontSize
+                      }}
+                      route={routeData}
+                    />}
+
                     <label className="block text-sm font-medium text-gray-600 mb-1">
                       Format
                     </label>
@@ -443,8 +497,8 @@ export const DisplayConfigForm: React.FC = () => {
                       className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       {FORMATS.filter(format => isEnglish || format.value !== 'three').map(format => (
-                        <option 
-                          key={format.value} 
+                        <option
+                          key={format.value}
                           value={format.value}
                         >
                           {format.label}
@@ -566,62 +620,80 @@ export const DisplayConfigForm: React.FC = () => {
   };
 
   const onSubmit = async (data: DisplayConfig) => {
-    // Create a deep copy of the data to avoid mutating the form state
-    const configToSave = JSON.parse(JSON.stringify(data));
+    try {
+      // Create a deep copy of the data to avoid mutating the form state
+      const configToSave = JSON.parse(JSON.stringify(data));
 
-    // Process all screens
-    for (const language of selectedLanguages) {
-      for (const screenKey of SCREEN_TYPES) {
-        const screen = configToSave.displayConfig[language][screenKey];
-        if (!screen || !screen.texts) continue;
+      // Process only selected languages
+      for (const language of selectedLanguages) {
+        const langConfig = AVAILABLE_LANGUAGES.find(l => l.code === language);
+        if (!langConfig) {
+          console.error(`Font file not found for language: ${language}`);
+          continue;
+        }
 
-        // Process each text section in the screen
-        for (const [textKey, textConfig] of Object.entries(screen.texts)) {
-          // Process each language's bitmap
-          const langConfig = AVAILABLE_LANGUAGES.find(l => l.code === language);
-          if (!langConfig) {
-            throw new Error(`Font file not found for language: ${language}`);
+        // Process all screen types (front, side, rear, internal)
+        for (const screenKey of SCREEN_TYPES) {
+          const screen = configToSave.displayConfig[language][screenKey];
+          if (!screen || !screen.texts) continue;
+
+          // Process each text section in the screen
+          for (const [textKey, textConfig] of Object.entries(screen.texts)) {
+            if (!textConfig.text) continue;
+
+            try {
+              // Call the generateBitmap API with the correct font file
+              const bitmapResponse = await routeService.generateBitmap(
+                textConfig.text,
+                langConfig.fontFile,
+                textConfig.fontSize
+              );
+
+              // Store bitmap data with metadata
+              screen.texts[textKey].bitmap = {
+                bitmap: bitmapResponse.bitmap.join(','),
+                width: bitmapResponse.width,
+                height: bitmapResponse.height
+              };
+            } catch (error) {
+              console.error(`Error generating bitmap for ${language} ${screenKey} ${textKey}:`, error);
+            }
           }
-
-          // Call the generateBitmap API with the correct font file
-          const bitmapResponse = await routeService.generateBitmap(textConfig.text, langConfig.fontFile, textConfig.fontSize);
-          // Store bitmap data with metadata
-          screen.texts[textKey].bitmap = {
-            bitmap: bitmapResponse.bitmap.join(','),
-            width: bitmapResponse.width,
-            height: bitmapResponse.height
-          };
         }
       }
+
+      // Create an array with the config object
+      const configArray = [configToSave];
+      console.log(configArray);
+
+      // Create a JSON blob and download it
+      const jsonString = JSON.stringify(configArray, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      // Create a temporary link and trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `route.json`;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      console.log('Configuration saved and downloaded');
+    } catch (error) {
+      console.error('Error processing configuration:', error);
     }
-
-    // Create an array with the config object
-    const configArray = [configToSave];
-    console.log(configArray);
-
-    // Create a JSON blob and download it
-    const jsonString = JSON.stringify(configArray, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-
-    // Create a temporary link and trigger download
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `route.json`;
-    document.body.appendChild(link);
-    link.click();
-
-    // Cleanup
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    console.log('Configuration saved and downloaded');
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-full overflow-y-scroll p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Display Configuration</h2>
+        {/* <IMEInput/> */}
+        {/* <GoogleIME/> */}
         <button
           type="submit"
           className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -636,8 +708,8 @@ export const DisplayConfigForm: React.FC = () => {
             type="button"
             onClick={() => setActiveTab('route')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'route'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
           >
             Route
@@ -646,8 +718,8 @@ export const DisplayConfigForm: React.FC = () => {
             type="button"
             onClick={() => setActiveTab('languages')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'languages'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
           >
             Languages
@@ -658,8 +730,8 @@ export const DisplayConfigForm: React.FC = () => {
               type="button"
               onClick={() => setActiveTab(screenType)}
               className={`py-2 px-1 border-b-2 font-medium text-sm capitalize ${activeTab === screenType
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
             >
               {screenType}

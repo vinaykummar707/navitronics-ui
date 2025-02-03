@@ -134,7 +134,7 @@ const SideWithTwoTextsBoard = ({ route, formData }) => {
               {" "}
               <div className="led-display"> {formData.routeUpperHalfText} </div>
             </div>
-            <div className="bottom-section border-t-2  border-[#ffa500]">
+            <div className="bottom-section border-t-2  border-[#2a2a2a]">
               {" "}
               <div className="led-display"> {formData.routeLowerHalfText} </div>
             </div>
@@ -169,7 +169,7 @@ const SideWithTwoTextsBoard = ({ route, formData }) => {
               </span>
             </div>
           </div>
-          <div className="bottom-section border-t-2 border-[#ffa500]">
+          <div className="bottom-section border-t-2 border-[#2a2a2a]">
             <div
               className={`${getPositionClass(
                 lowerHalfPosition,

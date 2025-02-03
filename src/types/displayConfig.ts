@@ -1,5 +1,5 @@
-export type ScrollType = 'left-to-right' | 'right-to-left' | 'fixed' | 'flicker';
-export type Position = 'left' | 'right' | 'center';
+export type ScrollType = 'Left To Right' | 'Right To Left' | 'Fixed' | 'Flicker';
+export type Position = 'Left' | 'Right' | 'Center';
 export type ScreenFormat = 'single' | 'two' | 'three';
 
 export interface BitmapTranslations {
