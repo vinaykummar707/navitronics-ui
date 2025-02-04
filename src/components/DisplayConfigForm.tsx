@@ -249,7 +249,7 @@ export const DisplayConfigForm: React.FC = () => {
     }
   };
 
-  const handlePlaceholderSelect = (
+  const handlePlaceholderSelect = async (
     screenKey: string,
     textKey: string,
     language: string,
@@ -257,12 +257,25 @@ export const DisplayConfigForm: React.FC = () => {
   ) => {
     const routeData = watch('route');
     const generatedText = generatePlaceholderText(option, routeData);
-    const upperText = generatedText.toUpperCase();
+    let  upperText;
+    if(language === 'en') {
+      upperText = generatedText;
+    } else {
+      if(option === 'routeNumber' || option === 'routeNumber1' || option === 'routeNumber2'){
+        upperText = generatedText.toUpperCase();
+    } else {
+      const res  = await fetchTransliteration(generatedText, language);
+      upperText = res[0];
+    }
 
+    }
     // Update both translations and bitmaps
     setValue(`displayConfig.${language}.${screenKey}.texts.${textKey}.text`, upperText);
     setValue(`displayConfig.${language}.${screenKey}.texts.${textKey}.bitmap.bitmap`, upperText);
   };
+
+
+  
 
   const renderRouteTab = () => (
     <div className="mb-8 p-6 bg-white rounded-xl shadow-md">
@@ -406,6 +419,25 @@ export const DisplayConfigForm: React.FC = () => {
       </div>
     </div>
   );
+
+  const fetchTransliteration = async (text: string, langCode: string = "hi") => {
+    try {
+      const response = await fetch(
+        `https://inputtools.google.com/request?text=${encodeURIComponent(text)}&itc=${langCode}-t-i0-und&num=5&ie=utf-8&oe=utf-8&app=customApp`
+      );
+      const data = await response.json();
+  
+      if (data[0] === "SUCCESS") {
+        return data[1][0][1]; // Array of suggestions
+      } else {
+        console.error("Transliteration failed:", data);
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching transliteration:", error);
+      return [];
+    }
+  };
 
   const renderScreenTab = (screenKey: typeof SCREEN_TYPES[number]) => {
     const displayConfig = watch('displayConfig');
@@ -663,6 +695,7 @@ export const DisplayConfigForm: React.FC = () => {
       }
 
       // Create an array with the config object
+      configToSave['version'] = '1.0';
       const configArray = [configToSave];
       console.log(configArray);
 
