@@ -65,7 +65,7 @@ const PLACEHOLDER_OPTIONS = [
 const ROUTE_SEPARATORS = [
   { value: '-', label: 'Dash (-)' },
   { value: 'TO', label: 'TO' },
-  { value: 'vc', label: 'Vice Verca' }
+  { value: '⇄', label: 'Vice Verca' }
 ] as const;
 
 const FONT_SIZES = [10, 12, 14, 16] as const;
@@ -696,24 +696,48 @@ export const DisplayConfigForm: React.FC = () => {
 
       // Create an array with the config object
       configToSave['version'] = '1.0';
-      const configArray = [configToSave];
-      console.log(configArray);
+      const rn = configToSave.route.routeNumber;
 
       // Create a JSON blob and download it
-      const jsonString = JSON.stringify(configArray, null, 2);
+      const jsonString = JSON.stringify(configToSave, null, 2);
       const blob = new Blob([jsonString], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
+
+    
+
+  
 
       // Create a temporary link and trigger download
       const link = document.createElement('a');
       link.href = url;
-      link.download = `route.json`;
+      link.download = `${rn}.json`;
       document.body.appendChild(link);
       link.click();
+
+
+      const masterJson = [{[configToSave.route.routeNumber]: `${rn}.json`}];
+
+
+      // Create a master JSON blob and download it
+      const masterjsonString = JSON.stringify(masterJson, null, 2);
+      const masterblob = new Blob([masterjsonString], { type: 'application/json' });
+      const masterurl = URL.createObjectURL(masterblob);
+
+
+          // Create a temporary link and trigger download
+          const masterlink = document.createElement('a');
+          masterlink.href = masterurl;
+          masterlink.download = `routes.json`;
+          document.body.appendChild(masterlink);
+          masterlink.click();
 
       // Cleanup
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+
+
+      document.body.removeChild(masterlink);
+      URL.revokeObjectURL(masterurl);
 
       console.log('Configuration saved and downloaded');
     } catch (error) {
