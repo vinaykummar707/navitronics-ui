@@ -1,9 +1,11 @@
 import { useState } from "react";
 
-const fetchTransliteration = async (text: string, langCode: string = "hi") => {
+const fetchTransliteration = async (text: string, langCode: string) => {
   try {
     const response = await fetch(
-      `https://inputtools.google.com/request?text=${encodeURIComponent(text)}&itc=${langCode}-t-i0-und&num=5&ie=utf-8&oe=utf-8&app=customApp`
+      `https://inputtools.google.com/request?text=${encodeURIComponent(
+        text
+      )}&itc=${langCode}-t-i0-und&num=5&ie=utf-8&oe=utf-8&app=customApp`
     );
     const data = await response.json();
 
@@ -19,16 +21,21 @@ const fetchTransliteration = async (text: string, langCode: string = "hi") => {
   }
 };
 
-const IMEInput = () => {
-  const [text, setText] = useState("");
+interface IMEInputProps {
+  langCode: string;
+  value: string;
+  onChange: (value: string) => void;
+}
+
+const IMEInput: React.FC<IMEInputProps> = ({ langCode, value, onChange }) => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setText(value);
+    const newValue = e.target.value;
+    onChange(newValue); // Update form value
 
-    if (value.trim()) {
-      const results = await fetchTransliteration(value);
+    if (newValue.trim()) {
+      const results = await fetchTransliteration(newValue, langCode);
       setSuggestions(results);
     } else {
       setSuggestions([]);
@@ -36,18 +43,18 @@ const IMEInput = () => {
   };
 
   const handleSuggestionClick = (suggestion: string) => {
-    setText(suggestion);
-    setSuggestions([]); // Clear suggestions after selection
+    onChange(suggestion); // Set selected suggestion in the form
+    setSuggestions([]);
   };
 
   return (
-    <div className="relative w-64">
+    <div className="relative w-full">
       <input
         type="text"
-        value={text}
+        value={value}
         onChange={handleChange}
         placeholder="Type in English..."
-        className="border p-2 w-full"
+        className="border p-2 w-full rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       />
       {suggestions.length > 0 && (
         <ul className="absolute bg-white border w-full mt-1 shadow-md z-10">

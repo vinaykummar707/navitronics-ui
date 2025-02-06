@@ -132,11 +132,11 @@ const SideWithTwoTextsBoard = ({ route, formData }) => {
           <div className="left-half flex flex-col">
             <div className="top-section">
               {" "}
-              <div className="led-display"> {formData.routeUpperHalfText} </div>
+              <div className="led-display"> {formData.routeNumber1} </div>
             </div>
             <div className="bottom-section border-t-2  border-[#2a2a2a]">
               {" "}
-              <div className="led-display"> {formData.routeLowerHalfText} </div>
+              <div className="led-display"> {formData.routeNumber2} </div>
             </div>
           </div>
         )}
