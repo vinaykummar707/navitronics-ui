@@ -36,7 +36,7 @@ export const routeService = {
   },
 
   generateBitmap: async (text: string, fontFile: string, size: number) => {
-    const response = await axiosInstance.get(`${BASE_PATH}/generateBitmap?text=${encodeURIComponent(text)}&fontFile=${fontFile}&size=${size}`);
+    const response = await axiosInstance.get(`${BASE_PATH}/generateBitmap?text=${encodeURIComponent(text)}&fontFile=${fontFile}&height=${16}&width=96`);
     return response.data;
   }
 

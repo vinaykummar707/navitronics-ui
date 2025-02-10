@@ -4,10 +4,10 @@ const baseURL =  'https://api.navitronix.in/navitranix/api';
 // const baseURL =  'http://localhost:8080/navitranix/api';
 
 const axiosInstance = axios.create({
-  baseURL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+	baseURL,
+	headers: {
+		'Content-Type': 'application/json',
+	},
 });
 
 // Request interceptor to add token to all requests
@@ -26,15 +26,15 @@ const axiosInstance = axios.create({
 
 // Response interceptor to handle errors
 axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized access (e.g., redirect to login)
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
+	(response) => response,
+	(error) => {
+		if (error.response?.status === 401) {
+			// Handle unauthorized access (e.g., redirect to login)
+			localStorage.removeItem('token');
+			window.location.href = '/login';
+		}
+		return Promise.reject(error);
+	}
 );
 
 export default axiosInstance;

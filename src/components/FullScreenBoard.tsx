@@ -3,7 +3,7 @@ import "./LedSignBoard.css";
 
 const FullScreenBoard = ({ formData }: any) => {
   // const { routeNumber, source, destination, via } = config[selectedTab];
-  const { text, scrollType, scrollSpeed, position } = formData;
+  const { text, scrollType, scrollSpeed, position, fontWeight } = formData;
 
   const [scrollEnabled, setScrollEnabled] = useState(scrollSpeed);
 
@@ -71,7 +71,7 @@ const FullScreenBoard = ({ formData }: any) => {
               }}
             >
               <span
-                className={`${
+                className={`${fontWeight} ${
                   (scrollType === "Left To Right" ||
                     scrollType === "Right To Left") &&
                   "w-full"

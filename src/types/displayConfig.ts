@@ -1,6 +1,7 @@
 export type ScrollType = 'Left To Right' | 'Right To Left' | 'Fixed' | 'Flicker';
 export type Position = 'Left' | 'Right' | 'Center';
 export type ScreenFormat = 'single' | 'two' | 'three';
+export type FontWeight = 'Regular' | 'Bold' ;
 
 export interface BitmapTranslations {
     bitmap: string;
@@ -9,12 +10,13 @@ export interface BitmapTranslations {
 }
 
 export interface TextConfig {
-  text:string;
-  bitmap: BitmapTranslations;
-  scrollType: ScrollType;
-  position: Position;
-  scrollSpeed: number;
-  fontSize: number;
+	text: string;
+	bitmap: BitmapTranslations;
+	scrollType: ScrollType;
+	position: Position;
+	scrollSpeed: number;
+	fontSize: number;
+	fontWeight: FontWeight;
 }
 
 export interface SingleScreenTexts {

@@ -77,125 +77,137 @@
 // };
 // export default SideWithTwoHalfsBoard;
 
-import { useEffect, useState } from "react";
-import "./LedSignBoard.css";
+import { useEffect, useState } from 'react';
+import './LedSignBoard.css';
 
 const SideWithTwoTextsBoard = ({ route, formData }) => {
-  const {
-    sideText,
-    upperHalfText,
-    upperHalfScrollType,
-    upperHalfScrollSpeed,
-    upperHalfPosition,
-    lowerHalfText,
-    lowerHalfScrollType,
-    lowerHalfScrollSpeed,
-    lowerHalfPosition,
-  } = formData;
+	const {
+		sideText,
+		upperHalfText,
+		upperHalfScrollType,
+		upperHalfScrollSpeed,
+		upperHalfPosition,
+		lowerHalfText,
+		lowerHalfScrollType,
+		lowerHalfScrollSpeed,
+		lowerHalfPosition,
+		lowerHalfFontWeight,
+		upperHalfFontWeight,
+		sideTextFontWeight,
+	} = formData;
 
-  const [upperScrollEnabled, setUpperScrollEnabled] = useState(false);
-  const [lowerScrollEnabled, setLowerScrollEnabled] = useState(false);
+	const [upperScrollEnabled, setUpperScrollEnabled] = useState(false);
+	const [lowerScrollEnabled, setLowerScrollEnabled] = useState(false);
 
-  useEffect(() => {
-    // console.log("called");
-    setUpperScrollEnabled(!["Fixed"].includes(upperHalfScrollType));
-    setLowerScrollEnabled(!["Fixed"].includes(lowerHalfScrollType));
-  }, [upperHalfScrollType, lowerHalfScrollType]);
+	useEffect(() => {
+		// console.log("called");
+		setUpperScrollEnabled(!['Fixed'].includes(upperHalfScrollType));
+		setLowerScrollEnabled(!['Fixed'].includes(lowerHalfScrollType));
+	}, [upperHalfScrollType, lowerHalfScrollType]);
 
-  const getPositionClass = (position, scrollType) => {
-    switch (scrollType) {
-      case "Flicker":
-        switch (position) {
-          case "Left":
-            return "flicker justify-start";
-          case "Right":
-            return "flicker justify-end";
-          default:
-            return "flicker justify-center";
-        }
-      default:
-        switch (position) {
-          case "Left":
-            return "marquee justify-start";
-          case "Right":
-            return "marquee justify-end";
-          default:
-            return "marquee justify-center";
-        }
-    }
-  };
+	const getPositionClass = (position, scrollType) => {
+		switch (scrollType) {
+			case 'Flicker':
+				switch (position) {
+					case 'Left':
+						return 'flicker justify-start';
+					case 'Right':
+						return 'flicker justify-end';
+					default:
+						return 'flicker justify-center';
+				}
+			default:
+				switch (position) {
+					case 'Left':
+						return 'marquee justify-start';
+					case 'Right':
+						return 'marquee justify-end';
+					default:
+						return 'marquee justify-center';
+				}
+		}
+	};
 
-  return (
-    <div className="w-full">
-      <div className="led-sign-board">
-        {route.splitRoute && (
-          <div className="left-half flex flex-col">
-            <div className="top-section">
-              {" "}
-              <div className="led-display"> {formData.routeNumber1} </div>
-            </div>
-            <div className="bottom-section border-t-2  border-[#2a2a2a]">
-              {" "}
-              <div className="led-display"> {formData.routeNumber2} </div>
-            </div>
-          </div>
-        )}
-        {!route.splitRoute && (
-          <div className="left-half ">
-            <div className="led-display"> {sideText} </div>
-          </div>
-        )}
-        <div className="right-half">
-          <div className="top-section">
-            <div
-              className={`${getPositionClass(
-                upperHalfPosition,
-                upperHalfScrollType
-              )} ${!upperScrollEnabled ? "paused" : ""} ${
-                upperHalfScrollType === "Left To Right" && "marquee-left"
-              } ${upperHalfScrollType === "Right To Left" && "marquee"}`}
-              style={{
-                "--scroll-speed": `${upperHalfScrollSpeed}s`,
-              }}
-            >
-              <span
-                className={`${
-                  (upperHalfScrollType === "Left To Right" ||
-                    upperHalfScrollType === "Right To Left") &&
-                  "w-full"
-                }`}
-              >
-                {upperHalfText}
-              </span>
-            </div>
-          </div>
-          <div className="bottom-section border-t-2 border-[#2a2a2a]">
-            <div
-              className={`${getPositionClass(
-                lowerHalfPosition,
-                lowerHalfScrollType
-              )} ${!lowerScrollEnabled ? "paused" : ""} ${
-                lowerHalfScrollType === "Left To Right" && "marquee-left"
-              } ${lowerHalfScrollType === "Right To Left" && "marquee"}`}
-              style={{
-                "--scroll-speed": `${lowerHalfScrollSpeed}s`,
-              }}
-            >
-              <span
-                className={`${
-                  (lowerHalfScrollType === "Left To Right" ||
-                    lowerHalfScrollType === "Right To Left") &&
-                  "w-full"
-                }`}
-              >
-                {lowerHalfText}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+	return (
+		<div className="w-full">
+			<div className="led-sign-board">
+				{route.splitRoute && (
+					<div className="left-half flex flex-col">
+						<div className="top-section">
+							{' '}
+							<div className={`led-display ${sideTextFontWeight}`}>
+								{' '}
+								{formData.routeNumber1}{' '}
+							</div>
+						</div>
+						<div className="bottom-section border-t-2  border-[#2a2a2a]">
+							{' '}
+							<div className={`led-display ${sideTextFontWeight}`}>
+								{' '}
+								{formData.routeNumber2}{' '}
+							</div>
+						</div>
+					</div>
+				)}
+				{!route.splitRoute && (
+					<div className="left-half ">
+						<div className={`led-display ${sideTextFontWeight}`}>
+							{' '}
+							{sideText}{' '}
+						</div>
+					</div>
+				)}
+				<div className="right-half">
+					<div className="top-section">
+						<div
+							className={`${getPositionClass(
+								upperHalfPosition,
+								upperHalfScrollType
+							)} ${!upperScrollEnabled ? 'paused' : ''} ${
+								upperHalfScrollType === 'Left To Right' && 'marquee-left'
+							} ${upperHalfScrollType === 'Right To Left' && 'marquee'}`}
+							style={{
+								'--scroll-speed': `${upperHalfScrollSpeed}s`,
+							}}
+						>
+							<span
+								className={` ${upperHalfFontWeight} ${
+									(upperHalfScrollType === 'Left To Right' ||
+										upperHalfScrollType === 'Right To Left') &&
+									'w-full'
+								}`}
+							>
+								{upperHalfText}
+							</span>
+						</div>
+					</div>
+					<div className="bottom-section border-t-2 border-[#2a2a2a]">
+						<div
+							className={`${getPositionClass(
+								lowerHalfPosition,
+								lowerHalfScrollType
+							)} ${!lowerScrollEnabled ? 'paused' : ''} ${
+								lowerHalfScrollType === 'Left To Right' && 'marquee-left'
+							} ${lowerHalfScrollType === 'Right To Left' && 'marquee'}`}
+							style={{
+								'--scroll-speed': `${lowerHalfScrollSpeed}s`,
+							}}
+						>
+							<span
+								className={`${lowerHalfFontWeight} ${
+									(lowerHalfScrollType === 'Left To Right' ||
+										lowerHalfScrollType === 'Right To Left') &&
+									'w-full'
+								}`}
+							>
+								{lowerHalfText}
+							</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	);
 };
 
 export default SideWithTwoTextsBoard;
