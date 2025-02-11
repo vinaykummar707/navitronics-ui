@@ -43,6 +43,14 @@ const FORMATS = [
 	},
 ] as const;
 
+const FORMATS2 = [
+	{
+		value: 'single',
+		label: 'Single Line Board',
+	},
+
+] as const;
+
 const FONT_WEIGHT = [
 	{
 		value: 'font-normal',
@@ -57,7 +65,7 @@ const AVAILABLE_LANGUAGES = [
 	{ code: 'en', name: 'English', fontFile: 'english' },
 	{ code: 'hi', name: 'Hindi', fontFile: 'mangal' },
 	{ code: 'ch', name: 'Chattisgarh', fontFile: 'krutidev' },
-	{ code: 'te', name: 'Telugu', fontFile: 'anuradha' },
+	{ code: 'te', name: 'Telugu', fontFile: 'gautami' },
 	{ code: 'ta', name: 'Tamil', fontFile: 'latha' },
 	{ code: 'kn', name: 'Kannada', fontFile: 'tunga' },
 	{ code: 'ml', name: 'Malayalam', fontFile: 'mangal' },
@@ -76,6 +84,10 @@ const AVAILABLE_LANGUAGES = [
 	{ code: 'mai', name: 'Maithili', fontFile: 'mangal' },
 	{ code: 'bho', name: 'Bhojpuri', fontFile: 'mangal' },
 ] as const;
+
+const PLACE_HOLDER_OPTIONS2 = [	{
+	value:	'source', label : 'Special Messages'
+}]
 
 const PLACEHOLDER_OPTIONS = [
 	{ value: 'routeNumber', label: 'Route Number' },
@@ -163,7 +175,7 @@ const getDefaultScreenConfig = (format: ScreenFormat, isEnglish: boolean) => {
 };
 
 const getDefaultLanguageConfig = (isEnglish: boolean) => ({
-	front: getDefaultScreenConfig('two', isEnglish),
+	front: getDefaultScreenConfig('single', isEnglish),
 	side: getDefaultScreenConfig('single', isEnglish),
 	rear: getDefaultScreenConfig('single', isEnglish),
 	internal: getDefaultScreenConfig('single', isEnglish),
@@ -173,7 +185,9 @@ const generatePlaceholderText = (option: string, routeData: any) => {
 	const parts = option.split('-');
 	console.log(option, routeData, parts);
 	const res = parts
-		.map((part) => routeData[part] || '')
+		.map((part) =>
+			part === 'via' ? `VIA: ${routeData[part]}` : routeData[part] || ''
+		)
 		.filter(Boolean)
 		.join(' ');
 	console.log(res);
@@ -206,6 +220,7 @@ export const DisplayConfigForm: React.FC = () => {
 		});
 
 	const splitRoute = watch('route.splitRoute');
+	const isSpecialMessage	= watch('route.isSpecialMessage');
 
 	const handleFormatChange = (
 		screenKey: string,
@@ -330,11 +345,7 @@ export const DisplayConfigForm: React.FC = () => {
 		const generatedText = generatePlaceholderText(option, routeData);
 		let upperText;
 		if (language === 'en') {
-			if (option === 'via') {
-				upperText = `VIA: ${generatedText.toUpperCase()}`;
-			} else {
-				upperText = generatedText;
-			}
+			upperText = generatedText.toUpperCase();
 		} else {
 			if (
 				option === 'routeNumber' ||
@@ -345,9 +356,6 @@ export const DisplayConfigForm: React.FC = () => {
 			} else {
 				const res = await fetchTransliteration(generatedText, language);
 				upperText = res[0];
-				if (option === 'via') {
-					upperText = `VIA: ${upperText}`;
-				}
 			}
 		}
 		// Update both translations and bitmaps
@@ -366,22 +374,39 @@ export const DisplayConfigForm: React.FC = () => {
 			<h3 className="text-xl font-bold mb-4 text-gray-800">
 				Route Information
 			</h3>
-			<div className="flex mb-4 items-center">
-				<input
-					type="checkbox"
-					{...register('route.splitRoute')}
-					id="splitRoute"
-					className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded uppercase"
-				/>
-				<label
-					htmlFor="splitRoute"
-					className="ml-2 block text-sm text-gray-900"
-				>
-					Split Route
-				</label>
+			<div className="flex gap-4 items-center">
+				<div className="flex mb-4 items-center">
+					<input
+						type="checkbox"
+						{...register('route.splitRoute')}
+						id="splitRoute"
+						className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded uppercase"
+					/>
+					<label
+						htmlFor="splitRoute"
+						className="ml-2 block text-sm text-gray-900"
+					>
+						Split Route
+					</label>
+				</div>
+				<div className="flex mb-4 items-center">
+					<input
+						type="checkbox"
+						{...register('route.isSpecialMessage')}
+						id="splitRoute"
+						className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded uppercase"
+					/>
+					<label
+						htmlFor="splitRoute"
+						className="ml-2 block text-sm text-gray-900"
+					>
+						Special Messages
+					</label>
+				</div>
 			</div>
+
 			{/* Conditional Split Route Fields */}
-			{splitRoute && (
+			{splitRoute && !isSpecialMessage && (
 				<div className="mt-4 grid grid-cols-1 mb-4 md:grid-cols-2 gap-4">
 					<div>
 						<label className="block text-sm font-medium text-gray-600 mb-1">
@@ -408,7 +433,7 @@ export const DisplayConfigForm: React.FC = () => {
 				</div>
 			)}
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-				{!splitRoute && (
+				{!splitRoute && !isSpecialMessage && (
 					<div>
 						<label className="block text-sm font-medium text-gray-600 mb-1">
 							Route Number
@@ -421,17 +446,17 @@ export const DisplayConfigForm: React.FC = () => {
 					</div>
 				)}
 
-				<div>
+				<div className={isSpecialMessage ? 'col-span-2' : ''}>
 					<label className="block text-sm font-medium text-gray-600 mb-1">
-						Source
+						{ isSpecialMessage ? 'Special Messages' :  'Source'}
 					</label>
 					<input
 						{...register('route.source')}
 						className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-						placeholder="Enter source location"
+						placeholder={ isSpecialMessage ? "For Multiple Special Messages Keep '/' In Between Each Message " : "Enter source location"}
 					/>
 				</div>
-				<div>
+				{!isSpecialMessage && <div>
 					<label className="block text-sm font-medium text-gray-600 mb-1">
 						Destination
 					</label>
@@ -440,8 +465,8 @@ export const DisplayConfigForm: React.FC = () => {
 						className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 						placeholder="Enter destination location"
 					/>
-				</div>
-				<div>
+				</div>}
+				{!isSpecialMessage && <div>
 					<label className="block text-sm font-medium text-gray-600 mb-1">
 						Via
 					</label>
@@ -450,8 +475,8 @@ export const DisplayConfigForm: React.FC = () => {
 						className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 						placeholder="Dont add comma for stops use space instead"
 					/>
-				</div>
-				<div>
+				</div>}
+				{!isSpecialMessage && <div>
 					<label className="block text-sm font-medium text-gray-600 mb-1">
 						Separator
 					</label>
@@ -465,7 +490,7 @@ export const DisplayConfigForm: React.FC = () => {
 							</option>
 						))}
 					</select>
-				</div>
+				</div>}
 			</div>
 		</div>
 	);
@@ -537,25 +562,30 @@ export const DisplayConfigForm: React.FC = () => {
 		const displayConfig = watch('displayConfig');
 		const routeData = watch('route');
 		const sampleBitmap = `
-.......#####.........#....#####......................................#...............#####.....#####.....#.................#........#.....................
-..#..#.#....##........#..#.....##.....................................#.............#.....##..#.....##....#.................#.............................
-################################################.....##########################.....###############################.....##################################
-.....#..#.....#....#...#..#......#....#....#..#.......#..#..#...#......#....#........#......#..#...#..#....#....#............#......#....#.#..#......#..#.
-.#####..#..##.#..###...#..#..#####.##.###..#..#.......#..#..#.###...##.#..###........#...##.#..#...#..#..###..###............#...##.#..#.#.#..#..#####..#.
-.#...#..#.#...#.#......#..#..#...#.#..#..#.####.......#..#..#.####.#...#.#...........#..#..##..#.######.#.....####......######..#..##..#.#.#..#..#...#..#.
-.##..#..#..####.#......#..#..##..#.####...#...#........###..#....#..####.#...........#..#.#.#..#.#.#..#.#........#......#....#..#.#.#..###.#..#..##..#..#.
-.....#..#.....#..####..#..#......#....#....#..#........#.#..#.###......#..####.......#...#..#..#.###..#..####.###.......#....#...#..#......#..#......#..#.
-..................##........................#..................#.........................................................##...............................
-.................#..#...........................................#.........................................................................................
-`;
+....................................................#######.......................................................................................................................................................................................................................................................######...............................................................................................................................................
+.................................................##########...........................................................................######...................................................................................................................................................................#########...............................................................................................................................................
+............................##...................##..................................................................##...............##................##.....................................................###..............................................................................##.............##.........................................................................................##................................##.........................
+.........###..............####....................#####.........##......................###########................####.............########..........####........##............................................##............................................................................####..............#####...................................................................................####..............................####..........###............
+.........###........###..###.....................##.............##........###....................###.........##..###................##....###...###..###..........##....................................................###.............................................................###..###...............##.................................................................................###..###..........................###..###............##.............
+.......########......######..##...##........##########........#######...#######..............######....#.....######..##########.....#########....######..#.......####....#....#.....................###....###..##....#######...............#####...#####..#################.............######..##.....#......######...................################............###################.....######.#####.....#.....######..#####.....######....##......#####...##......
+.....#####.#####............####.####......###.###..###........###.....###...###...............####...####..........####...######..##########...........####...###..##..####.####.....######.........##...###...##.........###..###........###.##..###.###..####.####..##.###...#####...........####...####...####.####......................####..##.###...#####.....##########...#####..#########..####...####..####.##########...########..####....###.###.####.....
+....###############...........###..####....#######...###.......###.....###....###................###....###...........###..##..##.###.......##............###..###.###...####..###...###..###........###..##....##....########...##.......#######...##.###.###.....###.##..##.###..####...........###...####.###.....###............#####......###.##..##.###..####..##.......###..##.##..##.....###...###....###..###...##....##..###....###...###..#######....###....
+....###############.#######....##....###...#####.....###.......###.....###....###.......######....###...###..######....###..####..##........###.######.....##..######.....###...###.###....###........##.###....##...###...###............######.########..###.....###..####..##....###.#######....##....###.###.....###.............###.......###..####..##....###.###........##..#####.###.....###....##....###..#####...#######.###.....##....###.######......##....
+....##...#####..##..##...###...##.....###..###......###........###.....###...###.......###..###...###...###.###..###...###........##...###..###.##..####...##..##...###...###....##..##....##.........#####.....##...###...###.............###.........###..##.....###........###...###.##...###...###...###.###.....##..............##...###..###........###...###.###..###...##.........###....###....###...###.###.....##...##..###....####...###.###...###...##....
+....#############...#############......##...##########..........#####...#######.........###################..############.........############..#############..#############.....###.########..........####.....##...#########..###.........#############...#########..........#######..###################...#########...##.........#############.........#######...############.........######################..###############...##....#########...#############....
+......##.....##.......##.....##........###......###...............##.......#.............##.....##....##.......##....##.............##....##......##....##.......###....##.......###....##.............................##........##..............####..........###...............##.......##.##..##....##........###.....###...........##....##..............###.......##....##..............###.....###....##.......##.....###................##.......##.....##......
+...............................###.....###................................................................................................................................######.###.........................................................................................................##..........................##.........................................##.........###......................................................................####..##.......
+..............................######...###...............................................................................................................................###..#####..................................................................................................................................................................................####....####......................................................................##..##.###......
+..............................##.########.................................................................................................................................###########..................................................................................................................................................................................########........................................................................#####...##......
+...............................###..####...................................................................................................................................####...###..................................................................................................................................................................................................................................................................##########......`;
 
 		return (
-			<div className="mb-8 p-2 bg-white shadow-md rounded-xl ">
-				<h3 className="text-md font-bold mb-2 text-gray-800 capitalize">
-					{screenKey} Screen Configuration
+			<div className=" overflow-y-auto bg-white p-6 rounded-xl">
+				<h3 className="text-md font-semibold mb-4 text-gray-800 capitalize">
+					{screenKey} Board
 				</h3>
 
-				<AccordionRoot defaultValue={['en']} collapsible>
+				<AccordionRoot  collapsible>
 					{selectedLanguages.map((language) => {
 						const isEnglish = language === 'en';
 
@@ -576,7 +606,7 @@ export const DisplayConfigForm: React.FC = () => {
 
 						return (
 							<AccordionItem
-								className="py-2 px-4 bg-gray-00  border "
+								className="py-2 bg-white rounded-xl shadow mb-4 border px-4 bg-gray-00   "
 								key={language}
 								value={language}
 							>
@@ -587,7 +617,7 @@ export const DisplayConfigForm: React.FC = () => {
 								</AccordionItemTrigger>
 								<AccordionItemContent className="bg-neutral-20 p-2">
 									<div className="mb-4">
-										<LEDBoardBitmap bitmap={sampleBitmap} />
+										 {/*<LEDBoardBitmap rows={16} columns={96} bitmap={sampleBitmap} />*/}
 
 										{screenConfig.format === 'single' && (
 											<FullScreenBoard
@@ -717,9 +747,17 @@ export const DisplayConfigForm: React.FC = () => {
 											}
 											className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 										>
-											{FORMATS.filter(
+											{ !isSpecialMessage ?  FORMATS.filter(
 												(format) => isEnglish || format.value !== 'three'
 											).map((format) => (
+
+												<option key={format.value} value={format.value}>
+													{format.label}
+												</option>
+											)) : FORMATS2.filter(
+												(format) => isEnglish || format.value !== 'three'
+											).map((format) => (
+
 												<option key={format.value} value={format.value}>
 													{format.label}
 												</option>
@@ -731,7 +769,7 @@ export const DisplayConfigForm: React.FC = () => {
 										([textKey, textConfig]) => (
 											<div
 												key={`${language}-${textKey}`}
-												className="border p-4 bg-gray-200 border-gray-400 rounded-lg mb-4"
+												className="border p-4 bg-stone-100 border-stone-400 rounded-lg mb-4"
 											>
 												<h4 className="font-semibold mb-2 text-gray-700 capitalize">
 													{textKey === 'sideText'
@@ -739,9 +777,9 @@ export const DisplayConfigForm: React.FC = () => {
 														: textKey.replace(/([A-Z])/g, ' $1').trim()}
 												</h4>
 
-												<div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+												<div className="mb-4 flex gap-4">
 													<select
-														className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+														className=" p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 														onChange={(e) =>
 															handlePlaceholderSelect(
 																screenKey,
@@ -750,14 +788,21 @@ export const DisplayConfigForm: React.FC = () => {
 																e.target.value
 															)
 														}
-														value={selectedPlaceholder}
+
 													>
 														<option value="">Select placeholder</option>
-														{PLACEHOLDER_OPTIONS.map((option) => (
-															<option key={option.value} value={option.value}>
-																{option.label}
-															</option>
-														))}
+														{
+
+															isSpecialMessage ? PLACE_HOLDER_OPTIONS2.map((option) => (
+																<option  key={option.value} value={option.value}>
+																	{option.label}
+																</option>
+															)) : PLACEHOLDER_OPTIONS.map((option) => (
+																<option  key={option.value} value={option.value}>
+																	{option.label}
+																</option>
+															))
+														}
 													</select>
 													{/* <input
                             {...register(
@@ -946,12 +991,21 @@ export const DisplayConfigForm: React.FC = () => {
 						if (!textConfig.text) continue;
 
 						try {
+							let bitmapResponse;
+							if (language !== 'en') {
+								bitmapResponse = await routeService.generateBitmap(
+									textConfig.text,
+									langConfig.fontFile,
+									13
+								);
+							} else {
+								bitmapResponse = await routeService.generateBitmap(
+									textConfig.text,
+									langConfig.fontFile,
+									13
+								);
+							}
 							// Call the generateBitmap API with the correct font file
-							const bitmapResponse = await routeService.generateBitmap(
-								textConfig.text,
-								langConfig.fontFile,
-								textConfig.fontSize
-							);
 
 							// Store bitmap data with metadata
 							screen.texts[textKey].bitmap = {
@@ -974,7 +1028,7 @@ export const DisplayConfigForm: React.FC = () => {
 			const rn = configToSave.route.routeNumber;
 
 			// Create a JSON blob and download it
-			const jsonString = JSON.stringify(configToSave, null, 2);
+			const jsonString = JSON.stringify([configToSave], null, 2);
 			const blob = new Blob([jsonString], { type: 'application/json' });
 			const url = URL.createObjectURL(blob);
 
@@ -1017,9 +1071,9 @@ export const DisplayConfigForm: React.FC = () => {
 	return (
 		<form
 			onSubmit={handleSubmit(onSubmit)}
-			className="w-full overflow-y-scroll p-6"
+			className="w-full flex flex-col gap-4 overflow-hidden p-6"
 		>
-			<div className="flex justify-between items-center mb-2">
+			<div className="flex justify-between items-center">
 				<h2 className="text-xl font-bold text-gray-900">
 					Display Configuration
 				</h2>
@@ -1033,14 +1087,14 @@ export const DisplayConfigForm: React.FC = () => {
 				</button>
 			</div>
 
-			<div className="mb-6 border-b border-gray-200">
-				<nav className="-mb-px flex space-x-4">
+			<div className=" border-b border-gray-200">
+				<nav className="-mb-px space-x-4 flex ">
 					<button
 						type="button"
 						onClick={() => setActiveTab('route')}
-						className={`py-2 px-1 border-b-2 font-medium text-sm ${
+						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${
 							activeTab === 'route'
-								? 'border-blue-500 text-blue-600'
+								? 'border-nav_orange bg-white text-nav_blue-600'
 								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
 						}`}
 					>
@@ -1049,9 +1103,9 @@ export const DisplayConfigForm: React.FC = () => {
 					<button
 						type="button"
 						onClick={() => setActiveTab('languages')}
-						className={`py-2 px-1 border-b-2 font-medium text-sm ${
+						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${
 							activeTab === 'languages'
-								? 'border-blue-500 text-blue-600'
+								? 'border-nav_orange bg-white text-nav_blue-600'
 								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
 						}`}
 					>
@@ -1062,19 +1116,19 @@ export const DisplayConfigForm: React.FC = () => {
 							key={screenType}
 							type="button"
 							onClick={() => setActiveTab(screenType)}
-							className={`py-2 px-1 border-b-2 font-medium text-sm capitalize ${
+							className={`py-2 px-3 text-left max-w-[120px]  border-b-2 font-medium text-sm capitalize ${
 								activeTab === screenType
-									? 'border-blue-500 text-blue-600'
+									? 'border-nav_orange bg-white text-nav_blue-600'
 									: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
 							}`}
 						>
-							{screenType}
+							{screenType} Board
 						</button>
 					))}
 				</nav>
 			</div>
 
-			<div className="mt-6">{renderTabContent()}</div>
+			<div className="flex flex-col overflow-hidden">{renderTabContent()}</div>
 		</form>
 	);
 };

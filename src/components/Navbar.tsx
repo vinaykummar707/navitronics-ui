@@ -27,9 +27,9 @@ const Navbar = () => {
     <nav className="bg-white  border-b  ">
 
       <Container fluid className='flex  justify-between items-center'>
-        <Link to="/" className="text-xl gap-2 items-center flex font-bold">
-          <img className='size-16' src="/assets/Navitronix.png" alt="" srcSet="" />
-          Navitronix
+        <Link to="/" className="text-2xl text-nav_orange gap-2 items-center flex font-bold">
+          <img className='size-20 ' src="/assets/navitronix.jpeg" alt="" srcSet="" />
+          NAVITRONIX
         </Link>
         {/* <div className="flex items-center space-x-6">
 
@@ -65,7 +65,7 @@ const Navbar = () => {
 
             {/* <Link to="/settings" className="text-sm text-neutral-1000 hover:text-neutral-700">
                 Settings
-              </Link> 
+              </Link>
           </div>
         </div> */}
 
@@ -74,16 +74,16 @@ const Navbar = () => {
           <div
             className="border-neutral-200 gap-2  border rounded-md flex items-center px-3 py-1.5  text-sm "
           >
-            <Icon height={16} width={16} icon="solar:user-bold" />
-            <span className='text-xs text-neutral-400 uppercase'>{user.userName} </span> /
-            <span className='text-xs text-neutral-400 uppercase'>{user.userRole} Role </span>
+            <Icon height={20} width={20} className={'text-nav_blue-500'} icon="solar:user-bold" />
+            <span className='text-xs text-neutral-900 font-semibold uppercase'>{user.userName} </span> /
+            <span className='text-xs text-neutral-900 font-semibold uppercase'>{user.userRole} Role </span>
           </div>
           <button
             onClick={() => {
               logout();
               navigate('/login')
             }}
-            className="bg-red-600 text-white px-3 py-1.5 text-sm rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            className="bg-nav_orange text-white px-3 py-1.5 text-sm rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           >
             Logout
           </button>

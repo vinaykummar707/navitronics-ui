@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import {useEffect, useRef, useState} from 'react';
 
 const fetchTransliteration = async (word: string, langCode: string) => {
 	try {
@@ -29,49 +29,96 @@ interface IMEInputProps {
 
 const IMEInput: React.FC<IMEInputProps> = ({ langCode, value, onChange }) => {
 	const [suggestions, setSuggestions] = useState<string[]>([]);
-	const [currentWord, setCurrentWord] = useState<string>('');
+	const [cursorIndex, setCursorIndex] = useState<number>(0);
+	const inputRef = useRef<HTMLInputElement>(null);
 
 	const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const newValue = e.target.value;
+		const selectionStart = e.target.selectionStart || 0;
+
 		onChange(newValue);
+		setCursorIndex(selectionStart); // Track cursor position
 
-		// Get the last word after the last space
-		const words = newValue.split(' ');
-		const lastWord = words[words.length - 1];
+		// Find the word at the cursor position
+		const words = newValue.split(" ");
+		let wordStart = 0;
+		let wordIndex = -1;
 
-		setCurrentWord(lastWord);
+		for (let i = 0; i < words.length; i++) {
+			if (selectionStart >= wordStart && selectionStart <= wordStart + words[i].length) {
+				wordIndex = i;
+				break;
+			}
+			wordStart += words[i].length + 1; // +1 for spaces
+		}
 
-		// Disable transliteration for English
-		if (langCode === 'en' || !lastWord.trim()) {
+		if (wordIndex === -1 || langCode === "en") {
 			setSuggestions([]);
 			return;
 		}
 
-		if (lastWord.trim()) {
-			const results = await fetchTransliteration(lastWord, langCode);
-			setSuggestions([...results, lastWord]); // Add user-typed word at the end
+		const wordAtCursor = words[wordIndex];
+
+		if (wordAtCursor.trim()) {
+			const results = await fetchTransliteration(wordAtCursor, langCode);
+			setSuggestions([...results, wordAtCursor]); // Add user-typed word at the end
 		} else {
 			setSuggestions([]);
 		}
 	};
 
 	const handleSuggestionClick = (suggestion: string) => {
-		const words = value.split(' ');
-		words[words.length - 1] = suggestion; // Replace only the last word
-		const newText = words.join(' ');
+		const words = value.split(" ");
+		let wordStart = 0;
+		let wordIndex = -1;
 
-		onChange(newText);
-		setSuggestions([]); // Clear suggestions after selection
+		// Find which word is at the cursor position
+		for (let i = 0; i < words.length; i++) {
+			if (cursorIndex >= wordStart && cursorIndex <= wordStart + words[i].length) {
+				wordIndex = i;
+				break;
+			}
+			wordStart += words[i].length + 1;
+		}
+
+		if (wordIndex !== -1) {
+			words[wordIndex] = suggestion; // Replace only the word at cursor
+			const newText = words.join(" ");
+			onChange(newText);
+			setCursorIndex(wordStart + suggestion.length); // Adjust cursor position
+		}
+
+		setSuggestions([]); // Clear suggestions
+
+		// Keep input focused and restore cursor position after clicking a suggestion
+		setTimeout(() => {
+			if (inputRef.current) {
+				inputRef.current.focus();
+				inputRef.current.setSelectionRange(cursorIndex, cursorIndex); // Restore cursor position
+			}
+		}, 0);
 	};
+
+	// Hide suggestions when clicking outside
+	useEffect(() => {
+		// const handleClickOutside = (event: MouseEvent) => {
+		// 	if (inputRef.current && !inputRef.current.contains(event.target as Node)) {
+		// 		setSuggestions([]);
+		// 	}
+		// };
+		// document.addEventListener("mousedown", handleClickOutside);
+		// return () => document.removeEventListener("mousedown", handleClickOutside);
+	}, []);
 
 	return (
 		<div className="relative w-full">
 			<input
+				ref={inputRef}
 				type="text"
 				value={value}
 				onChange={handleChange}
 				placeholder="Type in English..."
-				className="border p-2 w-full rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+				className="border w-full p-2  rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 			/>
 			{suggestions.length > 0 && (
 				<ul className=" bg-white border w-full mt-1 shadow-md z-50  overflow-y-auto">

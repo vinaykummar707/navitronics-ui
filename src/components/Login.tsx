@@ -69,11 +69,11 @@ function Login() {
 			}}
 		>
 			<div className="absolute top-10 left-10">
-				<img src="/assets/Navitronix.png" alt="Logo" className="h-36" />
+				<img src="/assets/navitronix.png" alt="Logo" className="h-40" />
 			</div>
 
 			<div className="flex items-center justify-between w-full max-w-7xl">
-				<div className="w-1/2">
+				<div className="">
 					<img
 						src="/assets/BusImage.png"
 						alt="Our Vision"
