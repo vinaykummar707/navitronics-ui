@@ -77,6 +77,8 @@ const Routes = () => {
     mutationFn: routeService.delete,
     onSuccess: (data) => {
       console.log(data);
+      queryClient.invalidateQueries({ queryKey: ["routes", selectedDepotId] });
+
     },
     onError: (error) => {
       console.error("Error creating route:", error);
@@ -286,22 +288,22 @@ const Routes = () => {
                     <tr key={route?.id} className="hover:bg-stone-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-stone-900">
-                          {route.routeNumber}
+                          {route.route.routeNumber}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-stone-500">
-                          {route.source}
+                          {route.route.source}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-stone-500">
-                          {route.destination}
+                          {route.route.destination}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-stone-500">
-                          {route.via}
+                          {route.route.via}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -328,9 +330,11 @@ const Routes = () => {
                         </button>
                         <RBAC roles={[ROLES.ORGANIZATION_ADMIN, ROLES.AREA_ADMIN, ROLES.DEPOT_ADMIN, ROLES.MASTER]}>
                           <button
-                            onClick={() =>
-                              navigate(`/edit-route/${route.id}`)
-                            }
+                              onClick={() =>
+                                  navigate("/home/create-route", {
+                                    state: { areaId: selectedAreaId, depotId: selectedDepotId, isEdit: true, gotRouteData: route },
+                                  })
+                              }
                             className="text-indigo-600 hover:text-indigo-900 mr-4"
                           >
                             <Icon

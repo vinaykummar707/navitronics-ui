@@ -10,13 +10,17 @@ export const routeService = {
 		depotId: string
 	): Promise<Route[]> => {
 		const response = await axiosInstance.get(
-			`${BASE_PATH}/getAllRoutes?organizationId=${organizationId}&areaId=${areaId}&depotId=${depotId}`
+			`${BASE_PATH}/all?areaId=${areaId}&depotId=${depotId}`
 		);
-		return response.data['data'];
+		return response.data;
 	},
 	create: async (routeData: any): Promise<any> => {
-		const response = await axiosInstance.post(`${BASE_PATH}/create`, routeData);
+		const response = await axiosInstance.post(`${BASE_PATH}`, routeData);
 		return response.data['data'];
+	},
+	update: async (id:any, routeData: any): Promise<any> => {
+		const response = await axiosInstance.put(`${BASE_PATH}/${id}`, routeData);
+		return response.data;
 	},
 	getAllWithConfig: async (depotId: string): Promise<any> => {
 		const response = await axiosInstance.get(
@@ -32,7 +36,7 @@ export const routeService = {
 	},
 	delete: async (routeId: string): Promise<any> => {
 		const response = await axiosInstance.delete(
-			`${BASE_PATH}/delete/${routeId}`
+			`${BASE_PATH}/${routeId}`
 		);
 		return response.data;
 	},

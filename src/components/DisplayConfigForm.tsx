@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import {
 	AccordionItem,
@@ -19,6 +19,8 @@ import IMEInput from './IMEInput';
 import GoogleIME from './IMEInput';
 import LedSignBoard from './LedSignBoard';
 import LEDBoardBitmap from './ledBitmap';
+import {useMutation, useQueryClient} from "@tanstack/react-query";
+import {useLocation, useNavigate} from "react-router-dom";
 
 const SCREEN_TYPES = ['front', 'side', 'rear', 'internal'] as const;
 const SCROLL_TYPES = [
@@ -141,6 +143,8 @@ const getDefaultTextConfig = () => ({
 	fontWeight: 'font-regular',
 });
 
+
+
 const getFormatTexts = (format: ScreenFormat) => {
 	switch (format) {
 		case 'single':
@@ -196,11 +200,44 @@ const generatePlaceholderText = (option: string, routeData: any) => {
 
 export const DisplayConfigForm: React.FC = () => {
 	const [selectedLanguages, setSelectedLanguages] = useState<string[]>(['en']);
+	const location = useLocation();
+	const { areaId, depotId , isEdit, gotRouteData} = location.state || {};
 	const [activeTab, setActiveTab] = useState<
 		'route' | 'languages' | (typeof SCREEN_TYPES)[number]
 	>('route');
 
-	const { register, handleSubmit, watch, setValue, control } =
+	const navigate = useNavigate();
+	const queryClient = useQueryClient();
+
+	const createRouteMutation = useMutation({
+		mutationFn: routeService.create,
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["routes"] });
+			navigate("/home/routes");
+		},
+		onError: (error) => {
+			console.error("Error creating route:", error);
+			// Handle error appropriately
+		},
+	});
+
+	const updateRouteMutation = useMutation({
+		mutationFn: ({id, data}: {id: any; data: any}) =>  routeService.update(id, data),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["routes"] });
+			navigate("/home/routes");
+		},
+		onError: (error) => {
+			console.error("Error creating route:", error);
+			// Handle error appropriately
+		},
+	});
+
+	const handleSave = (data: any) => {
+		createRouteMutation.mutate(data);
+	};
+
+	const { register, handleSubmit, watch, setValue, control,reset } =
 		useForm<DisplayConfig>({
 			defaultValues: {
 				route: {
@@ -216,8 +253,18 @@ export const DisplayConfigForm: React.FC = () => {
 				displayConfig: {
 					en: getDefaultLanguageConfig(true),
 				},
+				version: '1.0',
+				areaId: areaId,
+				depotId: depotId
 			},
 		});
+
+	useEffect(() => {
+		console.log(isEdit, gotRouteData);
+		if (isEdit && gotRouteData) {
+			reset(gotRouteData); // ✅ Reset entire form with new data
+		}
+	}, [isEdit, gotRouteData, reset]);
 
 	const splitRoute = watch('route.splitRoute');
 	const isSpecialMessage	= watch('route.isSpecialMessage');
@@ -1005,47 +1052,52 @@ export const DisplayConfigForm: React.FC = () => {
 					}
 				}
 			}
-
+			console.log(configToSave.id)
 			// Create an array with the config object
-			configToSave['version'] = '1.0';
-			const rn = configToSave.route.routeNumber;
+			if(isEdit) {
+				updateRouteMutation.mutate({id: configToSave.id, data: configToSave})
+			} else {
+				createRouteMutation.mutate(configToSave);
+			}
+
+			// const rn = configToSave.route.routeNumber;
 
 			// Create a JSON blob and download it
-			const jsonString = JSON.stringify([configToSave], null, 2);
-			const blob = new Blob([jsonString], { type: 'application/json' });
-			const url = URL.createObjectURL(blob);
+			// const jsonString = JSON.stringify([configToSave], null, 2);
+			// const blob = new Blob([jsonString], { type: 'application/json' });
+			// const url = URL.createObjectURL(blob);
 
 			// Create a temporary link and trigger download
-			const link = document.createElement('a');
-			link.href = url;
-			link.download = `${rn}.json`;
-			document.body.appendChild(link);
-			link.click();
+			// const link = document.createElement('a');
+			// link.href = url;
+			// link.download = `${rn}.json`;
+			// document.body.appendChild(link);
+			// link.click();
 
-			const masterJson = [{ [configToSave.route.routeNumber]: `${rn}.json` }];
+			// const masterJson = [{ [configToSave.route.routeNumber]: `${rn}.json` }];
 
 			// Create a master JSON blob and download it
-			const masterjsonString = JSON.stringify(masterJson, null, 2);
-			const masterblob = new Blob([masterjsonString], {
-				type: 'application/json',
-			});
-			const masterurl = URL.createObjectURL(masterblob);
+			// const masterjsonString = JSON.stringify(masterJson, null, 2);
+			// const masterblob = new Blob([masterjsonString], {
+			// 	type: 'application/json',
+			// });
+			// const masterurl = URL.createObjectURL(masterblob);
 
 			// Create a temporary link and trigger download
-			const masterlink = document.createElement('a');
-			masterlink.href = masterurl;
-			masterlink.download = `routes.json`;
-			document.body.appendChild(masterlink);
-			masterlink.click();
+			// const masterlink = document.createElement('a');
+			// masterlink.href = masterurl;
+			// masterlink.download = `routes.json`;
+			// document.body.appendChild(masterlink);
+			// masterlink.click();
 
 			// Cleanup
-			document.body.removeChild(link);
-			URL.revokeObjectURL(url);
+			// document.body.removeChild(link);
+			// URL.revokeObjectURL(url);
+			//
+			// document.body.removeChild(masterlink);
+			// URL.revokeObjectURL(masterurl);
 
-			document.body.removeChild(masterlink);
-			URL.revokeObjectURL(masterurl);
-
-			console.log('Configuration saved and downloaded');
+			console.log('Configuration saved and downloaded', configToSave);
 		} catch (error) {
 			console.error('Error processing configuration:', error);
 		}
@@ -1066,7 +1118,7 @@ export const DisplayConfigForm: React.FC = () => {
 					type="submit"
 					className="px-4 text-sm py-2 bg-blue-700 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
 				>
-					Save Configuration
+					{isEdit ? "Update Configuration" : "Save Configuration"}
 				</button>
 			</div>
 

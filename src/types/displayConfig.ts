@@ -66,4 +66,11 @@ export interface LanguageDisplayConfig {
 export interface DisplayConfig {
   route: RouteInformation;
   displayConfig: LanguageDisplayConfig;
+  version: string;
+    areaId: string,
+    depotId: string;
+    createdAt?: string;
+    active?: string;
+    deleted?: string;
+    id?: string;
 }
