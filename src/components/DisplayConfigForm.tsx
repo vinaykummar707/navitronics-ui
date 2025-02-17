@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import {
 	AccordionItem,
@@ -19,8 +19,8 @@ import IMEInput from './IMEInput';
 import GoogleIME from './IMEInput';
 import LedSignBoard from './LedSignBoard';
 import LEDBoardBitmap from './ledBitmap';
-import {useMutation, useQueryClient} from "@tanstack/react-query";
-import {useLocation, useNavigate} from "react-router-dom";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const SCREEN_TYPES = ['front', 'side', 'rear', 'internal'] as const;
 const SCROLL_TYPES = [
@@ -50,7 +50,6 @@ const FORMATS2 = [
 		value: 'single',
 		label: 'Single Line Board',
 	},
-
 ] as const;
 
 const FONT_WEIGHT = [
@@ -64,7 +63,7 @@ const FONT_WEIGHT = [
 	},
 ];
 const AVAILABLE_LANGUAGES = [
-	{ code: 'en', name: 'English', fontFile: 'english' },
+	{ code: 'en', name: 'English', fontFile: 'arial' },
 	{ code: 'hi', name: 'Hindi', fontFile: 'mangal' },
 	{ code: 'ch', name: 'Chattisgarh', fontFile: 'krutidev' },
 	{ code: 'te', name: 'Telugu', fontFile: 'gautami' },
@@ -87,9 +86,12 @@ const AVAILABLE_LANGUAGES = [
 	{ code: 'bho', name: 'Bhojpuri', fontFile: 'mangal' },
 ] as const;
 
-const PLACE_HOLDER_OPTIONS2 = [	{
-	value:	'source', label : 'Special Messages'
-}]
+const PLACE_HOLDER_OPTIONS2 = [
+	{
+		value: 'source',
+		label: 'Special Messages',
+	},
+];
 
 const PLACEHOLDER_OPTIONS = [
 	{ value: 'routeNumber', label: 'Route Number' },
@@ -136,14 +138,40 @@ const getDefaultTextConfig = () => ({
 		width: 0,
 		height: 0,
 	},
-	scrollType: 'Left To Right' as const,
-	position: 'Center' as const,
-	scrollSpeed: 5,
+	scrollType: 'Fixed' as const,
+	position: 'Left' as const,
+	scrollSpeed: 15,
 	fontSize: 16,
 	fontWeight: 'font-regular',
 });
 
+const getDefaultThreeTextConfig = () => ({
+	text: '',
+	bitmap: {
+		bitmap: '',
+		width: 0,
+		height: 0,
+	},
+	scrollType: 'Fixed' as const,
+	position: 'Left' as const,
+	scrollSpeed: 15,
+	fontSize: 8,
+	fontWeight: 'font-regular',
+});
 
+const getDefaultThreeSideTextConfig = () => ({
+	text: '',
+	bitmap: {
+		bitmap: '',
+		width: 0,
+		height: 0,
+	},
+	scrollType: 'Fixed' as const,
+	position: 'Left' as const,
+	scrollSpeed: 15,
+	fontSize: 16,
+	fontWeight: 'font-regular',
+});
 
 const getFormatTexts = (format: ScreenFormat) => {
 	switch (format) {
@@ -158,9 +186,9 @@ const getFormatTexts = (format: ScreenFormat) => {
 			};
 		case 'three':
 			return {
-				sideText: getDefaultTextConfig(),
-				upperHalfText: getDefaultTextConfig(),
-				lowerHalfText: getDefaultTextConfig(),
+				sideText: getDefaultThreeSideTextConfig(),
+				upperHalfText: getDefaultThreeTextConfig(),
+				lowerHalfText: getDefaultThreeTextConfig(),
 			};
 		default:
 			return {};
@@ -201,7 +229,7 @@ const generatePlaceholderText = (option: string, routeData: any) => {
 export const DisplayConfigForm: React.FC = () => {
 	const [selectedLanguages, setSelectedLanguages] = useState<string[]>(['en']);
 	const location = useLocation();
-	const { areaId, depotId , isEdit, gotRouteData} = location.state || {};
+	const { areaId, depotId, isEdit, gotRouteData } = location.state || {};
 	const [activeTab, setActiveTab] = useState<
 		'route' | 'languages' | (typeof SCREEN_TYPES)[number]
 	>('route');
@@ -212,23 +240,24 @@ export const DisplayConfigForm: React.FC = () => {
 	const createRouteMutation = useMutation({
 		mutationFn: routeService.create,
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["routes"] });
-			navigate("/home/routes");
+			queryClient.invalidateQueries({ queryKey: ['routes'] });
+			navigate('/home/routes');
 		},
 		onError: (error) => {
-			console.error("Error creating route:", error);
+			console.error('Error creating route:', error);
 			// Handle error appropriately
 		},
 	});
 
 	const updateRouteMutation = useMutation({
-		mutationFn: ({id, data}: {id: any; data: any}) =>  routeService.update(id, data),
+		mutationFn: ({ id, data }: { id: any; data: any }) =>
+			routeService.update(id, data),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["routes"] });
-			navigate("/home/routes");
+			queryClient.invalidateQueries({ queryKey: ['routes'] });
+			navigate('/home/routes');
 		},
 		onError: (error) => {
-			console.error("Error creating route:", error);
+			console.error('Error creating route:', error);
 			// Handle error appropriately
 		},
 	});
@@ -237,7 +266,7 @@ export const DisplayConfigForm: React.FC = () => {
 		createRouteMutation.mutate(data);
 	};
 
-	const { register, handleSubmit, watch, setValue, control,reset } =
+	const { register, handleSubmit, watch, setValue, control, reset } =
 		useForm<DisplayConfig>({
 			defaultValues: {
 				route: {
@@ -255,19 +284,22 @@ export const DisplayConfigForm: React.FC = () => {
 				},
 				version: '1.0',
 				areaId: areaId,
-				depotId: depotId
+				depotId: depotId,
 			},
 		});
 
 	useEffect(() => {
 		console.log(isEdit, gotRouteData);
 		if (isEdit && gotRouteData) {
+			console.log(Object.keys(gotRouteData.displayConfig));
+			setSelectedLanguages(Object.keys(gotRouteData.displayConfig));
 			reset(gotRouteData); // ✅ Reset entire form with new data
+			// const languages =
 		}
 	}, [isEdit, gotRouteData, reset]);
 
 	const splitRoute = watch('route.splitRoute');
-	const isSpecialMessage	= watch('route.isSpecialMessage');
+	const isSpecialMessage = watch('route.isSpecialMessage');
 
 	const handleFormatChange = (
 		screenKey: string,
@@ -283,68 +315,20 @@ export const DisplayConfigForm: React.FC = () => {
 		switch (newFormat) {
 			case 'single':
 				newTexts = {
-					text: {
-						text: currentText,
-						bitmap: { bitmap: '', width: 0, height: 0 },
-						scrollType: 'Left To Right' as const,
-						position: 'Center' as const,
-						scrollSpeed: 4,
-						fontSize: 16,
-						fontWeight: 'font-regular',
-					},
+					text: getDefaultTextConfig(),
 				};
 				break;
 			case 'two':
 				newTexts = {
-					sideText: {
-						text: currentText,
-						bitmap: { bitmap: '', width: 0, height: 0 },
-						scrollType: 'Left To Right' as const,
-						position: 'Center' as const,
-						scrollSpeed: 5,
-						fontSize: 16,
-						fontWeight: 'font-regular',
-					},
-					text: {
-						text: currentText,
-						bitmap: { bitmap: '', width: 0, height: 0 },
-						scrollType: 'Fixed' as const,
-						position: 'Right' as const,
-						scrollSpeed: 3,
-						fontSize: 14,
-						fontWeight: 'font-regular',
-					},
+					sideText: getDefaultTextConfig(),
+					text: getDefaultTextConfig(),
 				};
 				break;
 			case 'three':
 				newTexts = {
-					sideText: {
-						text: currentText,
-						bitmap: { bitmap: '', width: 0, height: 0 },
-						scrollType: 'Right To Left' as const,
-						position: 'Center' as const,
-						scrollSpeed: 6,
-						fontSize: 8,
-						fontWeight: 'font-regular',
-					},
-					upperHalfText: {
-						text: currentText,
-						bitmap: { bitmap: '', width: 0, height: 0 },
-						scrollType: 'Fixed' as const,
-						position: 'Right' as const,
-						scrollSpeed: 2,
-						fontSize: 8,
-						fontWeight: 'font-regular',
-					},
-					lowerHalfText: {
-						text: currentText,
-						bitmap: { bitmap: '', width: 0, height: 0 },
-						scrollType: 'Left To Right' as const,
-						position: 'Left' as const,
-						scrollSpeed: 5,
-						fontSize: 8,
-						fontWeight: 'font-regular',
-					},
+					sideText: getDefaultThreeSideTextConfig(),
+					upperHalfText: getDefaultThreeTextConfig(),
+					lowerHalfText: getDefaultThreeTextConfig(),
 				};
 				break;
 		}
@@ -495,49 +479,59 @@ export const DisplayConfigForm: React.FC = () => {
 
 				<div className={isSpecialMessage ? 'col-span-2' : ''}>
 					<label className="block text-sm font-medium text-gray-600 mb-1">
-						{ isSpecialMessage ? 'Special Messages' :  'Source'}
+						{isSpecialMessage ? 'Special Messages' : 'Source'}
 					</label>
 					<input
 						{...register('route.source')}
 						className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-						placeholder={ isSpecialMessage ? "For Multiple Special Messages Keep '/' In Between Each Message " : "Enter source location"}
+						placeholder={
+							isSpecialMessage
+								? "For Multiple Special Messages Keep '/' In Between Each Message "
+								: 'Enter source location'
+						}
 					/>
 				</div>
-				{!isSpecialMessage && <div>
-					<label className="block text-sm font-medium text-gray-600 mb-1">
-						Destination
-					</label>
-					<input
-						{...register('route.destination')}
-						className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-						placeholder="Enter destination location"
-					/>
-				</div>}
-				{!isSpecialMessage && <div>
-					<label className="block text-sm font-medium text-gray-600 mb-1">
-						Via
-					</label>
-					<input
-						{...register('route.via')}
-						className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-						placeholder="Dont add comma for stops use space instead"
-					/>
-				</div>}
-				{!isSpecialMessage && <div>
-					<label className="block text-sm font-medium text-gray-600 mb-1">
-						Separator
-					</label>
-					<select
-						{...register('route.separation')}
-						className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-					>
-						{ROUTE_SEPARATORS.map((sep) => (
-							<option key={sep.value} value={sep.value}>
-								{sep.label}
-							</option>
-						))}
-					</select>
-				</div>}
+				{!isSpecialMessage && (
+					<div>
+						<label className="block text-sm font-medium text-gray-600 mb-1">
+							Destination
+						</label>
+						<input
+							{...register('route.destination')}
+							className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+							placeholder="Enter destination location"
+						/>
+					</div>
+				)}
+				{!isSpecialMessage && (
+					<div>
+						<label className="block text-sm font-medium text-gray-600 mb-1">
+							Via
+						</label>
+						<input
+							{...register('route.via')}
+							className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+							placeholder="Dont add comma for stops use space instead"
+						/>
+					</div>
+				)}
+				{!isSpecialMessage && (
+					<div>
+						<label className="block text-sm font-medium text-gray-600 mb-1">
+							Separator
+						</label>
+						<select
+							{...register('route.separation')}
+							className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+						>
+							{ROUTE_SEPARATORS.map((sep) => (
+								<option key={sep.value} value={sep.value}>
+									{sep.label}
+								</option>
+							))}
+						</select>
+					</div>
+				)}
 			</div>
 		</div>
 	);
@@ -615,7 +609,7 @@ export const DisplayConfigForm: React.FC = () => {
 					{screenKey} Board Configuration
 				</h3>
 
-				<AccordionRoot  collapsible>
+				<AccordionRoot collapsible>
 					{selectedLanguages.map((language) => {
 						const isEnglish = language === 'en';
 
@@ -647,7 +641,7 @@ export const DisplayConfigForm: React.FC = () => {
 								</AccordionItemTrigger>
 								<AccordionItemContent className="bg-neutral-20 p-2">
 									<div className="mb-4">
-										 {/*<LEDBoardBitmap rows={16} columns={96} bitmap={sampleBitmap} />*/}
+										{/*<LEDBoardBitmap rows={16} columns={96} bitmap={sampleBitmap} />*/}
 
 										{screenConfig.format === 'single' && (
 											<FullScreenBoard
@@ -777,21 +771,21 @@ export const DisplayConfigForm: React.FC = () => {
 											}
 											className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 										>
-											{ !isSpecialMessage ?  FORMATS.filter(
-												(format) => isEnglish || format.value !== 'three'
-											).map((format) => (
-
-												<option key={format.value} value={format.value}>
-													{format.label}
-												</option>
-											)) : FORMATS2.filter(
-												(format) => isEnglish || format.value !== 'three'
-											).map((format) => (
-
-												<option key={format.value} value={format.value}>
-													{format.label}
-												</option>
-											))}
+											{!isSpecialMessage
+												? FORMATS.filter(
+														(format) => isEnglish || format.value !== 'three'
+												  ).map((format) => (
+														<option key={format.value} value={format.value}>
+															{format.label}
+														</option>
+												  ))
+												: FORMATS2.filter(
+														(format) => isEnglish || format.value !== 'three'
+												  ).map((format) => (
+														<option key={format.value} value={format.value}>
+															{format.label}
+														</option>
+												  ))}
 										</select>
 									</div>
 
@@ -818,21 +812,25 @@ export const DisplayConfigForm: React.FC = () => {
 																e.target.value
 															)
 														}
-
 													>
 														<option value="">Select placeholder</option>
-														{
-
-															isSpecialMessage ? PLACE_HOLDER_OPTIONS2.map((option) => (
-																<option  key={option.value} value={option.value}>
-																	{option.label}
-																</option>
-															)) : PLACEHOLDER_OPTIONS.map((option) => (
-																<option  key={option.value} value={option.value}>
-																	{option.label}
-																</option>
-															))
-														}
+														{isSpecialMessage
+															? PLACE_HOLDER_OPTIONS2.map((option) => (
+																	<option
+																		key={option.value}
+																		value={option.value}
+																	>
+																		{option.label}
+																	</option>
+															  ))
+															: PLACEHOLDER_OPTIONS.map((option) => (
+																	<option
+																		key={option.value}
+																		value={option.value}
+																	>
+																		{option.label}
+																	</option>
+															  ))}
 													</select>
 													{/* <input
                             {...register(
@@ -1026,13 +1024,13 @@ export const DisplayConfigForm: React.FC = () => {
 								bitmapResponse = await routeService.generateBitmap(
 									textConfig.text,
 									langConfig.fontFile,
-									13
+									textConfig.fontSize
 								);
 							} else {
 								bitmapResponse = await routeService.generateBitmap(
 									textConfig.text,
 									langConfig.fontFile,
-									13
+									textConfig.fontSize
 								);
 							}
 							// Call the generateBitmap API with the correct font file
@@ -1052,10 +1050,10 @@ export const DisplayConfigForm: React.FC = () => {
 					}
 				}
 			}
-			console.log(configToSave.id)
+			console.log(configToSave.id);
 			// Create an array with the config object
-			if(isEdit) {
-				updateRouteMutation.mutate({id: configToSave.id, data: configToSave})
+			if (isEdit) {
+				updateRouteMutation.mutate({ id: configToSave.id, data: configToSave });
 			} else {
 				createRouteMutation.mutate(configToSave);
 			}
@@ -1118,7 +1116,7 @@ export const DisplayConfigForm: React.FC = () => {
 					type="submit"
 					className="px-4 text-sm py-2 bg-blue-700 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
 				>
-					{isEdit ? "Update Configuration" : "Save Configuration"}
+					{isEdit ? 'Update Configuration' : 'Save Configuration'}
 				</button>
 			</div>
 

@@ -18,15 +18,16 @@ export const routeService = {
 		const response = await axiosInstance.post(`${BASE_PATH}`, routeData);
 		return response.data['data'];
 	},
-	update: async (id:any, routeData: any): Promise<any> => {
+	update: async (id: any, routeData: any): Promise<any> => {
 		const response = await axiosInstance.put(`${BASE_PATH}/${id}`, routeData);
 		return response.data;
 	},
-	getAllWithConfig: async (depotId: string): Promise<any> => {
+	getAllWithConfig: async (depotId: string, areaId: string): Promise<any> => {
 		const response = await axiosInstance.get(
-			`${BASE_PATH}/getAllRoutesDisplayConfig/${depotId}`
+			`${BASE_PATH}/export?areaId=${areaId}&depotId=${depotId}`,
+			{ responseType: 'blob' }
 		);
-		return response.data['data'];
+		return response;
 	},
 	getRouteWithRouteId: async (routeId: string): Promise<any> => {
 		const response = await axiosInstance.get(
@@ -35,17 +36,35 @@ export const routeService = {
 		return response.data['data'];
 	},
 	delete: async (routeId: string): Promise<any> => {
-		const response = await axiosInstance.delete(
-			`${BASE_PATH}/${routeId}`
-		);
+		const response = await axiosInstance.delete(`${BASE_PATH}/${routeId}`);
 		return response.data;
 	},
 
-	generateBitmap: async (text: string, fontFile: string, size: number) => {
+	generateBitmap: async (text: string, fontFile: string, fontSize: number) => {
+		let size = 1;
+		let desiredHeight = 20;
+		if (fontSize === 8) {
+			desiredHeight = 12;
+			size = 2;
+		}
 		const response = await axiosInstance.get(
 			`${BASE_PATH}/generateBitmap?text=${encodeURIComponent(
 				text
-			)}&fontFile=${fontFile}&size=${size}`
+			)}&fontFile=${fontFile}&size=${size}&height=${desiredHeight}`
+		);
+		return response.data;
+	},
+	generateBitmapSimulation: async (text: string, fontFile: string, fontSize: number) => {
+		let size = 1;
+		let desiredHeight = 20;
+		if (fontSize === 8) {
+			desiredHeight = 12;
+			size = 2;
+		}
+		const response = await axiosInstance.get(
+			`${BASE_PATH}/getBitmapSimulation?text=${encodeURIComponent(
+				text
+			)}&fontFile=${fontFile}&size=${size}&height=${desiredHeight}`
 		);
 		return response.data;
 	},
