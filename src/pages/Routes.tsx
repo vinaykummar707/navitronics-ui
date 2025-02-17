@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { routeService } from '../services/routeService';
 import { areaService } from '../services/areaService';
@@ -12,6 +12,8 @@ import useAuthStore from '@/store/authStore';
 import SimulationDialog from '@/components/SimulationDialog';
 import RBAC from '../components/RBAC';
 import { ROLES } from '../constants/roles';
+import { AgGridReact } from 'ag-grid-react';
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 
 const Routes = () => {
 	const [selectedAreaId, setSelectedAreaId] = useState<string>('');
@@ -23,11 +25,14 @@ const Routes = () => {
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
 	const user = useAuthStore((state) => state.user);
+	const gridRef = useRef<AgGridReact>(null); // Reference to AG Grid
+	const [selectedRows, setSelectedRows] = useState<any[]>([]); // State to hold selected rows
 
 	// Reset selections when organization changes
 	useEffect(() => {
 		setSelectedAreaId('');
 		setSelectedDepotId('');
+		ModuleRegistry.registerModules([AllCommunityModule]);
 	}, [selectedOrganization?.organizationId]);
 
 	// Queries
@@ -121,20 +126,22 @@ const Routes = () => {
 		mutationFn: async ({
 			areaId,
 			depotId,
+			selectedIds, // Add selectedIds as part of the parameters
 		}: {
 			areaId: string;
 			depotId: string;
-		}) => await routeService.getAllWithConfig(depotId, areaId),
+			selectedIds: string[]; // Expecting an array of selected IDs
+		}) => await routeService.getAllWithConfig(depotId, areaId, selectedIds), // Pass selectedIds to the service call
 		onSuccess: (response) => {
-			// Create a download link
+			// Create a download link for the response (which is a Blob for file download)
 			const url = window.URL.createObjectURL(new Blob([response.data]));
 			const a = document.createElement('a');
 			a.href = url;
-			a.download = 'Routes.zip';
+			a.download = 'Routes.zip'; // Set the desired filename for the downloaded file
 			document.body.appendChild(a);
 			a.click();
 			document.body.removeChild(a);
-			window.URL.revokeObjectURL(url);
+			window.URL.revokeObjectURL(url); // Clean up after download
 		},
 	});
 
@@ -179,6 +186,110 @@ const Routes = () => {
 	}
 
 	const filteredRoutes = routes?.filter((route) => !route.deleted);
+
+	// Custom cell renderer for actions column
+	const ActionCellRenderer = (params: any) => {
+		const route = params.data.route; // Extracting route data
+		console.log(params.data);
+
+		return (
+			<RBAC
+				roles={[
+					ROLES.ORGANIZATION_ADMIN,
+					ROLES.AREA_ADMIN,
+					ROLES.DEPOT_ADMIN,
+					ROLES.MASTER,
+				]}
+			>
+				{/* Edit Button */}
+				<button
+					onClick={() =>
+						navigate('/home/create-route', {
+							state: {
+								areaId: selectedAreaId, // Ensure this is defined in scope
+								depotId: selectedDepotId, // Ensure this is defined in scope
+								isEdit: true,
+								gotRouteData: params.data, // Passing route data
+							},
+						})
+					}
+					className="text-indigo-600 hover:text-indigo-900 mr-4"
+				>
+					<Icon icon="solar:pen-bold" className="inline-block" />
+				</button>
+
+				{/* Delete Button */}
+				<button
+					onClick={() => {
+						if (
+							confirm(
+								`Are you sure you want to delete route ${route.routeNumber}?`
+							)
+						) {
+							deleteMutation.mutate(params.data.id);
+						}
+					}}
+					className="text-red-600 hover:text-red-900"
+				>
+					<Icon icon="solar:trash-bin-trash-bold" className="inline-block" />
+				</button>
+			</RBAC>
+		);
+	};
+
+	// Event handler for selection change
+const onSelectionChanged = () => {
+	const selectedNodes = gridRef.current?.api.getSelectedNodes(); // Get selected nodes
+	const selectedIds = selectedNodes?.map((node) => node.data.id); // Extract only the IDs from the selected nodes
+	setSelectedRows(selectedIds); // Store only the selected IDs
+	console.log('Selected IDs:', selectedIds); // Log the selected IDs
+};
+
+	const columnDefs = [
+		{
+			headerCheckboxSelection: true,
+			checkboxSelection: true,
+			width: 50,
+		},
+		{
+			headerName: 'Route No',
+			field: 'route.routeNumber',
+			valueGetter: (params) =>
+				params.data.route.splitRoute
+					? `${params.data.route.routeNumber1} / ${params.data.route.routeNumber2}`
+					: params.data.route.routeNumber,
+			editable: false, // Since it's dynamically generated
+		},
+		{
+			headerName: 'Source - Destination',
+			field: 'route.combinedRoute',
+			valueGetter: (params) =>
+				`${params.data.route.source} ${params.data.route.separation} ${params.data.route.destination}`,
+			editable: false,
+			flex: 1,
+		},
+		{ headerName: 'Via', field: 'route.via', flex: 1 },
+		{
+			headerName: 'Actions',
+			field: 'actions',
+			cellRenderer: ActionCellRenderer, // Use custom renderer
+			width: 150,
+			pinned: 'right', // Keep actions column fixed on right
+		},
+		// {
+		// 	headerName: 'Split Route',
+		// 	field: 'route.splitRoute',
+		// 	cellRenderer: 'agCheckboxCellRenderer',
+		// },
+		// { headerName: 'Route No 1', field: 'route.routeNumber1' },
+		// { headerName: 'Route No 2', field: 'route.routeNumber2' },
+		// { headerName: 'Separation', field: 'route.separation' },
+		// {
+		// 	headerName: 'Special Message',
+		// 	field: 'route.specialMessage',
+		// 	cellRenderer: 'agCheckboxCellRenderer',
+		// },
+	];
 
 	return (
 		<Container fluid className="py-4">
@@ -257,6 +368,7 @@ const Routes = () => {
 							getAllWithConfigMutation.mutate({
 								areaId: selectedAreaId,
 								depotId: selectedDepotId,
+								selectedIds: selectedRows,
 							})
 						}
 						disabled={!selectedDepotId}
@@ -280,166 +392,178 @@ const Routes = () => {
 						<div className="text-lg">Loading...</div>
 					</div>
 				) : (
-					<div className="bg-white rounded-lg  shadow overflow-hidden">
-						<table className="min-w-full divide-y divide-stone-200">
-							<thead className="bg-stone-50">
-								<tr>
-									<th
-										scope="col"
-										className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
-									>
-										Route Number
-									</th>
-									<th
-										scope="col"
-										className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
-									>
-										Source
-									</th>
-									<th
-										scope="col"
-										className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
-									>
-										Destination
-									</th>
-									<th
-										scope="col"
-										className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
-									>
-										Via
-									</th>
-									<th
-										scope="col"
-										className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
-									>
-										Status
-									</th>
-									<th
-										scope="col"
-										className="px-3 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider"
-									>
-										Actions
-									</th>
-								</tr>
-							</thead>
-							<tbody className="bg-white divide-y divide-stone-200">
-								{filteredRoutes && filteredRoutes.length > 0 ? (
-									filteredRoutes.map((route) => (
-										<tr key={route?.id} className="hover:bg-stone-50">
-											<td className="px-3 py-4  ">
-												<div className="text-sm font-medium text-stone-900">
-													{route.route.routeNumber}
-												</div>
-											</td>
-											<td className="px-3 py-4 max-w-[300px] w-[300px] ">
-												<div className="text-sm text-stone-500">
-													{route.route.source}
-												</div>
-											</td>
-											<td className="px-3 py-4  ">
-												<div className="text-sm text-stone-500">
-													{route.route.destination}
-												</div>
-											</td>
-											<td className="px-3 py-4 max-w-[300px] w-[300px] ">
-												<div className="text-sm text-stone-500">
-													{route.route.via}
-												</div>
-											</td>
-											<td className="px-3 py-4  ">
-												<span
-													className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-														route.active
-															? 'bg-green-100 text-green-800'
-															: 'bg-red-100 text-red-800'
-													}`}
-												>
-													{route.active ? 'Active' : 'Inactive'}
-												</span>
-											</td>
-											<td className="px-3 py-4   text-right text-sm font-medium">
-												<button
-													onClick={() => {
-														getRouteDetaildWithIdMutation.mutate(route.id);
-													}}
-													className="text-indigo-600 hover:text-indigo-900 mr-4"
-												>
-													<Icon
-														icon="solar:eye-bold"
-														className="inline-block"
-													/>
-												</button>
-												<RBAC
-													roles={[
-														ROLES.ORGANIZATION_ADMIN,
-														ROLES.AREA_ADMIN,
-														ROLES.DEPOT_ADMIN,
-														ROLES.MASTER,
-													]}
-												>
-													<button
-														onClick={() =>
-															navigate('/home/create-route', {
-																state: {
-																	areaId: selectedAreaId,
-																	depotId: selectedDepotId,
-																	isEdit: true,
-																	gotRouteData: route,
-																},
-															})
-														}
-														className="text-indigo-600 hover:text-indigo-900 mr-4"
-													>
-														<Icon
-															icon="solar:pen-bold"
-															className="inline-block"
-														/>
-													</button>
-													<button
-														onClick={() => {
-															if (
-																confirm(
-																	'Are you sure you want to delete this route?'
-																)
-															) {
-																deleteMutation.mutate(route.id);
-															}
-														}}
-														className="text-red-600 hover:text-red-900"
-													>
-														<Icon
-															icon="solar:trash-bin-trash-bold"
-															className="inline-block"
-														/>
-													</button>
-												</RBAC>
-											</td>
-										</tr>
-									))
-								) : (
-									<tr>
-										<td
-											colSpan={6}
-											className="px-3 py-4 text-center text-stone-500"
-										>
-											No routes found for this depot
-										</td>
-									</tr>
-								)}
-							</tbody>
-						</table>
-
-						{showSimulation && (
-							<SimulationDialog
-								route={route}
-								showSimulation={showSimulation}
-								displayConfig={finalObj['displayConfig']}
-								closeSimulation={() => setShowSimulation(false)}
-								saveToDatabase={null}
-								showSaveButton={false}
-							/>
-						)}
+					<div
+						className="ag-theme-alpine"
+						style={{ height: 400, width: '100%' }}
+					>
+						<AgGridReact
+							ref={gridRef}
+							rowData={routes}
+							columnDefs={columnDefs}
+							rowSelection="multiple"
+							onSelectionChanged={onSelectionChanged} // Bind selection change event
+						/>
 					</div>
+					// <div className="bg-white rounded-lg  shadow overflow-hidden">
+					// 	<table className="min-w-full divide-y divide-stone-200">
+					// 		<thead className="bg-stone-50">
+					// 			<tr>
+					// 				<th
+					// 					scope="col"
+					// 					className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
+					// 				>
+					// 					Route Number
+					// 				</th>
+					// 				<th
+					// 					scope="col"
+					// 					className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
+					// 				>
+					// 					Source
+					// 				</th>
+					// 				<th
+					// 					scope="col"
+					// 					className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
+					// 				>
+					// 					Destination
+					// 				</th>
+					// 				<th
+					// 					scope="col"
+					// 					className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
+					// 				>
+					// 					Via
+					// 				</th>
+					// 				<th
+					// 					scope="col"
+					// 					className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
+					// 				>
+					// 					Status
+					// 				</th>
+					// 				<th
+					// 					scope="col"
+					// 					className="px-3 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider"
+					// 				>
+					// 					Actions
+					// 				</th>
+					// 			</tr>
+					// 		</thead>
+					// 		<tbody className="bg-white divide-y divide-stone-200">
+					// 			{filteredRoutes && filteredRoutes.length > 0 ? (
+					// 				filteredRoutes.map((route) => (
+					// 					<tr key={route?.id} className="hover:bg-stone-50">
+					// 						<td className="px-3 py-4  ">
+					// 							<div className="text-sm font-medium text-stone-900">
+					// 								{route.route.routeNumber}
+					// 							</div>
+					// 						</td>
+					// 						<td className="px-3 py-4 max-w-[300px] w-[300px] ">
+					// 							<div className="text-sm text-stone-500">
+					// 								{route.route.source}
+					// 							</div>
+					// 						</td>
+					// 						<td className="px-3 py-4  ">
+					// 							<div className="text-sm text-stone-500">
+					// 								{route.route.destination}
+					// 							</div>
+					// 						</td>
+					// 						<td className="px-3 py-4 max-w-[300px] w-[300px] ">
+					// 							<div className="text-sm text-stone-500">
+					// 								{route.route.via}
+					// 							</div>
+					// 						</td>
+					// 						<td className="px-3 py-4  ">
+					// 							<span
+					// 								className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+					// 									route.active
+					// 										? 'bg-green-100 text-green-800'
+					// 										: 'bg-red-100 text-red-800'
+					// 								}`}
+					// 							>
+					// 								{route.active ? 'Active' : 'Inactive'}
+					// 							</span>
+					// 						</td>
+					// 						<td className="px-3 py-4   text-right text-sm font-medium">
+					// 							<button
+					// 								onClick={() => {
+					// 									getRouteDetaildWithIdMutation.mutate(route.id);
+					// 								}}
+					// 								className="text-indigo-600 hover:text-indigo-900 mr-4"
+					// 							>
+					// 								<Icon
+					// 									icon="solar:eye-bold"
+					// 									className="inline-block"
+					// 								/>
+					// 							</button>
+					// 							<RBAC
+					// 								roles={[
+					// 									ROLES.ORGANIZATION_ADMIN,
+					// 									ROLES.AREA_ADMIN,
+					// 									ROLES.DEPOT_ADMIN,
+					// 									ROLES.MASTER,
+					// 								]}
+					// 							>
+					// 								<button
+					// 									onClick={() =>
+					// 										navigate('/home/create-route', {
+					// 											state: {
+					// 												areaId: selectedAreaId,
+					// 												depotId: selectedDepotId,
+					// 												isEdit: true,
+					// 												gotRouteData: route,
+					// 											},
+					// 										})
+					// 									}
+					// 									className="text-indigo-600 hover:text-indigo-900 mr-4"
+					// 								>
+					// 									<Icon
+					// 										icon="solar:pen-bold"
+					// 										className="inline-block"
+					// 									/>
+					// 								</button>
+					// 								<button
+					// 									onClick={() => {
+					// 										if (
+					// 											confirm(
+					// 												'Are you sure you want to delete this route?'
+					// 											)
+					// 										) {
+					// 											deleteMutation.mutate(route.id);
+					// 										}
+					// 									}}
+					// 									className="text-red-600 hover:text-red-900"
+					// 								>
+					// 									<Icon
+					// 										icon="solar:trash-bin-trash-bold"
+					// 										className="inline-block"
+					// 									/>
+					// 								</button>
+					// 							</RBAC>
+					// 						</td>
+					// 					</tr>
+					// 				))
+					// 			) : (
+					// 				<tr>
+					// 					<td
+					// 						colSpan={6}
+					// 						className="px-3 py-4 text-center text-stone-500"
+					// 					>
+					// 						No routes found for this depot
+					// 					</td>
+					// 				</tr>
+					// 			)}
+					// 		</tbody>
+					// 	</table>
+
+					// 	{showSimulation && (
+					// 		<SimulationDialog
+					// 			route={route}
+					// 			showSimulation={showSimulation}
+					// 			displayConfig={finalObj['displayConfig']}
+					// 			closeSimulation={() => setShowSimulation(false)}
+					// 			saveToDatabase={null}
+					// 			showSaveButton={false}
+					// 		/>
+					// 	)}
+					// </div>
 				)
 			) : (
 				<div className="text-center text-stone-500">

@@ -22,13 +22,20 @@ export const routeService = {
 		const response = await axiosInstance.put(`${BASE_PATH}/${id}`, routeData);
 		return response.data;
 	},
-	getAllWithConfig: async (depotId: string, areaId: string): Promise<any> => {
+	getAllWithConfig: async (
+		depotId: string,
+		areaId: string,
+		selectedIds: string[]
+	): Promise<any> => {
 		const response = await axiosInstance.get(
-			`${BASE_PATH}/export?areaId=${areaId}&depotId=${depotId}`,
+			`${BASE_PATH}/export?areaId=${areaId}&depotId=${depotId}&selectedIds=${selectedIds.join(
+				','
+			)}`,
 			{ responseType: 'blob' }
 		);
 		return response;
 	},
+
 	getRouteWithRouteId: async (routeId: string): Promise<any> => {
 		const response = await axiosInstance.get(
 			`${BASE_PATH}/getRoutesDisplayConfig/${routeId}`
@@ -54,7 +61,11 @@ export const routeService = {
 		);
 		return response.data;
 	},
-	generateBitmapSimulation: async (text: string, fontFile: string, fontSize: number) => {
+	generateBitmapSimulation: async (
+		text: string,
+		fontFile: string,
+		fontSize: number
+	) => {
 		let size = 1;
 		let desiredHeight = 20;
 		if (fontSize === 8) {
