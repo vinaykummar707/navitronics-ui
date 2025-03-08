@@ -6,7 +6,7 @@ const RouteLanguageSettings = ({
   handleLanguageConfigChange,
 }) => {
   return (
-    <div className="">
+    <div className="overflow-auto">
       <div className="flex flex-col gap-8 p-6 bg-white w-full items-start rounded-lg border border-neutral-300">
         <h1 className="text-lg text-neutral-800 font-bold">
           Route Language Settings

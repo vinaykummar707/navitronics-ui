@@ -658,11 +658,11 @@ export const DisplayConfigForm: React.FC = () => {
 								</AccordionItemTrigger>
 								<AccordionItemContent className="bg-neutral-20 p-2">
 									<div className="mb-4">
-										<LEDBoardBitmap
+										{/* <LEDBoardBitmap
 											rows={16}
 											columns={96}
 											bitmap={sampleBitmap}
-										/>
+										/> */}
 
 										{screenConfig.format === 'single' && (
 											<FullScreenBoard
@@ -1182,7 +1182,7 @@ export const DisplayConfigForm: React.FC = () => {
 				</nav>
 			</div>
 
-			<div className="flex flex-col overflow-hidden">{renderTabContent()}</div>
+			<div className="flex flex-col overflow-auto">{renderTabContent()}</div>
 		</form>
 	);
 };
