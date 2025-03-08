@@ -33,7 +33,8 @@ const HomePage = () => {
         <Navbar />
         <NavbarTwo />
         <Flex className="overflow-hidden">
-            <Outlet />
+
+            <Outlet  />
         </Flex>
     </div>)
 };

@@ -53,7 +53,7 @@ const Organizations = () => {
   });
 
   return (
-    <Container fluid py={4}>
+    <Container overflow={'scroll'} fluid py={4}>
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-lg font-semibold"></h1>
       {user.userRole === 'master' &&  <button

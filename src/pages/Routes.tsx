@@ -292,7 +292,7 @@ const onSelectionChanged = () => {
 	];
 
 	return (
-		<Container fluid className="py-4">
+		<Container overflow={'scroll'} fluid className="py-4">
 			<div className="flex justify-between items-center mb-2">
 				<div className="flex gap-2 ">
 					<div className="mb-4 flex flex-col items-start justify-start">

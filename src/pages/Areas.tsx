@@ -61,7 +61,7 @@ const Areas = () => {
   }
 
   return (
-    <Container fluid py={4}>
+    <Container overflow={'scroll'} fluid py={4}>
       <div className="flex justify-between items-center mb-6">
         <div>
           {/* <p className="text-stone-600">

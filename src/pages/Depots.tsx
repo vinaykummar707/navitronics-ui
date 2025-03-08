@@ -84,157 +84,203 @@ const Depots = () => {
   }
 
   return (
-    <Container display={'flex'} flexDirection={'column'} alignItems={'start'} fluid py={4}>
-      <div className="flex justify-between items-center mb-2 w-full">
-      <div className="mb-4 flex flex-col items-start justify-start">
-        <label htmlFor="area" className="block text-sm font-medium text-stone-700">
-          Select Area
-        </label>
-        <select
-          id="area"
-          value={selectedAreaId}
-          onChange={(e) => setSelectedAreaId(e.target.value)}
-          className="border text-sm border-neutral-300 text-neutral-900 p-2 rounded-lg "
-        >
-          <option value="">Select Area</option>
-          {filteredAreas?.map((area) => (
-            <option key={area.areaId} value={area.areaId}>
-              {area.areaName}
-            </option>
-          ))}
-        </select>
-      </div>
-        <RBAC roles={[ROLES.ORGANIZATION_ADMIN, ROLES.AREA_ADMIN, ROLES.MASTER]}>
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-indigo-600 text-white px-3 py-1.5 text-sm rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-          >
-            Create Depot
-          </button>
-        </RBAC>
-      </div>
+		<Container
+			overflow={'scroll'}
+			display={'flex'}
+			flexDirection={'column'}
+			alignItems={'start'}
+			fluid
+			py={4}
+		>
+			<div className="flex justify-between items-center mb-2 w-full">
+				<div className="mb-4 flex flex-col items-start justify-start">
+					<label
+						htmlFor="area"
+						className="block text-sm font-medium text-stone-700"
+					>
+						Select Area
+					</label>
+					<select
+						id="area"
+						value={selectedAreaId}
+						onChange={(e) => setSelectedAreaId(e.target.value)}
+						className="border text-sm border-neutral-300 text-neutral-900 p-2 rounded-lg "
+					>
+						<option value="">Select Area</option>
+						{filteredAreas?.map((area) => (
+							<option key={area.areaId} value={area.areaId}>
+								{area.areaName}
+							</option>
+						))}
+					</select>
+				</div>
+				<RBAC
+					roles={[ROLES.ORGANIZATION_ADMIN, ROLES.AREA_ADMIN, ROLES.MASTER]}
+				>
+					<button
+						onClick={() => setIsCreateModalOpen(true)}
+						className="bg-indigo-600 text-white px-3 py-1.5 text-sm rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+					>
+						Create Depot
+					</button>
+				</RBAC>
+			</div>
 
-      {/* Area Selection */}
-     
+			{/* Area Selection */}
 
-      {/* Depots Display */}
-      {selectedAreaId ? (
-        isLoading ? (
-          <div className="flex items-center justify-center h-48">
-            <div className="text-lg">Loading...</div>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden w-full">
-            <table className="min-w-full divide-y divide-stone-200">
-              <thead className="bg-stone-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                    Depot Name
-                  </th>
-                  
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-stone-200">
-                {filteredDepots && filteredDepots.length > 0 ? (
-                  filteredDepots.map((depot) => (
-                    <tr key={depot.depotId} className="hover:bg-stone-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-stone-900">{depot.depotName}</div>
-                      </td>
-                     
-                    
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          depot.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                          {depot.active ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() => setEditingDepot(depot)}
-                          className="text-indigo-600 hover:text-indigo-900 mr-4"
-                        >
-                          <Icon icon="solar:pen-bold" className="inline-block" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm('Are you sure you want to delete this depot?')) {
-                              deleteMutation.mutate(depot.depotId);
-                            }
-                          }}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <Icon icon="solar:trash-bin-trash-bold" className="inline-block" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-stone-500">
-                      No depots found for this area
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )
-      ) : (
-        <div className="text-center text-stone-500">Please select an area to view depots</div>
-      )}
+			{/* Depots Display */}
+			{selectedAreaId ? (
+				isLoading ? (
+					<div className="flex items-center justify-center h-48">
+						<div className="text-lg">Loading...</div>
+					</div>
+				) : (
+					<div className="bg-white rounded-lg shadow overflow-hidden w-full">
+						<table className="min-w-full divide-y divide-stone-200">
+							<thead className="bg-stone-50">
+								<tr>
+									<th
+										scope="col"
+										className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
+									>
+										Depot Name
+									</th>
 
-      {/* Create Modal */}
-      <Dialog
-        open={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        className="relative z-50"
-      >
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="mx-auto max-w-md rounded bg-white p-6">
-            <Dialog.Title className="text-lg font-medium mb-4">Create Depot</Dialog.Title>
-            <DepotForm
-              selectedAreaId={selectedAreaId}
-              selectedOrganizationId={selectedOrganization.organizationId}
-              onSubmit={(data) => createMutation.mutate(data)}
-              onCancel={() => setIsCreateModalOpen(false)}
-            />
-          </Dialog.Panel>
-        </div>
-      </Dialog>
+									<th
+										scope="col"
+										className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
+									>
+										Status
+									</th>
+									<th
+										scope="col"
+										className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider"
+									>
+										Actions
+									</th>
+								</tr>
+							</thead>
+							<tbody className="bg-white divide-y divide-stone-200">
+								{filteredDepots && filteredDepots.length > 0 ? (
+									filteredDepots.map((depot) => (
+										<tr key={depot.depotId} className="hover:bg-stone-50">
+											<td className="px-6 py-4 whitespace-nowrap">
+												<div className="text-sm font-medium text-stone-900">
+													{depot.depotName}
+												</div>
+											</td>
 
-      {/* Edit Modal */}
-      <Dialog
-        open={!!editingDepot}
-        onClose={() => setEditingDepot(null)}
-        className="relative z-50"
-      >
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="mx-auto max-w-md rounded bg-white p-6">
-            <Dialog.Title className="text-lg font-medium mb-4">Edit Depot</Dialog.Title>
-            {editingDepot && (
-              <DepotForm
-                initialData={editingDepot}
-                selectedAreaId={selectedAreaId}
-                selectedOrganizationId={selectedOrganization.organizationId}
-                onSubmit={(data) => updateMutation.mutate({ data, depotId: editingDepot.depotId })}
-                onCancel={() => setEditingDepot(null)}
-              />
-            )}
-          </Dialog.Panel>
-        </div>
-      </Dialog>
-    </Container>
-  );
+											<td className="px-6 py-4 whitespace-nowrap">
+												<span
+													className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+														depot.active
+															? 'bg-green-100 text-green-800'
+															: 'bg-red-100 text-red-800'
+													}`}
+												>
+													{depot.active ? 'Active' : 'Inactive'}
+												</span>
+											</td>
+											<td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+												<button
+													onClick={() => setEditingDepot(depot)}
+													className="text-indigo-600 hover:text-indigo-900 mr-4"
+												>
+													<Icon
+														icon="solar:pen-bold"
+														className="inline-block"
+													/>
+												</button>
+												<button
+													onClick={() => {
+														if (
+															confirm(
+																'Are you sure you want to delete this depot?'
+															)
+														) {
+															deleteMutation.mutate(depot.depotId);
+														}
+													}}
+													className="text-red-600 hover:text-red-900"
+												>
+													<Icon
+														icon="solar:trash-bin-trash-bold"
+														className="inline-block"
+													/>
+												</button>
+											</td>
+										</tr>
+									))
+								) : (
+									<tr>
+										<td
+											colSpan={6}
+											className="px-6 py-4 text-center text-stone-500"
+										>
+											No depots found for this area
+										</td>
+									</tr>
+								)}
+							</tbody>
+						</table>
+					</div>
+				)
+			) : (
+				<div className="text-center text-stone-500">
+					Please select an area to view depots
+				</div>
+			)}
+
+			{/* Create Modal */}
+			<Dialog
+				open={isCreateModalOpen}
+				onClose={() => setIsCreateModalOpen(false)}
+				className="relative z-50"
+			>
+				<div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+				<div className="fixed inset-0 flex items-center justify-center p-4">
+					<Dialog.Panel className="mx-auto max-w-md rounded bg-white p-6">
+						<Dialog.Title className="text-lg font-medium mb-4">
+							Create Depot
+						</Dialog.Title>
+						<DepotForm
+							selectedAreaId={selectedAreaId}
+							selectedOrganizationId={selectedOrganization.organizationId}
+							onSubmit={(data) => createMutation.mutate(data)}
+							onCancel={() => setIsCreateModalOpen(false)}
+						/>
+					</Dialog.Panel>
+				</div>
+			</Dialog>
+
+			{/* Edit Modal */}
+			<Dialog
+				open={!!editingDepot}
+				onClose={() => setEditingDepot(null)}
+				className="relative z-50"
+			>
+				<div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+				<div className="fixed inset-0 flex items-center justify-center p-4">
+					<Dialog.Panel className="mx-auto max-w-md rounded bg-white p-6">
+						<Dialog.Title className="text-lg font-medium mb-4">
+							Edit Depot
+						</Dialog.Title>
+						{editingDepot && (
+							<DepotForm
+								initialData={editingDepot}
+								selectedAreaId={selectedAreaId}
+								selectedOrganizationId={selectedOrganization.organizationId}
+								onSubmit={(data) =>
+									updateMutation.mutate({ data, depotId: editingDepot.depotId })
+								}
+								onCancel={() => setEditingDepot(null)}
+							/>
+						)}
+					</Dialog.Panel>
+				</div>
+			</Dialog>
+		</Container>
+	);
 };
 
 export default Depots;
