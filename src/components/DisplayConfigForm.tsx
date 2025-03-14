@@ -20,6 +20,15 @@ import GoogleIME from './IMEInput';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
 import LEDBoardBitmap from './LedSignBoard';
+import { Button } from '@chakra-ui/react';
+import {
+	MenuContent,
+	MenuItem,
+	MenuItemCommand,
+	MenuRoot,
+	MenuTrigger,
+} from '@/components/ui/menu';
+import { LuChevronDown } from 'react-icons/lu';
 
 const SCREEN_TYPES = ['front', 'side', 'rear', 'internal'] as const;
 const SCROLL_TYPES = [
@@ -57,7 +66,7 @@ const FONT_WEIGHT = [
 		label: 'Regular',
 	},
 	{
-		value: 'font-bold',
+		value: 'bold',
 		label: 'Bold',
 	},
 ];
@@ -141,7 +150,11 @@ const getDefaultTextConfig = () => ({
 	position: 'Left' as const,
 	scrollSpeed: 15,
 	fontSize: 16,
-	fontWeight: 'font-regular',
+	fontWeight: 'regular',
+	fontHeight: 12,
+	x_offset: 0,
+	y_offset: 0,
+	spacing: 0,
 });
 
 const getDefaultThreeTextConfig = () => ({
@@ -155,7 +168,11 @@ const getDefaultThreeTextConfig = () => ({
 	position: 'Left' as const,
 	scrollSpeed: 15,
 	fontSize: 8,
-	fontWeight: 'font-regular',
+	fontWeight: 'regular',
+	fontHeight: 12,
+	x_offset: 0,
+	y_offset: 0,
+	spacing: 0,
 });
 
 const getDefaultThreeSideTextConfig = () => ({
@@ -169,7 +186,11 @@ const getDefaultThreeSideTextConfig = () => ({
 	position: 'Left' as const,
 	scrollSpeed: 15,
 	fontSize: 16,
-	fontWeight: 'font-regular',
+	fontWeight: 'regular',
+	fontHeight: 12,
+	x_offset: 0,
+	y_offset: 0,
+	spacing: 0,
 });
 
 const getFormatTexts = (format: ScreenFormat) => {
@@ -370,7 +391,7 @@ export const DisplayConfigForm: React.FC = () => {
 		language: string,
 		option: string
 	) => {
-		setSelectedPlaceholder(option);
+		// setSelectedPlaceholder(option);
 		const routeData = watch('route');
 		const generatedText = generatePlaceholderText(option, routeData);
 		let upperText;
@@ -401,7 +422,7 @@ export const DisplayConfigForm: React.FC = () => {
 
 	const renderRouteTab = () => (
 		<div className="mb-8 p-6 bg-white rounded-xl shadow-md">
-			<h3 className="text-xl font-bold mb-4 text-gray-800">
+			<h3 className="text-xl bold mb-4 text-gray-800">
 				Route Information
 			</h3>
 			<div className="flex gap-4 items-center">
@@ -537,7 +558,7 @@ export const DisplayConfigForm: React.FC = () => {
 
 	const renderLanguagesTab = () => (
 		<div className="mb-8 p-6 bg-white rounded-xl shadow-md">
-			<h3 className="text-xl font-bold mb-4 text-gray-800">
+			<h3 className="text-xl bold mb-4 text-gray-800">
 				Language Selection
 			</h3>
 			<div className="mb-4">
@@ -602,23 +623,6 @@ export const DisplayConfigForm: React.FC = () => {
 		const displayConfig = watch('displayConfig');
 		const routeData = watch('route');
 		const sampleBitmap = `
-....######........######........######.........######...............######..............######.........######.........####......#####.........#####........######......
-..###....##.....##......##....##......####...##......##...........##......##..........##.......#.....###....##.......##..##...##....##.......##....###...##......##....
-..#........#...##........##..#.........###..#.........##.........#.........##........##.........#....#........#.....##.......#........#......##.....##..#.........##...
-.##........##..##........##.##..........##.##..........#........##..........#........##..........#..##........##....#.......##........##...######...##.##..........#...
-.##........##..####......#..##..........##.##..........#........##..........#........##..........#..##........##....#.......##........##..###....#..##.##..........#...
-.##........##...##....##.....##..##.....##.##..........#........##..........#........###..##.....#..##........##....####....##........##...#..####..##.##..........#...
-...######..#.....##...##.......##.......##..##..####...#.........##..####...#.........##..#...##.#....######..#.....#...##...##..####........##..##.##..##..####...#...
-....##..##.......#######.......#........##....##...##..#...........##...##..#..........#..#...####.....##..##.......#....##...###..##........##..##.##....##...##..#...
-....##..##......######.........#.......###....##....#.##...........##....#.##..........#...######......##..##.......##...##...#....##.........####..##....##....#.##...
-.....#####........#...###.......#.....####....##...##..#...........##...##..#..........##.....#.##......#####........##..##...#....##...........##..##....##...##..#...
-........##........########.......######.##......####...#.............####...#............#####...#.........##.........####....###..##...........##..##......####...#...
-........##........##.##.##.........#...............................#....................#........................................................#####.................
-........##........####..##.....#####...........................#####................#####..............................................................................
-..########.....................#..##...........................#..##................#..##..............................................................................
-...............................###..####.......................###..####............###..####..........................................................................
-
-
 		`;
 		return (
 			<div className=" overflow-y-auto bg-white p-6 rounded-xl">
@@ -658,11 +662,11 @@ export const DisplayConfigForm: React.FC = () => {
 								</AccordionItemTrigger>
 								<AccordionItemContent className="bg-neutral-20 p-2">
 									<div className="mb-4">
-										{/* <LEDBoardBitmap
+										 <LEDBoardBitmap
 											rows={16}
 											columns={96}
 											bitmap={sampleBitmap}
-										/> */}
+										/> 
 
 										{screenConfig.format === 'single' && (
 											<FullScreenBoard
@@ -823,7 +827,7 @@ export const DisplayConfigForm: React.FC = () => {
 												</h4>
 
 												<div className="mb-4 items-start flex gap-4">
-													<select
+													{/* <select
 														className=" p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 														onChange={(e) =>
 															handlePlaceholderSelect(
@@ -834,7 +838,9 @@ export const DisplayConfigForm: React.FC = () => {
 															)
 														}
 													>
-														<option value="">Select placeholder</option>
+													 <option value={'select placeholder'}
+															Select placeholder
+														</option> 
 														{isSpecialMessage
 															? PLACE_HOLDER_OPTIONS2.map((option) => (
 																	<option
@@ -852,7 +858,39 @@ export const DisplayConfigForm: React.FC = () => {
 																		{option.label}
 																	</option>
 															  ))}
-													</select>
+													</select> */}
+
+													<MenuRoot
+														onSelect={(e) =>
+															handlePlaceholderSelect(
+																screenKey,
+																textKey,
+																language,
+																e.value
+															)
+														}
+													>
+														<MenuTrigger asChild>
+															<Button className='px-3 h-10 bg-white rounded-md border' size="sm">Select Text To Display
+
+															<LuChevronDown/>
+
+															</Button>
+														</MenuTrigger>
+														<MenuContent>
+															{isSpecialMessage
+																? PLACE_HOLDER_OPTIONS2.map((option) => (
+																		<MenuItem value={option.value}>
+																			{option.label}
+																		</MenuItem>
+																  ))
+																: PLACEHOLDER_OPTIONS.map((option) => (
+																		<MenuItem value={option.value}>
+																			{option.label}
+																		</MenuItem>
+																  ))}
+														</MenuContent>
+													</MenuRoot>
 													{/* <input
                             {...register(
                               `displayConfig.${language}.${screenKey}.texts.${textKey}.text`
@@ -870,7 +908,7 @@ export const DisplayConfigForm: React.FC = () => {
 													/>
 												</div>
 
-												<div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+												<div className="grid grid-cols-1 md:grid-cols-9 gap-4">
 													<div>
 														<label className="block text-sm font-medium text-gray-600 mb-1">
 															Scroll Type
@@ -945,15 +983,17 @@ export const DisplayConfigForm: React.FC = () => {
 														<label className="block text-sm font-medium text-gray-600 mb-1">
 															Font Weight
 														</label>
+
 														<select
 															{...register(
 																`displayConfig.${language}.${screenKey}.texts.${textKey}.fontWeight`
 															)}
-															value={
-																displayConfig[language][screenKey]['texts'][
-																	textKey
-																]['fontWeight']
-															}
+															// value={
+															// 	displayConfig[language][screenKey]['texts'][
+															// 		textKey
+															// 	]['fontWeight']
+															// }
+															defaultValue={'Regular'}
 															className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 														>
 															{FONT_WEIGHT.map((weight) => (
@@ -962,6 +1002,55 @@ export const DisplayConfigForm: React.FC = () => {
 																</option>
 															))}
 														</select>
+													</div>
+
+													<div>
+														<label className="block text-sm font-medium text-gray-600 mb-1">
+															Font Height
+														</label>
+														<input
+															type="number"
+															{...register(
+																`displayConfig.${language}.${screenKey}.texts.${textKey}.fontHeight`
+															)}
+															className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+														/>
+													</div>
+													<div>
+														<label className="block text-sm font-medium text-gray-600 mb-1">
+															X Offset
+														</label>
+														<input
+															type="number"
+															{...register(
+																`displayConfig.${language}.${screenKey}.texts.${textKey}.x_offset`
+															)}
+															className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+														/>
+													</div>
+													<div>
+														<label className="block text-sm font-medium text-gray-600 mb-1">
+															Y Offset
+														</label>
+														<input
+															type="number"
+															{...register(
+																`displayConfig.${language}.${screenKey}.texts.${textKey}.y_offset`
+															)}
+															className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+														/>
+													</div>
+													<div>
+														<label className="block text-sm font-medium text-gray-600 mb-1">
+															Spacing
+														</label>
+														<input
+															type="number"
+															{...register(
+																`displayConfig.${language}.${screenKey}.texts.${textKey}.spacing`
+															)}
+															className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+														/>
 													</div>
 
 													{/* {displayConfig[language][screenKey].format ===
@@ -1077,6 +1166,9 @@ export const DisplayConfigForm: React.FC = () => {
 				updateRouteMutation.mutate({ id: configToSave.id, data: configToSave });
 			} else {
 				createRouteMutation.mutate(configToSave);
+				console.log('====================================');
+				console.log(configToSave);
+				console.log('====================================');
 			}
 
 			// const rn = configToSave.route.routeNumber;
@@ -1128,7 +1220,7 @@ export const DisplayConfigForm: React.FC = () => {
 			className="w-full flex flex-col gap-4 overflow-hidden p-6"
 		>
 			<div className="flex justify-between items-center">
-				<h2 className="text-xl font-bold text-gray-900">
+				<h2 className="text-xl bold text-gray-900">
 					Display Configuration
 				</h2>
 				{/* <IMEInput /> */}
