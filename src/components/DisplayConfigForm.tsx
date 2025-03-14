@@ -29,6 +29,8 @@ import {
 	MenuTrigger,
 } from '@/components/ui/menu';
 import { LuChevronDown } from 'react-icons/lu';
+import ScrollingLEDDisplay from './LedSignBoard';
+import LEDBitmapSimulator from './LedSignBoard';
 
 const SCREEN_TYPES = ['front', 'side', 'rear', 'internal'] as const;
 const SCROLL_TYPES = [
@@ -62,7 +64,7 @@ const FORMATS2 = [
 
 const FONT_WEIGHT = [
 	{
-		value: 'font-normal',
+		value: 'regular',
 		label: 'Regular',
 	},
 	{
@@ -622,8 +624,8 @@ export const DisplayConfigForm: React.FC = () => {
 	const renderScreenTab = (screenKey: (typeof SCREEN_TYPES)[number]) => {
 		const displayConfig = watch('displayConfig');
 		const routeData = watch('route');
-		const sampleBitmap = `
-		`;
+
+
 		return (
 			<div className=" overflow-y-auto bg-white p-6 rounded-xl">
 				<h3 className="text-md font-semibold mb-4 text-gray-900 capitalize">
@@ -661,128 +663,41 @@ export const DisplayConfigForm: React.FC = () => {
 									</span>
 								</AccordionItemTrigger>
 								<AccordionItemContent className="bg-neutral-20 p-2">
-									<div className="mb-4">
-										 <LEDBoardBitmap
-											rows={16}
-											columns={96}
-											bitmap={sampleBitmap}
-										/> 
 
-										{screenConfig.format === 'single' && (
-											<FullScreenBoard
-												formData={{
-													text: displayConfig[language][screenKey].texts.text
-														.text,
-													scrollType:
-														displayConfig[language][screenKey].texts.text
-															.scrollType,
-													scrollSpeed:
-														displayConfig[language][screenKey].texts.text
-															.scrollSpeed,
-													position:
-														displayConfig[language][screenKey].texts.text
-															.position,
-													fontSize:
-														displayConfig[language][screenKey].texts.text
-															.fontSize,
-													fontWeight:
-														displayConfig[language][screenKey].texts.text
-															.fontWeight,
-												}}
-											/>
-										)}
+									{
+										screenConfig.format === 'single' &&
+										<LEDBitmapSimulator rows={16} cols={96} text={displayConfig[language][screenKey].texts.text
+										} language={language} />
+									}
 
-										{screenConfig.format === 'two' && (
-											<SideWithSingleTextBoard
-												formData={{
-													sideText:
-														displayConfig[language][screenKey].texts.sideText
-															.text,
-													text: displayConfig[language][screenKey].texts.text
-														.text,
-													scrollType:
-														displayConfig[language][screenKey].texts.text
-															.scrollType,
-													scrollSpeed:
-														displayConfig[language][screenKey].texts.text
-															.scrollSpeed,
-													position:
-														displayConfig[language][screenKey].texts.text
-															.position,
-													fontSize:
-														displayConfig[language][screenKey].texts.text
-															.fontSize,
-													fontWeight:
-														displayConfig[language][screenKey].texts.text
-															.fontWeight,
-													sideTextFontWeight:
-														displayConfig[language][screenKey].texts.sideText
-															.fontWeight,
-													// For split route
-													routeNumber1: routeData.routeNumber1,
-													routeNumber2: routeData.routeNumber2,
-												}}
-												route={routeData} // Pass route info for route number display
-											/>
-										)}
+									{
+										screenConfig.format === 'two' &&
+										<div className="flex">
+											<LEDBitmapSimulator rows={16} cols={32} text={displayConfig[language][screenKey].texts.sideText
+											} language={'en'} />
+											<LEDBitmapSimulator rows={16} cols={64} text={displayConfig[language][screenKey].texts.text
+											} language={language} />
+										</div>
 
-										{screenConfig.format === 'three' && (
-											<SideWithTwoTextsBoard
-												formData={{
-													sideText:
-														displayConfig[language][screenKey].texts.sideText
-															.text,
-													sideTextFontWeight:
-														displayConfig[language][screenKey].texts.sideText
-															.fontWeight,
-													upperHalfText:
-														displayConfig[language][screenKey].texts
-															.upperHalfText.text,
-													lowerHalfText:
-														displayConfig[language][screenKey].texts
-															.lowerHalfText.text,
-													// Upper half config
-													upperHalfScrollType:
-														displayConfig[language][screenKey].texts
-															.upperHalfText.scrollType,
-													upperHalfScrollSpeed:
-														displayConfig[language][screenKey].texts
-															.upperHalfText.scrollSpeed,
-													upperHalfPosition:
-														displayConfig[language][screenKey].texts
-															.upperHalfText.position,
-													// Lower half config
-													lowerHalfScrollType:
-														displayConfig[language][screenKey].texts
-															.lowerHalfText.scrollType,
-													lowerHalfScrollSpeed:
-														displayConfig[language][screenKey].texts
-															.lowerHalfText.scrollSpeed,
-													lowerHalfPosition:
-														displayConfig[language][screenKey].texts
-															.lowerHalfText.position,
-													// Font sizes
-													upperHalfFontSize:
-														displayConfig[language][screenKey].texts
-															.upperHalfText.fontSize,
-													upperHalfFontWeight:
-														displayConfig[language][screenKey].texts
-															.upperHalfText.fontWeight,
-													lowerHalfFontSize:
-														displayConfig[language][screenKey].texts
-															.lowerHalfText.fontSize,
-													lowerHalfFontWeight:
-														displayConfig[language][screenKey].texts
-															.lowerHalfText.fontWeight,
+									}
 
-													routeNumber1: routeData.routeNumber1,
-													routeNumber2: routeData.routeNumber2,
-												}}
-												route={routeData}
-											/>
-										)}
+									{
+										screenConfig.format === 'three' &&
+										<div className="flex flex-row">
+											<LEDBitmapSimulator rows={16} cols={32} text={displayConfig[language][screenKey].texts.sideText
+											} language={'en'} />
+											<div className="flex flex-col">
+												<LEDBitmapSimulator rows={8} cols={64} text={displayConfig[language][screenKey].texts.upperHalfText
+												} language={language} />
+												<LEDBitmapSimulator rows={8} cols={64} text={displayConfig[language][screenKey].texts.lowerHalfText
+												} language={language} />
+											</div>
+										</div>
 
-										<label className="block text-sm font-medium text-gray-600 mb-1">
+									}
+
+
+<label className="block text-sm font-medium text-gray-600 mb-1">
 											Format
 										</label>
 										<select
@@ -812,8 +727,9 @@ export const DisplayConfigForm: React.FC = () => {
 														</option>
 												  ))}
 										</select>
-									</div>
+									
 
+									
 									{Object.entries(screenConfig.texts).map(
 										([textKey, textConfig]) => (
 											<div
@@ -873,22 +789,22 @@ export const DisplayConfigForm: React.FC = () => {
 														<MenuTrigger asChild>
 															<Button className='px-3 h-10 bg-white rounded-md border' size="sm">Select Text To Display
 
-															<LuChevronDown/>
+																<LuChevronDown />
 
 															</Button>
 														</MenuTrigger>
 														<MenuContent>
 															{isSpecialMessage
 																? PLACE_HOLDER_OPTIONS2.map((option) => (
-																		<MenuItem value={option.value}>
-																			{option.label}
-																		</MenuItem>
-																  ))
+																	<MenuItem value={option.value}>
+																		{option.label}
+																	</MenuItem>
+																))
 																: PLACEHOLDER_OPTIONS.map((option) => (
-																		<MenuItem value={option.value}>
-																			{option.label}
-																		</MenuItem>
-																  ))}
+																	<MenuItem value={option.value}>
+																		{option.label}
+																	</MenuItem>
+																))}
 														</MenuContent>
 													</MenuRoot>
 													{/* <input
@@ -960,24 +876,24 @@ export const DisplayConfigForm: React.FC = () => {
 
 													{displayConfig[language][screenKey].format !==
 														'three' && (
-														<div>
-															<label className="block text-sm font-medium text-gray-600 mb-1">
-																Font Size
-															</label>
-															<select
-																{...register(
-																	`displayConfig.${language}.${screenKey}.texts.${textKey}.fontSize`
-																)}
-																className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-															>
-																{FONT_SIZES.map((size) => (
-																	<option key={size} value={size}>
-																		{size}px
-																	</option>
-																))}
-															</select>
-														</div>
-													)}
+															<div>
+																<label className="block text-sm font-medium text-gray-600 mb-1">
+																	Font Size
+																</label>
+																<select
+																	{...register(
+																		`displayConfig.${language}.${screenKey}.texts.${textKey}.fontSize`
+																	)}
+																	className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+																>
+																	{FONT_SIZES.map((size) => (
+																		<option key={size} value={size}>
+																			{size}px
+																		</option>
+																	))}
+																</select>
+															</div>
+														)}
 
 													<div>
 														<label className="block text-sm font-medium text-gray-600 mb-1">
@@ -1238,22 +1154,20 @@ export const DisplayConfigForm: React.FC = () => {
 					<button
 						type="button"
 						onClick={() => setActiveTab('route')}
-						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${
-							activeTab === 'route'
-								? 'border-nav_orange bg-white text-nav_blue-500'
-								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-						}`}
+						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${activeTab === 'route'
+							? 'border-nav_orange bg-white text-nav_blue-500'
+							: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+							}`}
 					>
 						Route
 					</button>
 					<button
 						type="button"
 						onClick={() => setActiveTab('languages')}
-						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${
-							activeTab === 'languages'
-								? 'border-nav_orange bg-white text-nav_blue-500'
-								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-						}`}
+						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${activeTab === 'languages'
+							? 'border-nav_orange bg-white text-nav_blue-500'
+							: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+							}`}
 					>
 						Languages
 					</button>
@@ -1262,11 +1176,10 @@ export const DisplayConfigForm: React.FC = () => {
 							key={screenType}
 							type="button"
 							onClick={() => setActiveTab(screenType)}
-							className={`py-2 px-3 text-left max-w-[120px]  border-b-2 font-medium text-sm capitalize ${
-								activeTab === screenType
-									? 'border-nav_orange bg-white text-nav_blue-500'
-									: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-							}`}
+							className={`py-2 px-3 text-left max-w-[120px]  border-b-2 font-medium text-sm capitalize ${activeTab === screenType
+								? 'border-nav_orange bg-white text-nav_blue-500'
+								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+								}`}
 						>
 							{screenType} Board
 						</button>
