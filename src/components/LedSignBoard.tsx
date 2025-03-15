@@ -1,220 +1,237 @@
 import axiosInstance from '@/config/axios';
 import React, { useState, useEffect, useRef } from 'react';
 
-const LEDBitmapSimulator = ({text,language,rows,cols}) => {
-//   const [rows, setRows] = useState(16);
-//   const [cols, setColumns] = useState(96);
-  const [ledSize, setLedSize] = useState(6);
-  const [ledSpacing, setLedSpacing] = useState(1);
-  const [bitmapText, setBitmapText] = useState('');
-  const [ledMatrix, setLedMatrix] = useState([]);
-  const [ledColor, setLedColor] = useState('#ff0000');
-  const [bgColor, setBgColor] = useState('#000000');
-  const [viewportWidth, setViewportWidth] = useState(800);
-  const [isScrolling, setIsScrolling] = useState(false);
-  const [scrollDirection, setScrollDirection] = useState('left');
-  const [scrollSpeed, setScrollSpeed] = useState(100);
-  const [scrollOffset, setScrollOffset] = useState(0);
-  const scrollIntervalRef = useRef(null);
+const LEDBitmapSimulator = ({ text, language, rows, cols }) => {
+	//   const [rows, setRows] = useState(16);
+	//   const [cols, setColumns] = useState(96);
+	const [ledSize, setLedSize] = useState(6);
+	const [ledSpacing, setLedSpacing] = useState(1);
+	const [bitmapText, setBitmapText] = useState('');
+	const [ledMatrix, setLedMatrix] = useState([]);
+	const [ledColor, setLedColor] = useState('#ff0000');
+	const [bgColor, setBgColor] = useState('#000000');
+	const [viewportWidth, setViewportWidth] = useState(800);
+	const [isScrolling, setIsScrolling] = useState(false);
+	const [scrollDirection, setScrollDirection] = useState('left');
+	const [scrollSpeed, setScrollSpeed] = useState(100);
+	const [scrollOffset, setScrollOffset] = useState(0);
+	const scrollIntervalRef = useRef(null);
 
+	useEffect(() => {
+		setViewportWidth(
+			Math.min(window.innerWidth - 40, cols * (ledSize + ledSpacing))
+		);
+	}, [cols, ledSize, ledSpacing]);
 
+	useEffect(() => {
+		console.log(text, language);
+		const fetchBitmap = async () => {
+			try {
+				const response = await axiosInstance.post(
+					'/routes/getBitmapSimulation',
+					JSON.stringify({
+						text: text,
+						language: language,
+					})
+				);
 
-  useEffect(() => {
-    setViewportWidth(Math.min(window.innerWidth - 40, cols * (ledSize + ledSpacing)));
-  }, [cols, ledSize, ledSpacing]);
+				console.log(response);
+				setBitmapText(response.data || '');
+			} catch (error) {
+				console.error('Error fetching bitmap:', error);
+			}
+		};
 
-  useEffect(() => {
-	console.log(text,language)
-    const fetchBitmap = async () => {
-      try {
-        const response = await axiosInstance.post('/routes/getBitmapSimulation', JSON.stringify({
-            text: text,
-            language: language
-          }));
+		fetchBitmap();
 
-       
+		if (text.scrollType === 'Left To Right') {
+			setIsScrolling(true);
+			setScrollDirection('right');
+		}
+		if (text.scrollType === 'Right To Left') {
+			setIsScrolling(true);
+			setScrollDirection('left');
+		}
+		if (text.scrollType === 'Fixed') {
+			setIsScrolling(false);
+		}
+		setScrollSpeed(text.scrollSpeed);
+	}, [
+		text,
+		text.text,
+		language,
+		text.scrollType,
+		text.position,
+		text.scrollSpeed,
+		text.fontSize,
+		text.fontWeight,
+		text.fontHeight,
+		text.x_offset,
+		text.y_offset,
+		text.spacing,
+	]);
 
-        
-		console.log(response);
-        setBitmapText(response.data || '');
-      } catch (error) {
-        console.error('Error fetching bitmap:', error);
-      }
-    };
+	// Process bitmap text into matrix with scrolling support
+	// Process bitmap text into matrix with scrolling support
+	const processBitmapText = (text, offset = 0) => {
+		if (!text)
+			return Array(rows)
+				.fill()
+				.map(() => Array(cols).fill(0));
 
-      fetchBitmap();
+		const lines = text.split('\n').filter((line) => line.length > 0);
+		const matrix = [];
 
-	  if(text.scrollType === 'Left To Right'){
-		setIsScrolling(true);
-		setScrollDirection('right');	
-	}
-	if(text.scrollType === 'Right To Left'){
-		setIsScrolling(true);
-		setScrollDirection('left');
-	}
-	if(text.scrollType === 'Fixed'){
+		for (let i = 0; i < rows; i++) {
+			const row = [];
+			const line = lines[i] || '';
+
+			// Skip if line is empty
+			if (line.length === 0) {
+				matrix.push(Array(cols).fill(0));
+				continue;
+			}
+
+			// For each column in the display
+			for (let j = 0; j < cols; j++) {
+				// Calculate the position in the bitmap text with offset
+				const textPos = j + offset;
+
+				// Check if the position is within the bitmap text length
+				// This will ensure text doesn't repeat
+				if (textPos >= 0 && textPos < line.length) {
+					row.push(line[textPos] === '#' ? 1 : 0);
+				} else {
+					// Outside of text bounds, so show empty LED
+					row.push(0);
+				}
+			}
+
+			matrix.push(row);
+		}
+
+		return matrix;
+	};
+
+	useEffect(() => {
+		setLedMatrix(processBitmapText(bitmapText, scrollOffset));
+	}, [bitmapText, rows, cols, scrollOffset]);
+
+	// Handle scrolling logic
+	useEffect(() => {
+		if (isScrolling) {
+			// Clear any existing interval
+			if (scrollIntervalRef.current) {
+				clearInterval(scrollIntervalRef.current);
+			}
+
+			// Set up new scrolling interval
+			scrollIntervalRef.current = setInterval(() => {
+				setScrollOffset((prev) => {
+					const direction = scrollDirection === 'left' ? 1 : -1;
+					let newOffset = prev + direction;
+
+					// Get the maximum width of any line in the bitmap
+					const maxWidth = Math.max(
+						...bitmapText.split('\n').map((line) => line.length || 0)
+					);
+
+					// Reset offset when text has completely scrolled off screen
+					// For left scrolling (text moves right to left)
+					if (scrollDirection === 'left' && newOffset > maxWidth + cols) {
+						return -cols; // Start with text just off the right edge
+					}
+					// For right scrolling (text moves left to right)
+					else if (scrollDirection === 'right' && newOffset < -maxWidth) {
+						return cols; // Start with text just off the left edge
+					}
+
+					return newOffset;
+				});
+			}, scrollSpeed);
+		} else if (scrollIntervalRef.current) {
+			clearInterval(scrollIntervalRef.current);
+			scrollIntervalRef.current = null;
+		}
+
+		// Cleanup on unmount
+		return () => {
+			if (scrollIntervalRef.current) {
+				clearInterval(scrollIntervalRef.current);
+			}
+		};
+	}, [isScrolling, scrollDirection, scrollSpeed, bitmapText]);
+
+	const handleImportSample = () => {
+		setBitmapText(sampleBitmap);
+		// Set dimensions based on the sample bitmap
+		const lines = sampleBitmap.trim().split('\n');
+		const maxLineLength = Math.max(...lines.map((line) => line.length));
+		setRows(lines.length);
+		// Reset scroll offset
+		setScrollOffset(0);
+	};
+
+	const handleClear = () => {
+		setBitmapText('');
+		setLedMatrix(
+			Array(rows)
+				.fill()
+				.map(() => Array(cols).fill(0))
+		);
+		setScrollOffset(0);
 		setIsScrolling(false);
-	}
-	setScrollSpeed(text.scrollSpeed);
-    
-  }, [
-	text,
-	text.text,
-	language,
-	text.scrollType,
-	text.position,
-	text.scrollSpeed,
-	text.fontSize,
-	text.fontWeight,
-	text.fontHeight,
-	text.x_offset,
-	text.y_offset,
-	text.spacing
-  ]);
+	};
 
-  // Process bitmap text into matrix with scrolling support
-  const processBitmapText = (text, offset = 0) => {
-    if (!text) return Array(rows).fill().map(() => Array(cols).fill(0));
-    
-    const lines = text.split('\n').filter(line => line.length > 0);
-    const matrix = [];
-    
-    for (let i = 0; i < rows; i++) {
-      const row = [];
-      const line = lines[i] || '';
-      
-      // Handle scrolling by applying offset
-      for (let j = 0; j < cols; j++) {
-        // Skip if line is empty
-        if (line.length === 0) {
-          row.push(0);
-          continue;
-        }
-        
-        const charPos = (j + offset) % line.length;
-        // Handle negative positions for right scroll
-        const adjustedPos = charPos < 0 ? line.length + charPos : charPos;
-        row.push(adjustedPos < line.length && line[adjustedPos] === '#' ? 1 : 0);
-      }
-      
-      matrix.push(row);
-    }
-    
-    return matrix;
-  };
+	const toggleLed = (rowIndex, colIndex) => {
+		if (isScrolling) return; // Disable editing while scrolling
 
-  useEffect(() => {
-    setLedMatrix(processBitmapText(bitmapText, scrollOffset));
-  }, [bitmapText, rows, cols, scrollOffset]);
+		const newMatrix = [...ledMatrix];
+		if (newMatrix[rowIndex] && newMatrix[rowIndex][colIndex] !== undefined) {
+			newMatrix[rowIndex][colIndex] = newMatrix[rowIndex][colIndex] ? 0 : 1;
+			setLedMatrix(newMatrix);
 
-  // Handle scrolling logic
-  useEffect(() => {
-    if (isScrolling) {
-      // Clear any existing interval
-      if (scrollIntervalRef.current) {
-        clearInterval(scrollIntervalRef.current);
-      }
-      
-      // Set up new scrolling interval
-      scrollIntervalRef.current = setInterval(() => {
-        setScrollOffset(prev => {
-          const direction = scrollDirection === 'left' ? 1 : -1;
-          
-          // For left scrolling, we increase the offset
-          // For right scrolling, we decrease the offset
-          let newOffset = prev + direction;
-          
-          // If we have bitmap data, wrap around based on its width
-          if (bitmapText) {
-            const maxWidth = Math.max(...bitmapText.split('\n').map(line => line.length || 1));
-            if (maxWidth > 0) {
-              // Ensure offset wraps properly for both directions
-              newOffset = ((newOffset % maxWidth) + maxWidth) % maxWidth;
-            }
-          }
-          
-          return newOffset;
-        });
-      }, scrollSpeed);
-    } else if (scrollIntervalRef.current) {
-      clearInterval(scrollIntervalRef.current);
-      scrollIntervalRef.current = null;
-    }
-    
-    // Cleanup on unmount
-    return () => {
-      if (scrollIntervalRef.current) {
-        clearInterval(scrollIntervalRef.current);
-      }
-    };
-  }, [isScrolling, scrollDirection, scrollSpeed, bitmapText]);
+			// Update bitmap text based on the matrix
+			const lines = bitmapText.split('\n');
+			const updatedLines = [...lines];
 
-  const handleImportSample = () => {
-    setBitmapText(sampleBitmap);
-    // Set dimensions based on the sample bitmap
-    const lines = sampleBitmap.trim().split('\n');
-    const maxLineLength = Math.max(...lines.map(line => line.length));
-    setRows(lines.length);
-    // Reset scroll offset
-    setScrollOffset(0);
-  };
+			// Ensure we have enough lines
+			while (updatedLines.length <= rowIndex) {
+				updatedLines.push('.'.repeat(cols));
+			}
 
-  const handleClear = () => {
-    setBitmapText('');
-    setLedMatrix(Array(rows).fill().map(() => Array(cols).fill(0)));
-    setScrollOffset(0);
-    setIsScrolling(false);
-  };
+			// Convert the line to an array, modify it, and convert back to string
+			let lineArray = Array.from(updatedLines[rowIndex] || '.'.repeat(cols));
+			while (lineArray.length <= colIndex) {
+				lineArray.push('.');
+			}
+			lineArray[colIndex] = newMatrix[rowIndex][colIndex] ? '#' : '.';
+			updatedLines[rowIndex] = lineArray.join('');
 
-  const toggleLed = (rowIndex, colIndex) => {
-    if (isScrolling) return; // Disable editing while scrolling
-    
-    const newMatrix = [...ledMatrix];
-    if (newMatrix[rowIndex] && newMatrix[rowIndex][colIndex] !== undefined) {
-      newMatrix[rowIndex][colIndex] = newMatrix[rowIndex][colIndex] ? 0 : 1;
-      setLedMatrix(newMatrix);
-      
-      // Update bitmap text based on the matrix
-      const lines = bitmapText.split('\n');
-      const updatedLines = [...lines];
-      
-      // Ensure we have enough lines
-      while (updatedLines.length <= rowIndex) {
-        updatedLines.push('.'.repeat(cols));
-      }
-      
-      // Convert the line to an array, modify it, and convert back to string
-      let lineArray = Array.from(updatedLines[rowIndex] || '.'.repeat(cols));
-      while (lineArray.length <= colIndex) {
-        lineArray.push('.');
-      }
-      lineArray[colIndex] = newMatrix[rowIndex][colIndex] ? '#' : '.';
-      updatedLines[rowIndex] = lineArray.join('');
-      
-      setBitmapText(updatedLines.join('\n'));
-    }
-  };
+			setBitmapText(updatedLines.join('\n'));
+		}
+	};
 
-  // Calculate container width based on LED size
-  const containerStyle = {
-    // width: `${viewportWidth}px`,
-  };
+	// Calculate container width based on LED size
+	const containerStyle = {
+		// width: `${viewportWidth}px`,
+	};
 
-  const ledGridStyle = {
-    // display: 'inline-block',
-    padding: `${ledSpacing * 0}px`,
-    // width: `${cols * (ledSize + ledSpacing) + ledSpacing}px`
-  };
+	const ledGridStyle = {
+		// display: 'inline-block',
+		padding: `${ledSpacing * 0}px`,
+		// width: `${cols * (ledSize + ledSpacing) + ledSpacing}px`
+	};
 
-  const toggleScrolling = () => {
-    setIsScrolling(!isScrolling);
-  };
+	const toggleScrolling = () => {
+		setIsScrolling(!isScrolling);
+	};
 
-  return (
-    <div className=" ">
-      {/* <h2 className="text-2xl font-bold mb-2">LED Bitmap Simulator</h2> */}
-      
-      {/* <div className="flex flex-wrap gap-4 mb-4">
+	return (
+		<div className=" ">
+			{/* <h2 className="text-2xl font-bold mb-2">LED Bitmap Simulator</h2> */}
+
+			{/* <div className="flex flex-wrap gap-4 mb-4">
         <div className="flex flex-col">
           <label className="font-medium mb-1">Rows:</label>
           <input 
@@ -283,9 +300,9 @@ const LEDBitmapSimulator = ({text,language,rows,cols}) => {
           />
         </div>
       </div> */}
-      
-      {/* Scrolling Controls */}
-      {/* <div className="flex flex-wrap gap-4 mb-4 p-3 bg-gray-100 rounded">
+
+			{/* Scrolling Controls */}
+			{/* <div className="flex flex-wrap gap-4 mb-4 p-3 bg-gray-100 rounded">
         <div className="flex items-center">
           <input 
             type="checkbox" 
@@ -320,8 +337,8 @@ const LEDBitmapSimulator = ({text,language,rows,cols}) => {
           />
         </div>
       </div> */}
-      
-      {/* <div className="flex gap-2 mb-4">
+
+			{/* <div className="flex gap-2 mb-4">
         <button 
           onClick={handleImportSample} 
           className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
@@ -335,31 +352,36 @@ const LEDBitmapSimulator = ({text,language,rows,cols}) => {
           Clear
         </button>
       </div> */}
-      
-      <div style={containerStyle} className="">
-        <div className='bg-neutral-900 ' style={ledGridStyle}>
-          {ledMatrix.map((row, rowIndex) => (
-            <div key={rowIndex} style={{ height: `${ledSize + ledSpacing}px`, lineHeight: 0 }}>
-              {row.map((cell, colIndex) => (
-                <div 
-                  key={`${rowIndex}-${colIndex}`}
-                  onClick={() => toggleLed(rowIndex, colIndex)}
-				  className={`${cell ? 'bg-amber-500' : 'bg-neutral-800'} rounded-full`}
-                  style={{
-                    width: `${ledSize}px`,
-                    height: `${ledSize}px`,
-                    display: 'inline-block',
-                    margin: `0 ${ledSpacing}px 0 0`,
-                    cursor: isScrolling ? 'default' : 'pointer',
-                  }}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      {/* <div className="flex flex-col">
+
+			<div style={containerStyle} className="">
+				<div className="bg-neutral-900 " style={ledGridStyle}>
+					{ledMatrix.map((row, rowIndex) => (
+						<div
+							key={rowIndex}
+							style={{ height: `${ledSize + ledSpacing}px`, lineHeight: 0 }}
+						>
+							{row.map((cell, colIndex) => (
+								<div
+									key={`${rowIndex}-${colIndex}`}
+									onClick={() => toggleLed(rowIndex, colIndex)}
+									className={`${
+										cell ? 'bg-amber-500' : 'bg-neutral-800'
+									} rounded-full`}
+									style={{
+										width: `${ledSize}px`,
+										height: `${ledSize}px`,
+										display: 'inline-block',
+										margin: `0 ${ledSpacing}px 0 0`,
+										cursor: isScrolling ? 'default' : 'pointer',
+									}}
+								/>
+							))}
+						</div>
+					))}
+				</div>
+			</div>
+
+			{/* <div className="flex flex-col">
         <label className="font-medium mb-1">Bitmap Text:</label>
         <textarea 
           value={bitmapText} 
@@ -369,10 +391,8 @@ const LEDBitmapSimulator = ({text,language,rows,cols}) => {
           style={{ whiteSpace: 'pre', overflowX: 'auto' }}
         />
       </div> */}
-      
-     
-    </div>
-  );
+		</div>
+	);
 };
 
 export default LEDBitmapSimulator;
