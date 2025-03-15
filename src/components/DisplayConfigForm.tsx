@@ -424,9 +424,7 @@ export const DisplayConfigForm: React.FC = () => {
 
 	const renderRouteTab = () => (
 		<div className="mb-8 p-6 bg-white rounded-xl shadow-md">
-			<h3 className="text-xl bold mb-4 text-gray-800">
-				Route Information
-			</h3>
+			<h3 className="text-xl bold mb-4 text-gray-800">Route Information</h3>
 			<div className="flex gap-4 items-center">
 				<div className="flex mb-4 items-center">
 					<input
@@ -560,9 +558,7 @@ export const DisplayConfigForm: React.FC = () => {
 
 	const renderLanguagesTab = () => (
 		<div className="mb-8 p-6 bg-white rounded-xl shadow-md">
-			<h3 className="text-xl bold mb-4 text-gray-800">
-				Language Selection
-			</h3>
+			<h3 className="text-xl bold mb-4 text-gray-800">Language Selection</h3>
 			<div className="mb-4">
 				<label className="block text-sm font-medium text-gray-600 mb-2">
 					Select Languages (max 3)
@@ -625,7 +621,6 @@ export const DisplayConfigForm: React.FC = () => {
 		const displayConfig = watch('displayConfig');
 		const routeData = watch('route');
 
-
 		return (
 			<div className=" overflow-y-auto bg-white p-6 rounded-xl">
 				<h3 className="text-md font-semibold mb-4 text-gray-900 capitalize">
@@ -662,74 +657,105 @@ export const DisplayConfigForm: React.FC = () => {
 										{langName}
 									</span>
 								</AccordionItemTrigger>
-								<AccordionItemContent className="bg-neutral-20 p-2">
-
-									{
-										screenConfig.format === 'single' &&
-										<LEDBitmapSimulator rows={16} cols={96} text={displayConfig[language][screenKey].texts.text
-										} language={language} />
-									}
-
-									{
-										screenConfig.format === 'two' &&
-										<div className="flex">
-											<LEDBitmapSimulator rows={16} cols={32} text={displayConfig[language][screenKey].texts.sideText
-											} language={'en'} />
-											<LEDBitmapSimulator rows={16} cols={64} text={displayConfig[language][screenKey].texts.text
-											} language={language} />
+								<AccordionItemContent className="bg-neutral-20 p-2 flex flex-col gap-4 items-start">
+									{screenConfig.format === 'single' && (
+										<div className="p-3 bg-neutral-950  border-2 rounded-xl border-neutral-800">
+											<LEDBitmapSimulator
+												rows={16}
+												cols={96}
+												text={displayConfig[language][screenKey].texts.text}
+												language={language}
+											/>
 										</div>
+									)}
 
-									}
-
-									{
-										screenConfig.format === 'three' &&
-										<div className="flex flex-row">
-											<LEDBitmapSimulator rows={16} cols={32} text={displayConfig[language][screenKey].texts.sideText
-											} language={'en'} />
-											<div className="flex flex-col">
-												<LEDBitmapSimulator rows={8} cols={64} text={displayConfig[language][screenKey].texts.upperHalfText
-												} language={language} />
-												<LEDBitmapSimulator rows={8} cols={64} text={displayConfig[language][screenKey].texts.lowerHalfText
-												} language={language} />
+									{screenConfig.format === 'two' && (
+										<div className="p-3 bg-neutral-950  border-2 rounded-xl border-neutral-800">
+											<div className="flex">
+												<LEDBitmapSimulator
+													rows={16}
+													cols={32}
+													text={
+														displayConfig[language][screenKey].texts.sideText
+													}
+													language={'en'}
+												/>
+												<LEDBitmapSimulator
+													rows={16}
+													cols={64}
+													text={displayConfig[language][screenKey].texts.text}
+													language={language}
+												/>
 											</div>
 										</div>
+									)}
 
-									}
+									{screenConfig.format === 'three' && (
+										<div className="p-3 bg-neutral-950  border-2 rounded-xl border-neutral-800">
+											<div className="flex flex-row">
+												<LEDBitmapSimulator
+													rows={16}
+													cols={32}
+													text={
+														displayConfig[language][screenKey].texts.sideText
+													}
+													language={'en'}
+												/>
+												<div className="flex flex-col">
+													<LEDBitmapSimulator
+														rows={8}
+														cols={64}
+														text={
+															displayConfig[language][screenKey].texts
+																.upperHalfText
+														}
+														language={language}
+													/>
+													<LEDBitmapSimulator
+														rows={8}
+														cols={64}
+														text={
+															displayConfig[language][screenKey].texts
+																.lowerHalfText
+														}
+														language={language}
+													/>
+												</div>
+											</div>
+										</div>
+									)}
 
+									<label className="block text-sm font-medium text-gray-600 mb-1">
+										Format
+									</label>
+									<select
+										value={screenConfig.format || 'single'}
+										onChange={(e) =>
+											handleFormatChange(
+												screenKey,
+												language,
+												e.target.value as ScreenFormat
+											)
+										}
+										className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+									>
+										{!isSpecialMessage
+											? FORMATS.filter(
+													(format) => isEnglish || format.value !== 'three'
+											  ).map((format) => (
+													<option key={format.value} value={format.value}>
+														{format.label}
+													</option>
+											  ))
+											: FORMATS2.filter(
+													(format) => isEnglish || format.value !== 'three'
+											  ).map((format) => (
+													<option key={format.value} value={format.value}>
+														{format.label}
+													</option>
+											  ))}
+									</select>
 
-<label className="block text-sm font-medium text-gray-600 mb-1">
-											Format
-										</label>
-										<select
-											value={screenConfig.format || 'single'}
-											onChange={(e) =>
-												handleFormatChange(
-													screenKey,
-													language,
-													e.target.value as ScreenFormat
-												)
-											}
-											className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-										>
-											{!isSpecialMessage
-												? FORMATS.filter(
-														(format) => isEnglish || format.value !== 'three'
-												  ).map((format) => (
-														<option key={format.value} value={format.value}>
-															{format.label}
-														</option>
-												  ))
-												: FORMATS2.filter(
-														(format) => isEnglish || format.value !== 'three'
-												  ).map((format) => (
-														<option key={format.value} value={format.value}>
-															{format.label}
-														</option>
-												  ))}
-										</select>
-									
-
-									
 									{Object.entries(screenConfig.texts).map(
 										([textKey, textConfig]) => (
 											<div
@@ -787,24 +813,26 @@ export const DisplayConfigForm: React.FC = () => {
 														}
 													>
 														<MenuTrigger asChild>
-															<Button className='px-3 h-10 bg-white rounded-md border' size="sm">Select Text To Display
-
+															<Button
+																className="px-3 h-10 bg-white rounded-md border"
+																size="sm"
+															>
+																Select Text To Display
 																<LuChevronDown />
-
 															</Button>
 														</MenuTrigger>
 														<MenuContent>
 															{isSpecialMessage
 																? PLACE_HOLDER_OPTIONS2.map((option) => (
-																	<MenuItem value={option.value}>
-																		{option.label}
-																	</MenuItem>
-																))
+																		<MenuItem value={option.value}>
+																			{option.label}
+																		</MenuItem>
+																  ))
 																: PLACEHOLDER_OPTIONS.map((option) => (
-																	<MenuItem value={option.value}>
-																		{option.label}
-																	</MenuItem>
-																))}
+																		<MenuItem value={option.value}>
+																			{option.label}
+																		</MenuItem>
+																  ))}
 														</MenuContent>
 													</MenuRoot>
 													{/* <input
@@ -876,24 +904,24 @@ export const DisplayConfigForm: React.FC = () => {
 
 													{displayConfig[language][screenKey].format !==
 														'three' && (
-															<div>
-																<label className="block text-sm font-medium text-gray-600 mb-1">
-																	Font Size
-																</label>
-																<select
-																	{...register(
-																		`displayConfig.${language}.${screenKey}.texts.${textKey}.fontSize`
-																	)}
-																	className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-																>
-																	{FONT_SIZES.map((size) => (
-																		<option key={size} value={size}>
-																			{size}px
-																		</option>
-																	))}
-																</select>
-															</div>
-														)}
+														<div>
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Font Size
+															</label>
+															<select
+																{...register(
+																	`displayConfig.${language}.${screenKey}.texts.${textKey}.fontSize`
+																)}
+																className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+															>
+																{FONT_SIZES.map((size) => (
+																	<option key={size} value={size}>
+																		{size}px
+																	</option>
+																))}
+															</select>
+														</div>
+													)}
 
 													<div>
 														<label className="block text-sm font-medium text-gray-600 mb-1">
@@ -1136,9 +1164,7 @@ export const DisplayConfigForm: React.FC = () => {
 			className="w-full flex flex-col gap-4 overflow-hidden p-6"
 		>
 			<div className="flex justify-between items-center">
-				<h2 className="text-xl bold text-gray-900">
-					Display Configuration
-				</h2>
+				<h2 className="text-xl bold text-gray-900">Display Configuration</h2>
 				{/* <IMEInput /> */}
 				{/* <GoogleIME/> */}
 				<button
@@ -1154,20 +1180,22 @@ export const DisplayConfigForm: React.FC = () => {
 					<button
 						type="button"
 						onClick={() => setActiveTab('route')}
-						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${activeTab === 'route'
-							? 'border-nav_orange bg-white text-nav_blue-500'
-							: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-							}`}
+						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${
+							activeTab === 'route'
+								? 'border-nav_orange bg-white text-nav_blue-500'
+								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+						}`}
 					>
 						Route
 					</button>
 					<button
 						type="button"
 						onClick={() => setActiveTab('languages')}
-						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${activeTab === 'languages'
-							? 'border-nav_orange bg-white text-nav_blue-500'
-							: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-							}`}
+						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${
+							activeTab === 'languages'
+								? 'border-nav_orange bg-white text-nav_blue-500'
+								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+						}`}
 					>
 						Languages
 					</button>
@@ -1176,10 +1204,11 @@ export const DisplayConfigForm: React.FC = () => {
 							key={screenType}
 							type="button"
 							onClick={() => setActiveTab(screenType)}
-							className={`py-2 px-3 text-left max-w-[120px]  border-b-2 font-medium text-sm capitalize ${activeTab === screenType
-								? 'border-nav_orange bg-white text-nav_blue-500'
-								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-								}`}
+							className={`py-2 px-3 text-left max-w-[120px]  border-b-2 font-medium text-sm capitalize ${
+								activeTab === screenType
+									? 'border-nav_orange bg-white text-nav_blue-500'
+									: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+							}`}
 						>
 							{screenType} Board
 						</button>

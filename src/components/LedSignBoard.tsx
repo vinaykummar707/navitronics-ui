@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 const LEDBitmapSimulator = ({ text, language, rows, cols }) => {
 	//   const [rows, setRows] = useState(16);
 	//   const [cols, setColumns] = useState(96);
-	const [ledSize, setLedSize] = useState(6);
+	const [ledSize, setLedSize] = useState(3.5);
 	const [ledSpacing, setLedSpacing] = useState(1);
 	const [bitmapText, setBitmapText] = useState('');
 	const [ledMatrix, setLedMatrix] = useState([]);
