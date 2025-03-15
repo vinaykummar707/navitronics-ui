@@ -617,12 +617,41 @@ export const DisplayConfigForm: React.FC = () => {
 		}
 	};
 
+	const getColumnsByBoard = (boardType, format) => {
+		switch (boardType) {
+			case 'front':
+				return getFormatByScreen(160, format);
+			case 'side':
+				return getFormatByScreen(96, format);
+			case 'rear':
+				return getFormatByScreen(128, format);
+			default:
+				return getFormatByScreen(96, format);
+		}
+	};
+
+	const getFormatByScreen = (cols, format) => {
+		switch (format) {
+			case 'single':
+				console.log(format, cols);
+				return cols;
+			case 'two':
+				console.log(format, cols, cols - 32);
+				return cols - 32;
+			case 'three':
+				console.log(format, cols, cols - 32);
+				return cols - 32;
+			default:
+				return cols - 32;
+		}
+	};
+
 	const renderScreenTab = (screenKey: (typeof SCREEN_TYPES)[number]) => {
 		const displayConfig = watch('displayConfig');
 		const routeData = watch('route');
 
 		return (
-			<div className=" overflow-y-auto bg-white p-6 rounded-xl">
+			<div className="  bg-white p-6 rounded-xl">
 				<h3 className="text-md font-semibold mb-4 text-gray-900 capitalize">
 					{screenKey} Board Configuration
 				</h3>
@@ -657,12 +686,16 @@ export const DisplayConfigForm: React.FC = () => {
 										{langName}
 									</span>
 								</AccordionItemTrigger>
-								<AccordionItemContent className="bg-neutral-20 p-2 flex flex-col gap-4 items-start">
+								<AccordionItemContent className="bg-neutral-20  p-2 flex flex-col gap-4 items-start">
+									{/* <span>
+										Showing 16 x{' '}
+										{getColumnsByBoard(activeTab, screenConfig.format)} Board
+									</span> */}
 									{screenConfig.format === 'single' && (
-										<div className="p-3 bg-neutral-950  border-2 rounded-xl border-neutral-800">
+										<div className="p-2   bg-neutral-950  border-2 rounded-xl border-neutral-800">
 											<LEDBitmapSimulator
 												rows={16}
-												cols={96}
+												cols={getColumnsByBoard(activeTab, screenConfig.format)}
 												text={displayConfig[language][screenKey].texts.text}
 												language={language}
 											/>
@@ -670,7 +703,7 @@ export const DisplayConfigForm: React.FC = () => {
 									)}
 
 									{screenConfig.format === 'two' && (
-										<div className="p-3 bg-neutral-950  border-2 rounded-xl border-neutral-800">
+										<div className="p-2 bg-neutral-950  border-2 rounded-xl border-neutral-800">
 											<div className="flex">
 												<LEDBitmapSimulator
 													rows={16}
@@ -682,7 +715,10 @@ export const DisplayConfigForm: React.FC = () => {
 												/>
 												<LEDBitmapSimulator
 													rows={16}
-													cols={64}
+													cols={getColumnsByBoard(
+														activeTab,
+														screenConfig.format
+													)}
 													text={displayConfig[language][screenKey].texts.text}
 													language={language}
 												/>
@@ -691,7 +727,7 @@ export const DisplayConfigForm: React.FC = () => {
 									)}
 
 									{screenConfig.format === 'three' && (
-										<div className="p-3 bg-neutral-950  border-2 rounded-xl border-neutral-800">
+										<div className="p-2 bg-neutral-950  border-2 rounded-xl border-neutral-800">
 											<div className="flex flex-row">
 												<LEDBitmapSimulator
 													rows={16}
@@ -704,7 +740,10 @@ export const DisplayConfigForm: React.FC = () => {
 												<div className="flex flex-col">
 													<LEDBitmapSimulator
 														rows={8}
-														cols={64}
+														cols={getColumnsByBoard(
+															activeTab,
+															screenConfig.format
+														)}
 														text={
 															displayConfig[language][screenKey].texts
 																.upperHalfText
@@ -713,7 +752,10 @@ export const DisplayConfigForm: React.FC = () => {
 													/>
 													<LEDBitmapSimulator
 														rows={8}
-														cols={64}
+														cols={getColumnsByBoard(
+															activeTab,
+															screenConfig.format
+														)}
 														text={
 															displayConfig[language][screenKey].texts
 																.lowerHalfText
