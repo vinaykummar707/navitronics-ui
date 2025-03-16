@@ -1,251 +1,257 @@
 import axiosInstance from '@/config/axios';
 import React, { useState, useEffect, useRef } from 'react';
 
-const LEDBitmapSimulator = ({ 
-  text, 
-  language, 
-  rows, 
-  cols, 
-  horizontalSpacing =1, // Default horizontal spacing between LEDs
-  verticalSpacing =  1// Default vertical spacing between rows
+const LEDBitmapSimulator = ({
+	text,
+	language,
+	rows,
+	cols,
+	horizontalSpacing = 1, // Default horizontal spacing between LEDs
+	verticalSpacing = 1, // Default vertical spacing between rows
+	stopScroll,
 }) => {
-  const [ledSize, setLedSize] = useState(5);
-  const [ledSpacing, setLedSpacing] = useState(horizontalSpacing);
-  const [rowSpacing, setRowSpacing] = useState(verticalSpacing);
-  const [bitmapText, setBitmapText] = useState('');
-  const [ledMatrix, setLedMatrix] = useState([]);
-  const [ledColor, setLedColor] = useState('#ff0000');
-  const [bgColor, setBgColor] = useState('#000000');
-  const [viewportWidth, setViewportWidth] = useState(800);
-  const [isScrolling, setIsScrolling] = useState(false);
-  const [scrollDirection, setScrollDirection] = useState('left');
-  const [scrollSpeed, setScrollSpeed] = useState(5);
-  const [scrollOffset, setScrollOffset] = useState(0);
-  const scrollIntervalRef = useRef(null);
+	const [ledSize, setLedSize] = useState(5);
+	const [ledSpacing, setLedSpacing] = useState(horizontalSpacing);
+	const [rowSpacing, setRowSpacing] = useState(verticalSpacing);
+	const [bitmapText, setBitmapText] = useState('');
+	const [ledMatrix, setLedMatrix] = useState([]);
+	const [ledColor, setLedColor] = useState('#ff0000');
+	const [bgColor, setBgColor] = useState('#000000');
+	const [viewportWidth, setViewportWidth] = useState(800);
+	const [isScrolling, setIsScrolling] = useState(false);
+	const [scrollDirection, setScrollDirection] = useState('left');
+	const [scrollSpeed, setScrollSpeed] = useState(5);
+	const [scrollOffset, setScrollOffset] = useState(0);
+	const scrollIntervalRef = useRef(null);
 
-  // Update spacing when props change
-  useEffect(() => {
-    setLedSpacing(horizontalSpacing);
-  }, [horizontalSpacing]);
+	// Update spacing when props change
+	useEffect(() => {
+		setLedSpacing(horizontalSpacing);
+	}, [horizontalSpacing]);
 
-  useEffect(() => {
-    setRowSpacing(verticalSpacing);
-  }, [verticalSpacing]);
+	useEffect(() => {
+		setRowSpacing(verticalSpacing);
+	}, [verticalSpacing]);
 
-  useEffect(() => {
-    setViewportWidth(
-      Math.min(window.innerWidth - 40, cols * (ledSize + ledSpacing))
-    );
-  }, [cols, ledSize, ledSpacing]);
+	useEffect(() => {
+		setViewportWidth(
+			Math.min(window.innerWidth - 40, cols * (ledSize + ledSpacing))
+		);
+	}, [cols, ledSize, ledSpacing]);
 
-  useEffect(() => {
-    console.log(text, language);
-    const fetchBitmap = async () => {
-      try {
-        const response = await axiosInstance.post(
-          '/routes/getBitmapSimulation',
-          JSON.stringify({
-            text: text,
-            language: language,
-          })
-        );
+	useEffect(() => {
+		console.log(text, language);
+		const fetchBitmap = async () => {
+			try {
+				const response = await axiosInstance.post(
+					'/routes/getBitmapSimulation',
+					JSON.stringify({
+						text: text,
+						language: language,
+					})
+				);
 
-        console.log(response);
-        setBitmapText(response.data || '');
-      } catch (error) {
-        console.error('Error fetching bitmap:', error);
-      }
-    };
+				console.log(response);
+				setBitmapText(response.data || '');
+			} catch (error) {
+				console.error('Error fetching bitmap:', error);
+			}
+		};
 
-    fetchBitmap();
+		fetchBitmap();
 
-    if (text.scrollType === 'Left To Right') {
-      setIsScrolling(true);
-      setScrollDirection('right');
-    }
-    if (text.scrollType === 'Right To Left') {
-      setIsScrolling(true);
-      setScrollDirection('left');
-    }
-    if (text.scrollType === 'Fixed') {
-      setIsScrolling(false);
-    }
-    setScrollSpeed(text.scrollSpeed);
-  }, [
-    text,
-    text.text,
-    language,
-    text.scrollType,
-    text.position,
-    text.scrollSpeed,
-    text.fontSize,
-    text.fontWeight,
-    text.fontHeight,
-    text.x_offset,
-    text.y_offset,
-    text.spacing,
-  ]);
+		if (text.scrollType === 'Left To Right') {
+			setIsScrolling(true);
+			setScrollDirection('right');
+		}
+		if (text.scrollType === 'Right To Left') {
+			setIsScrolling(true);
+			setScrollDirection('left');
+		}
+		if (text.scrollType === 'Fixed') {
+			setIsScrolling(false);
+			setScrollOffset(0);
+		}
+		setScrollSpeed(text.scrollSpeed);
+		if (text.scrollType !== 'Fixed') {
+			setIsScrolling(stopScroll);
+		}
+	}, [
+		text,
+		text.text,
+		language,
+		text.scrollType,
+		text.position,
+		text.scrollSpeed,
+		text.fontSize,
+		text.fontWeight,
+		text.fontHeight,
+		text.x_offset,
+		text.y_offset,
+		text.spacing,
+		stopScroll,
+	]);
 
-  // Process bitmap text into matrix with scrolling support
-  const processBitmapText = (text, offset = 0) => {
-    if (!text)
-      return Array(rows)
-        .fill()
-        .map(() => Array(cols).fill(0));
+	// Process bitmap text into matrix with scrolling support
+	const processBitmapText = (text, offset = 0) => {
+		if (!text)
+			return Array(rows)
+				.fill()
+				.map(() => Array(cols).fill(0));
 
-    const lines = text.split('\n').filter((line) => line.length > 0);
-    const matrix = [];
+		const lines = text.split('\n').filter((line) => line.length > 0);
+		const matrix = [];
 
-    for (let i = 0; i < rows; i++) {
-      const row = [];
-      const line = lines[i] || '';
+		for (let i = 0; i < rows; i++) {
+			const row = [];
+			const line = lines[i] || '';
 
-      // Skip if line is empty
-      if (line.length === 0) {
-        matrix.push(Array(cols).fill(0));
-        continue;
-      }
+			// Skip if line is empty
+			if (line.length === 0) {
+				matrix.push(Array(cols).fill(0));
+				continue;
+			}
 
-      // For each column in the display
-      for (let j = 0; j < cols; j++) {
-        // Calculate the position in the bitmap text with offset
-        const textPos = j + offset;
+			// For each column in the display
+			for (let j = 0; j < cols; j++) {
+				// Calculate the position in the bitmap text with offset
+				const textPos = j + offset;
 
-        // Check if the position is within the bitmap text length
-        if (textPos >= 0 && textPos < line.length) {
-          row.push(line[textPos] === '#' ? 1 : 0);
-        } else {
-          // Outside of text bounds, so show empty LED
-          row.push(0);
-        }
-      }
+				// Check if the position is within the bitmap text length
+				if (textPos >= 0 && textPos < line.length) {
+					row.push(line[textPos] === '#' ? 1 : 0);
+				} else {
+					// Outside of text bounds, so show empty LED
+					row.push(0);
+				}
+			}
 
-      matrix.push(row);
-    }
+			matrix.push(row);
+		}
 
-    return matrix;
-  };
+		return matrix;
+	};
 
-  useEffect(() => {
-    setLedMatrix(processBitmapText(bitmapText, scrollOffset));
-  }, [bitmapText, rows, cols, scrollOffset]);
+	useEffect(() => {
+		setLedMatrix(processBitmapText(bitmapText, scrollOffset));
+	}, [bitmapText, rows, cols, scrollOffset]);
 
-  // Handle scrolling logic
-  useEffect(() => {
-    if (isScrolling) {
-      // Clear any existing interval
-      if (scrollIntervalRef.current) {
-        clearInterval(scrollIntervalRef.current);
-      }
+	// Handle scrolling logic
+	useEffect(() => {
+		if (isScrolling) {
+			// Clear any existing interval
+			if (scrollIntervalRef.current) {
+				clearInterval(scrollIntervalRef.current);
+			}
 
-      // Set up new scrolling interval
-      scrollIntervalRef.current = setInterval(() => {
-        setScrollOffset((prev) => {
-          const direction = scrollDirection === 'left' ? 1 : -1;
-          let newOffset = prev + direction;
+			// Set up new scrolling interval
+			scrollIntervalRef.current = setInterval(() => {
+				setScrollOffset((prev) => {
+					const direction = scrollDirection === 'left' ? 1 : -1;
+					let newOffset = prev + direction;
 
-          // Get the maximum width of any line in the bitmap
-          const maxWidth = Math.max(
-            ...bitmapText.split('\n').map((line) => line.length || 0)
-          );
+					// Get the maximum width of any line in the bitmap
+					const maxWidth = Math.max(
+						...bitmapText.split('\n').map((line) => line.length || 0)
+					);
 
-          // Reset offset when text has completely scrolled off screen
-          // For left scrolling (text moves right to left)
-          if (scrollDirection === 'left' && newOffset > maxWidth + cols) {
-            return -cols; // Start with text just off the right edge
-          }
-          // For right scrolling (text moves left to right)
-          else if (scrollDirection === 'right' && newOffset < -maxWidth) {
-            return cols; // Start with text just off the left edge
-          }
+					// Reset offset when text has completely scrolled off screen
+					// For left scrolling (text moves right to left)
+					if (scrollDirection === 'left' && newOffset > maxWidth + cols) {
+						return -cols; // Start with text just off the right edge
+					}
+					// For right scrolling (text moves left to right)
+					else if (scrollDirection === 'right' && newOffset < -maxWidth) {
+						return cols; // Start with text just off the left edge
+					}
 
-          return newOffset;
-        });
-      }, scrollSpeed);
-    } else if (scrollIntervalRef.current) {
-      clearInterval(scrollIntervalRef.current);
-      scrollIntervalRef.current = null;
-    }
+					return newOffset;
+				});
+			}, scrollSpeed);
+		} else if (scrollIntervalRef.current) {
+			clearInterval(scrollIntervalRef.current);
+			scrollIntervalRef.current = null;
+		}
 
-    // Cleanup on unmount
-    return () => {
-      if (scrollIntervalRef.current) {
-        clearInterval(scrollIntervalRef.current);
-      }
-    };
-  }, [isScrolling, scrollDirection, scrollSpeed, bitmapText]);
+		// Cleanup on unmount
+		return () => {
+			if (scrollIntervalRef.current) {
+				clearInterval(scrollIntervalRef.current);
+			}
+		};
+	}, [isScrolling, scrollDirection, scrollSpeed, bitmapText]);
 
-  const toggleLed = (rowIndex, colIndex) => {
-    if (isScrolling) return; // Disable editing while scrolling
+	const toggleLed = (rowIndex, colIndex) => {
+		if (isScrolling) return; // Disable editing while scrolling
 
-    const newMatrix = [...ledMatrix];
-    if (newMatrix[rowIndex] && newMatrix[rowIndex][colIndex] !== undefined) {
-      newMatrix[rowIndex][colIndex] = newMatrix[rowIndex][colIndex] ? 0 : 1;
-      setLedMatrix(newMatrix);
+		const newMatrix = [...ledMatrix];
+		if (newMatrix[rowIndex] && newMatrix[rowIndex][colIndex] !== undefined) {
+			newMatrix[rowIndex][colIndex] = newMatrix[rowIndex][colIndex] ? 0 : 1;
+			setLedMatrix(newMatrix);
 
-      // Update bitmap text based on the matrix
-      const lines = bitmapText.split('\n');
-      const updatedLines = [...lines];
+			// Update bitmap text based on the matrix
+			const lines = bitmapText.split('\n');
+			const updatedLines = [...lines];
 
-      // Ensure we have enough lines
-      while (updatedLines.length <= rowIndex) {
-        updatedLines.push('.'.repeat(cols));
-      }
+			// Ensure we have enough lines
+			while (updatedLines.length <= rowIndex) {
+				updatedLines.push('.'.repeat(cols));
+			}
 
-      // Convert the line to an array, modify it, and convert back to string
-      let lineArray = Array.from(updatedLines[rowIndex] || '.'.repeat(cols));
-      while (lineArray.length <= colIndex) {
-        lineArray.push('.');
-      }
-      lineArray[colIndex] = newMatrix[rowIndex][colIndex] ? '#' : '.';
-      updatedLines[rowIndex] = lineArray.join('');
+			// Convert the line to an array, modify it, and convert back to string
+			let lineArray = Array.from(updatedLines[rowIndex] || '.'.repeat(cols));
+			while (lineArray.length <= colIndex) {
+				lineArray.push('.');
+			}
+			lineArray[colIndex] = newMatrix[rowIndex][colIndex] ? '#' : '.';
+			updatedLines[rowIndex] = lineArray.join('');
 
-      setBitmapText(updatedLines.join('\n'));
-    }
-  };
+			setBitmapText(updatedLines.join('\n'));
+		}
+	};
 
-  // Calculate container width based on LED size
-  const containerStyle = {};
+	// Calculate container width based on LED size
+	const containerStyle = {};
 
-  const ledGridStyle = {
-    padding: `${rowSpacing * 0}px`,
-  };
+	const ledGridStyle = {
+		padding: `${rowSpacing * 0}px`,
+	};
 
-  return (
-    <div className="">
-      <div style={containerStyle} className="">
-        <div className="bg-neutral-900" style={ledGridStyle}>
-          {ledMatrix.map((row, rowIndex) => (
-            <div
-              key={rowIndex}
-              style={{ 
-                height: `${ledSize}px`, 
-                lineHeight: 0,
-                marginBottom: `${rowSpacing}px` // Apply vertical spacing
-              }}
-            >
-              {row.map((cell, colIndex) => (
-                <div
-                  key={`${rowIndex}-${colIndex}`}
-                  onClick={() => toggleLed(rowIndex, colIndex)}
-                  className={`${
-                    cell ? 'bg-amber-500' : 'bg-neutral-700'
-                  } rounded-full`}
-                  style={{
-                    width: `${ledSize}px`,
-                    height: `${ledSize}px`,
-                    display: 'inline-block',
-                    margin: `0 ${ledSpacing}px 0 0`, // Apply horizontal spacing
-                    cursor: isScrolling ? 'default' : 'pointer',
-                  }}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+	return (
+		<div className="">
+			<div style={containerStyle} className="">
+				<div className="bg-neutral-900" style={ledGridStyle}>
+					{ledMatrix.map((row, rowIndex) => (
+						<div
+							key={rowIndex}
+							style={{
+								height: `${ledSize}px`,
+								lineHeight: 0,
+								marginBottom: `${rowSpacing}px`, // Apply vertical spacing
+							}}
+						>
+							{row.map((cell, colIndex) => (
+								<div
+									key={`${rowIndex}-${colIndex}`}
+									onClick={() => toggleLed(rowIndex, colIndex)}
+									className={`${
+										cell ? 'bg-amber-500' : 'bg-neutral-700'
+									} rounded-full`}
+									style={{
+										width: `${ledSize}px`,
+										height: `${ledSize}px`,
+										display: 'inline-block',
+										margin: `0 ${ledSpacing}px 0 0`, // Apply horizontal spacing
+										cursor: isScrolling ? 'default' : 'pointer',
+									}}
+								/>
+							))}
+						</div>
+					))}
+				</div>
+			</div>
+		</div>
+	);
 };
 
 export default LEDBitmapSimulator;

@@ -386,6 +386,7 @@ export const DisplayConfigForm: React.FC = () => {
 	};
 
 	const [selectedPlaceholder, setSelectedPlaceholder] = useState('');
+	const [stopScroll, setStopScroll] = useState(false);
 
 	const handlePlaceholderSelect = async (
 		screenKey: string,
@@ -691,29 +692,11 @@ export const DisplayConfigForm: React.FC = () => {
 										Showing 16 x{' '}
 										{getColumnsByBoard(activeTab, screenConfig.format)} Board
 									</span> */}
-									{screenConfig.format === 'single' && (
-										<div className="p-2   bg-neutral-950  border-2 rounded-xl border-neutral-800">
-											<LEDBitmapSimulator
-												rows={16}
-												cols={getColumnsByBoard(activeTab, screenConfig.format)}
-												text={displayConfig[language][screenKey].texts.text}
-												language={language}
-											/>
-										</div>
-									)}
-
-									{screenConfig.format === 'two' && (
-										<div className="p-2 bg-neutral-950  border-2 rounded-xl border-neutral-800">
-											<div className="flex">
+									<div className="flex items-start gap-4">
+										{screenConfig.format === 'single' && (
+											<div className="p-2   bg-neutral-950  border-2 rounded-xl border-neutral-800">
 												<LEDBitmapSimulator
-													rows={16}
-													cols={32}
-													text={
-														displayConfig[language][screenKey].texts.sideText
-													}
-													language={'en'}
-												/>
-												<LEDBitmapSimulator
+													stopScroll={stopScroll}
 													rows={16}
 													cols={getColumnsByBoard(
 														activeTab,
@@ -723,49 +706,86 @@ export const DisplayConfigForm: React.FC = () => {
 													language={language}
 												/>
 											</div>
-										</div>
-									)}
+										)}
 
-									{screenConfig.format === 'three' && (
-										<div className="p-2 bg-neutral-950  border-2 rounded-xl border-neutral-800">
-											<div className="flex flex-row">
-												<LEDBitmapSimulator
-													rows={16}
-													cols={32}
-													text={
-														displayConfig[language][screenKey].texts.sideText
-													}
-													language={'en'}
-												/>
-												<div className="flex flex-col">
+										{screenConfig.format === 'two' && (
+											<div className="p-2 bg-neutral-950  border-2 rounded-xl border-neutral-800">
+												<div className="flex">
 													<LEDBitmapSimulator
-														rows={8}
-														cols={getColumnsByBoard(
-															activeTab,
-															screenConfig.format
-														)}
+														stopScroll={stopScroll}
+														rows={16}
+														cols={32}
 														text={
-															displayConfig[language][screenKey].texts
-																.upperHalfText
+															displayConfig[language][screenKey].texts.sideText
 														}
-														language={language}
+														language={'en'}
 													/>
 													<LEDBitmapSimulator
-														rows={8}
+														stopScroll={stopScroll}
+														rows={16}
 														cols={getColumnsByBoard(
 															activeTab,
 															screenConfig.format
 														)}
-														text={
-															displayConfig[language][screenKey].texts
-																.lowerHalfText
-														}
+														text={displayConfig[language][screenKey].texts.text}
 														language={language}
 													/>
 												</div>
 											</div>
-										</div>
-									)}
+										)}
+
+										{screenConfig.format === 'three' && (
+											<div className="p-2 bg-neutral-950  border-2 rounded-xl border-neutral-800">
+												<div className="flex flex-row">
+													<LEDBitmapSimulator
+														stopScroll={stopScroll}
+														rows={16}
+														cols={32}
+														text={
+															displayConfig[language][screenKey].texts.sideText
+														}
+														language={'en'}
+													/>
+													<div className="flex flex-col">
+														<LEDBitmapSimulator
+															stopScroll={stopScroll}
+															rows={8}
+															cols={getColumnsByBoard(
+																activeTab,
+																screenConfig.format
+															)}
+															text={
+																displayConfig[language][screenKey].texts
+																	.upperHalfText
+															}
+															language={language}
+														/>
+														<LEDBitmapSimulator
+															stopScroll={stopScroll}
+															rows={8}
+															cols={getColumnsByBoard(
+																activeTab,
+																screenConfig.format
+															)}
+															text={
+																displayConfig[language][screenKey].texts
+																	.lowerHalfText
+															}
+															language={language}
+														/>
+													</div>
+												</div>
+											</div>
+										)}
+
+										<button
+											type="button"
+											onClick={() => setStopScroll((value) => !value)}
+											className="bg-red-500 text-red-50 py-2 px-4 text-sm font-medium rounded-md"
+										>
+											{stopScroll ? 'Start' : 'Stop'} Scroll
+										</button>
+									</div>
 
 									<label className="block text-sm font-medium text-gray-600 mb-1">
 										Format
