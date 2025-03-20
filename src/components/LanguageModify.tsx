@@ -1,3 +1,4 @@
+import axiosInstance from '@/config/axios';
 import React, { useState, useEffect } from 'react';
 
 const API_URL = 'http://localhost:8080/navitranix/api/languages';
@@ -28,9 +29,9 @@ const LanguageManagement = () => {
 	const fetchLanguages = async () => {
 		setIsLoading(true);
 		try {
-			const response = await fetch(`${API_URL}/all`);
-			if (!response.ok) throw new Error('Failed to fetch languages');
-			const data = await response.json();
+			const response = await axiosInstance.get(`/languages/all`);
+			// if (!response.ok) throw new Error('Failed to fetch languages');
+			const data = await response.data;
 			setLanguages(data);
 			setError(null);
 		} catch (err) {
@@ -43,12 +44,10 @@ const LanguageManagement = () => {
 	const createLanguage = async (language) => {
 		setIsSubmitting(true);
 		try {
-			const response = await fetch(`${API_URL}/create`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(language),
-			});
-			if (!response.ok) throw new Error('Failed to create language');
+			const response = await axiosInstance.post(
+				`/languages/create`,
+				JSON.stringify(language)
+			);
 			await fetchLanguages();
 			resetForm();
 		} catch (err) {
@@ -61,13 +60,10 @@ const LanguageManagement = () => {
 	const updateLanguage = async (code, data) => {
 		setIsSubmitting(true);
 		try {
-			const response = await fetch(`${API_URL}/${code}`, {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(data),
-			});
-			if (!response.ok)
-				throw new Error(`Failed to update language with code ${code}`);
+			const response = await axiosInstance.put(
+				`/languages/${code}`,
+				JSON.stringify(data)
+			);
 			await fetchLanguages();
 			resetForm();
 			setIsEditing(false);
@@ -80,11 +76,8 @@ const LanguageManagement = () => {
 
 	const deleteLanguage = async (code) => {
 		try {
-			const response = await fetch(`${API_URL}/${code}`, {
-				method: 'DELETE',
-			});
-			if (!response.ok)
-				throw new Error(`Failed to delete language with code ${code}`);
+			const response = await axiosInstance.delete(`/languages/${code}`);
+
 			await fetchLanguages();
 			setSelectedLanguage(null);
 		} catch (err) {
@@ -146,7 +139,7 @@ const LanguageManagement = () => {
 			spacing: 0,
 		});
 		setSelectedLanguage(null);
-    setIsEditing(false)
+		setIsEditing(false);
 	};
 
 	// if (isLoading) {
@@ -181,7 +174,6 @@ const LanguageManagement = () => {
 								name="code"
 								value={formData.code}
 								onChange={handleInputChange}
-							
 								className="w-full p-2 border rounded focus:ring focus:ring-blue-200"
 								required
 							/>
