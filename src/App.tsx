@@ -21,6 +21,7 @@ import { CreateRoute } from "./pages/CreateRoute";
 import PublicRoute from "./components/PublicRoute";
 import EntryPage from "./components/EntryPage";
 import DisplayConfigForm from "./components/DisplayConfigForm";
+import LanguageModify from "./components/LanguageModify";
 
 
 const queryClient = new QueryClient({
@@ -42,6 +43,7 @@ function App() {
       depots: ['depot_admin', 'area_admin', 'organization_admin', 'master'],
       users: ['organization_admin', 'master'],
       roles: ['organization_admin', 'master'],
+      fonts: ['organization_admin', 'master'],
     };
   
     const canAccess = (route) => {
@@ -61,6 +63,7 @@ function App() {
             {canAccess('depots') && <Route path="depots" element={<Depots />} />}
             {canAccess('users') && <Route path="users" element={<Users />} />}
             {canAccess('roles') && <Route path="roles" element={<Roles />} />}
+            {canAccess('fonts') && <Route path="fonts" element={<LanguageModify />} />}
             <Route path="routes" element={<AppRoutes />} />
             <Route path="create-route" element={<DisplayConfigForm />} />
             <Route path="settings" element={<Settings />} />

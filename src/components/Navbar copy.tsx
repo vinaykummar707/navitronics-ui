@@ -90,6 +90,19 @@ const NavbarTwo = () => {
                 Users
               </Link>
             </RBAC>
+
+            <RBAC roles={[ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]}>
+              <Link
+                to="/home/fonts"
+                className={`text-sm  ${
+                  location.pathname === "/home/fonts" 
+                    ? 'bg-nav_blue-600 text-white py-1.5 px-4 bg-stone-1000 rounded-lg border-stone-200' 
+                    : 'text-neutral-900'
+                }`}
+              >
+                Fonts
+              </Link>
+            </RBAC>
           </div>
         </div>
 
