@@ -31,6 +31,7 @@ import {
 import { LuChevronDown } from 'react-icons/lu';
 import ScrollingLEDDisplay from './LedSignBoard';
 import LEDBitmapSimulator from './LedSignBoard';
+import axiosInstance from '@/config/axios';
 
 const SCREEN_TYPES = ['front', 'side', 'rear', 'internal'] as const;
 const SCROLL_TYPES = [
@@ -157,6 +158,7 @@ const getDefaultTextConfig = () => ({
 	x_offset: 0,
 	y_offset: 0,
 	spacing: 0,
+	fontfile: '',
 });
 
 const getDefaultThreeTextConfig = () => ({
@@ -175,6 +177,7 @@ const getDefaultThreeTextConfig = () => ({
 	x_offset: 0,
 	y_offset: 0,
 	spacing: 0,
+	fontfile: '',
 });
 
 const getDefaultThreeSideTextConfig = () => ({
@@ -193,6 +196,7 @@ const getDefaultThreeSideTextConfig = () => ({
 	x_offset: 0,
 	y_offset: 0,
 	spacing: 0,
+	fontfile: '',
 });
 
 const getFormatTexts = (format: ScreenFormat) => {
@@ -249,6 +253,7 @@ const generatePlaceholderText = (option: string, routeData: any) => {
 };
 
 export const DisplayConfigForm: React.FC = () => {
+	const [offsetConfigs, setOffsetConfigs] = useState([]);
 	const [selectedLanguages, setSelectedLanguages] = useState<string[]>(['en']);
 	const location = useLocation();
 	const { areaId, depotId, isEdit, gotRouteData } = location.state || {};
@@ -258,6 +263,19 @@ export const DisplayConfigForm: React.FC = () => {
 
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
+
+	// API service functions
+	const fetchLanguages = async () => {
+		try {
+			const response = await axiosInstance.get(`/languages/all`);
+			// if (!response.ok) throw new Error('Failed to fetch languages');
+			const data = await response.data;
+			setOffsetConfigs(data);
+			console.log(data);
+		} catch (err) {
+			console.error('Error fetching languages:', err);
+		}
+	};
 
 	const createRouteMutation = useMutation({
 		mutationFn: routeService.create,
@@ -312,6 +330,7 @@ export const DisplayConfigForm: React.FC = () => {
 
 	useEffect(() => {
 		console.log(isEdit, gotRouteData);
+		fetchLanguages();
 		if (isEdit && gotRouteData) {
 			console.log(Object.keys(gotRouteData.displayConfig));
 			setSelectedLanguages(Object.keys(gotRouteData.displayConfig));
@@ -914,7 +933,7 @@ export const DisplayConfigForm: React.FC = () => {
 													/>
 												</div>
 
-												<div className="grid grid-cols-1 md:grid-cols-9 gap-4">
+												<div className="grid grid-cols-1 md:grid-cols-10 gap-4">
 													<div>
 														<label className="block text-sm font-medium text-gray-600 mb-1">
 															Scroll Type
@@ -1009,6 +1028,86 @@ export const DisplayConfigForm: React.FC = () => {
 															))}
 														</select>
 													</div>
+													<div>
+														<label className="block text-sm font-medium text-gray-600 mb-1">
+															Select Offset 
+														</label>
+													<MenuRoot
+														onSelect={(e) =>
+														{
+															const selectedCode = e.value;
+															console.log(e);
+															
+																const selectedOffset: any = offsetConfigs.find(
+																	(offset) => offset.code === selectedCode
+																);
+																console.log(selectedOffset);
+																
+																setValue(
+																	`displayConfig.${language}.${screenKey}.texts.${textKey}.fontHeight`,
+																	selectedOffset?.fontHeight
+																);
+																setValue(
+																	`displayConfig.${language}.${screenKey}.texts.${textKey}.x_offset`,
+																	selectedOffset?.xoffset
+																);
+																setValue(
+																	`displayConfig.${language}.${screenKey}.texts.${textKey}.y_offset`,
+																	selectedOffset?.yoffset
+																);
+																setValue(
+																	`displayConfig.${language}.${screenKey}.texts.${textKey}.spacing`,
+																	selectedOffset?.spacing
+																);
+																setValue(
+																	`displayConfig.${language}.${screenKey}.texts.${textKey}.fontfile`,
+																	selectedOffset?.fontFile
+																);
+														}
+														}
+													>
+														<MenuTrigger asChild>
+															<Button
+																className="px-3 h-10 bg-white rounded-md border"
+																size="sm"
+															>
+																Select
+																<LuChevronDown />
+															</Button>
+														</MenuTrigger>
+														<MenuContent>
+															{ offsetConfigs.map((offset) => (
+																		<MenuItem value={offset.code}>
+																			{offset.name}
+																		</MenuItem>
+																  ))
+																}
+														</MenuContent>
+													</MenuRoot>
+													</div>
+
+
+													{/* <MenuRoot
+														
+													>
+														<MenuTrigger asChild>
+															<Button
+																className="px-3 h-10 bg-white rounded-md border"
+																size="sm"
+															>
+																Select Offset
+																<LuChevronDown />
+															</Button>
+														</MenuTrigger>
+														<MenuContent>
+															{ offsetConfigs.map((offset) => (
+																		<MenuItem value={offset.name}>
+																			{offset.name}
+																		</MenuItem>
+																  ))}
+																
+														</MenuContent>
+													</MenuRoot> */}
 
 													<div>
 														<label className="block text-sm font-medium text-gray-600 mb-1">
