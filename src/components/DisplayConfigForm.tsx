@@ -666,9 +666,49 @@ export const DisplayConfigForm: React.FC = () => {
 		}
 	};
 
+ // Add this useEffect at the component level
+ useEffect(() => {
+    if (offsetConfigs.length > 0) {
+      selectedLanguages.forEach(language => {
+        const selectedOffset = offsetConfigs.find(
+          (offset) => offset.code === language
+        );
+        SCREEN_TYPES.forEach(screenKey => {
+          const screenConfig = watch(`displayConfig.${language}.${screenKey}`);
+          if (screenConfig?.texts) {
+            Object.keys(screenConfig.texts).forEach(textKey => {
+              setValue(
+                `displayConfig.${language}.${screenKey}.texts.${textKey}.fontHeight`,
+                selectedOffset?.fontHeight
+              );
+              setValue(
+                `displayConfig.${language}.${screenKey}.texts.${textKey}.x_offset`,
+                selectedOffset?.xoffset
+              );
+              setValue(
+                `displayConfig.${language}.${screenKey}.texts.${textKey}.y_offset`,
+                selectedOffset?.yoffset
+              );
+              setValue(
+                `displayConfig.${language}.${screenKey}.texts.${textKey}.spacing`,
+                selectedOffset?.spacing
+              );
+              setValue(
+                `displayConfig.${language}.${screenKey}.texts.${textKey}.fontfile`,
+                selectedOffset?.fontFile
+              );
+            });
+          }
+        });
+      });
+    }
+  }, [selectedLanguages, offsetConfigs, setValue, watch]);
+
 	const renderScreenTab = (screenKey: (typeof SCREEN_TYPES)[number]) => {
 		const displayConfig = watch('displayConfig');
 		const routeData = watch('route');
+
+	
 
 		return (
 			<div className="  bg-white p-6 rounded-xl">
@@ -822,27 +862,31 @@ export const DisplayConfigForm: React.FC = () => {
 									>
 										{!isSpecialMessage
 											? FORMATS.filter(
-													(format) => isEnglish || format.value !== 'three'
-											  ).map((format) => (
-													<option key={format.value} value={format.value}>
-														{format.label}
-													</option>
-											  ))
+												(format) => isEnglish || format.value !== 'three'
+											).map((format) => (
+												<option key={format.value} value={format.value}>
+													{format.label}
+												</option>
+											))
 											: FORMATS2.filter(
-													(format) => isEnglish || format.value !== 'three'
-											  ).map((format) => (
-													<option key={format.value} value={format.value}>
-														{format.label}
-													</option>
-											  ))}
+												(format) => isEnglish || format.value !== 'three'
+											).map((format) => (
+												<option key={format.value} value={format.value}>
+													{format.label}
+												</option>
+											))}
 									</select>
 
 									{Object.entries(screenConfig.texts).map(
 										([textKey, textConfig]) => (
+
 											<div
 												key={`${language}-${textKey}`}
 												className="border p-4 bg-stone-100 border-stone-400 rounded-lg mb-4"
 											>
+												{/* <>
+												{applyOffset(language,screenKey,textKey)}
+												</> */}
 												<h4 className="font-semibold mb-2 text-gray-700 capitalize">
 													{textKey === 'sideText'
 														? 'Route Number'
@@ -905,15 +949,15 @@ export const DisplayConfigForm: React.FC = () => {
 														<MenuContent>
 															{isSpecialMessage
 																? PLACE_HOLDER_OPTIONS2.map((option) => (
-																		<MenuItem value={option.value}>
-																			{option.label}
-																		</MenuItem>
-																  ))
+																	<MenuItem value={option.value}>
+																		{option.label}
+																	</MenuItem>
+																))
 																: PLACEHOLDER_OPTIONS.map((option) => (
-																		<MenuItem value={option.value}>
-																			{option.label}
-																		</MenuItem>
-																  ))}
+																	<MenuItem value={option.value}>
+																		{option.label}
+																	</MenuItem>
+																))}
 														</MenuContent>
 													</MenuRoot>
 													{/* <input
@@ -985,24 +1029,24 @@ export const DisplayConfigForm: React.FC = () => {
 
 													{displayConfig[language][screenKey].format !==
 														'three' && (
-														<div>
-															<label className="block text-sm font-medium text-gray-600 mb-1">
-																Font Size
-															</label>
-															<select
-																{...register(
-																	`displayConfig.${language}.${screenKey}.texts.${textKey}.fontSize`
-																)}
-																className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-															>
-																{FONT_SIZES.map((size) => (
-																	<option key={size} value={size}>
-																		{size}px
-																	</option>
-																))}
-															</select>
-														</div>
-													)}
+															<div>
+																<label className="block text-sm font-medium text-gray-600 mb-1">
+																	Font Size
+																</label>
+																<select
+																	{...register(
+																		`displayConfig.${language}.${screenKey}.texts.${textKey}.fontSize`
+																	)}
+																	className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+																>
+																	{FONT_SIZES.map((size) => (
+																		<option key={size} value={size}>
+																			{size}px
+																		</option>
+																	))}
+																</select>
+															</div>
+														)}
 
 													<div>
 														<label className="block text-sm font-medium text-gray-600 mb-1">
@@ -1030,19 +1074,18 @@ export const DisplayConfigForm: React.FC = () => {
 													</div>
 													<div>
 														<label className="block text-sm font-medium text-gray-600 mb-1">
-															Select Offset 
+															Select Offset
 														</label>
-													<MenuRoot
-														onSelect={(e) =>
-														{
-															const selectedCode = e.value;
-															console.log(e);
-															
+														<MenuRoot
+															onSelect={(e) => {
+																const selectedCode = e.value;
+																console.log(e);
+
 																const selectedOffset: any = offsetConfigs.find(
 																	(offset) => offset.code === selectedCode
 																);
 																console.log(selectedOffset);
-																
+
 																setValue(
 																	`displayConfig.${language}.${screenKey}.texts.${textKey}.fontHeight`,
 																	selectedOffset?.fontHeight
@@ -1063,27 +1106,27 @@ export const DisplayConfigForm: React.FC = () => {
 																	`displayConfig.${language}.${screenKey}.texts.${textKey}.fontfile`,
 																	selectedOffset?.fontFile
 																);
-														}
-														}
-													>
-														<MenuTrigger asChild>
-															<Button
-																className="px-3 h-10 bg-white rounded-md border"
-																size="sm"
-															>
-																Select
-																<LuChevronDown />
-															</Button>
-														</MenuTrigger>
-														<MenuContent>
-															{ offsetConfigs.map((offset) => (
-																		<MenuItem value={offset.code}>
-																			{offset.name}
-																		</MenuItem>
-																  ))
+															}
+															}
+														>
+															<MenuTrigger asChild>
+																<Button
+																	className="px-3 h-10 bg-white rounded-md border"
+																	size="sm"
+																>
+																	Select
+																	<LuChevronDown />
+																</Button>
+															</MenuTrigger>
+															<MenuContent>
+																{offsetConfigs.map((offset) => (
+																	<MenuItem value={offset.code}>
+																		{offset.name}
+																	</MenuItem>
+																))
 																}
-														</MenuContent>
-													</MenuRoot>
+															</MenuContent>
+														</MenuRoot>
 													</div>
 
 
@@ -1341,22 +1384,20 @@ export const DisplayConfigForm: React.FC = () => {
 					<button
 						type="button"
 						onClick={() => setActiveTab('route')}
-						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${
-							activeTab === 'route'
+						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${activeTab === 'route'
 								? 'border-nav_orange bg-white text-nav_blue-500'
 								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-						}`}
+							}`}
 					>
 						Route
 					</button>
 					<button
 						type="button"
 						onClick={() => setActiveTab('languages')}
-						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${
-							activeTab === 'languages'
+						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${activeTab === 'languages'
 								? 'border-nav_orange bg-white text-nav_blue-500'
 								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-						}`}
+							}`}
 					>
 						Languages
 					</button>
@@ -1365,11 +1406,10 @@ export const DisplayConfigForm: React.FC = () => {
 							key={screenType}
 							type="button"
 							onClick={() => setActiveTab(screenType)}
-							className={`py-2 px-3 text-left max-w-[120px]  border-b-2 font-medium text-sm capitalize ${
-								activeTab === screenType
+							className={`py-2 px-3 text-left max-w-[120px]  border-b-2 font-medium text-sm capitalize ${activeTab === screenType
 									? 'border-nav_orange bg-white text-nav_blue-500'
 									: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-							}`}
+								}`}
 						>
 							{screenType} Board
 						</button>
