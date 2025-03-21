@@ -28,7 +28,7 @@ import {
 	MenuRoot,
 	MenuTrigger,
 } from '@/components/ui/menu';
-import { LuChevronDown } from 'react-icons/lu';
+import { LuChevronDown, LuClipboardCopy, LuClipboardPaste, LuCopy } from 'react-icons/lu';
 import ScrollingLEDDisplay from './LedSignBoard';
 import LEDBitmapSimulator from './LedSignBoard';
 import axiosInstance from '@/config/axios';
@@ -241,20 +241,34 @@ const getDefaultLanguageConfig = (isEnglish: boolean) => ({
 
 const generatePlaceholderText = (option: string, routeData: any) => {
 	const parts = option.split('-');
-	console.log(option, routeData, parts);
+	const processRouteNumber = (num: string) => {
+	  return num ? num.trim() : '';
+	};
+  
 	const res = parts
-		.map((part) =>
-			part === 'via' ? `VIA: ${routeData[part]}` : routeData[part] || ''
-		)
-		.filter(Boolean)
-		.join(' ');
-	console.log(res);
+	  .map((part) => {
+		if (part === 'via') {
+		  return `VIA: ${routeData[part]}`;
+		}
+		if (part.includes('routeNumber')) {
+		  return processRouteNumber(routeData[part]);
+		}
+		if (part === 'separation' && routeData[part]) {
+		  return ` ${routeData[part]} `;
+		}
+		return routeData[part] || '';
+	  })
+	  .filter(Boolean)
+	  .join(' ');
+  
 	return res;
-};
+  };
+  
 
 export const DisplayConfigForm: React.FC = () => {
 	const [offsetConfigs, setOffsetConfigs] = useState([]);
 	const [selectedLanguages, setSelectedLanguages] = useState<string[]>(['en']);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const location = useLocation();
 	const { areaId, depotId, isEdit, gotRouteData } = location.state || {};
 	const [activeTab, setActiveTab] = useState<
@@ -412,35 +426,45 @@ export const DisplayConfigForm: React.FC = () => {
 		textKey: string,
 		language: string,
 		option: string
-	) => {
-		// setSelectedPlaceholder(option);
+	  ) => {
 		const routeData = watch('route');
 		const generatedText = generatePlaceholderText(option, routeData);
 		let upperText;
+	  
 		if (language === 'en') {
-			upperText = generatedText.toUpperCase();
+		  upperText = generatedText;
 		} else {
-			if (
-				option === 'routeNumber' ||
-				option === 'routeNumber1' ||
-				option === 'routeNumber2'
-			) {
-				upperText = generatedText.toUpperCase();
-			} else {
-				const res = await fetchTransliteration(generatedText, language);
-				upperText = res[0];
-			}
+		  // Improved regex to better handle separations between numbers and text
+		  const parts = generatedText.split(/([0-9]+[\/A-Za-z]*|[\/\-⇄]+|\s+)/g);
+		  const translatedParts = await Promise.all(
+			parts.map(async (part) => {
+			  const trimmedPart = part.trim();
+			  // Skip empty parts
+			  if (!trimmedPart) return part;
+			  // Handle route numbers and special characters
+			  if (part.match(/[0-9]+[\/A-Za-z]*|[\/\-⇄]+/)) {
+				return `${part}`;
+			  }
+			  // Translate non-empty text parts
+			  if (trimmedPart) {
+				const res = await fetchTransliteration(trimmedPart, language);
+				return res[0] || trimmedPart;
+			  }
+			  return part;
+			})
+		  );
+		  upperText = translatedParts.join(' ').replace(/\s+/g, ' ').trim();
 		}
-		// Update both translations and bitmaps
+	  
 		setValue(
-			`displayConfig.${language}.${screenKey}.texts.${textKey}.text`,
-			upperText
+		  `displayConfig.${language}.${screenKey}.texts.${textKey}.text`,
+		  upperText
 		);
 		setValue(
-			`displayConfig.${language}.${screenKey}.texts.${textKey}.bitmap.bitmap`,
-			upperText
+		  `displayConfig.${language}.${screenKey}.texts.${textKey}.bitmap.bitmap`,
+		  upperText
 		);
-	};
+	  };
 
 	const renderRouteTab = () => (
 		<div className="mb-8 p-6 bg-white rounded-xl shadow-md">
@@ -644,7 +668,7 @@ export const DisplayConfigForm: React.FC = () => {
 			case 'side':
 				return getFormatByScreen(96, format);
 			case 'rear':
-				return getFormatByScreen(128, format);
+				return getFormatByScreen(96, format);
 			default:
 				return getFormatByScreen(96, format);
 		}
@@ -666,49 +690,51 @@ export const DisplayConfigForm: React.FC = () => {
 		}
 	};
 
- // Add this useEffect at the component level
- useEffect(() => {
-    if (offsetConfigs.length > 0) {
-      selectedLanguages.forEach(language => {
-        const selectedOffset = offsetConfigs.find(
-          (offset) => offset.code === language
-        );
-        SCREEN_TYPES.forEach(screenKey => {
-          const screenConfig = watch(`displayConfig.${language}.${screenKey}`);
-          if (screenConfig?.texts) {
-            Object.keys(screenConfig.texts).forEach(textKey => {
-              setValue(
-                `displayConfig.${language}.${screenKey}.texts.${textKey}.fontHeight`,
-                selectedOffset?.fontHeight
-              );
-              setValue(
-                `displayConfig.${language}.${screenKey}.texts.${textKey}.x_offset`,
-                selectedOffset?.xoffset
-              );
-              setValue(
-                `displayConfig.${language}.${screenKey}.texts.${textKey}.y_offset`,
-                selectedOffset?.yoffset
-              );
-              setValue(
-                `displayConfig.${language}.${screenKey}.texts.${textKey}.spacing`,
-                selectedOffset?.spacing
-              );
-              setValue(
-                `displayConfig.${language}.${screenKey}.texts.${textKey}.fontfile`,
-                selectedOffset?.fontFile
-              );
-            });
-          }
-        });
-      });
-    }
-  }, [selectedLanguages, offsetConfigs, setValue, watch]);
+	// Add this useEffect at the component level
+	// useEffect(() => {
+	// 	if (offsetConfigs.length > 0) {
+	// 		selectedLanguages.forEach(language => {
+	// 			const selectedOffset = offsetConfigs.find(
+	// 				(offset) => offset.code === language
+	// 			);
+	// 			SCREEN_TYPES.forEach(screenKey => {
+	// 				const screenConfig = watch(`displayConfig.${language}.${screenKey}`);
+	// 				if (screenConfig?.texts) {
+	// 					console.log(Object.keys(screenConfig.texts));
+						
+	// 					Object.keys(screenConfig.texts).forEach(textKey => {
+	// 						setValue(
+	// 							`displayConfig.${language}.${screenKey}.texts.${textKey}.fontHeight`,
+	// 							selectedOffset?.fontHeight
+	// 						);
+	// 						setValue(
+	// 							`displayConfig.${language}.${screenKey}.texts.${textKey}.x_offset`,
+	// 							selectedOffset?.xoffset
+	// 						);
+	// 						setValue(
+	// 							`displayConfig.${language}.${screenKey}.texts.${textKey}.y_offset`,
+	// 							selectedOffset?.yoffset
+	// 						);
+	// 						setValue(
+	// 							`displayConfig.${language}.${screenKey}.texts.${textKey}.spacing`,
+	// 							selectedOffset?.spacing
+	// 						);
+	// 						setValue(
+	// 							`displayConfig.${language}.${screenKey}.texts.${textKey}.fontfile`,
+	// 							selectedOffset?.fontFile
+	// 						);
+	// 					});
+	// 				}
+	// 			});
+	// 		});
+	// 	}
+	// }, [selectedLanguages, offsetConfigs, setValue, watch]);
 
 	const renderScreenTab = (screenKey: (typeof SCREEN_TYPES)[number]) => {
 		const displayConfig = watch('displayConfig');
 		const routeData = watch('route');
 
-	
+
 
 		return (
 			<div className="  bg-white p-6 rounded-xl">
@@ -752,7 +778,7 @@ export const DisplayConfigForm: React.FC = () => {
 										{getColumnsByBoard(activeTab, screenConfig.format)} Board
 									</span> */}
 									<div className="flex items-start gap-4">
-										{screenConfig.format === 'single' && (
+										{!isSubmitting && screenConfig.format === 'single' && (
 											<div className="p-2   bg-neutral-950  border-2 rounded-xl border-neutral-800">
 												<LEDBitmapSimulator
 													stopScroll={stopScroll}
@@ -767,7 +793,7 @@ export const DisplayConfigForm: React.FC = () => {
 											</div>
 										)}
 
-										{screenConfig.format === 'two' && (
+										{!isSubmitting && screenConfig.format === 'two' && (
 											<div className="p-2 bg-neutral-950  border-2 rounded-xl border-neutral-800">
 												<div className="flex">
 													<LEDBitmapSimulator
@@ -793,7 +819,7 @@ export const DisplayConfigForm: React.FC = () => {
 											</div>
 										)}
 
-										{screenConfig.format === 'three' && (
+										{!isSubmitting && screenConfig.format === 'three' && (
 											<div className="p-2 bg-neutral-950  border-2 rounded-xl border-neutral-800">
 												<div className="flex flex-row">
 													<LEDBitmapSimulator
@@ -893,39 +919,8 @@ export const DisplayConfigForm: React.FC = () => {
 														: textKey.replace(/([A-Z])/g, ' $1').trim()}
 												</h4>
 
-												<div className="mb-4 items-start flex gap-4">
-													{/* <select
-														className=" p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-														onChange={(e) =>
-															handlePlaceholderSelect(
-																screenKey,
-																textKey,
-																language,
-																e.target.value
-															)
-														}
-													>
-													 <option value={'select placeholder'}
-															Select placeholder
-														</option> 
-														{isSpecialMessage
-															? PLACE_HOLDER_OPTIONS2.map((option) => (
-																	<option
-																		key={option.value}
-																		value={option.value}
-																	>
-																		{option.label}
-																	</option>
-															  ))
-															: PLACEHOLDER_OPTIONS.map((option) => (
-																	<option
-																		key={option.value}
-																		value={option.value}
-																	>
-																		{option.label}
-																	</option>
-															  ))}
-													</select> */}
+												<div className="mb-4 items-start flex gap-2">
+												
 
 													<MenuRoot
 														onSelect={(e) =>
@@ -975,6 +970,34 @@ export const DisplayConfigForm: React.FC = () => {
 															<IMEInput langCode={language} {...field} />
 														)}
 													/>
+													<button
+														type="button"
+														onClick={() => {
+															const text = watch(`displayConfig.${language}.${screenKey}.texts.${textKey}.text`);
+															navigator.clipboard.writeText(text);
+															// alert(`${text} copied to clipboard`)
+														}}
+														className="h-10 px-3 bg-white border hover:bg-neutral-200 rounded-md"
+														title="Copy text"
+													>
+														<LuCopy className="w-4 h-4 text-gray-600" />
+													</button>
+													<button
+														type="button"
+														onClick={async () => {
+															const text = watch(`displayConfig.${language}.${screenKey}.texts.${textKey}.text`);
+															const clipboardText = await navigator.clipboard.readText()
+															setValue(
+																`displayConfig.${language}.${screenKey}.texts.${textKey}.text`,
+																clipboardText
+															);
+															// alert(`${text} copied to clipboard`)
+														}}
+														className="h-10 px-3 bg-white border hover:bg-neutral-200 rounded-md"
+														title="Copy text"
+													>
+														<LuClipboardPaste className="w-4 h-4 text-gray-600" />
+													</button>
 												</div>
 
 												<div className="grid grid-cols-1 md:grid-cols-10 gap-4">
@@ -1131,7 +1154,9 @@ export const DisplayConfigForm: React.FC = () => {
 
 
 													{/* <MenuRoot
-														
+														onSelect={(e) =>
+															
+														}
 													>
 														<MenuTrigger asChild>
 															<Button
@@ -1255,59 +1280,13 @@ export const DisplayConfigForm: React.FC = () => {
 	};
 
 	const onSubmit = async (data: DisplayConfig) => {
+		setIsSubmitting(true);
 		try {
 			// Create a deep copy of the data to avoid mutating the form state
 			const configToSave = JSON.parse(JSON.stringify(data));
 
 			// Process only selected languages
-			for (const language of selectedLanguages) {
-				const langConfig = AVAILABLE_LANGUAGES.find((l) => l.code === language);
-				if (!langConfig) {
-					console.error(`Font file not found for language: ${language}`);
-					continue;
-				}
 
-				// Process all screen types (front, side, rear, internal)
-				for (const screenKey of SCREEN_TYPES) {
-					const screen = configToSave.displayConfig[language][screenKey];
-					if (!screen || !screen.texts) continue;
-
-					// Process each text section in the screen
-					for (const [textKey, textConfig] of Object.entries(screen.texts)) {
-						if (!textConfig.text) continue;
-
-						try {
-							let bitmapResponse;
-							if (language !== 'en') {
-								bitmapResponse = await routeService.generateBitmap(
-									textConfig.text,
-									langConfig.fontFile,
-									textConfig.fontSize
-								);
-							} else {
-								bitmapResponse = await routeService.generateBitmap(
-									textConfig.text,
-									langConfig.fontFile,
-									textConfig.fontSize
-								);
-							}
-							// Call the generateBitmap API with the correct font file
-
-							// Store bitmap data with metadata
-							screen.texts[textKey].bitmap = {
-								bitmap: bitmapResponse.bitmap.join(','),
-								width: bitmapResponse.width,
-								height: bitmapResponse.height,
-							};
-						} catch (error) {
-							console.error(
-								`Error generating bitmap for ${language} ${screenKey} ${textKey}:`,
-								error
-							);
-						}
-					}
-				}
-			}
 			console.log(configToSave.id);
 			// Create an array with the config object
 			if (isEdit) {
@@ -1319,46 +1298,13 @@ export const DisplayConfigForm: React.FC = () => {
 				console.log('====================================');
 			}
 
-			// const rn = configToSave.route.routeNumber;
 
-			// Create a JSON blob and download it
-			// const jsonString = JSON.stringify([configToSave], null, 2);
-			// const blob = new Blob([jsonString], { type: 'application/json' });
-			// const url = URL.createObjectURL(blob);
-
-			// Create a temporary link and trigger download
-			// const link = document.createElement('a');
-			// link.href = url;
-			// link.download = `${rn}.json`;
-			// document.body.appendChild(link);
-			// link.click();
-
-			// const masterJson = [{ [configToSave.route.routeNumber]: `${rn}.json` }];
-
-			// Create a master JSON blob and download it
-			// const masterjsonString = JSON.stringify(masterJson, null, 2);
-			// const masterblob = new Blob([masterjsonString], {
-			// 	type: 'application/json',
-			// });
-			// const masterurl = URL.createObjectURL(masterblob);
-
-			// Create a temporary link and trigger download
-			// const masterlink = document.createElement('a');
-			// masterlink.href = masterurl;
-			// masterlink.download = `routes.json`;
-			// document.body.appendChild(masterlink);
-			// masterlink.click();
-
-			// Cleanup
-			// document.body.removeChild(link);
-			// URL.revokeObjectURL(url);
-			//
-			// document.body.removeChild(masterlink);
-			// URL.revokeObjectURL(masterurl);
 
 			console.log('Configuration saved and downloaded', configToSave);
 		} catch (error) {
 			console.error('Error processing configuration:', error);
+		} finally {
+			// setIsSubmitting(false);
 		}
 	};
 
@@ -1385,8 +1331,8 @@ export const DisplayConfigForm: React.FC = () => {
 						type="button"
 						onClick={() => setActiveTab('route')}
 						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${activeTab === 'route'
-								? 'border-nav_orange bg-white text-nav_blue-500'
-								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+							? 'border-nav_orange bg-white text-nav_blue-500'
+							: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
 							}`}
 					>
 						Route
@@ -1395,8 +1341,8 @@ export const DisplayConfigForm: React.FC = () => {
 						type="button"
 						onClick={() => setActiveTab('languages')}
 						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${activeTab === 'languages'
-								? 'border-nav_orange bg-white text-nav_blue-500'
-								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+							? 'border-nav_orange bg-white text-nav_blue-500'
+							: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
 							}`}
 					>
 						Languages
@@ -1407,8 +1353,8 @@ export const DisplayConfigForm: React.FC = () => {
 							type="button"
 							onClick={() => setActiveTab(screenType)}
 							className={`py-2 px-3 text-left max-w-[120px]  border-b-2 font-medium text-sm capitalize ${activeTab === screenType
-									? 'border-nav_orange bg-white text-nav_blue-500'
-									: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+								? 'border-nav_orange bg-white text-nav_blue-500'
+								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
 								}`}
 						>
 							{screenType} Board

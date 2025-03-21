@@ -207,7 +207,7 @@ const LanguageManagement = () => {
 							<label className="block text-sm font-medium ">Font Height</label>
 							<input
 								type="number"
-								step="0.1"
+								
 								name="fontHeight"
 								value={formData.fontHeight}
 								onChange={handleInputChange}
@@ -220,7 +220,7 @@ const LanguageManagement = () => {
 							<label className="block text-sm font-medium ">X Offset</label>
 							<input
 								type="number"
-								step="0.1"
+							
 								name="xoffset"
 								value={formData.xoffset}
 								onChange={handleInputChange}
@@ -233,7 +233,7 @@ const LanguageManagement = () => {
 							<label className="block text-sm font-medium ">Y Offset</label>
 							<input
 								type="number"
-								step="0.1"
+						
 								name="yoffset"
 								value={formData.yoffset}
 								onChange={handleInputChange}
@@ -246,7 +246,7 @@ const LanguageManagement = () => {
 							<label className="block text-sm font-medium ">Spacing</label>
 							<input
 								type="number"
-								step="0.1"
+								
 								name="spacing"
 								value={formData.spacing}
 								onChange={handleInputChange}

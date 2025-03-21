@@ -86,6 +86,7 @@ const LEDBitmapSimulator = ({
 		text.fontSize,
 		text.fontWeight,
 		text.fontHeight,
+		text.fontfile,
 		text.x_offset,
 		text.y_offset,
 		text.spacing,
