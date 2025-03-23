@@ -10,6 +10,7 @@ import { Container } from '@chakra-ui/react';
 import useAuthStore from '@/store/authStore';
 import RBAC from '../components/RBAC';
 import { ROLES } from '../constants/roles';
+import { toast } from 'react-toastify';
 
 const Areas = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -33,6 +34,11 @@ const Areas = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['areas', selectedOrganization?.organizationId] });
       setIsCreateModalOpen(false);
+      toast.success('Area created successfully!');
+    },
+    onError: (error) => {
+      console.error('Error creating area:', error);
+      toast.error('Failed to create area.');
     },
   });
 
@@ -42,6 +48,11 @@ const Areas = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['areas', selectedOrganization?.organizationId] });
       setEditingArea(null);
+      toast.success('Area updated successfully!');
+    },
+    onError: (error) => {
+      console.error('Error updating area:', error);
+      toast.error('Failed to update area.');
     },
   });
 
@@ -49,6 +60,11 @@ const Areas = () => {
     mutationFn: areaService.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['areas', selectedOrganization?.organizationId] });
+      toast.success('Area deleted successfully!');
+    },
+    onError: (error) => {
+      console.error('Error deleting area:', error);
+      toast.error('Failed to delete area.');
     },
   });
 

@@ -7,6 +7,7 @@ import { Dialog } from '@headlessui/react';
 import { useOrganizationStore } from '../store/useOrganizationStore';
 import { Icon } from '@iconify-icon/react';
 import { Container } from '@chakra-ui/react';
+import { toast } from 'react-toastify';
 
 const Roles = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -26,6 +27,11 @@ const Roles = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
       setIsCreateModalOpen(false);
+      toast.success('Role created successfully!');
+    },
+    onError: (error) => {
+      console.error('Error creating role:', error);
+      toast.error('Failed to create role.');
     },
   });
 
@@ -34,6 +40,11 @@ const Roles = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
       setEditingRole(null);
+      toast.success('Role updated successfully!');
+    },
+    onError: (error) => {
+      console.error('Error updating role:', error);
+      toast.error('Failed to update role.');
     },
   });
 
@@ -41,6 +52,11 @@ const Roles = () => {
     mutationFn: roleService.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
+      toast.success('Role deleted successfully!');
+    },
+    onError: (error) => {
+      console.error('Error deleting role:', error);
+      toast.error('Failed to delete role.');
     },
   });
 

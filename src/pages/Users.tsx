@@ -8,6 +8,7 @@ import { useOrganizationStore } from "../store/useOrganizationStore";
 import { Icon } from "@iconify-icon/react";
 import { Container } from "@chakra-ui/react";
 import TextToBitmap from "@/components/bitmap";
+import { toast } from 'react-toastify';
 
 const Users = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -29,6 +30,11 @@ const Users = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       setIsCreateModalOpen(false);
+      toast.success('User created successfully!');
+    },
+    onError: (error) => {
+      console.error('Error creating user:', error);
+      toast.error('Failed to create user.');
     },
   });
 
@@ -38,6 +44,11 @@ const Users = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       setEditingUser(null);
+      toast.success('User updated successfully!');
+    },
+    onError: (error) => {
+      console.error('Error updating user:', error);
+      toast.error('Failed to update user.');
     },
   });
 
@@ -45,6 +56,11 @@ const Users = () => {
     mutationFn: userService.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success('User deleted successfully!');
+    },
+    onError: (error) => {
+      console.error('Error deleting user:', error);
+      toast.error('Failed to delete user.');
     },
   });
 

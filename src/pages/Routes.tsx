@@ -14,6 +14,7 @@ import RBAC from '../components/RBAC';
 import { ROLES } from '../constants/roles';
 import { AgGridReact } from 'ag-grid-react';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+import { toast } from 'react-toastify';
 
 const Routes = () => {
 	const [selectedAreaId, setSelectedAreaId] = useState<string>('');
@@ -90,10 +91,11 @@ const Routes = () => {
 		onSuccess: (data) => {
 			console.log(data);
 			queryClient.invalidateQueries({ queryKey: ['routes', selectedDepotId] });
+			toast.success('Route deleted successfully!');
 		},
 		onError: (error) => {
-			console.error('Error creating route:', error);
-			// Handle error appropriately
+			console.error('Error deleting route:', error);
+			toast.error('Failed to delete route.');
 		},
 	});
 

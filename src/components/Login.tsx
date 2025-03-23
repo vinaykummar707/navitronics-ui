@@ -6,6 +6,7 @@ import Logo from '../../Assests/Navitronix.png';
 import useAuthStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { LuEye, LuEyeClosed } from 'react-icons/lu';
+import { toast } from 'react-toastify';
 
 function Login() {
 	const [userId, setUserId] = useState('');
@@ -32,6 +33,9 @@ function Login() {
 			// Handle successful response
 			console.log('Login successful:', response.data);
 
+			// Display success toast
+			toast.success('Login successful!');
+
 			// Save the response data to local storage
 			// const { userId, token, refreshToken, organizationId, userRole } = response.data;
 
@@ -56,6 +60,9 @@ function Login() {
 		} catch (error) {
 			console.error('Login error:', error);
 			setError('Invalid credentials. Please try again.');
+
+			// Display error toast
+			toast.error('Invalid credentials. Please try again.');
 		}
 	};
 

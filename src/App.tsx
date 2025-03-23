@@ -22,6 +22,8 @@ import PublicRoute from "./components/PublicRoute";
 import EntryPage from "./components/EntryPage";
 import DisplayConfigForm from "./components/DisplayConfigForm";
 import LanguageModify from "./components/LanguageModify";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const queryClient = new QueryClient({
@@ -73,6 +75,7 @@ function App() {
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         </Routes>
       </Router>
+      <ToastContainer theme="colored" />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

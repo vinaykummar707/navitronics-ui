@@ -32,6 +32,7 @@ import { LuChevronDown, LuClipboardCopy, LuClipboardPaste, LuCopy } from 'react-
 import ScrollingLEDDisplay from './LedSignBoard';
 import LEDBitmapSimulator from './LedSignBoard';
 import axiosInstance from '@/config/axios';
+import { toast } from 'react-toastify';
 
 const SCREEN_TYPES = ['front', 'side', 'rear', 'internal'] as const;
 const SCROLL_TYPES = [
@@ -296,10 +297,11 @@ export const DisplayConfigForm: React.FC = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['routes'] });
 			navigate('/home/routes');
+			toast.success('Route created successfully!');
 		},
 		onError: (error) => {
 			console.error('Error creating route:', error);
-			// Handle error appropriately
+			toast.error('Failed to create route.');
 		},
 	});
 
@@ -309,10 +311,11 @@ export const DisplayConfigForm: React.FC = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['routes'] });
 			navigate('/home/routes');
+			toast.success('Route updated successfully!');
 		},
 		onError: (error) => {
-			console.error('Error creating route:', error);
-			// Handle error appropriately
+			console.error('Error updating route:', error);
+			toast.error('Failed to update route.');
 		},
 	});
 

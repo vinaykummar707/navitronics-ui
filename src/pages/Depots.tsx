@@ -12,6 +12,7 @@ import useAuthStore from '@/store/authStore';
 import { AreaSelector } from '@/components/common/AreaSelector';
 import RBAC from '../components/RBAC';
 import { ROLES } from '../constants/roles';
+import { toast } from 'react-toastify';
 
 const Depots = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -57,6 +58,11 @@ const Depots = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['depots'] });
       setIsCreateModalOpen(false);
+      toast.success('Depot created successfully!');
+    },
+    onError: (error) => {
+      console.error('Error creating depot:', error);
+      toast.error('Failed to create depot.');
     },
   });
 
@@ -65,6 +71,11 @@ const Depots = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['depots'] });
       setEditingDepot(null);
+      toast.success('Depot updated successfully!');
+    },
+    onError: (error) => {
+      console.error('Error updating depot:', error);
+      toast.error('Failed to update depot.');
     },
   });
 
@@ -72,6 +83,11 @@ const Depots = () => {
     mutationFn: depotService.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['depots'] });
+      toast.success('Depot deleted successfully!');
+    },
+    onError: (error) => {
+      console.error('Error deleting depot:', error);
+      toast.error('Failed to delete depot.');
     },
   });
 
