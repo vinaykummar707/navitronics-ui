@@ -28,7 +28,12 @@ import {
 	MenuRoot,
 	MenuTrigger,
 } from '@/components/ui/menu';
-import { LuChevronDown, LuClipboardCopy, LuClipboardPaste, LuCopy } from 'react-icons/lu';
+import {
+	LuChevronDown,
+	LuClipboardCopy,
+	LuClipboardPaste,
+	LuCopy,
+} from 'react-icons/lu';
 import ScrollingLEDDisplay from './LedSignBoard';
 import LEDBitmapSimulator from './LedSignBoard';
 import axiosInstance from '@/config/axios';
@@ -145,59 +150,44 @@ const FONT_SIZES = [10, 12, 14, 16] as const;
 
 const getDefaultTextConfig = () => ({
 	text: '',
-	bitmap: {
-		bitmap: '',
-		width: 0,
-		height: 0,
-	},
+
 	scrollType: 'Fixed' as const,
 	position: 'Left' as const,
 	scrollSpeed: 15,
 	fontSize: 16,
 	fontWeight: 'regular',
-	fontHeight: 12,
+	fontHeight: 0,
 	x_offset: 0,
 	y_offset: 0,
 	spacing: 0,
-	fontfile: '',
 });
 
 const getDefaultThreeTextConfig = () => ({
 	text: '',
-	bitmap: {
-		bitmap: '',
-		width: 0,
-		height: 0,
-	},
+
 	scrollType: 'Fixed' as const,
 	position: 'Left' as const,
 	scrollSpeed: 15,
 	fontSize: 8,
 	fontWeight: 'regular',
-	fontHeight: 12,
+	fontHeight: 0,
 	x_offset: 0,
 	y_offset: 0,
 	spacing: 0,
-	fontfile: '',
 });
 
 const getDefaultThreeSideTextConfig = () => ({
 	text: '',
-	bitmap: {
-		bitmap: '',
-		width: 0,
-		height: 0,
-	},
+
 	scrollType: 'Fixed' as const,
 	position: 'Left' as const,
 	scrollSpeed: 15,
 	fontSize: 16,
 	fontWeight: 'regular',
-	fontHeight: 12,
+	fontHeight: 0,
 	x_offset: 0,
 	y_offset: 0,
 	spacing: 0,
-	fontfile: '',
 });
 
 const getFormatTexts = (format: ScreenFormat) => {
@@ -243,28 +233,27 @@ const getDefaultLanguageConfig = (isEnglish: boolean) => ({
 const generatePlaceholderText = (option: string, routeData: any) => {
 	const parts = option.split('-');
 	const processRouteNumber = (num: string) => {
-	  return num ? num.trim() : '';
+		return num ? num.trim() : '';
 	};
-  
+
 	const res = parts
-	  .map((part) => {
-		if (part === 'via') {
-		  return `VIA: ${routeData[part]}`;
-		}
-		if (part.includes('routeNumber')) {
-		  return processRouteNumber(routeData[part]);
-		}
-		if (part === 'separation' && routeData[part]) {
-		  return ` ${routeData[part]} `;
-		}
-		return routeData[part] || '';
-	  })
-	  .filter(Boolean)
-	  .join(' ');
-  
+		.map((part) => {
+			if (part === 'via') {
+				return `VIA: ${routeData[part]}`;
+			}
+			if (part.includes('routeNumber')) {
+				return processRouteNumber(routeData[part]);
+			}
+			if (part === 'separation' && routeData[part]) {
+				return ` ${routeData[part]} `;
+			}
+			return routeData[part] || '';
+		})
+		.filter(Boolean)
+		.join(' ');
+
 	return res;
-  };
-  
+};
 
 export const DisplayConfigForm: React.FC = () => {
 	const [offsetConfigs, setOffsetConfigs] = useState([]);
@@ -364,17 +353,21 @@ export const DisplayConfigForm: React.FC = () => {
 		language: string,
 		newFormat: ScreenFormat
 	) => {
-		// Get current text config for this screen
+		// Get the selected offset configuration for the current language
+		const selectedOffset = offsetConfigs.find(
+			(offset) => offset.code === language
+		);
+		if (!selectedOffset) return;
+
+		// Get current text config
 		const currentTexts = watch(`displayConfig.${language}.${screenKey}.texts`);
-		const currentText = Object.values(currentTexts)[0]?.text || '';
+		const currentText = Object.values(currentTexts || {})[0]?.text || '';
 
 		// Create new texts configuration based on format
 		let newTexts = {};
 		switch (newFormat) {
 			case 'single':
-				newTexts = {
-					text: getDefaultTextConfig(),
-				};
+				newTexts = { text: getDefaultTextConfig() };
 				break;
 			case 'two':
 				newTexts = {
@@ -391,8 +384,21 @@ export const DisplayConfigForm: React.FC = () => {
 				break;
 		}
 
+		// Update values in the form
 		setValue(`displayConfig.${language}.${screenKey}.format`, newFormat);
 		setValue(`displayConfig.${language}.${screenKey}.texts`, newTexts);
+
+		// Apply offset updates for each text field
+		Object.keys(newTexts).forEach((textKey) => {
+			updateTextConfig(
+				language,
+				screenKey,
+				textKey,
+				selectedOffset,
+				{ texts: newTexts },
+				setValue
+			);
+		});
 	};
 
 	const handleLanguageChange = (langCode: string) => {
@@ -429,45 +435,45 @@ export const DisplayConfigForm: React.FC = () => {
 		textKey: string,
 		language: string,
 		option: string
-	  ) => {
+	) => {
 		const routeData = watch('route');
 		const generatedText = generatePlaceholderText(option, routeData);
 		let upperText;
-	  
+
 		if (language === 'en') {
-		  upperText = generatedText;
+			upperText = generatedText;
 		} else {
-		  // Improved regex to better handle separations between numbers and text
-		  const parts = generatedText.split(/([0-9]+[\/A-Za-z]*|[\/\-⇄]+|\s+)/g);
-		  const translatedParts = await Promise.all(
-			parts.map(async (part) => {
-			  const trimmedPart = part.trim();
-			  // Skip empty parts
-			  if (!trimmedPart) return part;
-			  // Handle route numbers and special characters
-			  if (part.match(/[0-9]+[\/A-Za-z]*|[\/\-⇄]+/)) {
-				return `${part}`;
-			  }
-			  // Translate non-empty text parts
-			  if (trimmedPart) {
-				const res = await fetchTransliteration(trimmedPart, language);
-				return res[0] || trimmedPart;
-			  }
-			  return part;
-			})
-		  );
-		  upperText = translatedParts.join(' ').replace(/\s+/g, ' ').trim();
+			// Improved regex to better handle separations between numbers and text
+			const parts = generatedText.split(/([0-9]+[\/A-Za-z]*|[\/\-⇄]+|\s+)/g);
+			const translatedParts = await Promise.all(
+				parts.map(async (part) => {
+					const trimmedPart = part.trim();
+					// Skip empty parts
+					if (!trimmedPart) return part;
+					// Handle route numbers and special characters
+					if (part.match(/[0-9]+[\/A-Za-z]*|[\/\-⇄]+/)) {
+						return `${part}`;
+					}
+					// Translate non-empty text parts
+					if (trimmedPart) {
+						const res = await fetchTransliteration(trimmedPart, language);
+						return res[0] || trimmedPart;
+					}
+					return part;
+				})
+			);
+			upperText = translatedParts.join(' ').replace(/\s+/g, ' ').trim();
 		}
-	  
+
 		setValue(
-		  `displayConfig.${language}.${screenKey}.texts.${textKey}.text`,
-		  upperText
+			`displayConfig.${language}.${screenKey}.texts.${textKey}.text`,
+			upperText
 		);
-		setValue(
-		  `displayConfig.${language}.${screenKey}.texts.${textKey}.bitmap.bitmap`,
-		  upperText
-		);
-	  };
+		// setValue(
+		// 	`displayConfig.${language}.${screenKey}.texts.${textKey}.bitmap.bitmap`,
+		// 	upperText
+		// );
+	};
 
 	const renderRouteTab = () => (
 		<div className="mb-8 p-6 bg-white rounded-xl shadow-md">
@@ -693,51 +699,86 @@ export const DisplayConfigForm: React.FC = () => {
 		}
 	};
 
-	// Add this useEffect at the component level
-	// useEffect(() => {
-	// 	if (offsetConfigs.length > 0) {
-	// 		selectedLanguages.forEach(language => {
-	// 			const selectedOffset = offsetConfigs.find(
-	// 				(offset) => offset.code === language
-	// 			);
-	// 			SCREEN_TYPES.forEach(screenKey => {
-	// 				const screenConfig = watch(`displayConfig.${language}.${screenKey}`);
-	// 				if (screenConfig?.texts) {
-	// 					console.log(Object.keys(screenConfig.texts));
-						
-	// 					Object.keys(screenConfig.texts).forEach(textKey => {
-	// 						setValue(
-	// 							`displayConfig.${language}.${screenKey}.texts.${textKey}.fontHeight`,
-	// 							selectedOffset?.fontHeight
-	// 						);
-	// 						setValue(
-	// 							`displayConfig.${language}.${screenKey}.texts.${textKey}.x_offset`,
-	// 							selectedOffset?.xoffset
-	// 						);
-	// 						setValue(
-	// 							`displayConfig.${language}.${screenKey}.texts.${textKey}.y_offset`,
-	// 							selectedOffset?.yoffset
-	// 						);
-	// 						setValue(
-	// 							`displayConfig.${language}.${screenKey}.texts.${textKey}.spacing`,
-	// 							selectedOffset?.spacing
-	// 						);
-	// 						setValue(
-	// 							`displayConfig.${language}.${screenKey}.texts.${textKey}.fontfile`,
-	// 							selectedOffset?.fontFile
-	// 						);
-	// 					});
-	// 				}
-	// 			});
-	// 		});
-	// 	}
-	// }, [selectedLanguages, offsetConfigs, setValue, watch]);
+	// Helper function to check and update values
+	const updateTextConfig = (
+		language: string,
+		screenKey: string,
+		textKey: string,
+		selectedOffset: any,
+		screenConfig: any,
+		setValue: any
+	) => {
+		const existingValues = screenConfig?.texts?.[textKey] ?? {};
+
+		// Function to check if a field needs to be updated
+		const shouldUpdate = (value: any, defaultValue: any) => {
+			return value === undefined || value === '' || value === defaultValue;
+		};
+
+		if (shouldUpdate(existingValues.fontHeight, 0)) {
+			setValue(
+				`displayConfig.${language}.${screenKey}.texts.${textKey}.fontHeight`,
+				selectedOffset?.fontHeight
+			);
+		}
+		if (shouldUpdate(existingValues.x_offset, 0)) {
+			setValue(
+				`displayConfig.${language}.${screenKey}.texts.${textKey}.x_offset`,
+				selectedOffset?.xoffset
+			);
+		}
+		if (shouldUpdate(existingValues.y_offset, 0)) {
+			setValue(
+				`displayConfig.${language}.${screenKey}.texts.${textKey}.y_offset`,
+				selectedOffset?.yoffset
+			);
+		}
+		if (shouldUpdate(existingValues.spacing, 0)) {
+			setValue(
+				`displayConfig.${language}.${screenKey}.texts.${textKey}.spacing`,
+				selectedOffset?.spacing
+			);
+		}
+		if (shouldUpdate(existingValues.fontfile, '')) {
+			setValue(
+				`displayConfig.${language}.${screenKey}.texts.${textKey}.fontfile`,
+				selectedOffset?.fontFile
+			);
+		}
+	};
+
+	// useEffect to apply updates
+	useEffect(() => {
+		if (offsetConfigs.length > 0) {
+			selectedLanguages.forEach((language) => {
+				const selectedOffset = offsetConfigs.find(
+					(offset) => offset.code === language
+				);
+				if (!selectedOffset) return;
+
+				SCREEN_TYPES.forEach((screenKey) => {
+					const screenConfig = watch(`displayConfig.${language}.${screenKey}`);
+
+					if (screenConfig?.texts) {
+						Object.keys(screenConfig.texts).forEach((textKey) => {
+							updateTextConfig(
+								language,
+								screenKey,
+								textKey,
+								selectedOffset,
+								screenConfig,
+								setValue
+							);
+						});
+					}
+				});
+			});
+		}
+	}, [selectedLanguages, offsetConfigs, setValue, watch]);
 
 	const renderScreenTab = (screenKey: (typeof SCREEN_TYPES)[number]) => {
 		const displayConfig = watch('displayConfig');
 		const routeData = watch('route');
-
-
 
 		return (
 			<div className="  bg-white p-6 rounded-xl">
@@ -891,24 +932,23 @@ export const DisplayConfigForm: React.FC = () => {
 									>
 										{!isSpecialMessage
 											? FORMATS.filter(
-												(format) => isEnglish || format.value !== 'three'
-											).map((format) => (
-												<option key={format.value} value={format.value}>
-													{format.label}
-												</option>
-											))
+													(format) => isEnglish || format.value !== 'three'
+											  ).map((format) => (
+													<option key={format.value} value={format.value}>
+														{format.label}
+													</option>
+											  ))
 											: FORMATS2.filter(
-												(format) => isEnglish || format.value !== 'three'
-											).map((format) => (
-												<option key={format.value} value={format.value}>
-													{format.label}
-												</option>
-											))}
+													(format) => isEnglish || format.value !== 'three'
+											  ).map((format) => (
+													<option key={format.value} value={format.value}>
+														{format.label}
+													</option>
+											  ))}
 									</select>
 
 									{Object.entries(screenConfig.texts).map(
 										([textKey, textConfig]) => (
-
 											<div
 												key={`${language}-${textKey}`}
 												className="border p-4 bg-stone-100 border-stone-400 rounded-lg mb-4"
@@ -923,8 +963,6 @@ export const DisplayConfigForm: React.FC = () => {
 												</h4>
 
 												<div className="mb-4 items-start flex gap-2">
-												
-
 													<MenuRoot
 														onSelect={(e) =>
 															handlePlaceholderSelect(
@@ -947,15 +985,15 @@ export const DisplayConfigForm: React.FC = () => {
 														<MenuContent>
 															{isSpecialMessage
 																? PLACE_HOLDER_OPTIONS2.map((option) => (
-																	<MenuItem value={option.value}>
-																		{option.label}
-																	</MenuItem>
-																))
+																		<MenuItem value={option.value}>
+																			{option.label}
+																		</MenuItem>
+																  ))
 																: PLACEHOLDER_OPTIONS.map((option) => (
-																	<MenuItem value={option.value}>
-																		{option.label}
-																	</MenuItem>
-																))}
+																		<MenuItem value={option.value}>
+																			{option.label}
+																		</MenuItem>
+																  ))}
 														</MenuContent>
 													</MenuRoot>
 													{/* <input
@@ -976,7 +1014,9 @@ export const DisplayConfigForm: React.FC = () => {
 													<button
 														type="button"
 														onClick={() => {
-															const text = watch(`displayConfig.${language}.${screenKey}.texts.${textKey}.text`);
+															const text = watch(
+																`displayConfig.${language}.${screenKey}.texts.${textKey}.text`
+															);
 															navigator.clipboard.writeText(text);
 															// alert(`${text} copied to clipboard`)
 														}}
@@ -988,8 +1028,11 @@ export const DisplayConfigForm: React.FC = () => {
 													<button
 														type="button"
 														onClick={async () => {
-															const text = watch(`displayConfig.${language}.${screenKey}.texts.${textKey}.text`);
-															const clipboardText = await navigator.clipboard.readText()
+															const text = watch(
+																`displayConfig.${language}.${screenKey}.texts.${textKey}.text`
+															);
+															const clipboardText =
+																await navigator.clipboard.readText();
 															setValue(
 																`displayConfig.${language}.${screenKey}.texts.${textKey}.text`,
 																clipboardText
@@ -997,7 +1040,7 @@ export const DisplayConfigForm: React.FC = () => {
 															// alert(`${text} copied to clipboard`)
 														}}
 														className="h-10 px-3 bg-white border hover:bg-neutral-200 rounded-md"
-														title="Copy text"
+														title="Paste text"
 													>
 														<LuClipboardPaste className="w-4 h-4 text-gray-600" />
 													</button>
@@ -1055,24 +1098,24 @@ export const DisplayConfigForm: React.FC = () => {
 
 													{displayConfig[language][screenKey].format !==
 														'three' && (
-															<div>
-																<label className="block text-sm font-medium text-gray-600 mb-1">
-																	Font Size
-																</label>
-																<select
-																	{...register(
-																		`displayConfig.${language}.${screenKey}.texts.${textKey}.fontSize`
-																	)}
-																	className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-																>
-																	{FONT_SIZES.map((size) => (
-																		<option key={size} value={size}>
-																			{size}px
-																		</option>
-																	))}
-																</select>
-															</div>
-														)}
+														<div>
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Font Size
+															</label>
+															<select
+																{...register(
+																	`displayConfig.${language}.${screenKey}.texts.${textKey}.fontSize`
+																)}
+																className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+															>
+																{FONT_SIZES.map((size) => (
+																	<option key={size} value={size}>
+																		{size}px
+																	</option>
+																))}
+															</select>
+														</div>
+													)}
 
 													<div>
 														<label className="block text-sm font-medium text-gray-600 mb-1">
@@ -1098,7 +1141,7 @@ export const DisplayConfigForm: React.FC = () => {
 															))}
 														</select>
 													</div>
-													<div>
+													{/* <div>
 														<label className="block text-sm font-medium text-gray-600 mb-1">
 															Select Offset
 														</label>
@@ -1128,10 +1171,7 @@ export const DisplayConfigForm: React.FC = () => {
 																	`displayConfig.${language}.${screenKey}.texts.${textKey}.spacing`,
 																	selectedOffset?.spacing
 																);
-																setValue(
-																	`displayConfig.${language}.${screenKey}.texts.${textKey}.fontfile`,
-																	selectedOffset?.fontFile
-																);
+																
 															}
 															}
 														>
@@ -1153,8 +1193,7 @@ export const DisplayConfigForm: React.FC = () => {
 																}
 															</MenuContent>
 														</MenuRoot>
-													</div>
-
+													</div> */}
 
 													{/* <MenuRoot
 														onSelect={(e) =>
@@ -1301,8 +1340,6 @@ export const DisplayConfigForm: React.FC = () => {
 				console.log('====================================');
 			}
 
-
-
 			console.log('Configuration saved and downloaded', configToSave);
 		} catch (error) {
 			console.error('Error processing configuration:', error);
@@ -1333,20 +1370,22 @@ export const DisplayConfigForm: React.FC = () => {
 					<button
 						type="button"
 						onClick={() => setActiveTab('route')}
-						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${activeTab === 'route'
-							? 'border-nav_orange bg-white text-nav_blue-500'
-							: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-							}`}
+						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${
+							activeTab === 'route'
+								? 'border-nav_orange bg-white text-nav_blue-500'
+								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+						}`}
 					>
 						Route
 					</button>
 					<button
 						type="button"
 						onClick={() => setActiveTab('languages')}
-						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${activeTab === 'languages'
-							? 'border-nav_orange bg-white text-nav_blue-500'
-							: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-							}`}
+						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${
+							activeTab === 'languages'
+								? 'border-nav_orange bg-white text-nav_blue-500'
+								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+						}`}
 					>
 						Languages
 					</button>
@@ -1355,10 +1394,11 @@ export const DisplayConfigForm: React.FC = () => {
 							key={screenType}
 							type="button"
 							onClick={() => setActiveTab(screenType)}
-							className={`py-2 px-3 text-left max-w-[120px]  border-b-2 font-medium text-sm capitalize ${activeTab === screenType
-								? 'border-nav_orange bg-white text-nav_blue-500'
-								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-								}`}
+							className={`py-2 px-3 text-left max-w-[120px]  border-b-2 font-medium text-sm capitalize ${
+								activeTab === screenType
+									? 'border-nav_orange bg-white text-nav_blue-500'
+									: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+							}`}
 						>
 							{screenType} Board
 						</button>
