@@ -14,8 +14,8 @@ import { toast } from 'react-toastify';
 
 interface TextSettings {
 	fontHeight: string;
-	xOffset: string;
-	yOffset: string;
+	x_offset: string;
+	y_offset: string;
 	spacing: string;
 	scrollSpeed: string;
 	scrollType: string;
@@ -43,8 +43,8 @@ const initialState: DisplaySettingsState = {
 	config: {
 		sideText: {
 			fontHeight: '',
-			xOffset: '',
-			yOffset: '',
+			x_offset: '',
+			y_offset: '',
 			spacing: '',
 			scrollSpeed: '',
 			scrollType: '',
@@ -54,8 +54,8 @@ const initialState: DisplaySettingsState = {
 		},
 		text: {
 			fontHeight: '',
-			xOffset: '',
-			yOffset: '',
+			x_offset: '',
+			y_offset: '',
 			spacing: '',
 			scrollSpeed: '',
 			scrollType: '',
@@ -65,8 +65,8 @@ const initialState: DisplaySettingsState = {
 		},
 		upperHalfText: {
 			fontHeight: '',
-			xOffset: '',
-			yOffset: '',
+			x_offset: '',
+			y_offset: '',
 			spacing: '',
 			scrollSpeed: '',
 			scrollType: '',
@@ -76,8 +76,8 @@ const initialState: DisplaySettingsState = {
 		},
 		lowerHalfText: {
 			fontHeight: '',
-			xOffset: '',
-			yOffset: '',
+			x_offset: '',
+			y_offset: '',
 			spacing: '',
 			scrollSpeed: '',
 			scrollType: '',
@@ -119,7 +119,7 @@ const TextSettingsForm = ({
 					<label className="text-sm text-neutral-500">X Offset</label>
 					<input
 						type="number"
-						{...register(`${configKey}.xOffset`)}
+						{...register(`${configKey}.x_offset`)}
 						className="border rounded-lg p-2"
 					/>
 				</div>
@@ -127,7 +127,7 @@ const TextSettingsForm = ({
 					<label className="text-sm text-neutral-500">Y Offset</label>
 					<input
 						type="number"
-						{...register(`${configKey}.yOffset`)}
+						{...register(`${configKey}.y_offset`)}
 						className="border rounded-lg p-2"
 					/>
 				</div>

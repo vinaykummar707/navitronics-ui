@@ -14,8 +14,8 @@ const LanguageManagement = () => {
 		name: '',
 		fontFile: '',
 		fontHeight: 0,
-		xoffset: 0,
-		yoffset: 0,
+		x_offset: 0,
+		y_offset: 0,
 		spacing: 0,
 	});
 	const [isEditing, setIsEditing] = useState(false);
@@ -65,8 +65,8 @@ const LanguageManagement = () => {
 		const { name, value } = e.target;
 		const parsedValue = [
 			'fontHeight',
-			'xoffset',
-			'yoffset',
+			'x_offset',
+			'y_offset',
 			'spacing',
 		].includes(name)
 			? parseFloat(value)
@@ -102,8 +102,8 @@ const LanguageManagement = () => {
 			name: '',
 			fontFile: '',
 			fontHeight: 0,
-			xoffset: 0,
-			yoffset: 0,
+			x_offset: 0,
+			y_offset: 0,
 			spacing: 0,
 		});
 		setSelectedLanguage(null);

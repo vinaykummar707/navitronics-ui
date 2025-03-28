@@ -721,8 +721,8 @@ export const DisplayConfigForm: React.FC = () => {
 		// List of fields to update
 		const fieldsToUpdate = [
 			'fontHeight',
-			'xOffset',
-			'yOffset',
+			'x_offset',
+			'y_offset',
 			'spacing',
 			'scrollSpeed',
 			'scrollType',
@@ -959,7 +959,7 @@ export const DisplayConfigForm: React.FC = () => {
 												className="border p-4 bg-stone-100 border-stone-400 rounded-lg mb-4"
 											>
 												{/* <>
-												{applyOffset(language,screenKey,textKey)}
+												{apply_offset(language,screenKey,textKey)}
 												</> */}
 												<h4 className="font-semibold mb-2 text-gray-700 capitalize">
 													{textKey === 'sideText'
@@ -1102,9 +1102,11 @@ export const DisplayConfigForm: React.FC = () => {
 															className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 														/>
 													</div>
-
-													{displayConfig[language][screenKey].format !==
-														'three' && (
+													{!(
+														displayConfig[language][screenKey].format ===
+															'three' &&
+														['upperHalfText', 'lowerHalfText'].includes(textKey)
+													) && (
 														<div>
 															<label className="block text-sm font-medium text-gray-600 mb-1">
 																Font Size
@@ -1168,11 +1170,11 @@ export const DisplayConfigForm: React.FC = () => {
 																);
 																setValue(
 																	`displayConfig.${language}.${screenKey}.texts.${textKey}.x_offset`,
-																	selectedOffset?.xoffset
+																	selectedOffset?.x_offset
 																);
 																setValue(
 																	`displayConfig.${language}.${screenKey}.texts.${textKey}.y_offset`,
-																	selectedOffset?.yoffset
+																	selectedOffset?.y_offset
 																);
 																setValue(
 																	`displayConfig.${language}.${screenKey}.texts.${textKey}.spacing`,
@@ -1245,7 +1247,7 @@ export const DisplayConfigForm: React.FC = () => {
 														<input
 															type="number"
 															{...register(
-																`displayConfig.${language}.${screenKey}.texts.${textKey}.xOffset`
+																`displayConfig.${language}.${screenKey}.texts.${textKey}.x_offset`
 															)}
 															className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 														/>
@@ -1257,7 +1259,7 @@ export const DisplayConfigForm: React.FC = () => {
 														<input
 															type="number"
 															{...register(
-																`displayConfig.${language}.${screenKey}.texts.${textKey}.yOffset`
+																`displayConfig.${language}.${screenKey}.texts.${textKey}.y_offset`
 															)}
 															className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 														/>
