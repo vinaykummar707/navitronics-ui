@@ -95,7 +95,7 @@ interface TextSettingsFormProps {
 	register: any;
 }
 
-const FONT_SIZES = [10, 12, 14, 16] as const;
+const FONT_SIZES = [2, 4, 6, 8, 10, 12, 14, 16] as const;
 
 const TextSettingsForm = ({
 	settings,
