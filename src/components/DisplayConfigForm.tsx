@@ -150,44 +150,41 @@ const FONT_SIZES = [10, 12, 14, 16] as const;
 
 const getDefaultTextConfig = () => ({
 	text: '',
-
-	scrollType: 'Fixed' as const,
-	position: 'Left' as const,
-	scrollSpeed: 15,
-	fontSize: 16,
-	fontWeight: 'regular',
-	fontHeight: 0,
-	x_offset: 0,
-	y_offset: 0,
-	spacing: 0,
+	scrollType: '',
+	position: '',
+	scrollSpeed: null,
+	fontSize: null,
+	fontWeight: '',
+	fontHeight: null,
+	x_offset: null,
+	y_offset: null,
+	spacing: null,
 });
 
 const getDefaultThreeTextConfig = () => ({
 	text: '',
-
-	scrollType: 'Fixed' as const,
-	position: 'Left' as const,
-	scrollSpeed: 15,
-	fontSize: 8,
-	fontWeight: 'regular',
-	fontHeight: 0,
-	x_offset: 0,
-	y_offset: 0,
-	spacing: 0,
+	scrollType: '',
+	position: '',
+	scrollSpeed: null,
+	fontSize: null,
+	fontWeight: '',
+	fontHeight: null,
+	x_offset: null,
+	y_offset: null,
+	spacing: null,
 });
 
 const getDefaultThreeSideTextConfig = () => ({
 	text: '',
-
-	scrollType: 'Fixed' as const,
-	position: 'Left' as const,
-	scrollSpeed: 15,
-	fontSize: 16,
-	fontWeight: 'regular',
-	fontHeight: 0,
-	x_offset: 0,
-	y_offset: 0,
-	spacing: 0,
+	scrollType: '',
+	position: '',
+	scrollSpeed: null,
+	fontSize: null,
+	fontWeight: '',
+	fontHeight: null,
+	x_offset: null,
+	y_offset: null,
+	spacing: null,
 });
 
 const getFormatTexts = (format: ScreenFormat) => {
@@ -203,7 +200,7 @@ const getFormatTexts = (format: ScreenFormat) => {
 			};
 		case 'three':
 			return {
-				sideText: getDefaultThreeSideTextConfig(),
+				sideText: { ...getDefaultThreeSideTextConfig() },
 				upperHalfText: getDefaultThreeTextConfig(),
 				lowerHalfText: getDefaultThreeTextConfig(),
 			};
@@ -708,6 +705,12 @@ export const DisplayConfigForm: React.FC = () => {
 		screenConfig: any,
 		setValue: any
 	) => {
+		console.log('Selected Offset:', selectedOffset);
+
+		// Get the correct text key's configuration from selectedOffset.config
+		const textConfig = selectedOffset?.config?.[textKey] || {};
+
+		// Existing values from screenConfig (if any)
 		const existingValues = screenConfig?.texts?.[textKey] ?? {};
 
 		// Function to check if a field needs to be updated
@@ -715,33 +718,35 @@ export const DisplayConfigForm: React.FC = () => {
 			return value === undefined || value === '' || value === defaultValue;
 		};
 
-		if (shouldUpdate(existingValues.fontHeight, 0)) {
+		// List of fields to update
+		const fieldsToUpdate = [
+			'fontHeight',
+			'xOffset',
+			'yOffset',
+			'spacing',
+			'scrollSpeed',
+			'scrollType',
+			'fontSize',
+			'position',
+			'fontWeight',
+		];
+
+		fieldsToUpdate.forEach((field) => {
+			const existingValue = existingValues[field];
+			const newValue = textConfig[field];
+
+			if (shouldUpdate(existingValue, null)) {
+				setValue(
+					`displayConfig.${language}.${screenKey}.texts.${textKey}.${field}`,
+					newValue
+				);
+			}
+		});
+
+		// Handle fontFile separately if needed
+		if (shouldUpdate(existingValues.fontFile, '')) {
 			setValue(
-				`displayConfig.${language}.${screenKey}.texts.${textKey}.fontHeight`,
-				selectedOffset?.fontHeight
-			);
-		}
-		if (shouldUpdate(existingValues.x_offset, 0)) {
-			setValue(
-				`displayConfig.${language}.${screenKey}.texts.${textKey}.x_offset`,
-				selectedOffset?.xoffset
-			);
-		}
-		if (shouldUpdate(existingValues.y_offset, 0)) {
-			setValue(
-				`displayConfig.${language}.${screenKey}.texts.${textKey}.y_offset`,
-				selectedOffset?.yoffset
-			);
-		}
-		if (shouldUpdate(existingValues.spacing, 0)) {
-			setValue(
-				`displayConfig.${language}.${screenKey}.texts.${textKey}.spacing`,
-				selectedOffset?.spacing
-			);
-		}
-		if (shouldUpdate(existingValues.fontfile, '')) {
-			setValue(
-				`displayConfig.${language}.${screenKey}.texts.${textKey}.fontfile`,
+				`displayConfig.${language}.${screenKey}.texts.${textKey}.fontFile`,
 				selectedOffset?.fontFile
 			);
 		}
@@ -847,7 +852,7 @@ export const DisplayConfigForm: React.FC = () => {
 														text={
 															displayConfig[language][screenKey].texts.sideText
 														}
-														language={'en'}
+														language={language}
 													/>
 													<LEDBitmapSimulator
 														stopScroll={stopScroll}
@@ -873,7 +878,7 @@ export const DisplayConfigForm: React.FC = () => {
 														text={
 															displayConfig[language][screenKey].texts.sideText
 														}
-														language={'en'}
+														language={language}
 													/>
 													<div className="flex flex-col">
 														<LEDBitmapSimulator
@@ -1089,6 +1094,8 @@ export const DisplayConfigForm: React.FC = () => {
 														</label>
 														<input
 															type="number"
+															min={1}
+															max={10}
 															{...register(
 																`displayConfig.${language}.${screenKey}.texts.${textKey}.scrollSpeed`
 															)}
@@ -1238,7 +1245,7 @@ export const DisplayConfigForm: React.FC = () => {
 														<input
 															type="number"
 															{...register(
-																`displayConfig.${language}.${screenKey}.texts.${textKey}.x_offset`
+																`displayConfig.${language}.${screenKey}.texts.${textKey}.xOffset`
 															)}
 															className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 														/>
@@ -1250,7 +1257,7 @@ export const DisplayConfigForm: React.FC = () => {
 														<input
 															type="number"
 															{...register(
-																`displayConfig.${language}.${screenKey}.texts.${textKey}.y_offset`
+																`displayConfig.${language}.${screenKey}.texts.${textKey}.yOffset`
 															)}
 															className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 														/>

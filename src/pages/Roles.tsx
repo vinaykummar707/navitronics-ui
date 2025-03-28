@@ -27,12 +27,11 @@ const Roles = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
       setIsCreateModalOpen(false);
-      toast.success('Role created successfully!');
+      toast.success('Role created successfully');
     },
     onError: (error) => {
-      console.error('Error creating role:', error);
-      toast.error('Failed to create role.');
-    },
+      toast.error('Failed to create role');
+    }
   });
 
   const updateMutation = useMutation({
@@ -40,24 +39,22 @@ const Roles = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
       setEditingRole(null);
-      toast.success('Role updated successfully!');
+      toast.success('Role updated successfully');
     },
     onError: (error) => {
-      console.error('Error updating role:', error);
-      toast.error('Failed to update role.');
-    },
+      toast.error('Failed to update role');
+    }
   });
 
   const deleteMutation = useMutation({
     mutationFn: roleService.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
-      toast.success('Role deleted successfully!');
+      toast.success('Role deleted successfully');
     },
     onError: (error) => {
-      console.error('Error deleting role:', error);
-      toast.error('Failed to delete role.');
-    },
+      toast.error('Failed to delete role');
+    }
   });
 
   if (!selectedOrganization) {

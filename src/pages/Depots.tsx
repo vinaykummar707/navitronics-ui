@@ -58,12 +58,11 @@ const Depots = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['depots'] });
       setIsCreateModalOpen(false);
-      toast.success('Depot created successfully!');
+      toast.success('Depot created successfully');
     },
     onError: (error) => {
-      console.error('Error creating depot:', error);
-      toast.error('Failed to create depot.');
-    },
+      toast.error('Failed to create depot');
+    }
   });
 
   const updateMutation = useMutation({
@@ -71,24 +70,22 @@ const Depots = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['depots'] });
       setEditingDepot(null);
-      toast.success('Depot updated successfully!');
+      toast.success('Depot updated successfully');
     },
     onError: (error) => {
-      console.error('Error updating depot:', error);
-      toast.error('Failed to update depot.');
-    },
+      toast.error('Failed to update depot');
+    }
   });
 
   const deleteMutation = useMutation({
     mutationFn: depotService.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['depots'] });
-      toast.success('Depot deleted successfully!');
+      toast.success('Depot deleted successfully');
     },
     onError: (error) => {
-      console.error('Error deleting depot:', error);
-      toast.error('Failed to delete depot.');
-    },
+      toast.error('Failed to delete depot');
+    }
   });
 
   if (!selectedOrganization) {

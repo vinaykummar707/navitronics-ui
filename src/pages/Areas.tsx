@@ -34,12 +34,11 @@ const Areas = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['areas', selectedOrganization?.organizationId] });
       setIsCreateModalOpen(false);
-      toast.success('Area created successfully!');
+      toast.success('Area created successfully');
     },
     onError: (error) => {
-      console.error('Error creating area:', error);
-      toast.error('Failed to create area.');
-    },
+      toast.error('Failed to create area');
+    }
   });
 
   const updateMutation = useMutation({
@@ -48,24 +47,22 @@ const Areas = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['areas', selectedOrganization?.organizationId] });
       setEditingArea(null);
-      toast.success('Area updated successfully!');
+      toast.success('Area updated successfully');
     },
     onError: (error) => {
-      console.error('Error updating area:', error);
-      toast.error('Failed to update area.');
-    },
+      toast.error('Failed to update area');
+    }
   });
 
   const deleteMutation = useMutation({
     mutationFn: areaService.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['areas', selectedOrganization?.organizationId] });
-      toast.success('Area deleted successfully!');
+      toast.success('Area deleted successfully');
     },
     onError: (error) => {
-      console.error('Error deleting area:', error);
-      toast.error('Failed to delete area.');
-    },
+      toast.error('Failed to delete area');
+    }
   });
 
   if (!selectedOrganization) {
