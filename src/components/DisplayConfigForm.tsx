@@ -39,7 +39,7 @@ import LEDBitmapSimulator from './LedSignBoard';
 import axiosInstance from '@/config/axios';
 import { toast } from 'react-toastify';
 
-const SCREEN_TYPES = ['Special Messages','front', 'side', 'rear', 'internal'] as const;
+const SCREEN_TYPES = ['Special Messages', 'front', 'side', 'rear', 'internal'] as const;
 const SCROLL_TYPES = [
 	'Left To Right',
 	'Right To Left',
@@ -326,17 +326,24 @@ export const DisplayConfigForm: React.FC = () => {
 				},
 				displayConfig: {
 					en: getDefaultLanguageConfig(true),
+
 				},
 				version: '1.0',
 				areaId: areaId,
 				depotId: depotId,
 				specialMessages: [
 					{
-						en: getDefaultTextConfig(),
+						front: false,
+						side: false,
+						rear: false,
+						internal: false,
+						en: getDefaultTextConfig()
 					}
 				]
 			},
 		});
+
+
 
 	useEffect(() => {
 		console.log(isEdit, gotRouteData);
@@ -351,6 +358,7 @@ export const DisplayConfigForm: React.FC = () => {
 
 	const splitRoute = watch('route.splitRoute');
 	const isSpecialMessage = watch('route.isSpecialMessage');
+
 
 	const handleFormatChange = (
 		screenKey: string,
@@ -420,6 +428,20 @@ export const DisplayConfigForm: React.FC = () => {
 					`displayConfig.${langCode}`,
 					getDefaultLanguageConfig(isEnglish)
 				);
+
+				// Initialize specialMessages if undefined
+				let specialMessages = watch('specialMessages');
+				if (specialMessages === undefined) {
+					specialMessages = [];
+					setValue('specialMessages', specialMessages);
+				}
+
+				// Add the new language to each special message
+				const updatedSpecialMessages = specialMessages.map(message => ({
+					...message,
+					[langCode]: getDefaultTextConfig()
+				}));
+				setValue('specialMessages', updatedSpecialMessages);
 			}
 
 			// Remove configuration for removed language
@@ -427,8 +449,17 @@ export const DisplayConfigForm: React.FC = () => {
 				const displayConfig = { ...watch('displayConfig') };
 				delete displayConfig[langCode];
 				setValue('displayConfig', displayConfig);
+
+				// Remove the language from each special message
+				const specialMessages = watch('specialMessages') || [];
+				const updatedSpecialMessages = specialMessages.map(message => {
+					const { [langCode]: removed, ...rest } = message;
+					return rest;
+				});
+				setValue('specialMessages', updatedSpecialMessages);
 			}
 		}
+
 	};
 
 	const [selectedPlaceholder, setSelectedPlaceholder] = useState('');
@@ -703,6 +734,51 @@ export const DisplayConfigForm: React.FC = () => {
 		}
 	};
 
+	const updateSpecialMessageConfig = (
+		language: string,
+		messageIndex: number,
+		selectedOffset: any,
+		setValue: any
+	) => {
+		// Get the correct text configuration from selectedOffset.config
+		const textConfig = selectedOffset?.config?.text || {};
+
+		// Existing values from specialMessages
+		const existingValues = watch(`specialMessages.${messageIndex}.${language}`) ?? {};
+
+		// Function to check if a field needs to be updated
+		const shouldUpdate = (value: any, defaultValue: any) => {
+			return value === undefined || value === '' || value === defaultValue;
+		};
+
+		// List of fields to update
+		const fieldsToUpdate = [
+			'fontHeight',
+			'x_offset',
+			'y_offset',
+			'spacing',
+			'scrollSpeed',
+			'scrollType',
+			'fontSize',
+			'position',
+			'fontWeight',
+		];
+
+		fieldsToUpdate.forEach((field) => {
+			const existingValue = existingValues[field];
+			const newValue = textConfig[field];
+
+			if (shouldUpdate(existingValue, null)) {
+				setValue(
+					`specialMessages.${messageIndex}.${language}.${field}`,
+					newValue
+				);
+			}
+		});
+
+
+	};
+
 	// Helper function to check and update values
 	const updateTextConfig = (
 		language: string,
@@ -750,13 +826,7 @@ export const DisplayConfigForm: React.FC = () => {
 			}
 		});
 
-		// Handle fontFile separately if needed
-		if (shouldUpdate(existingValues.fontFile, '')) {
-			setValue(
-				`displayConfig.${language}.${screenKey}.texts.${textKey}.fontFile`,
-				selectedOffset?.fontFile
-			);
-		}
+
 	};
 
 	// useEffect to apply updates
@@ -1001,19 +1071,19 @@ export const DisplayConfigForm: React.FC = () => {
 									>
 										{!isSpecialMessage
 											? FORMATS.filter(
-													(format) => isEnglish || format.value !== 'three'
-											  ).map((format) => (
-													<option key={format.value} value={format.value}>
-														{format.label}
-													</option>
-											  ))
+												(format) => isEnglish || format.value !== 'three'
+											).map((format) => (
+												<option key={format.value} value={format.value}>
+													{format.label}
+												</option>
+											))
 											: FORMATS2.filter(
-													(format) => isEnglish || format.value !== 'three'
-											  ).map((format) => (
-													<option key={format.value} value={format.value}>
-														{format.label}
-													</option>
-											  ))}
+												(format) => isEnglish || format.value !== 'three'
+											).map((format) => (
+												<option key={format.value} value={format.value}>
+													{format.label}
+												</option>
+											))}
 									</select>
 
 									{Object.entries(screenConfig.texts).map(
@@ -1054,15 +1124,15 @@ export const DisplayConfigForm: React.FC = () => {
 														<MenuContent>
 															{isSpecialMessage
 																? PLACE_HOLDER_OPTIONS2.map((option) => (
-																		<MenuItem value={option.value}>
-																			{option.label}
-																		</MenuItem>
-																  ))
+																	<MenuItem value={option.value}>
+																		{option.label}
+																	</MenuItem>
+																))
 																: PLACEHOLDER_OPTIONS.map((option) => (
-																		<MenuItem value={option.value}>
-																			{option.label}
-																		</MenuItem>
-																  ))}
+																	<MenuItem value={option.value}>
+																		{option.label}
+																	</MenuItem>
+																))}
 														</MenuContent>
 													</MenuRoot>
 													{/* <input
@@ -1168,27 +1238,27 @@ export const DisplayConfigForm: React.FC = () => {
 													</div>
 													{!(
 														displayConfig[language][screenKey].format ===
-															'three' &&
+														'three' &&
 														['upperHalfText', 'lowerHalfText'].includes(textKey)
 													) && (
-														<div>
-															<label className="block text-sm font-medium text-gray-600 mb-1">
-																Font Size
-															</label>
-															<select
-																{...register(
-																	`displayConfig.${language}.${screenKey}.texts.${textKey}.fontSize`
-																)}
-																className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-															>
-																{FONT_SIZES.map((size) => (
-																	<option key={size} value={size}>
-																		{size}px
-																	</option>
-																))}
-															</select>
-														</div>
-													)}
+															<div>
+																<label className="block text-sm font-medium text-gray-600 mb-1">
+																	Font Size
+																</label>
+																<select
+																	{...register(
+																		`displayConfig.${language}.${screenKey}.texts.${textKey}.fontSize`
+																	)}
+																	className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+																>
+																	{FONT_SIZES.map((size) => (
+																		<option key={size} value={size}>
+																			{size}px
+																		</option>
+																	))}
+																</select>
+															</div>
+														)}
 
 													<div>
 														<label className="block text-sm font-medium text-gray-600 mb-1">
@@ -1375,12 +1445,225 @@ export const DisplayConfigForm: React.FC = () => {
 		);
 	};
 
+	const renderSpecialMessagesTab = () => {
+		const specialMessages = watch('specialMessages') || [];
+
+		const handleAddSpecialMessage = () => {
+			const newMessage = {
+				front: false,
+				side: false,
+				rear: false,
+				internal: false,
+				...selectedLanguages.reduce((acc, lang) => {
+					acc[lang] = getDefaultTextConfig();
+					return acc;
+				}, {})
+			};
+			setValue('specialMessages', [...specialMessages, newMessage]);
+		};
+
+		const handleDeleteSpecialMessage = (index: number) => {
+			const updatedMessages = specialMessages.filter((_, i) => i !== index);
+			setValue('specialMessages', updatedMessages);
+		};
+
+		const handleScreenToggle = (messageIndex: number, screen: 'front' | 'side' | 'rear' | 'internal') => {
+			const currentValue = watch(`specialMessages.${messageIndex}.${screen}`);
+			setValue(`specialMessages.${messageIndex}.${screen}`, !currentValue);
+		};
+
+		return (
+			<div className="bg-white p-6 rounded-xl">
+				<div className="flex justify-between items-center mb-4">
+					<h3 className="text-md font-semibold text-gray-900">Special Messages Configuration</h3>
+					<button
+						type="button"
+						onClick={handleAddSpecialMessage}
+						className="bg-blue-500 text-white py-2 px-4 text-sm font-medium rounded-md hover:bg-blue-600"
+					>
+						Add Special Message
+					</button>
+				</div>
+
+				{specialMessages.map((message, index) => (
+					<AccordionRoot multiple key={index} className="mb-4">
+						<AccordionItem value={`message-${index}`} className="bg-white rounded-xl shadow border px-4 py-4">
+							<div className="flex justify-between items-center">
+								<AccordionItemTrigger>
+									<span className="text-md py-2 font-bold text-gray-900">
+										{message['en']['text'] === '' ? `Special Message ${index + 1}` : message['en']['text']}
+									</span>
+								</AccordionItemTrigger>
+								<button
+									type="button"
+									onClick={() => handleDeleteSpecialMessage(index)}
+									className="p-2 text-red-500 hover:text-red-700 rounded-md hover:bg-red-50"
+									title="Delete message"
+								>
+									<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+										<path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+									</svg>
+								</button>
+							</div>
+							<AccordionItemContent>
+								<div className="mb-4">
+									<label className="block text-sm   text-gray-600 mb-4">Display On Screens</label>
+									<div className="grid grid-cols-12 gap-4">
+										{['front', 'side', 'rear', 'internal'].map((screen) => (
+											<div key={screen} className="flex items-center">
+												<input
+													type="checkbox"
+													id={`${index}-${screen}`}
+													checked={watch(`specialMessages.${index}.${screen}`)}
+													onChange={() => handleScreenToggle(index, screen as 'front' | 'side' | 'rear' | 'internal')}
+													className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+												/>
+												<label
+													htmlFor={`${index}-${screen}`}
+													className="ml-2 block text-sm text-gray-900 capitalize"
+												>
+													{screen}
+												</label>
+											</div>
+										))}
+									</div>
+								</div>
+
+								<AccordionRoot>
+									{selectedLanguages.map((language) => {
+										const langName = AVAILABLE_LANGUAGES.find((l) => l.code === language)?.name || language.toUpperCase();
+										return (
+											<AccordionItem
+												className="py-2 bg-white rounded-xl shadow mb-4 border px-4"
+												key={language}
+												value={language}
+											>
+												<AccordionItemTrigger>
+													<span className="text-md py-2 font-semibold text-gray-500">{langName}</span>
+												</AccordionItemTrigger>
+												<AccordionItemContent className="bg-neutral-20 p-2">
+													<div className="grid grid-cols-9 gap-4 items-start">
+														<div className="w-full col-span-9">
+															<label className="block text-sm font-medium text-gray-600 mb-1">Text</label>
+															<Controller
+																name={`specialMessages.${index}.${language}.text`}
+																control={control}
+																render={({ field }) => (
+																	<IMEInput langCode={language} {...field} />
+																)}
+															/>
+														</div>
+
+														<div className="w-full">
+															<label className="block text-sm font-medium text-gray-600 mb-1">Scroll Type</label>
+															<select
+																{...register(`specialMessages.${index}.${language}.scrollType`)}
+																className="w-full p-2 border rounded-md"
+															>
+																{SCROLL_TYPES.map((type) => (
+																	<option key={type} value={type}>{type}</option>
+																))}
+															</select>
+														</div>
+														<div>
+															<label className="block text-sm font-medium text-gray-600 mb-1">Position</label>
+															<select
+																{...register(`specialMessages.${index}.${language}.position`)}
+																className="w-full p-2 border rounded-md"
+															>
+																{POSITIONS.map((pos) => (
+																	<option key={pos} value={pos}>{pos}</option>
+																))}
+															</select>
+														</div>
+														<div>
+															<label className="block text-sm font-medium text-gray-600 mb-1">Scroll Speed</label>
+															<input
+																type="number"
+																min={1}
+																max={10}
+																{...register(`specialMessages.${index}.${language}.scrollSpeed`)}
+																className="w-full p-2 border rounded-md"
+															/>
+														</div>
+														<div>
+															<label className="block text-sm font-medium text-gray-600 mb-1">Font Size</label>
+															<select
+																{...register(`specialMessages.${index}.${language}.fontSize`)}
+																className="w-full p-2 border rounded-md"
+															>
+																{FONT_SIZES.map((size) => (
+																	<option key={size} value={size}>
+																		{size}px
+																	</option>
+																))}
+															</select>
+														</div>
+														<div>
+															<label className="block text-sm font-medium text-gray-600 mb-1">Font Weight</label>
+															<select
+																{...register(`specialMessages.${index}.${language}.fontWeight`)}
+																className="w-full p-2 border rounded-md"
+															>
+																{FONT_WEIGHT.map((weight) => (
+																	<option key={weight.value} value={weight.value}>{weight.label}</option>
+																))}
+															</select>
+														</div>
+														<div>
+															<label className="block text-sm font-medium text-gray-600 mb-1">Font Height</label>
+															<input
+																type="number"
+																{...register(`specialMessages.${index}.${language}.fontHeight`)}
+																className="w-full p-2 border rounded-md"
+															/>
+														</div>
+														<div>
+															<label className="block text-sm font-medium text-gray-600 mb-1">X Offset</label>
+															<input
+																type="number"
+																{...register(`specialMessages.${index}.${language}.x_offset`)}
+																className="w-full p-2 border rounded-md"
+															/>
+														</div>
+														<div>
+															<label className="block text-sm font-medium text-gray-600 mb-1">Y Offset</label>
+															<input
+																type="number"
+																{...register(`specialMessages.${index}.${language}.y_offset`)}
+																className="w-full p-2 border rounded-md"
+															/>
+														</div>
+														<div>
+															<label className="block text-sm font-medium text-gray-600 mb-1">Spacing</label>
+															<input
+																type="number"
+																{...register(`specialMessages.${index}.${language}.spacing`)}
+																className="w-full p-2 border rounded-md"
+															/>
+														</div>
+													</div>
+												</AccordionItemContent>
+											</AccordionItem>
+										);
+									})}
+								</AccordionRoot>
+							</AccordionItemContent>
+						</AccordionItem>
+					</AccordionRoot>
+				))}
+			</div>
+		);
+	};
+
 	const renderTabContent = () => {
 		switch (activeTab) {
 			case 'route':
 				return renderRouteTab();
 			case 'languages':
 				return renderLanguagesTab();
+			case 'Special Messages':
+				return renderSpecialMessagesTab();
 			case 'front':
 				return renderScreenTab('front');
 			case 'side':
@@ -1443,22 +1726,20 @@ export const DisplayConfigForm: React.FC = () => {
 					<button
 						type="button"
 						onClick={() => setActiveTab('route')}
-						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${
-							activeTab === 'route'
-								? 'border-nav_orange bg-white text-nav_blue-500'
-								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-						}`}
+						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${activeTab === 'route'
+							? 'border-nav_orange bg-white text-nav_blue-500'
+							: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+							}`}
 					>
 						Route
 					</button>
 					<button
 						type="button"
 						onClick={() => setActiveTab('languages')}
-						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${
-							activeTab === 'languages'
-								? 'border-nav_orange bg-white text-nav_blue-500'
-								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-						}`}
+						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${activeTab === 'languages'
+							? 'border-nav_orange bg-white text-nav_blue-500'
+							: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+							}`}
 					>
 						Languages
 					</button>
@@ -1467,11 +1748,10 @@ export const DisplayConfigForm: React.FC = () => {
 							key={screenType}
 							type="button"
 							onClick={() => setActiveTab(screenType)}
-							className={`py-2 px-3 text-left max-w-[160px]  border-b-2 font-medium text-sm capitalize ${
-								activeTab === screenType
-									? 'border-nav_orange bg-white text-nav_blue-500'
-									: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-							}`}
+							className={`py-2 px-3 text-left max-w-[160px]  border-b-2 font-medium text-sm capitalize ${activeTab === screenType
+								? 'border-nav_orange bg-white text-nav_blue-500'
+								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+								}`}
 						>
 							{screenType}
 						</button>

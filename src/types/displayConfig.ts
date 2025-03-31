@@ -80,4 +80,5 @@ export interface DisplayConfig {
 	active?: string;
 	deleted?: string;
 	id?: string;
+	specialMessages: any[];
 }
