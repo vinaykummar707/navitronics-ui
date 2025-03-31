@@ -332,13 +332,7 @@ export const DisplayConfigForm: React.FC = () => {
 				areaId: areaId,
 				depotId: depotId,
 				specialMessages: [
-					{
-						front: false,
-						side: false,
-						rear: false,
-						internal: false,
-						en: getDefaultTextConfig()
-					}
+					
 				]
 			},
 		});
