@@ -200,7 +200,7 @@ const TextSettingsForm = ({
 						className="border rounded-lg p-2"
 					>
 						<option value="">Select Font Weight</option>
-						<option value="normal">Normal</option>
+						<option value="regular">Regular</option>
 						<option value="bold">Bold</option>
 					</select>
 				</div>

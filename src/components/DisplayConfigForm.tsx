@@ -39,7 +39,7 @@ import LEDBitmapSimulator from './LedSignBoard';
 import axiosInstance from '@/config/axios';
 import { toast } from 'react-toastify';
 
-const SCREEN_TYPES = ['front', 'side', 'rear', 'internal'] as const;
+const SCREEN_TYPES = ['Special Messages','front', 'side', 'rear', 'internal'] as const;
 const SCROLL_TYPES = [
 	'Left To Right',
 	'Right To Left',
@@ -146,7 +146,7 @@ const ROUTE_SEPARATORS = [
 	{ value: '⇄', label: 'Vice Verca' },
 ] as const;
 
-const FONT_SIZES = [10, 12, 14, 16] as const;
+const FONT_SIZES = [8, 10, 12, 14, 16] as const;
 
 const getDefaultTextConfig = () => ({
 	text: '',
@@ -247,10 +247,12 @@ const generatePlaceholderText = (option: string, routeData: any) => {
 			return routeData[part] || '';
 		})
 		.filter(Boolean)
-		.join(' ');
+		.join(option === 'routeNumber1-routeNumber2' ? '/' : ' ');
 
 	return res;
 };
+
+
 
 export const DisplayConfigForm: React.FC = () => {
 	const [offsetConfigs, setOffsetConfigs] = useState([]);
@@ -328,6 +330,11 @@ export const DisplayConfigForm: React.FC = () => {
 				version: '1.0',
 				areaId: areaId,
 				depotId: depotId,
+				specialMessages: [
+					{
+						en: getDefaultTextConfig(),
+					}
+				]
 			},
 		});
 
@@ -459,7 +466,7 @@ export const DisplayConfigForm: React.FC = () => {
 					return part;
 				})
 			);
-			upperText = translatedParts.join(' ').replace(/\s+/g, ' ').trim();
+			upperText = translatedParts.join('').replace(/\s+/g, '').trim();
 		}
 
 		setValue(
@@ -845,15 +852,44 @@ export const DisplayConfigForm: React.FC = () => {
 										{!isSubmitting && screenConfig.format === 'two' && (
 											<div className="p-2 bg-neutral-950  border-2 rounded-xl border-neutral-800">
 												<div className="flex">
-													<LEDBitmapSimulator
-														stopScroll={stopScroll}
-														rows={16}
-														cols={32}
-														text={
-															displayConfig[language][screenKey].texts.sideText
-														}
-														language={language}
-													/>
+													{routeData.splitRoute ? (
+														<div className="flex flex-col">
+															<LEDBitmapSimulator
+																stopScroll={stopScroll}
+																rows={8}
+																cols={32}
+																text={{
+																	...displayConfig[language][screenKey].texts
+																		.sideText,
+																	text: routeData.routeNumber1,
+																}}
+																language={language}
+															/>
+															<LEDBitmapSimulator
+																stopScroll={stopScroll}
+																rows={8}
+																cols={32}
+																text={{
+																	...displayConfig[language][screenKey].texts
+																		.sideText,
+																	text: routeData.routeNumber2,
+																}}
+																language={language}
+															/>
+														</div>
+													) : (
+														<LEDBitmapSimulator
+															stopScroll={stopScroll}
+															rows={16}
+															cols={32}
+															text={
+																displayConfig[language][screenKey].texts
+																	.sideText
+															}
+															language={language}
+														/>
+													)}
+
 													<LEDBitmapSimulator
 														stopScroll={stopScroll}
 														rows={16}
@@ -871,15 +907,43 @@ export const DisplayConfigForm: React.FC = () => {
 										{!isSubmitting && screenConfig.format === 'three' && (
 											<div className="p-2 bg-neutral-950  border-2 rounded-xl border-neutral-800">
 												<div className="flex flex-row">
-													<LEDBitmapSimulator
-														stopScroll={stopScroll}
-														rows={16}
-														cols={32}
-														text={
-															displayConfig[language][screenKey].texts.sideText
-														}
-														language={language}
-													/>
+													{routeData.splitRoute ? (
+														<div className="flex flex-col">
+															<LEDBitmapSimulator
+																stopScroll={stopScroll}
+																rows={8}
+																cols={32}
+																text={{
+																	...displayConfig[language][screenKey].texts
+																		.sideText,
+																	text: routeData.routeNumber1,
+																}}
+																language={language}
+															/>
+															<LEDBitmapSimulator
+																stopScroll={stopScroll}
+																rows={8}
+																cols={32}
+																text={{
+																	...displayConfig[language][screenKey].texts
+																		.sideText,
+																	text: routeData.routeNumber2,
+																}}
+																language={language}
+															/>
+														</div>
+													) : (
+														<LEDBitmapSimulator
+															stopScroll={stopScroll}
+															rows={16}
+															cols={32}
+															text={
+																displayConfig[language][screenKey].texts
+																	.sideText
+															}
+															language={language}
+														/>
+													)}
 													<div className="flex flex-col">
 														<LEDBitmapSimulator
 															stopScroll={stopScroll}
@@ -1403,13 +1467,13 @@ export const DisplayConfigForm: React.FC = () => {
 							key={screenType}
 							type="button"
 							onClick={() => setActiveTab(screenType)}
-							className={`py-2 px-3 text-left max-w-[120px]  border-b-2 font-medium text-sm capitalize ${
+							className={`py-2 px-3 text-left max-w-[160px]  border-b-2 font-medium text-sm capitalize ${
 								activeTab === screenType
 									? 'border-nav_orange bg-white text-nav_blue-500'
 									: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
 							}`}
 						>
-							{screenType} Board
+							{screenType}
 						</button>
 					))}
 				</nav>
