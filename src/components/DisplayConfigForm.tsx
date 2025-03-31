@@ -323,10 +323,10 @@ export const DisplayConfigForm: React.FC = () => {
 					routeNumber1: '',
 					routeNumber2: '',
 					separation: '-',
+					specialMessage: false
 				},
 				displayConfig: {
 					en: getDefaultLanguageConfig(true),
-
 				},
 				version: '1.0',
 				areaId: areaId,
@@ -357,7 +357,7 @@ export const DisplayConfigForm: React.FC = () => {
 	}, [isEdit, gotRouteData, reset]);
 
 	const splitRoute = watch('route.splitRoute');
-	const isSpecialMessage = watch('route.isSpecialMessage');
+	const isSpecialMessage = watch('route.specialMessage');
 
 
 	const handleFormatChange = (
@@ -436,10 +436,15 @@ export const DisplayConfigForm: React.FC = () => {
 					setValue('specialMessages', specialMessages);
 				}
 
-				// Add the new language to each special message
+				// Get the offset config for this language
+				const offsetConfig = offsetConfigs.find(offset => offset.code === langCode);
+				// Use the text config from offsetConfigs if available, otherwise use default
+				const textConfig = offsetConfig?.config?.text || getDefaultTextConfig();
+
+				// Add the new language to each special message with the correct config
 				const updatedSpecialMessages = specialMessages.map(message => ({
 					...message,
-					[langCode]: getDefaultTextConfig()
+					[langCode]: textConfig
 				}));
 				setValue('specialMessages', updatedSpecialMessages);
 			}
@@ -531,27 +536,28 @@ export const DisplayConfigForm: React.FC = () => {
 				<div className="flex mb-4 items-center">
 					<input
 						type="checkbox"
-						{...register('route.isSpecialMessage')}
-						id="splitRoute"
+						{...register('route.specialMessage')}
+						id="isSpecialMessage"
 						className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded uppercase"
 					/>
 					<label
-						htmlFor="splitRoute"
+						htmlFor="isSpecialMessage"
 						className="ml-2 block text-sm text-gray-900"
 					>
-						Special Messages
+						Show Special Messages In This Route
 					</label>
 				</div>
 			</div>
 
 			{/* Conditional Split Route Fields */}
-			{splitRoute && !isSpecialMessage && (
+			{splitRoute && (
 				<div className="mt-4 grid grid-cols-1 mb-4 md:grid-cols-2 gap-4">
 					<div>
 						<label className="block text-sm font-medium text-gray-600 mb-1">
 							Route Number 1
 						</label>
 						<input
+							required
 							{...register('route.routeNumber1')}
 							className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 							placeholder="Enter first route number"
@@ -563,6 +569,7 @@ export const DisplayConfigForm: React.FC = () => {
 							Route Number 2
 						</label>
 						<input
+							required
 							{...register('route.routeNumber2')}
 							className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 							placeholder="Enter second route number"
@@ -572,12 +579,13 @@ export const DisplayConfigForm: React.FC = () => {
 				</div>
 			)}
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-				{!splitRoute && !isSpecialMessage && (
+				{!splitRoute && (
 					<div>
 						<label className="block text-sm font-medium text-gray-600 mb-1">
 							Route Number
 						</label>
 						<input
+							required
 							{...register('route.routeNumber')}
 							className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 							placeholder="Enter route number"
@@ -585,61 +593,62 @@ export const DisplayConfigForm: React.FC = () => {
 					</div>
 				)}
 
-				<div className={isSpecialMessage ? 'col-span-2' : ''}>
+				<div >
 					<label className="block text-sm font-medium text-gray-600 mb-1">
-						{isSpecialMessage ? 'Special Messages' : 'Source'}
+						Source
 					</label>
 					<input
+						required
 						{...register('route.source')}
 						className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 						placeholder={
-							isSpecialMessage
-								? "For Multiple Special Messages Keep '/' In Between Each Message "
-								: 'Enter source location'
+							'Enter source location'
 						}
 					/>
 				</div>
-				{!isSpecialMessage && (
-					<div>
-						<label className="block text-sm font-medium text-gray-600 mb-1">
-							Destination
-						</label>
-						<input
-							{...register('route.destination')}
-							className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-							placeholder="Enter destination location"
-						/>
-					</div>
-				)}
-				{!isSpecialMessage && (
-					<div>
-						<label className="block text-sm font-medium text-gray-600 mb-1">
-							Via
-						</label>
-						<input
-							{...register('route.via')}
-							className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-							placeholder="Dont add comma for stops use space instead"
-						/>
-					</div>
-				)}
-				{!isSpecialMessage && (
-					<div>
-						<label className="block text-sm font-medium text-gray-600 mb-1">
-							Separator
-						</label>
-						<select
-							{...register('route.separation')}
-							className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-						>
-							{ROUTE_SEPARATORS.map((sep) => (
-								<option key={sep.value} value={sep.value}>
-									{sep.label}
-								</option>
-							))}
-						</select>
-					</div>
-				)}
+
+				<div>
+					<label className="block text-sm font-medium text-gray-600 mb-1">
+						Destination
+					</label>
+					<input
+						required
+						{...register('route.destination')}
+						className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+						placeholder="Enter destination location"
+					/>
+				</div>
+
+
+				<div>
+					<label className="block text-sm font-medium text-gray-600 mb-1">
+						Via
+					</label>
+					<input
+						required
+						{...register('route.via')}
+						className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+						placeholder="Dont add comma for stops use space instead"
+					/>
+				</div>
+
+
+				<div>
+					<label className="block text-sm font-medium text-gray-600 mb-1">
+						Separator
+					</label>
+					<select
+						{...register('route.separation')}
+						className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+					>
+						{ROUTE_SEPARATORS.map((sep) => (
+							<option key={sep.value} value={sep.value}>
+								{sep.label}
+							</option>
+						))}
+					</select>
+				</div>
+
 			</div>
 		</div>
 	);
@@ -1455,7 +1464,11 @@ export const DisplayConfigForm: React.FC = () => {
 				rear: false,
 				internal: false,
 				...selectedLanguages.reduce((acc, lang) => {
-					acc[lang] = getDefaultTextConfig();
+					// Get the offset config for this language
+					const offsetConfig = offsetConfigs.find(offset => offset.code === lang);
+					// Use the text config from offsetConfigs if available, otherwise use default
+					const textConfig = offsetConfig?.config?.text || getDefaultTextConfig();
+					acc[lang] = textConfig;
 					return acc;
 				}, {})
 			};
@@ -1491,7 +1504,7 @@ export const DisplayConfigForm: React.FC = () => {
 							<div className="flex justify-between items-center">
 								<AccordionItemTrigger>
 									<span className="text-md py-2 font-bold text-gray-900">
-										{message['en']['text'] === '' ? `Special Message ${index + 1}` : message['en']['text']}
+										{(message['en']['text'] === '' || message['en']['text'] === undefined) ? `Special Message ${index + 1}` : message['en']['text']}
 									</span>
 								</AccordionItemTrigger>
 								<button
@@ -1541,7 +1554,30 @@ export const DisplayConfigForm: React.FC = () => {
 												<AccordionItemTrigger>
 													<span className="text-md py-2 font-semibold text-gray-500">{langName}</span>
 												</AccordionItemTrigger>
-												<AccordionItemContent className="bg-neutral-20 p-2">
+												<AccordionItemContent className="bg-neutral-20 flex flex-col items-start p-2">
+													{watch(`specialMessages.${index}.${language}.previewBoard`) && (
+														<div className="flex items-start gap-2 mb-4">
+															<div className="p-2 bg-neutral-950 border-2  rounded-xl border-neutral-800">
+																<LEDBitmapSimulator
+																	stopScroll={stopScroll}
+																	rows={16}
+																	cols={getColumnsByBoard(
+																		watch(`specialMessages.${index}.${language}.previewBoard`),
+																		'single'
+																	)}
+																	text={watch(`specialMessages.${index}.${language}`)}
+																	language={language}
+																/>
+															</div>
+															<button
+																type="button"
+																onClick={() => setStopScroll((value) => !value)}
+																className="mt-2 bg-red-500 text-red-50 py-2 px-4 text-sm font-medium rounded-md"
+															>
+																{!stopScroll ? 'Start' : 'Stop'} Scroll
+															</button>
+														</div>
+													)}
 													<div className="grid grid-cols-9 gap-4 items-start">
 														<div className="w-full col-span-9">
 															<label className="block text-sm font-medium text-gray-600 mb-1">Text</label>
@@ -1553,6 +1589,26 @@ export const DisplayConfigForm: React.FC = () => {
 																)}
 															/>
 														</div>
+
+														<div className="w-full col-span-9">
+															<label className="block text-sm font-medium text-gray-600 mb-1">Preview Board</label>
+															<select
+																value={watch(`specialMessages.${index}.${language}.previewBoard`) || ''}
+																onChange={(e) => setValue(`specialMessages.${index}.${language}.previewBoard`, e.target.value)}
+																className="w-full p-2 border rounded-md"
+															>
+																<option value="">Select Board</option>
+																{['front', 'side', 'rear', 'internal'].map((screen) => (
+																	watch(`specialMessages.${index}.${screen}`) && (
+																		<option key={screen} value={screen}>
+																			{screen.charAt(0).toUpperCase() + screen.slice(1)} Board
+																		</option>
+																	)
+																))}
+															</select>
+														</div>
+
+
 
 														<div className="w-full">
 															<label className="block text-sm font-medium text-gray-600 mb-1">Scroll Type</label>
@@ -1743,7 +1799,7 @@ export const DisplayConfigForm: React.FC = () => {
 					>
 						Languages
 					</button>
-					{SCREEN_TYPES.map((screenType) => (
+					{SCREEN_TYPES.filter(screenType => screenType !== 'Special Messages' || isSpecialMessage).map((screenType) => (
 						<button
 							key={screenType}
 							type="button"

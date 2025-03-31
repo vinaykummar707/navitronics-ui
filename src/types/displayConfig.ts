@@ -62,7 +62,7 @@ export interface RouteInformation {
 	routeNumber1: string;
 	routeNumber2: string;
 	separation: string;
-	isSpecialMessage: boolean;
+	specialMessage: boolean;
 }
 
 // Language-specific screen configurations
