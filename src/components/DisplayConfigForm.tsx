@@ -331,9 +331,7 @@ export const DisplayConfigForm: React.FC = () => {
 				version: '1.0',
 				areaId: areaId,
 				depotId: depotId,
-				specialMessages: [
-					
-				]
+				specialMessages: []
 			},
 		});
 
@@ -1450,8 +1448,14 @@ export const DisplayConfigForm: React.FC = () => {
 
 	const renderSpecialMessagesTab = () => {
 		const specialMessages = watch('specialMessages') || [];
+		const MAX_SPECIAL_MESSAGES = 10;
 
 		const handleAddSpecialMessage = () => {
+			if (specialMessages.length >= MAX_SPECIAL_MESSAGES) {
+				toast.error(`Maximum limit of ${MAX_SPECIAL_MESSAGES} special messages reached`);
+				return;
+			}
+
 			const newMessage = {
 				front: false,
 				side: false,
@@ -1466,17 +1470,25 @@ export const DisplayConfigForm: React.FC = () => {
 					return acc;
 				}, {})
 			};
-			setValue('specialMessages', [...specialMessages, newMessage]);
+			const currentMessages = watch('specialMessages') || [];
+			setValue('specialMessages', [...currentMessages, newMessage]);
 		};
 
 		const handleDeleteSpecialMessage = (index: number) => {
-			const updatedMessages = specialMessages.filter((_, i) => i !== index);
+			const currentMessages = watch('specialMessages') || [];
+			const updatedMessages = currentMessages.filter((_, i) => i !== index);
 			setValue('specialMessages', updatedMessages);
 		};
 
 		const handleScreenToggle = (messageIndex: number, screen: 'front' | 'side' | 'rear' | 'internal') => {
-			const currentValue = watch(`specialMessages.${messageIndex}.${screen}`);
-			setValue(`specialMessages.${messageIndex}.${screen}`, !currentValue);
+			const currentMessages = watch('specialMessages') || [];
+			const currentValue = currentMessages[messageIndex]?.[screen] || false;
+			const updatedMessages = [...currentMessages];
+			updatedMessages[messageIndex] = {
+				...updatedMessages[messageIndex],
+				[screen]: !currentValue
+			};
+			setValue('specialMessages', updatedMessages);
 		};
 
 		return (
@@ -1486,7 +1498,11 @@ export const DisplayConfigForm: React.FC = () => {
 					<button
 						type="button"
 						onClick={handleAddSpecialMessage}
-						className="bg-blue-500 text-white py-2 px-4 text-sm font-medium rounded-md hover:bg-blue-600"
+						disabled={specialMessages.length >= MAX_SPECIAL_MESSAGES}
+						className={`px-4 text-sm py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${specialMessages.length >= MAX_SPECIAL_MESSAGES
+							? 'bg-gray-400 cursor-not-allowed'
+							: 'bg-blue-700 hover:bg-blue-700 text-white'
+							}`}
 					>
 						Add Special Message
 					</button>
@@ -1498,7 +1514,7 @@ export const DisplayConfigForm: React.FC = () => {
 							<div className="flex justify-between items-center">
 								<AccordionItemTrigger>
 									<span className="text-md py-2 font-bold text-gray-900">
-										{(message['en']['text'] === '' || message['en']['text'] === undefined) ? `Special Message ${index + 1}` : message['en']['text']}
+										{(!message?.['en']?.text || message['en']?.text === '') ? `Special Message ${index + 1}` : message['en'].text}
 									</span>
 								</AccordionItemTrigger>
 								<button
@@ -1733,7 +1749,10 @@ export const DisplayConfigForm: React.FC = () => {
 			// Create a deep copy of the data to avoid mutating the form state
 			const configToSave = JSON.parse(JSON.stringify(data));
 
-			// Process only selected languages
+			// Ensure specialMessages is an array
+			if (!configToSave.specialMessages) {
+				configToSave.specialMessages = [];
+			}
 
 			console.log(configToSave.id);
 			// Create an array with the config object
