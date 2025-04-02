@@ -252,7 +252,34 @@ const generatePlaceholderText = (option: string, routeData: any) => {
 	return res;
 };
 
+const translateText = async (text: string, targetLang: string) => {
+	if (!text || text.trim() === '') return '';
 
+	try {
+		// Using Devnagri Translation API v2
+		const formData = new FormData();
+		formData.append('key', 'devnagri_086971e80fa111f0a4e142010aa00fc7');
+		formData.append('sentence', text);
+		formData.append('src_lang', 'en');
+		formData.append('dest_lang', targetLang);
+
+		const response = await fetch('https://api.devnagri.com/machine-translation/v2/translate', {
+			method: 'POST',
+			body: formData
+		});
+
+		const data = await response.json();
+		if (data && data.translated_text) {
+			return data.translated_text;
+		} else {
+			throw new Error('Translation failed');
+		}
+	} catch (error) {
+		console.error('Translation error:', error);
+		toast.error('Failed to translate text');
+		return text;
+	}
+};
 
 export const DisplayConfigForm: React.FC = () => {
 	const [offsetConfigs, setOffsetConfigs] = useState([]);
@@ -488,8 +515,8 @@ export const DisplayConfigForm: React.FC = () => {
 					}
 					// Translate non-empty text parts
 					if (trimmedPart) {
-						const res = await fetchTransliteration(trimmedPart, language);
-						return res[0] || trimmedPart;
+						const res = await translateText(trimmedPart, language);
+						return res;
 					}
 					return part;
 				})
@@ -681,30 +708,6 @@ export const DisplayConfigForm: React.FC = () => {
 			</div>
 		</div>
 	);
-
-	const fetchTransliteration = async (
-		text: string,
-		langCode: string = 'hi'
-	) => {
-		try {
-			const response = await fetch(
-				`https://inputtools.google.com/request?text=${encodeURIComponent(
-					text
-				)}&itc=${langCode}-t-i0-und&num=5&ie=utf-8&oe=utf-8&app=customApp`
-			);
-			const data = await response.json();
-
-			if (data[0] === 'SUCCESS') {
-				return data[1][0][1]; // Array of suggestions
-			} else {
-				console.error('Transliteration failed:', data);
-				return [];
-			}
-		} catch (error) {
-			console.error('Error fetching transliteration:', error);
-			return [];
-		}
-	};
 
 	const getColumnsByBoard = (boardType, format) => {
 		switch (boardType) {
@@ -1070,21 +1073,15 @@ export const DisplayConfigForm: React.FC = () => {
 										}
 										className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 									>
-										{!isSpecialMessage
-											? FORMATS.filter(
+										{
+											FORMATS.filter(
 												(format) => isEnglish || format.value !== 'three'
 											).map((format) => (
 												<option key={format.value} value={format.value}>
 													{format.label}
 												</option>
 											))
-											: FORMATS2.filter(
-												(format) => isEnglish || format.value !== 'three'
-											).map((format) => (
-												<option key={format.value} value={format.value}>
-													{format.label}
-												</option>
-											))}
+										}
 									</select>
 
 									{Object.entries(screenConfig.texts).map(
@@ -1123,13 +1120,9 @@ export const DisplayConfigForm: React.FC = () => {
 															</Button>
 														</MenuTrigger>
 														<MenuContent>
-															{isSpecialMessage
-																? PLACE_HOLDER_OPTIONS2.map((option) => (
-																	<MenuItem value={option.value}>
-																		{option.label}
-																	</MenuItem>
-																))
-																: PLACEHOLDER_OPTIONS.map((option) => (
+															{
+
+																PLACEHOLDER_OPTIONS.map((option) => (
 																	<MenuItem value={option.value}>
 																		{option.label}
 																	</MenuItem>
@@ -1591,13 +1584,41 @@ export const DisplayConfigForm: React.FC = () => {
 													<div className="grid grid-cols-9 gap-4 items-start">
 														<div className="w-full col-span-9">
 															<label className="block text-sm font-medium text-gray-600 mb-1">Text</label>
-															<Controller
-																name={`specialMessages.${index}.${language}.text`}
-																control={control}
-																render={({ field }) => (
-																	<IMEInput langCode={language} {...field} />
+															<div className="flex gap-2">
+																<Controller
+																	name={`specialMessages.${index}.${language}.text`}
+																	control={control}
+																	render={({ field }) => (
+																		<IMEInput langCode={language} {...field} />
+																	)}
+																/>
+																{language !== 'en' && (
+																	<button
+																		type="button"
+																		onClick={async () => {
+																			const englishText = watch(`specialMessages.${index}.en.text`);
+																			if (englishText && englishText.trim() !== '') {
+																				toast.info(`Translating to ${AVAILABLE_LANGUAGES.find(l => l.code === language)?.name}...`, { autoClose: false, toastId: `translating-special-${index}-${language}` });
+																				try {
+																					const translatedText = await translateText(englishText, language);
+																					setValue(`specialMessages.${index}.${language}.text`, translatedText);
+																					toast.dismiss(`translating-special-${index}-${language}`);
+																					toast.success(`Translated to ${AVAILABLE_LANGUAGES.find(l => l.code === language)?.name}`);
+																				} catch (error) {
+																					toast.dismiss(`translating-special-${index}-${language}`);
+																					toast.error(`Failed to translate to ${AVAILABLE_LANGUAGES.find(l => l.code === language)?.name}`);
+																				}
+																			} else {
+																				toast.warning('Please enter English text first');
+																			}
+																		}}
+																		className="h-10 px-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400"
+																		disabled={!watch(`specialMessages.${index}.en.text`)}
+																	>
+																		Translate from English
+																	</button>
 																)}
-															/>
+															</div>
 														</div>
 
 														<div className="w-full col-span-9">
