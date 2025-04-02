@@ -1612,7 +1612,7 @@ export const DisplayConfigForm: React.FC = () => {
 																				toast.warning('Please enter English text first');
 																			}
 																		}}
-																		className="h-10 px-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400"
+																		className="h-10 px-3 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400"
 																		disabled={!watch(`specialMessages.${index}.en.text`)}
 																	>
 																		Translate from English
