@@ -521,7 +521,7 @@ export const DisplayConfigForm: React.FC = () => {
 					return part;
 				})
 			);
-			upperText = translatedParts.join('').replace(/\s+/g, '').trim();
+			upperText = translatedParts.join(' ').replace(/\s+/g, ' ').trim();
 		}
 
 		setValue(
