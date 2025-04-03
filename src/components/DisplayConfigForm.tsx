@@ -515,8 +515,8 @@ export const DisplayConfigForm: React.FC = () => {
 					}
 					// Translate non-empty text parts
 					if (trimmedPart) {
-						const res = await translateText(trimmedPart, language);
-						return res;
+						const res = await fetchTransliteration(trimmedPart, language);
+ 						return res[0] || trimmedPart;
 					}
 					return part;
 				})
@@ -708,6 +708,31 @@ export const DisplayConfigForm: React.FC = () => {
 			</div>
 		</div>
 	);
+
+	const fetchTransliteration = async (
+ 		text: string,
+ 		langCode: string = 'hi'
+ 	) => {
+ 		try {
+ 			const response = await fetch(
+ 				`https://inputtools.google.com/request?text=${encodeURIComponent(
+ 					text
+ 				)}&itc=${langCode}-t-i0-und&num=5&ie=utf-8&oe=utf-8&app=customApp`
+ 			);
+ 			const data = await response.json();
+ 
+ 			if (data[0] === 'SUCCESS') {
+ 				return data[1][0][1]; // Array of suggestions
+ 			} else {
+ 				console.error('Transliteration failed:', data);
+ 				return [];
+ 			}
+ 		} catch (error) {
+ 			console.error('Error fetching transliteration:', error);
+ 			return [];
+ 		}
+ 	};
+ 
 
 	const getColumnsByBoard = (boardType, format) => {
 		switch (boardType) {
