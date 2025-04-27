@@ -39,7 +39,13 @@ import LEDBitmapSimulator from './LedSignBoard';
 import axiosInstance from '@/config/axios';
 import { toast } from 'react-toastify';
 
-const SCREEN_TYPES = ['Special Messages', 'front', 'side', 'rear', 'internal'] as const;
+const SCREEN_TYPES = [
+	'Special Messages',
+	'front',
+	'side',
+	'rear',
+	'internal',
+] as const;
 const SCROLL_TYPES = [
 	'Left To Right',
 	'Right To Left',
@@ -71,7 +77,7 @@ const FORMATS2 = [
 
 const FONT_WEIGHT = [
 	{
-		value: 'regular',
+		value: 'normal',
 		label: 'Regular',
 	},
 	{
@@ -150,6 +156,7 @@ const FONT_SIZES = [8, 10, 12, 14, 16] as const;
 
 const getDefaultTextConfig = () => ({
 	text: '',
+	bitmap: '',
 	scrollType: '',
 	position: '',
 	scrollSpeed: null,
@@ -163,6 +170,7 @@ const getDefaultTextConfig = () => ({
 
 const getDefaultThreeTextConfig = () => ({
 	text: '',
+	bitmap: '',
 	scrollType: '',
 	position: '',
 	scrollSpeed: null,
@@ -176,6 +184,7 @@ const getDefaultThreeTextConfig = () => ({
 
 const getDefaultThreeSideTextConfig = () => ({
 	text: '',
+	bitmap: '',
 	scrollType: '',
 	position: '',
 	scrollSpeed: null,
@@ -263,10 +272,13 @@ const translateText = async (text: string, targetLang: string) => {
 		formData.append('src_lang', 'en');
 		formData.append('dest_lang', targetLang);
 
-		const response = await fetch('https://api.devnagri.com/machine-translation/v2/translate', {
-			method: 'POST',
-			body: formData
-		});
+		const response = await fetch(
+			'https://api.devnagri.com/machine-translation/v2/translate',
+			{
+				method: 'POST',
+				body: formData,
+			}
+		);
 
 		const data = await response.json();
 		if (data && data.translated_text) {
@@ -350,7 +362,7 @@ export const DisplayConfigForm: React.FC = () => {
 					routeNumber1: '',
 					routeNumber2: '',
 					separation: '-',
-					specialMessage: false
+					specialMessage: false,
 				},
 				displayConfig: {
 					en: getDefaultLanguageConfig(true),
@@ -358,11 +370,9 @@ export const DisplayConfigForm: React.FC = () => {
 				version: '1.0',
 				areaId: areaId,
 				depotId: depotId,
-				specialMessages: []
+				specialMessages: [],
 			},
 		});
-
-
 
 	useEffect(() => {
 		console.log(isEdit, gotRouteData);
@@ -377,7 +387,6 @@ export const DisplayConfigForm: React.FC = () => {
 
 	const splitRoute = watch('route.splitRoute');
 	const isSpecialMessage = watch('route.specialMessage');
-
 
 	const handleFormatChange = (
 		screenKey: string,
@@ -456,14 +465,16 @@ export const DisplayConfigForm: React.FC = () => {
 				}
 
 				// Get the offset config for this language
-				const offsetConfig = offsetConfigs.find(offset => offset.code === langCode);
+				const offsetConfig = offsetConfigs.find(
+					(offset) => offset.code === langCode
+				);
 				// Use the text config from offsetConfigs if available, otherwise use default
 				const textConfig = offsetConfig?.config?.text || getDefaultTextConfig();
 
 				// Add the new language to each special message with the correct config
-				const updatedSpecialMessages = specialMessages.map(message => ({
+				const updatedSpecialMessages = specialMessages.map((message) => ({
 					...message,
-					[langCode]: textConfig
+					[langCode]: textConfig,
 				}));
 				setValue('specialMessages', updatedSpecialMessages);
 			}
@@ -476,14 +487,13 @@ export const DisplayConfigForm: React.FC = () => {
 
 				// Remove the language from each special message
 				const specialMessages = watch('specialMessages') || [];
-				const updatedSpecialMessages = specialMessages.map(message => {
+				const updatedSpecialMessages = specialMessages.map((message) => {
 					const { [langCode]: removed, ...rest } = message;
 					return rest;
 				});
 				setValue('specialMessages', updatedSpecialMessages);
 			}
 		}
-
 	};
 
 	const [selectedPlaceholder, setSelectedPlaceholder] = useState('');
@@ -516,7 +526,7 @@ export const DisplayConfigForm: React.FC = () => {
 					// Translate non-empty text parts
 					if (trimmedPart) {
 						const res = await fetchTransliteration(trimmedPart, language);
- 						return res[0] || trimmedPart;
+						return res[0] || trimmedPart;
 					}
 					return part;
 				})
@@ -612,7 +622,7 @@ export const DisplayConfigForm: React.FC = () => {
 					</div>
 				)}
 
-				<div >
+				<div>
 					<label className="block text-sm font-medium text-gray-600 mb-1">
 						Source
 					</label>
@@ -620,9 +630,7 @@ export const DisplayConfigForm: React.FC = () => {
 						required
 						{...register('route.source')}
 						className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-						placeholder={
-							'Enter source location'
-						}
+						placeholder={'Enter source location'}
 					/>
 				</div>
 
@@ -638,7 +646,6 @@ export const DisplayConfigForm: React.FC = () => {
 					/>
 				</div>
 
-
 				<div>
 					<label className="block text-sm font-medium text-gray-600 mb-1">
 						Via
@@ -650,7 +657,6 @@ export const DisplayConfigForm: React.FC = () => {
 						placeholder="Dont add comma for stops use space instead"
 					/>
 				</div>
-
 
 				<div>
 					<label className="block text-sm font-medium text-gray-600 mb-1">
@@ -667,7 +673,6 @@ export const DisplayConfigForm: React.FC = () => {
 						))}
 					</select>
 				</div>
-
 			</div>
 		</div>
 	);
@@ -710,29 +715,28 @@ export const DisplayConfigForm: React.FC = () => {
 	);
 
 	const fetchTransliteration = async (
- 		text: string,
- 		langCode: string = 'hi'
- 	) => {
- 		try {
- 			const response = await fetch(
- 				`https://inputtools.google.com/request?text=${encodeURIComponent(
- 					text
- 				)}&itc=${langCode}-t-i0-und&num=5&ie=utf-8&oe=utf-8&app=customApp`
- 			);
- 			const data = await response.json();
- 
- 			if (data[0] === 'SUCCESS') {
- 				return data[1][0][1]; // Array of suggestions
- 			} else {
- 				console.error('Transliteration failed:', data);
- 				return [];
- 			}
- 		} catch (error) {
- 			console.error('Error fetching transliteration:', error);
- 			return [];
- 		}
- 	};
- 
+		text: string,
+		langCode: string = 'hi'
+	) => {
+		try {
+			const response = await fetch(
+				`https://inputtools.google.com/request?text=${encodeURIComponent(
+					text
+				)}&itc=${langCode}-t-i0-und&num=5&ie=utf-8&oe=utf-8&app=customApp`
+			);
+			const data = await response.json();
+
+			if (data[0] === 'SUCCESS') {
+				return data[1][0][1]; // Array of suggestions
+			} else {
+				console.error('Transliteration failed:', data);
+				return [];
+			}
+		} catch (error) {
+			console.error('Error fetching transliteration:', error);
+			return [];
+		}
+	};
 
 	const getColumnsByBoard = (boardType, format) => {
 		switch (boardType) {
@@ -773,7 +777,8 @@ export const DisplayConfigForm: React.FC = () => {
 		const textConfig = selectedOffset?.config?.text || {};
 
 		// Existing values from specialMessages
-		const existingValues = watch(`specialMessages.${messageIndex}.${language}`) ?? {};
+		const existingValues =
+			watch(`specialMessages.${messageIndex}.${language}`) ?? {};
 
 		// Function to check if a field needs to be updated
 		const shouldUpdate = (value: any, defaultValue: any) => {
@@ -804,8 +809,6 @@ export const DisplayConfigForm: React.FC = () => {
 				);
 			}
 		});
-
-
 	};
 
 	// Helper function to check and update values
@@ -854,8 +857,6 @@ export const DisplayConfigForm: React.FC = () => {
 				);
 			}
 		});
-
-
 	};
 
 	// useEffect to apply updates
@@ -944,6 +945,12 @@ export const DisplayConfigForm: React.FC = () => {
 													)}
 													text={displayConfig[language][screenKey].texts.text}
 													language={language}
+													onBitmapTextChange={(text) =>
+														setValue(
+															`displayConfig.${language}.${screenKey}.texts.text.bitmap`,
+															text
+														)
+													}
 												/>
 											</div>
 										)}
@@ -963,6 +970,12 @@ export const DisplayConfigForm: React.FC = () => {
 																	text: routeData.routeNumber1,
 																}}
 																language={language}
+																onBitmapTextChange={(text) =>
+																	setValue(
+																		`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`,
+																		text
+																	)
+																}
 															/>
 															<LEDBitmapSimulator
 																stopScroll={stopScroll}
@@ -974,6 +987,12 @@ export const DisplayConfigForm: React.FC = () => {
 																	text: routeData.routeNumber2,
 																}}
 																language={language}
+																onBitmapTextChange={(text) =>
+																	setValue(
+																		`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`,
+																		text
+																	)
+																}
 															/>
 														</div>
 													) : (
@@ -986,6 +1005,12 @@ export const DisplayConfigForm: React.FC = () => {
 																	.sideText
 															}
 															language={language}
+															onBitmapTextChange={(text) =>
+																setValue(
+																	`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`,
+																	text
+																)
+															}
 														/>
 													)}
 
@@ -998,6 +1023,12 @@ export const DisplayConfigForm: React.FC = () => {
 														)}
 														text={displayConfig[language][screenKey].texts.text}
 														language={language}
+														onBitmapTextChange={(text) =>
+															setValue(
+																`displayConfig.${language}.${screenKey}.texts.text.bitmap`,
+																text
+															)
+														}
 													/>
 												</div>
 											</div>
@@ -1018,6 +1049,12 @@ export const DisplayConfigForm: React.FC = () => {
 																	text: routeData.routeNumber1,
 																}}
 																language={language}
+																onBitmapTextChange={(text) =>
+																	setValue(
+																		`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`,
+																		text
+																	)
+																}
 															/>
 															<LEDBitmapSimulator
 																stopScroll={stopScroll}
@@ -1029,6 +1066,12 @@ export const DisplayConfigForm: React.FC = () => {
 																	text: routeData.routeNumber2,
 																}}
 																language={language}
+																onBitmapTextChange={(text) =>
+																	setValue(
+																		`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`,
+																		text
+																	)
+																}
 															/>
 														</div>
 													) : (
@@ -1041,6 +1084,12 @@ export const DisplayConfigForm: React.FC = () => {
 																	.sideText
 															}
 															language={language}
+															onBitmapTextChange={(text) =>
+																setValue(
+																	`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`,
+																	text
+																)
+															}
 														/>
 													)}
 													<div className="flex flex-col">
@@ -1056,6 +1105,12 @@ export const DisplayConfigForm: React.FC = () => {
 																	.upperHalfText
 															}
 															language={language}
+															onBitmapTextChange={(text) =>
+																setValue(
+																	`displayConfig.${language}.${screenKey}.texts.upperHalfText.bitmap`,
+																	text
+																)
+															}
 														/>
 														<LEDBitmapSimulator
 															stopScroll={stopScroll}
@@ -1069,6 +1124,12 @@ export const DisplayConfigForm: React.FC = () => {
 																	.lowerHalfText
 															}
 															language={language}
+															onBitmapTextChange={(text) =>
+																setValue(
+																	`displayConfig.${language}.${screenKey}.texts.lowerHalfText.bitmap`,
+																	text
+																)
+															}
 														/>
 													</div>
 												</div>
@@ -1098,15 +1159,13 @@ export const DisplayConfigForm: React.FC = () => {
 										}
 										className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 									>
-										{
-											FORMATS.filter(
-												(format) => isEnglish || format.value !== 'three'
-											).map((format) => (
-												<option key={format.value} value={format.value}>
-													{format.label}
-												</option>
-											))
-										}
+										{FORMATS.filter(
+											(format) => isEnglish || format.value !== 'three'
+										).map((format) => (
+											<option key={format.value} value={format.value}>
+												{format.label}
+											</option>
+										))}
 									</select>
 
 									{Object.entries(screenConfig.texts).map(
@@ -1145,13 +1204,11 @@ export const DisplayConfigForm: React.FC = () => {
 															</Button>
 														</MenuTrigger>
 														<MenuContent>
-															{
-
-																PLACEHOLDER_OPTIONS.map((option) => (
-																	<MenuItem value={option.value}>
-																		{option.label}
-																	</MenuItem>
-																))}
+															{PLACEHOLDER_OPTIONS.map((option) => (
+																<MenuItem value={option.value}>
+																	{option.label}
+																</MenuItem>
+															))}
 														</MenuContent>
 													</MenuRoot>
 													{/* <input
@@ -1255,29 +1312,24 @@ export const DisplayConfigForm: React.FC = () => {
 															className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 														/>
 													</div>
-													{!(
-														displayConfig[language][screenKey].format ===
-														'three' &&
-														['upperHalfText', 'lowerHalfText'].includes(textKey)
-													) && (
-															<div>
-																<label className="block text-sm font-medium text-gray-600 mb-1">
-																	Font Size
-																</label>
-																<select
-																	{...register(
-																		`displayConfig.${language}.${screenKey}.texts.${textKey}.fontSize`
-																	)}
-																	className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-																>
-																	{FONT_SIZES.map((size) => (
-																		<option key={size} value={size}>
-																			{size}px
-																		</option>
-																	))}
-																</select>
-															</div>
-														)}
+
+													<div>
+														<label className="block text-sm font-medium text-gray-600 mb-1">
+															Font Size
+														</label>
+														<select
+															{...register(
+																`displayConfig.${language}.${screenKey}.texts.${textKey}.fontSize`
+															)}
+															className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+														>
+															{FONT_SIZES.map((size) => (
+																<option key={size} value={size}>
+																	{size}px
+																</option>
+															))}
+														</select>
+													</div>
 
 													<div>
 														<label className="block text-sm font-medium text-gray-600 mb-1">
@@ -1381,7 +1433,7 @@ export const DisplayConfigForm: React.FC = () => {
 														</MenuContent>
 													</MenuRoot> */}
 
-													<div>
+													{/* <div>
 														<label className="block text-sm font-medium text-gray-600 mb-1">
 															Font Height
 														</label>
@@ -1392,8 +1444,8 @@ export const DisplayConfigForm: React.FC = () => {
 															)}
 															className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 														/>
-													</div>
-													<div>
+													</div> */}
+													{/* <div>
 														<label className="block text-sm font-medium text-gray-600 mb-1">
 															X Offset
 														</label>
@@ -1416,10 +1468,10 @@ export const DisplayConfigForm: React.FC = () => {
 															)}
 															className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 														/>
-													</div>
+													</div> */}
 													<div>
 														<label className="block text-sm font-medium text-gray-600 mb-1">
-															Spacing
+															Thresshold
 														</label>
 														<input
 															type="number"
@@ -1470,7 +1522,9 @@ export const DisplayConfigForm: React.FC = () => {
 
 		const handleAddSpecialMessage = () => {
 			if (specialMessages.length >= MAX_SPECIAL_MESSAGES) {
-				toast.error(`Maximum limit of ${MAX_SPECIAL_MESSAGES} special messages reached`);
+				toast.error(
+					`Maximum limit of ${MAX_SPECIAL_MESSAGES} special messages reached`
+				);
 				return;
 			}
 
@@ -1481,12 +1535,15 @@ export const DisplayConfigForm: React.FC = () => {
 				internal: false,
 				...selectedLanguages.reduce((acc, lang) => {
 					// Get the offset config for this language
-					const offsetConfig = offsetConfigs.find(offset => offset.code === lang);
+					const offsetConfig = offsetConfigs.find(
+						(offset) => offset.code === lang
+					);
 					// Use the text config from offsetConfigs if available, otherwise use default
-					const textConfig = offsetConfig?.config?.text || getDefaultTextConfig();
+					const textConfig =
+						offsetConfig?.config?.text || getDefaultTextConfig();
 					acc[lang] = textConfig;
 					return acc;
-				}, {})
+				}, {}),
 			};
 			const currentMessages = watch('specialMessages') || [];
 			setValue('specialMessages', [...currentMessages, newMessage]);
@@ -1498,13 +1555,16 @@ export const DisplayConfigForm: React.FC = () => {
 			setValue('specialMessages', updatedMessages);
 		};
 
-		const handleScreenToggle = (messageIndex: number, screen: 'front' | 'side' | 'rear' | 'internal') => {
+		const handleScreenToggle = (
+			messageIndex: number,
+			screen: 'front' | 'side' | 'rear' | 'internal'
+		) => {
 			const currentMessages = watch('specialMessages') || [];
 			const currentValue = currentMessages[messageIndex]?.[screen] || false;
 			const updatedMessages = [...currentMessages];
 			updatedMessages[messageIndex] = {
 				...updatedMessages[messageIndex],
-				[screen]: !currentValue
+				[screen]: !currentValue,
 			};
 			setValue('specialMessages', updatedMessages);
 		};
@@ -1512,15 +1572,18 @@ export const DisplayConfigForm: React.FC = () => {
 		return (
 			<div className="bg-white p-6 rounded-xl">
 				<div className="flex justify-between items-center mb-4">
-					<h3 className="text-md font-semibold text-gray-900">Special Messages Configuration</h3>
+					<h3 className="text-md font-semibold text-gray-900">
+						Special Messages Configuration
+					</h3>
 					<button
 						type="button"
 						onClick={handleAddSpecialMessage}
 						disabled={specialMessages.length >= MAX_SPECIAL_MESSAGES}
-						className={`px-4 text-sm py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${specialMessages.length >= MAX_SPECIAL_MESSAGES
-							? 'bg-gray-400 cursor-not-allowed'
-							: 'bg-blue-700 hover:bg-blue-700 text-white'
-							}`}
+						className={`px-4 text-sm py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+							specialMessages.length >= MAX_SPECIAL_MESSAGES
+								? 'bg-gray-400 cursor-not-allowed'
+								: 'bg-blue-700 hover:bg-blue-700 text-white'
+						}`}
 					>
 						Add Special Message
 					</button>
@@ -1528,11 +1591,16 @@ export const DisplayConfigForm: React.FC = () => {
 
 				{specialMessages.map((message, index) => (
 					<AccordionRoot multiple key={index} className="mb-4">
-						<AccordionItem value={`message-${index}`} className="bg-white rounded-xl shadow border px-4 py-4">
+						<AccordionItem
+							value={`message-${index}`}
+							className="bg-white rounded-xl shadow border px-4 py-4"
+						>
 							<div className="flex justify-between items-center">
 								<AccordionItemTrigger>
 									<span className="text-md py-2 font-bold text-gray-900">
-										{(!message?.['en']?.text || message['en']?.text === '') ? `Special Message ${index + 1}` : message['en'].text}
+										{!message?.['en']?.text || message['en']?.text === ''
+											? `Special Message ${index + 1}`
+											: message['en'].text}
 									</span>
 								</AccordionItemTrigger>
 								<button
@@ -1541,14 +1609,25 @@ export const DisplayConfigForm: React.FC = () => {
 									className="p-2 text-red-500 hover:text-red-700 rounded-md hover:bg-red-50"
 									title="Delete message"
 								>
-									<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-										<path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										className="h-5 w-5"
+										viewBox="0 0 20 20"
+										fill="currentColor"
+									>
+										<path
+											fillRule="evenodd"
+											d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+											clipRule="evenodd"
+										/>
 									</svg>
 								</button>
 							</div>
 							<AccordionItemContent>
 								<div className="mb-4">
-									<label className="block text-sm   text-gray-600 mb-4">Display On Screens</label>
+									<label className="block text-sm   text-gray-600 mb-4">
+										Display On Screens
+									</label>
 									<div className="grid grid-cols-12 gap-4">
 										{['front', 'side', 'rear', 'internal'].map((screen) => (
 											<div key={screen} className="flex items-center">
@@ -1556,7 +1635,12 @@ export const DisplayConfigForm: React.FC = () => {
 													type="checkbox"
 													id={`${index}-${screen}`}
 													checked={watch(`specialMessages.${index}.${screen}`)}
-													onChange={() => handleScreenToggle(index, screen as 'front' | 'side' | 'rear' | 'internal')}
+													onChange={() =>
+														handleScreenToggle(
+															index,
+															screen as 'front' | 'side' | 'rear' | 'internal'
+														)
+													}
 													className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
 												/>
 												<label
@@ -1572,7 +1656,9 @@ export const DisplayConfigForm: React.FC = () => {
 
 								<AccordionRoot>
 									{selectedLanguages.map((language) => {
-										const langName = AVAILABLE_LANGUAGES.find((l) => l.code === language)?.name || language.toUpperCase();
+										const langName =
+											AVAILABLE_LANGUAGES.find((l) => l.code === language)
+												?.name || language.toUpperCase();
 										return (
 											<AccordionItem
 												className="py-2 bg-white rounded-xl shadow mb-4 border px-4"
@@ -1580,20 +1666,28 @@ export const DisplayConfigForm: React.FC = () => {
 												value={language}
 											>
 												<AccordionItemTrigger>
-													<span className="text-md py-2 font-semibold text-gray-500">{langName}</span>
+													<span className="text-md py-2 font-semibold text-gray-500">
+														{langName}
+													</span>
 												</AccordionItemTrigger>
 												<AccordionItemContent className="bg-neutral-20 flex flex-col items-start p-2">
-													{watch(`specialMessages.${index}.${language}.previewBoard`) && (
+													{watch(
+														`specialMessages.${index}.${language}.previewBoard`
+													) && (
 														<div className="flex items-start gap-2 mb-4">
 															<div className="p-2 bg-neutral-950 border-2  rounded-xl border-neutral-800">
 																<LEDBitmapSimulator
 																	stopScroll={stopScroll}
 																	rows={16}
 																	cols={getColumnsByBoard(
-																		watch(`specialMessages.${index}.${language}.previewBoard`),
+																		watch(
+																			`specialMessages.${index}.${language}.previewBoard`
+																		),
 																		'single'
 																	)}
-																	text={watch(`specialMessages.${index}.${language}`)}
+																	text={watch(
+																		`specialMessages.${index}.${language}`
+																	)}
 																	language={language}
 																/>
 															</div>
@@ -1608,7 +1702,9 @@ export const DisplayConfigForm: React.FC = () => {
 													)}
 													<div className="grid grid-cols-9 gap-4 items-start">
 														<div className="w-full col-span-9">
-															<label className="block text-sm font-medium text-gray-600 mb-1">Text</label>
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Text
+															</label>
 															<div className="flex gap-2">
 																<Controller
 																	name={`specialMessages.${index}.${language}.text`}
@@ -1621,24 +1717,66 @@ export const DisplayConfigForm: React.FC = () => {
 																	<button
 																		type="button"
 																		onClick={async () => {
-																			const englishText = watch(`specialMessages.${index}.en.text`);
-																			if (englishText && englishText.trim() !== '') {
-																				toast.info(`Translating to ${AVAILABLE_LANGUAGES.find(l => l.code === language)?.name}...`, { autoClose: false, toastId: `translating-special-${index}-${language}` });
+																			const englishText = watch(
+																				`specialMessages.${index}.en.text`
+																			);
+																			if (
+																				englishText &&
+																				englishText.trim() !== ''
+																			) {
+																				toast.info(
+																					`Translating to ${
+																						AVAILABLE_LANGUAGES.find(
+																							(l) => l.code === language
+																						)?.name
+																					}...`,
+																					{
+																						autoClose: false,
+																						toastId: `translating-special-${index}-${language}`,
+																					}
+																				);
 																				try {
-																					const translatedText = await translateText(englishText, language);
-																					setValue(`specialMessages.${index}.${language}.text`, translatedText);
-																					toast.dismiss(`translating-special-${index}-${language}`);
-																					toast.success(`Translated to ${AVAILABLE_LANGUAGES.find(l => l.code === language)?.name}`);
+																					const translatedText =
+																						await translateText(
+																							englishText,
+																							language
+																						);
+																					setValue(
+																						`specialMessages.${index}.${language}.text`,
+																						translatedText
+																					);
+																					toast.dismiss(
+																						`translating-special-${index}-${language}`
+																					);
+																					toast.success(
+																						`Translated to ${
+																							AVAILABLE_LANGUAGES.find(
+																								(l) => l.code === language
+																							)?.name
+																						}`
+																					);
 																				} catch (error) {
-																					toast.dismiss(`translating-special-${index}-${language}`);
-																					toast.error(`Failed to translate to ${AVAILABLE_LANGUAGES.find(l => l.code === language)?.name}`);
+																					toast.dismiss(
+																						`translating-special-${index}-${language}`
+																					);
+																					toast.error(
+																						`Failed to translate to ${
+																							AVAILABLE_LANGUAGES.find(
+																								(l) => l.code === language
+																							)?.name
+																						}`
+																					);
 																				}
 																			} else {
-																				toast.warning('Please enter English text first');
+																				toast.warning(
+																					'Please enter English text first'
+																				);
 																			}
 																		}}
 																		className="h-10 px-3 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400"
-																		disabled={!watch(`specialMessages.${index}.en.text`)}
+																		disabled={
+																			!watch(`specialMessages.${index}.en.text`)
+																		}
 																	>
 																		Translate from English
 																	</button>
@@ -1647,61 +1785,95 @@ export const DisplayConfigForm: React.FC = () => {
 														</div>
 
 														<div className="w-full col-span-9">
-															<label className="block text-sm font-medium text-gray-600 mb-1">Preview Board</label>
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Preview Board
+															</label>
 															<select
-																value={watch(`specialMessages.${index}.${language}.previewBoard`) || ''}
-																onChange={(e) => setValue(`specialMessages.${index}.${language}.previewBoard`, e.target.value)}
+																value={
+																	watch(
+																		`specialMessages.${index}.${language}.previewBoard`
+																	) || ''
+																}
+																onChange={(e) =>
+																	setValue(
+																		`specialMessages.${index}.${language}.previewBoard`,
+																		e.target.value
+																	)
+																}
 																className="w-full p-2 border rounded-md"
 															>
 																<option value="">Select Board</option>
-																{['front', 'side', 'rear', 'internal'].map((screen) => (
-																	watch(`specialMessages.${index}.${screen}`) && (
-																		<option key={screen} value={screen}>
-																			{screen.charAt(0).toUpperCase() + screen.slice(1)} Board
-																		</option>
-																	)
-																))}
+																{['front', 'side', 'rear', 'internal'].map(
+																	(screen) =>
+																		watch(
+																			`specialMessages.${index}.${screen}`
+																		) && (
+																			<option key={screen} value={screen}>
+																				{screen.charAt(0).toUpperCase() +
+																					screen.slice(1)}{' '}
+																				Board
+																			</option>
+																		)
+																)}
 															</select>
 														</div>
 
-
-
 														<div className="w-full">
-															<label className="block text-sm font-medium text-gray-600 mb-1">Scroll Type</label>
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Scroll Type
+															</label>
 															<select
-																{...register(`specialMessages.${index}.${language}.scrollType`)}
+																{...register(
+																	`specialMessages.${index}.${language}.scrollType`
+																)}
 																className="w-full p-2 border rounded-md"
 															>
 																{SCROLL_TYPES.map((type) => (
-																	<option key={type} value={type}>{type}</option>
+																	<option key={type} value={type}>
+																		{type}
+																	</option>
 																))}
 															</select>
 														</div>
 														<div>
-															<label className="block text-sm font-medium text-gray-600 mb-1">Position</label>
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Position
+															</label>
 															<select
-																{...register(`specialMessages.${index}.${language}.position`)}
+																{...register(
+																	`specialMessages.${index}.${language}.position`
+																)}
 																className="w-full p-2 border rounded-md"
 															>
 																{POSITIONS.map((pos) => (
-																	<option key={pos} value={pos}>{pos}</option>
+																	<option key={pos} value={pos}>
+																		{pos}
+																	</option>
 																))}
 															</select>
 														</div>
 														<div>
-															<label className="block text-sm font-medium text-gray-600 mb-1">Scroll Speed</label>
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Scroll Speed
+															</label>
 															<input
 																type="number"
 																min={1}
 																max={10}
-																{...register(`specialMessages.${index}.${language}.scrollSpeed`)}
+																{...register(
+																	`specialMessages.${index}.${language}.scrollSpeed`
+																)}
 																className="w-full p-2 border rounded-md"
 															/>
 														</div>
 														<div>
-															<label className="block text-sm font-medium text-gray-600 mb-1">Font Size</label>
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Font Size
+															</label>
 															<select
-																{...register(`specialMessages.${index}.${language}.fontSize`)}
+																{...register(
+																	`specialMessages.${index}.${language}.fontSize`
+																)}
 																className="w-full p-2 border rounded-md"
 															>
 																{FONT_SIZES.map((size) => (
@@ -1712,45 +1884,70 @@ export const DisplayConfigForm: React.FC = () => {
 															</select>
 														</div>
 														<div>
-															<label className="block text-sm font-medium text-gray-600 mb-1">Font Weight</label>
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Font Weight
+															</label>
 															<select
-																{...register(`specialMessages.${index}.${language}.fontWeight`)}
+																{...register(
+																	`specialMessages.${index}.${language}.fontWeight`
+																)}
 																className="w-full p-2 border rounded-md"
 															>
 																{FONT_WEIGHT.map((weight) => (
-																	<option key={weight.value} value={weight.value}>{weight.label}</option>
+																	<option
+																		key={weight.value}
+																		value={weight.value}
+																	>
+																		{weight.label}
+																	</option>
 																))}
 															</select>
 														</div>
 														<div>
-															<label className="block text-sm font-medium text-gray-600 mb-1">Font Height</label>
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Font Height
+															</label>
 															<input
 																type="number"
-																{...register(`specialMessages.${index}.${language}.fontHeight`)}
+																{...register(
+																	`specialMessages.${index}.${language}.fontHeight`
+																)}
 																className="w-full p-2 border rounded-md"
 															/>
 														</div>
 														<div>
-															<label className="block text-sm font-medium text-gray-600 mb-1">X Offset</label>
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																X Offset
+															</label>
 															<input
 																type="number"
-																{...register(`specialMessages.${index}.${language}.x_offset`)}
+																{...register(
+																	`specialMessages.${index}.${language}.x_offset`
+																)}
 																className="w-full p-2 border rounded-md"
 															/>
 														</div>
 														<div>
-															<label className="block text-sm font-medium text-gray-600 mb-1">Y Offset</label>
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Y Offset
+															</label>
 															<input
 																type="number"
-																{...register(`specialMessages.${index}.${language}.y_offset`)}
+																{...register(
+																	`specialMessages.${index}.${language}.y_offset`
+																)}
 																className="w-full p-2 border rounded-md"
 															/>
 														</div>
 														<div>
-															<label className="block text-sm font-medium text-gray-600 mb-1">Spacing</label>
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Spacing
+															</label>
 															<input
 																type="number"
-																{...register(`specialMessages.${index}.${language}.spacing`)}
+																{...register(
+																	`specialMessages.${index}.${language}.spacing`
+																)}
 																className="w-full p-2 border rounded-md"
 															/>
 														</div>
@@ -1841,32 +2038,38 @@ export const DisplayConfigForm: React.FC = () => {
 					<button
 						type="button"
 						onClick={() => setActiveTab('route')}
-						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${activeTab === 'route'
-							? 'border-nav_orange bg-white text-nav_blue-500'
-							: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-							}`}
+						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${
+							activeTab === 'route'
+								? 'border-nav_orange bg-white text-nav_blue-500'
+								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+						}`}
 					>
 						Route
 					</button>
 					<button
 						type="button"
 						onClick={() => setActiveTab('languages')}
-						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${activeTab === 'languages'
-							? 'border-nav_orange bg-white text-nav_blue-500'
-							: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-							}`}
+						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${
+							activeTab === 'languages'
+								? 'border-nav_orange bg-white text-nav_blue-500'
+								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+						}`}
 					>
 						Languages
 					</button>
-					{SCREEN_TYPES.filter(screenType => screenType !== 'Special Messages' || isSpecialMessage).map((screenType) => (
+					{SCREEN_TYPES.filter(
+						(screenType) =>
+							screenType !== 'Special Messages' || isSpecialMessage
+					).map((screenType) => (
 						<button
 							key={screenType}
 							type="button"
 							onClick={() => setActiveTab(screenType)}
-							className={`py-2 px-3 text-left max-w-[160px]  border-b-2 font-medium text-sm capitalize ${activeTab === screenType
-								? 'border-nav_orange bg-white text-nav_blue-500'
-								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-								}`}
+							className={`py-2 px-3 text-left max-w-[160px]  border-b-2 font-medium text-sm capitalize ${
+								activeTab === screenType
+									? 'border-nav_orange bg-white text-nav_blue-500'
+									: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+							}`}
 						>
 							{screenType}
 						</button>

@@ -4,6 +4,9 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-    font-family: 'Inter', serif;
-}
+
+@font-face {
+    font-family: 'english';
+    src: url('./english.ttf') format('truetype');
+  }
+  

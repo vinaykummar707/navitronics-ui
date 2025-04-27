@@ -1,16 +1,19 @@
 import axiosInstance from '@/config/axios';
+import { convertToLEDMatrix } from '@/utils/canvas-utility';
 import React, { useState, useEffect, useRef } from 'react';
+import { get } from 'react-hook-form';
 
 const LEDBitmapSimulator = ({
 	text,
 	language,
 	rows,
 	cols,
-	horizontalSpacing = 1, // Default horizontal spacing between LEDs
-	verticalSpacing = 1, // Default vertical spacing between rows
+	horizontalSpacing = 1.5, // Default horizontal spacing between LEDs
+	verticalSpacing = 1.5, // Default vertical spacing between rows
 	stopScroll,
+	onBitmapTextChange,
 }) => {
-	const [ledSize, setLedSize] = useState(5);
+	const [ledSize, setLedSize] = useState(6);
 	const [ledSpacing, setLedSpacing] = useState(horizontalSpacing);
 	const [rowSpacing, setRowSpacing] = useState(verticalSpacing);
 	const [bitmapText, setBitmapText] = useState('');
@@ -24,6 +27,7 @@ const LEDBitmapSimulator = ({
 	const [scrollOffset, setScrollOffset] = useState(0);
 	const scrollIntervalRef = useRef(null);
 
+	const [languages, setLanguages] = useState<any[]>([]);
 	// Update spacing when props change
 	useEffect(() => {
 		setLedSpacing(horizontalSpacing);
@@ -39,26 +43,126 @@ const LEDBitmapSimulator = ({
 		);
 	}, [cols, ledSize, ledSpacing]);
 
-	useEffect(() => {
-		console.log(text, language);
-		const fetchBitmap = async () => {
+	
+  useEffect(() => {
+		async function fetchLanguages() {
 			try {
-				const response = await axiosInstance.post(
-					'/routes/getBitmapSimulation',
-					JSON.stringify({
-						text: text,
-						language: language,
-					})
-				);
-
-				console.log(response);
-				setBitmapText(response.data || '');
-			} catch (error) {
-				console.error('Error fetching bitmap:', error);
+				const response = await axiosInstance.get('/languages/all');
+				setLanguages(response.data);
+			} catch (err: any) {
+				console.log(err.message || 'Something went wrong');
 			}
-		};
+		}
 
-		fetchBitmap();
+		fetchLanguages();
+	}, []);
+
+	//  useEffect(() => {
+	// 		async function loadFontAndConvert() {
+	// 			if (languages.length === 0) return; // Wait until languages are loaded
+
+	// 			const fontName = getFontFileByLanguageCode(language); // this should return font name
+	// 			const fontUrl = `/fonts/${fontName}.ttf`;
+
+	// 			try {
+	// 				const font = new FontFace(fontName, `url(${fontUrl})`);
+	// 				await font.load();
+	// 				(document as any).fonts.add(font);
+
+	// 				const matrix = convertToLEDMatrix({
+	// 					text: text.text,
+	// 					fontFamily: fontName,
+	// 					ledRows: text.fontHeight,
+	// 					fontWeight: text.fontWeight,
+	// 					brightnessThreshold: text.spacing,
+	// 					fontSize: 100,
+	// 				});
+
+	// 				if (matrix) setBitmapText(matrix);
+	// 			} catch (err) {
+	// 				console.error('Error loading font or converting matrix', err);
+	// 			}
+	// 		}
+
+	// 		loadFontAndConvert();
+	// 	}, [languages, text]);
+
+	useEffect(() => {
+		// console.log(text, language);
+		// const fetchBitmap = async () => {
+		// 	try {
+		// 		const response = await axiosInstance.post(
+		// 			'/routes/getBitmapSimulation',
+		// 			JSON.stringify({
+		// 				text: text,
+		// 				language: language,
+		// 			})
+		// 		);
+
+		// 		console.log(response);
+		// 		setBitmapText(response.data || '');
+		// 	} catch (error) {
+		// 		console.error('Error fetching bitmap:', error);
+		// 	}
+		// };
+
+		// fetchBitmap();
+
+	
+
+		// async function loadFont(fontName: string, fontUrl: string) {
+		// 	const font = new FontFace(fontName, `url(${fontUrl})`);
+		// 	await font.load();
+		// 	(document as any).fonts.add(font);
+		// }
+
+		// console.log(languages)
+		// console.log(
+		// 	convertToLEDMatrix({
+		// 		text: text.text,
+		// 		fontFamily: getFontFileByLanguageCode(language),
+		// 		ledRows: text.fontSize,
+		// 		fontWeight: text.fontWeight,
+		// 	})
+		// );
+		// setBitmapText(
+		// 	convertToLEDMatrix({
+		// 		text: text.text,
+		// 		fontFamily: getFontFileByLanguageCode(language),
+		// 		ledRows: text.fontHeight,
+		// 		fontWeight: text.fontWeight,
+		// 		brightnessThreshold: text.spacing,
+		// 		fontSize: 100,
+		// 	})
+		// );
+
+			async function loadFontAndConvert() {
+				if (languages.length === 0) return; // Wait until languages are loaded
+
+				const fontName = getFontFileByLanguageCode(language); // this should return font name
+				const fontUrl = `/fonts/${fontName}.ttf`;
+
+				try {
+					const font = new FontFace(fontName, `url(${fontUrl})`);
+					await font.load();
+					(document as any).fonts.add(font);
+
+					const matrix = convertToLEDMatrix({
+						text: text.text,
+						fontFamily: fontName,
+						ledRows: text.fontSize,
+						fontWeight: text.fontWeight,
+						brightnessThreshold: text.spacing,
+						fontSize: 100,
+					});
+
+					if (matrix) setBitmapText(matrix);
+				} catch (err) {
+					console.error('Error loading font or converting matrix', err);
+				}
+			}
+
+			loadFontAndConvert();
 
 		if (text.scrollType === 'Left To Right') {
 			setIsScrolling(true);
@@ -76,22 +180,16 @@ const LEDBitmapSimulator = ({
 		if (text.scrollType !== 'Fixed') {
 			setIsScrolling(stopScroll);
 		}
-	}, [
-		text,
-		text.text,
-		language,
-		text.scrollType,
-		text.position,
-		text.scrollSpeed,
-		text.fontSize,
-		text.fontWeight,
-		text.fontHeight,
-		text.fontfile,
-		text.x_offset,
-		text.y_offset,
-		text.spacing,
-		stopScroll,
-	]);
+	}, [text, text.text, language, text.scrollType, text.position, text.scrollSpeed, text.fontSize, text.fontWeight, text.fontHeight, text.fontfile, text.x_offset, text.y_offset, text.spacing, stopScroll, languages]);
+
+	function getFontFileByLanguageCode(code: string): string {
+		console.log(languages)
+		const language = languages.find((lang) => lang.code === code);
+		if (!language) {
+			throw new Error(`Language code '${code}' not found`);
+		}
+		return language.fontFile;
+	}
 
 	// Process bitmap text into matrix with scrolling support
 	const processBitmapText = (text, offset = 0) => {
@@ -135,6 +233,7 @@ const LEDBitmapSimulator = ({
 
 	useEffect(() => {
 		setLedMatrix(processBitmapText(bitmapText, scrollOffset));
+		onBitmapTextChange(bitmapText); // Call the callback with the updated bitmap text
 	}, [bitmapText, rows, cols, scrollOffset]);
 
 	// Handle scrolling logic
@@ -234,7 +333,7 @@ const LEDBitmapSimulator = ({
 							{row.map((cell, colIndex) => (
 								<div
 									key={`${rowIndex}-${colIndex}`}
-									onClick={() => toggleLed(rowIndex, colIndex)}
+									// onClick={() => toggleLed(rowIndex, colIndex)}
 									className={`${
 										cell ? 'bg-amber-500' : 'bg-neutral-700'
 									} rounded-full`}

@@ -15,6 +15,7 @@ export interface BitmapTranslations {
 
 export interface TextConfig {
 	text: string;
+	bitmap: string;
 	scrollType: ScrollType;
 	position: Position;
 	scrollSpeed: number;
