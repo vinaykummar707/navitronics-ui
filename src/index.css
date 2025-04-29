@@ -4,6 +4,26 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
+/* * {
     font-family: 'Inter', serif;
-}
+} */
+
+@font-face {
+    font-family: 'en';
+    src: url('./en.ttf') format('truetype');
+  }
+  
+  @font-face {
+    font-family: 'hi';
+    src: url('./hi.ttf') format('truetype');
+  }
+  
+  @font-face {
+    font-family: 'te';
+    src: url('./te.ttf') format('truetype');
+  }
+
+  @font-face {
+    font-family: 'mangal';
+    src: url('/public/fonts/mangal.ttf') format('truetype');
+  }

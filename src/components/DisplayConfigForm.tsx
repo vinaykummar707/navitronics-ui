@@ -71,7 +71,7 @@ const FORMATS2 = [
 
 const FONT_WEIGHT = [
 	{
-		value: 'regular',
+		value: 'normal',
 		label: 'Regular',
 	},
 	{
@@ -150,6 +150,7 @@ const FONT_SIZES = [8, 10, 12, 14, 16] as const;
 
 const getDefaultTextConfig = () => ({
 	text: '',
+	bitmap:'',
 	scrollType: '',
 	position: '',
 	scrollSpeed: null,
@@ -163,6 +164,7 @@ const getDefaultTextConfig = () => ({
 
 const getDefaultThreeTextConfig = () => ({
 	text: '',
+	bitmap:'',
 	scrollType: '',
 	position: '',
 	scrollSpeed: null,
@@ -176,6 +178,7 @@ const getDefaultThreeTextConfig = () => ({
 
 const getDefaultThreeSideTextConfig = () => ({
 	text: '',
+	bitmap:'',
 	scrollType: '',
 	position: '',
 	scrollSpeed: null,
@@ -1255,7 +1258,7 @@ export const DisplayConfigForm: React.FC = () => {
 															className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 														/>
 													</div>
-													{!(
+													{/* {!(
 														displayConfig[language][screenKey].format ===
 														'three' &&
 														['upperHalfText', 'lowerHalfText'].includes(textKey)
@@ -1277,7 +1280,7 @@ export const DisplayConfigForm: React.FC = () => {
 																	))}
 																</select>
 															</div>
-														)}
+														)} */}
 
 													<div>
 														<label className="block text-sm font-medium text-gray-600 mb-1">
@@ -1393,7 +1396,7 @@ export const DisplayConfigForm: React.FC = () => {
 															className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 														/>
 													</div>
-													<div>
+													{/* <div>
 														<label className="block text-sm font-medium text-gray-600 mb-1">
 															X Offset
 														</label>
@@ -1404,8 +1407,8 @@ export const DisplayConfigForm: React.FC = () => {
 															)}
 															className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 														/>
-													</div>
-													<div>
+													</div> */}
+													{/* <div>
 														<label className="block text-sm font-medium text-gray-600 mb-1">
 															Y Offset
 														</label>
@@ -1416,10 +1419,10 @@ export const DisplayConfigForm: React.FC = () => {
 															)}
 															className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 														/>
-													</div>
+													</div> */}
 													<div>
 														<label className="block text-sm font-medium text-gray-600 mb-1">
-															Spacing
+															Thresshold
 														</label>
 														<input
 															type="number"
