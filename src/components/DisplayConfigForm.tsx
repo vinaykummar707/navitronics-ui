@@ -947,6 +947,12 @@ export const DisplayConfigForm: React.FC = () => {
 													)}
 													text={displayConfig[language][screenKey].texts.text}
 													language={language}
+													onBitmapTextChange={(text) =>
+														setValue(
+															`displayConfig.${language}.${screenKey}.texts.text.bitmap`,
+															text
+														)
+													}
 												/>
 											</div>
 										)}
@@ -966,6 +972,12 @@ export const DisplayConfigForm: React.FC = () => {
 																	text: routeData.routeNumber1,
 																}}
 																language={language}
+																onBitmapTextChange={(text) =>
+																	setValue(
+																		`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`,
+																		text
+																	)
+																}
 															/>
 															<LEDBitmapSimulator
 																stopScroll={stopScroll}
@@ -977,6 +989,13 @@ export const DisplayConfigForm: React.FC = () => {
 																	text: routeData.routeNumber2,
 																}}
 																language={language}
+																onBitmapTextChange={(text) =>
+																	setValue(
+																		`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`,
+																		text
+																	)
+																}
+
 															/>
 														</div>
 													) : (
@@ -989,6 +1008,12 @@ export const DisplayConfigForm: React.FC = () => {
 																	.sideText
 															}
 															language={language}
+															onBitmapTextChange={(text) =>
+																setValue(
+																	`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`,
+																	text
+																)
+															}
 														/>
 													)}
 
@@ -1001,6 +1026,12 @@ export const DisplayConfigForm: React.FC = () => {
 														)}
 														text={displayConfig[language][screenKey].texts.text}
 														language={language}
+														onBitmapTextChange={(text) =>
+															setValue(
+																`displayConfig.${language}.${screenKey}.texts.text.bitmap`,
+																text
+															)
+														}
 													/>
 												</div>
 											</div>
@@ -1021,6 +1052,12 @@ export const DisplayConfigForm: React.FC = () => {
 																	text: routeData.routeNumber1,
 																}}
 																language={language}
+																onBitmapTextChange={(text) =>
+																	setValue(
+																		`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`,
+																		text
+																	)
+																}
 															/>
 															<LEDBitmapSimulator
 																stopScroll={stopScroll}
@@ -1032,6 +1069,12 @@ export const DisplayConfigForm: React.FC = () => {
 																	text: routeData.routeNumber2,
 																}}
 																language={language}
+																onBitmapTextChange={(text) =>
+																	setValue(
+																		`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`,
+																		text
+																	)
+																}
 															/>
 														</div>
 													) : (
@@ -1044,6 +1087,12 @@ export const DisplayConfigForm: React.FC = () => {
 																	.sideText
 															}
 															language={language}
+															onBitmapTextChange={(text) =>
+																setValue(
+																	`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`,
+																	text
+																)
+															}
 														/>
 													)}
 													<div className="flex flex-col">
@@ -1059,6 +1108,12 @@ export const DisplayConfigForm: React.FC = () => {
 																	.upperHalfText
 															}
 															language={language}
+															onBitmapTextChange={(text) =>
+																setValue(
+																	`displayConfig.${language}.${screenKey}.texts.upperHalfText.bitmap`,
+																	text
+																)
+															}
 														/>
 														<LEDBitmapSimulator
 															stopScroll={stopScroll}
@@ -1072,6 +1127,12 @@ export const DisplayConfigForm: React.FC = () => {
 																	.lowerHalfText
 															}
 															language={language}
+															onBitmapTextChange={(text) =>
+																setValue(
+																	`displayConfig.${language}.${screenKey}.texts.lowerHalfText.bitmap`,
+																	text
+																)
+															}
 														/>
 													</div>
 												</div>
@@ -1598,6 +1659,7 @@ export const DisplayConfigForm: React.FC = () => {
 																	)}
 																	text={watch(`specialMessages.${index}.${language}`)}
 																	language={language}
+																	onBitmapTextChange={null}
 																/>
 															</div>
 															<button

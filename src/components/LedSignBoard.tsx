@@ -11,6 +11,7 @@ const LEDBitmapSimulator = ({
 	horizontalSpacing = 2.5, // Default horizontal spacing between LEDs
 	verticalSpacing = 2.5, // Default vertical spacing between rows
 	stopScroll,
+	onBitmapTextChange
 }) => {
 	const [ledSize, setLedSize] = useState(5);
 	const [ledSpacing, setLedSpacing] = useState(horizontalSpacing);
@@ -307,6 +308,7 @@ ledRows: text.fontHeight,
 	// 	// }
 		console.log(bitmapText)
 	setLedMatrix(processBitmapText(bitmapText, scrollOffset));
+	onBitmapTextChange(bitmapText);
 	}, [bitmapText, rows, cols, scrollOffset]);
 
 	// Handle scrolling logic
