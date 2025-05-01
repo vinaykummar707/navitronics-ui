@@ -16,6 +16,7 @@ export interface BitmapTranslations {
 export interface TextConfig {
 	text: string;
 	bitmap: string;
+	fontWidth: number;
 	scrollType: ScrollType;
 	position: Position;
 	scrollSpeed: number;
@@ -63,7 +64,9 @@ export interface RouteInformation {
 	routeNumber1: string;
 	routeNumber2: string;
 	separation: string;
-	specialMessage: boolean;
+	showRt: boolean;
+	showSpm: boolean;
+	showBoth: boolean;
 }
 
 // Language-specific screen configurations

@@ -31,6 +31,8 @@ interface DisplaySettingsState {
 	config: {
 		sideText: TextSettings;
 		text: TextSettings;
+		routeNumber1: TextSettings;
+		routeNumber2: TextSettings;
 		upperHalfText: TextSettings;
 		lowerHalfText: TextSettings;
 	};
@@ -42,6 +44,28 @@ const initialState: DisplaySettingsState = {
 	fontFile: null,
 	config: {
 		sideText: {
+			fontHeight: '',
+			x_offset: '',
+			y_offset: '',
+			spacing: '',
+			scrollSpeed: '',
+			scrollType: '',
+			fontSize: '',
+			position: '',
+			fontWeight: '',
+		},
+		routeNumber1: {
+			fontHeight: '',
+			x_offset: '',
+			y_offset: '',
+			spacing: '',
+			scrollSpeed: '',
+			scrollType: '',
+			fontSize: '',
+			position: '',
+			fontWeight: '',
+		},
+		routeNumber2: {
 			fontHeight: '',
 			x_offset: '',
 			y_offset: '',
@@ -115,24 +139,36 @@ const TextSettingsForm = ({
 						className="border rounded-lg p-2"
 					/>
 				</div>
+
 				<div className="flex flex-col gap-2">
+					<label className="text-sm text-neutral-500">Font Weight</label>
+					<select
+						{...register(`${configKey}.fontWeight`)}
+						className="border rounded-lg p-2"
+					>
+						<option value="">Select Font Weight</option>
+						<option value="normal">Regular</option>
+						<option value="bold">Bold</option>
+					</select>
+				</div>
+				{/* <div className="flex flex-col gap-2">
 					<label className="text-sm text-neutral-500">X Offset</label>
 					<input
 						type="number"
 						{...register(`${configKey}.x_offset`)}
 						className="border rounded-lg p-2"
 					/>
-				</div>
-				<div className="flex flex-col gap-2">
+				</div> */}
+				{/* <div className="flex flex-col gap-2">
 					<label className="text-sm text-neutral-500">Y Offset</label>
 					<input
 						type="number"
 						{...register(`${configKey}.y_offset`)}
 						className="border rounded-lg p-2"
 					/>
-				</div>
+				</div> */}
 				<div className="flex flex-col gap-2">
-					<label className="text-sm text-neutral-500">Spacing</label>
+					<label className="text-sm text-neutral-500">Thresshold</label>
 					<input
 						type="number"
 						{...register(`${configKey}.spacing`)}
@@ -162,13 +198,9 @@ const TextSettingsForm = ({
 						<option value="Flicker">Flicker</option>
 					</select>
 				</div>
-				<div className="flex flex-col gap-2">
+				{/* <div className="flex flex-col gap-2">
 					<label className="text-sm text-neutral-500">Font Size</label>
-					{/* <input
-						type="number"
-						{...register(`${configKey}.fontSize`)}
-						className="border rounded-lg p-2"
-					/> */}
+					
 					<select
 						{...register(`${configKey}.fontSize`)}
 						className="border rounded-lg p-2"
@@ -180,7 +212,7 @@ const TextSettingsForm = ({
 							</option>
 						))}
 					</select>
-				</div>
+				</div> */}
 				<div className="flex flex-col gap-2">
 					<label className="text-sm text-neutral-500">Position</label>
 					<select
@@ -191,17 +223,6 @@ const TextSettingsForm = ({
 						<option value="Left">Left</option>
 						<option value="Center">Center</option>
 						<option value="Right">Right</option>
-					</select>
-				</div>
-				<div className="flex flex-col gap-2">
-					<label className="text-sm text-neutral-500">Font Weight</label>
-					<select
-						{...register(`${configKey}.fontWeight`)}
-						className="border rounded-lg p-2"
-					>
-						<option value="">Select Font Weight</option>
-						<option value="regular">Regular</option>
-						<option value="bold">Bold</option>
 					</select>
 				</div>
 			</div>
@@ -323,8 +344,22 @@ const DisplaySettings = ({
 
 					<TextSettingsForm
 						settings={formValues.config.sideText}
-						title="Side Text Settings"
+						title="Route Number Text Settings"
 						configKey="config.sideText"
+						register={register}
+					/>
+
+					<TextSettingsForm
+						settings={formValues.config.sideText}
+						title="Route Number 1 Settings"
+						configKey="config.routeNumber1"
+						register={register}
+					/>
+
+					<TextSettingsForm
+						settings={formValues.config.sideText}
+						title="Route Number 2 Settings"
+						configKey="config.routeNumber2"
 						register={register}
 					/>
 

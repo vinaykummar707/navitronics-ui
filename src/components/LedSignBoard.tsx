@@ -8,12 +8,12 @@ const LEDBitmapSimulator = ({
 	language,
 	rows,
 	cols,
-	horizontalSpacing = 2.5, // Default horizontal spacing between LEDs
-	verticalSpacing = 2.5, // Default vertical spacing between rows
+	horizontalSpacing = 4, // Default horizontal spacing between LEDs
+	verticalSpacing = 4, // Default vertical spacing between rows
 	stopScroll,
 	onBitmapTextChange
 }) => {
-	const [ledSize, setLedSize] = useState(5);
+	const [ledSize, setLedSize] = useState(6);
 	const [ledSpacing, setLedSpacing] = useState(horizontalSpacing);
 	const [rowSpacing, setRowSpacing] = useState(verticalSpacing);
 	const [bitmapText, setBitmapText] = useState('');
@@ -184,7 +184,7 @@ const LEDBitmapSimulator = ({
 	}, [cols, ledSize, ledSpacing]);
 
 	useEffect(() => {
-		console.log(text, language);
+		// console.log(text, language);
 		// const fetchBitmap = async () => {
 		// 	try {
 		// 		const response = await axiosInstance.post(
