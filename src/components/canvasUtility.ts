@@ -20,6 +20,9 @@ interface GenerateLedMatrixOptions {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) return 'Canvas context not available.';
+    console.log('====================================');
+    console.log(options);
+    console.log('====================================');
   
     const {
       text,

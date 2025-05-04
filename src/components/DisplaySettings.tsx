@@ -139,7 +139,17 @@ const TextSettingsForm = ({
 						className="border rounded-lg p-2"
 					/>
 				</div>
-
+				<div className="flex flex-col gap-2">
+					<label className="text-sm text-neutral-500">Width Aspect</label>
+					<input
+						type="text"
+						min={1}
+						max={10}
+						step={0.1}
+						{...register(`${configKey}.fontSize`)}
+						className="border rounded-lg p-2"
+					/>
+				</div>
 				<div className="flex flex-col gap-2">
 					<label className="text-sm text-neutral-500">Font Weight</label>
 					<select

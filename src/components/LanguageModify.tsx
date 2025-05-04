@@ -14,6 +14,7 @@ const LanguageManagement = () => {
 		name: '',
 		fontFile: '',
 		fontHeight: 0,
+		fontSize: 0,
 		x_offset: 0,
 		y_offset: 0,
 		spacing: 0,

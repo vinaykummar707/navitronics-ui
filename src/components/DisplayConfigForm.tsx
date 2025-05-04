@@ -512,8 +512,11 @@ export const DisplayConfigForm: React.FC = () => {
 	const [stopScroll, setStopScroll] = useState(false);
 
 	function getBitmapColumns(bitmap: string): number {
-		const lines = bitmap.trim().split('\n');
-		return lines.length > 0 ? lines[0].length : 0;
+		if (bitmap) {
+			const lines = bitmap.trim().split('\n');
+			return lines.length > 0 ? lines[0].length : 0;
+		}
+		return 0;
 	}
 
 	const handlePlaceholderSelect = async (
@@ -980,6 +983,7 @@ export const DisplayConfigForm: React.FC = () => {
 															`displayConfig.${language}.${screenKey}.texts.text.bitmap`,
 															text
 														);
+
 														setValue(
 															`displayConfig.${language}.${screenKey}.texts.text.fontWidth`,
 															getBitmapColumns(text)
@@ -1011,16 +1015,17 @@ export const DisplayConfigForm: React.FC = () => {
 																		)
 																	) + 1
 																}
-																text={{
-																	...displayConfig[language][screenKey].texts
-																		.routeNumber1,
-																}}
+																text={
+																	displayConfig[language][screenKey].texts
+																		.routeNumber1
+																}
 																language={language}
 																onBitmapTextChange={(text) => {
 																	setValue(
 																		`displayConfig.${language}.${screenKey}.texts.routeNumber1.bitmap`,
 																		text
 																	);
+
 																	setValue(
 																		`displayConfig.${language}.${screenKey}.texts.routeNumber1.fontWidth`,
 																		getBitmapColumns(text)
@@ -1044,17 +1049,17 @@ export const DisplayConfigForm: React.FC = () => {
 																		)
 																	) + 1
 																}
-																text={{
-																	...displayConfig[language][screenKey].texts
-																		.routeNumber2,
-																}}
+																text={
+																	displayConfig[language][screenKey].texts
+																		.routeNumber2
+																}
 																language={language}
 																onBitmapTextChange={(text) => {
-																	console.log(displayConfig);
 																	setValue(
 																		`displayConfig.${language}.${screenKey}.texts.routeNumber2.bitmap`,
 																		text
 																	);
+
 																	setValue(
 																		`displayConfig.${language}.${screenKey}.texts.routeNumber2.fontWidth`,
 																		getBitmapColumns(text)
@@ -1083,6 +1088,7 @@ export const DisplayConfigForm: React.FC = () => {
 																	`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`,
 																	text
 																);
+
 																setValue(
 																	`displayConfig.${language}.${screenKey}.texts.sideText.fontWidth`,
 																	getBitmapColumns(text)
@@ -1125,6 +1131,7 @@ export const DisplayConfigForm: React.FC = () => {
 																`displayConfig.${language}.${screenKey}.texts.text.bitmap`,
 																text
 															);
+
 															setValue(
 																`displayConfig.${language}.${screenKey}.texts.text.fontWidth`,
 																getBitmapColumns(text)
@@ -1157,16 +1164,17 @@ export const DisplayConfigForm: React.FC = () => {
 																		)
 																	) + 1
 																}
-																text={{
-																	...displayConfig[language][screenKey].texts
-																		.routeNumber1,
-																}}
+																text={
+																	displayConfig[language][screenKey].texts
+																		.routeNumber1
+																}
 																language={language}
 																onBitmapTextChange={(text) => {
 																	setValue(
 																		`displayConfig.${language}.${screenKey}.texts.routeNumber1.bitmap`,
 																		text
 																	);
+
 																	setValue(
 																		`displayConfig.${language}.${screenKey}.texts.routeNumber1.fontWidth`,
 																		getBitmapColumns(text)
@@ -1190,17 +1198,17 @@ export const DisplayConfigForm: React.FC = () => {
 																		)
 																	) + 1
 																}
-																text={{
-																	...displayConfig[language][screenKey].texts
-																		.routeNumber2,
-																}}
+																text={
+																	displayConfig[language][screenKey].texts
+																		.routeNumber2
+																}
 																language={language}
 																onBitmapTextChange={(text) => {
-																	console.log(displayConfig);
 																	setValue(
 																		`displayConfig.${language}.${screenKey}.texts.routeNumber2.bitmap`,
 																		text
 																	);
+
 																	setValue(
 																		`displayConfig.${language}.${screenKey}.texts.routeNumber2.fontWidth`,
 																		getBitmapColumns(text)
@@ -1229,6 +1237,7 @@ export const DisplayConfigForm: React.FC = () => {
 																	`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`,
 																	text
 																);
+
 																setValue(
 																	`displayConfig.${language}.${screenKey}.texts.sideText.fontWidth`,
 																	getBitmapColumns(text)
@@ -1261,6 +1270,7 @@ export const DisplayConfigForm: React.FC = () => {
 																	`displayConfig.${language}.${screenKey}.texts.upperHalfText.bitmap`,
 																	text
 																);
+
 																setValue(
 																	`displayConfig.${language}.${screenKey}.texts.upperHalfText.fontWidth`,
 																	getBitmapColumns(text)
@@ -1291,6 +1301,7 @@ export const DisplayConfigForm: React.FC = () => {
 																	`displayConfig.${language}.${screenKey}.texts.lowerHalfText.bitmap`,
 																	text
 																);
+
 																setValue(
 																	`displayConfig.${language}.${screenKey}.texts.lowerHalfText.fontWidth`,
 																	getBitmapColumns(text)
@@ -1518,6 +1529,22 @@ export const DisplayConfigForm: React.FC = () => {
 
 															<div>
 																<label className="block text-sm font-medium text-gray-600 mb-1">
+																	Width Aspect
+																</label>
+																<input
+																	type="number"
+																	{...register(
+																		`displayConfig.${language}.${screenKey}.texts.${textKey}.fontSize`
+																	)}
+																	min={0.1}
+																	max={2.0}
+																	step={0.01}
+																	className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+																/>
+															</div>
+
+															<div>
+																<label className="block text-sm font-medium text-gray-600 mb-1">
 																	Thresshold
 																</label>
 																<input
@@ -1677,6 +1704,9 @@ export const DisplayConfigForm: React.FC = () => {
 														checked={watch(
 															`specialMessages.${index}.${screen}.show`
 														)}
+														{...register(
+															`specialMessages.${index}.${screen}.show`
+														)}
 														onChange={() =>
 															handleScreenToggle(
 																index,
@@ -1745,7 +1775,17 @@ export const DisplayConfigForm: React.FC = () => {
 																		`specialMessages.${index}.${language}`
 																	)}
 																	language={language}
-																	onBitmapTextChange={null}
+																	onBitmapTextChange={(text) => {
+																		setValue(
+																			`specialMessages.${index}.${language}.bitmap`,
+																			text
+																		);
+
+																		setValue(
+																			`specialMessages.${index}.${language}.fontWidth`,
+																			getBitmapColumns(text)
+																		);
+																	}}
 																/>
 															</div>
 															<button
@@ -1962,6 +2002,22 @@ export const DisplayConfigForm: React.FC = () => {
 														</div>
 														<div>
 															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Width
+															</label>
+															<input
+																min={1}
+																step={0.1}
+																max={10}
+																type="number"
+																{...register(
+																	`specialMessages.${index}.${language}.fontSize`
+																)}
+																className="w-full p-2 border rounded-md"
+															/>
+														</div>
+
+														<div>
+															<label className="block text-sm font-medium text-gray-600 mb-1">
 																Font Height
 															</label>
 															<input
@@ -1974,6 +2030,7 @@ export const DisplayConfigForm: React.FC = () => {
 																className="w-full p-2 border rounded-md"
 															/>
 														</div>
+
 														{/* <div>
 															<label className="block text-sm font-medium text-gray-600 mb-1">
 																X Offset
