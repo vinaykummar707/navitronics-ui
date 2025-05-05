@@ -54,7 +54,7 @@ const LEDBitmapSimulator = ({
 		const fetchBitmap = async () => {
 			try {
 				const response = await axios.post(
-					'http://localhost:8000/api/bitmap',
+					'http://194.238.17.52:8000/api/bitmap',
 					{
 						text: text.text,
 						fontPath:
