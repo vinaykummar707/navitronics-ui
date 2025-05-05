@@ -28,6 +28,7 @@ interface DisplaySettingsState {
 	code: string;
 	name: string;
 	fontFile: string | null;
+	fontFamily: string | null;
 	config: {
 		sideText: TextSettings;
 		text: TextSettings;
@@ -42,6 +43,7 @@ const initialState: DisplaySettingsState = {
 	code: '',
 	name: '',
 	fontFile: null,
+	fontFamily: null,
 	config: {
 		sideText: {
 			fontHeight: '',
@@ -346,6 +348,14 @@ const DisplaySettings = ({
 								<input
 									type="text"
 									{...register('fontFile')}
+									className="border rounded-lg p-2"
+								/>
+							</div>
+							<div className="flex flex-col gap-2">
+								<label className="text-sm text-neutral-500">Font Family</label>
+								<input
+									type="text"
+									{...register('fontFamily')}
 									className="border rounded-lg p-2"
 								/>
 							</div>

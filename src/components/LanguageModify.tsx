@@ -13,6 +13,7 @@ const LanguageManagement = () => {
 		code: '',
 		name: '',
 		fontFile: '',
+		fontFamily: '',
 		fontHeight: 0,
 		fontSize: 0,
 		x_offset: 0,
@@ -102,6 +103,7 @@ const LanguageManagement = () => {
 			code: '',
 			name: '',
 			fontFile: '',
+			fontFamily: '',
 			fontHeight: 0,
 			x_offset: 0,
 			y_offset: 0,
@@ -165,6 +167,10 @@ const LanguageManagement = () => {
 										<th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
 											Font File
 										</th>
+										<th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
+											Font Family
+										</th>
+										
 
 										<th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
 											Actions
@@ -179,6 +185,9 @@ const LanguageManagement = () => {
 												<td className="px-4 py-3 text-sm">{language.name}</td>
 												<td className="px-4 py-3 text-sm">
 													{language.fontFile}
+												</td>
+												<td className="px-4 py-3 text-sm">
+													{language.fontFamily}
 												</td>
 												<td className="px-4 py-3 text-sm whitespace-nowrap">
 													<button
