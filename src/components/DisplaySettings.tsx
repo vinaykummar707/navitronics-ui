@@ -14,6 +14,21 @@ import { toast } from 'react-toastify';
 
 interface TextSettings {
 	fontHeight: string;
+	fontFamily: string;
+	x_offset: string;
+	y_offset: string;
+	spacing: string;
+	scrollSpeed: string;
+	scrollType: string;
+	fontSize: string;
+	position: string;
+	fontWeight: string;
+}
+
+interface TextSettings2 {
+	fontHeight: string;
+	fontFamily16: string;
+	fontFamily8: string;
 	x_offset: string;
 	y_offset: string;
 	spacing: string;
@@ -30,12 +45,12 @@ interface DisplaySettingsState {
 	fontFile: string | null;
 	fontFamily: string | null;
 	config: {
-		sideText: TextSettings;
-		text: TextSettings;
-		routeNumber1: TextSettings;
-		routeNumber2: TextSettings;
-		upperHalfText: TextSettings;
-		lowerHalfText: TextSettings;
+		sideText: TextSettings2;
+		text: TextSettings2;
+		routeNumber1: TextSettings2;
+		routeNumber2: TextSettings2;
+		upperHalfText: TextSettings2;
+		lowerHalfText: TextSettings2;
 	};
 }
 
@@ -47,6 +62,8 @@ const initialState: DisplaySettingsState = {
 	config: {
 		sideText: {
 			fontHeight: '',
+			fontFamily16: '',
+			fontFamily8: '',
 			x_offset: '',
 			y_offset: '',
 			spacing: '',
@@ -58,6 +75,8 @@ const initialState: DisplaySettingsState = {
 		},
 		routeNumber1: {
 			fontHeight: '',
+			fontFamily16: '',
+			fontFamily8: '',
 			x_offset: '',
 			y_offset: '',
 			spacing: '',
@@ -69,6 +88,8 @@ const initialState: DisplaySettingsState = {
 		},
 		routeNumber2: {
 			fontHeight: '',
+			fontFamily16: '',
+			fontFamily8: '',
 			x_offset: '',
 			y_offset: '',
 			spacing: '',
@@ -80,6 +101,8 @@ const initialState: DisplaySettingsState = {
 		},
 		text: {
 			fontHeight: '',
+			fontFamily16: '',
+			fontFamily8: '',
 			x_offset: '',
 			y_offset: '',
 			spacing: '',
@@ -91,6 +114,8 @@ const initialState: DisplaySettingsState = {
 		},
 		upperHalfText: {
 			fontHeight: '',
+			fontFamily16: '',
+			fontFamily8: '',
 			x_offset: '',
 			y_offset: '',
 			spacing: '',
@@ -102,6 +127,8 @@ const initialState: DisplaySettingsState = {
 		},
 		lowerHalfText: {
 			fontHeight: '',
+			fontFamily16: '',
+			fontFamily8: '',
 			x_offset: '',
 			y_offset: '',
 			spacing: '',
@@ -115,7 +142,7 @@ const initialState: DisplaySettingsState = {
 };
 
 interface TextSettingsFormProps {
-	settings: TextSettings;
+	settings: TextSettings | TextSettings2;
 	title: string;
 	configKey: string;
 	register: any;
@@ -134,6 +161,22 @@ const TextSettingsForm = ({
 			<h3 className="text-lg font-semibold">{title}</h3>
 			<div className="grid grid-cols-3 gap-4">
 				<div className="flex flex-col gap-2">
+					<label className="text-sm text-neutral-500">Font Family 16</label>
+					<input
+						type="text"
+						{...register(`${configKey}.fontFamily16`)}
+						className="border rounded-lg p-2"
+					/>
+				</div>
+				<div className="flex flex-col gap-2">
+					<label className="text-sm text-neutral-500">Font Family 8 </label>
+					<input
+						type="text"
+						{...register(`${configKey}.fontFamily8`)}
+						className="border rounded-lg p-2"
+					/>
+				</div>
+				<div className="flex flex-col gap-2">
 					<label className="text-sm text-neutral-500">Font Height</label>
 					<input
 						type="number"
@@ -144,10 +187,7 @@ const TextSettingsForm = ({
 				<div className="flex flex-col gap-2">
 					<label className="text-sm text-neutral-500">Width Aspect</label>
 					<input
-						type="text"
-						min={1}
-						max={10}
-						step={0.1}
+						type="number"
 						{...register(`${configKey}.fontSize`)}
 						className="border rounded-lg p-2"
 					/>
@@ -294,6 +334,25 @@ const DisplaySettings = ({
 		>
 			<div>
 				<div className="flex flex-col gap-2">
+					<div className="flex justify-end gap-4 mt-6">
+						<button
+							type="button"
+							className="bg-gray-500 text-white px-4 py-2 rounded-lg"
+							onClick={() => {
+								console.log('Cancel clicked');
+								// onOperationComplete();
+								reset(initialState);
+							}}
+						>
+							Cancel
+						</button>
+						<Button
+							className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+							type="submit"
+						>
+							{isEdit ? 'Update' : 'Create'}
+						</Button>
+					</div>
 					<div className="flex bg-white flex-col gap-4 p-4 border rounded-lg">
 						<h3 className="text-lg font-semibold">Language Settings</h3>
 						<div className="grid grid-cols-2 gap-4">
@@ -341,7 +400,7 @@ const DisplaySettings = ({
 									className="border rounded-lg p-2"
 								/>
 							</div>
-							<div className="flex flex-col gap-2">
+							{/* <div className="flex flex-col gap-2">
 								<label className="text-sm text-neutral-500">
 									Font File Name
 								</label>
@@ -358,34 +417,34 @@ const DisplaySettings = ({
 									{...register('fontFamily')}
 									className="border rounded-lg p-2"
 								/>
-							</div>
+							</div> */}
 						</div>
 					</div>
 
 					<TextSettingsForm
 						settings={formValues.config.sideText}
-						title="Route Number Text Settings"
+						title="Route Number Text"
 						configKey="config.sideText"
 						register={register}
 					/>
 
 					<TextSettingsForm
-						settings={formValues.config.sideText}
-						title="Route Number 1 Settings"
+						settings={formValues.config.routeNumber1}
+						title="Route Number 1"
 						configKey="config.routeNumber1"
 						register={register}
 					/>
 
 					<TextSettingsForm
-						settings={formValues.config.sideText}
-						title="Route Number 2 Settings"
+						settings={formValues.config.routeNumber2}
+						title="Route Number 2"
 						configKey="config.routeNumber2"
 						register={register}
 					/>
 
 					<TextSettingsForm
 						settings={formValues.config.text}
-						title="Main Text Settings"
+						title="Main Text"
 						configKey="config.text"
 						register={register}
 					/>
@@ -394,38 +453,19 @@ const DisplaySettings = ({
 						<>
 							<TextSettingsForm
 								settings={formValues.config.upperHalfText}
-								title="Upper Half Text Settings"
+								title="Upper Half Text"
 								configKey="config.upperHalfText"
 								register={register}
 							/>
 
 							<TextSettingsForm
 								settings={formValues.config.lowerHalfText}
-								title="Lower Half Text Settings"
+								title="Lower Half Text"
 								configKey="config.lowerHalfText"
 								register={register}
 							/>
 						</>
 					)}
-				</div>
-				<div className="flex justify-end gap-4 mt-6">
-					<button
-						type="button"
-						className="bg-blue-500 text-white px-4 py-2 rounded-lg"
-						onClick={() => {
-							console.log('Cancel clicked');
-							// onOperationComplete();
-							reset(initialState);
-						}}
-					>
-						Cancel
-					</button>
-					<Button
-						className="bg-green-500 text-white px-4 py-2 rounded-lg"
-						type="submit"
-					>
-						{isEdit ? 'Update' : 'Create'}
-					</Button>
 				</div>
 			</div>
 		</form>

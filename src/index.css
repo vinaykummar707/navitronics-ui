@@ -7,23 +7,27 @@
 /* * {
     font-family: 'Inter', serif;
 } */
+@font-face {
+	font-family: 'gautami';
+	src: url('./gautami.ttf') format('truetype');
+}
 
 @font-face {
-    font-family: 'en';
-    src: url('./en.ttf') format('truetype');
-  }
-  
-  @font-face {
-    font-family: 'hi';
-    src: url('./hi.ttf') format('truetype');
-  }
-  
-  @font-face {
-    font-family: 'te';
-    src: url('./te.ttf') format('truetype');
-  }
+	font-family: 'mangal';
+	src: url('./mangal.ttf') format('truetype');
+}
 
-  @font-face {
-    font-family: 'mangal';
-    src: url('/public/fonts/mangal.ttf') format('truetype');
-  }
+@font-face {
+	font-family: 'notosanstelugu';
+	src: url('./notosanstelugu.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'pixeloperator';
+	src: url('./pixeloperator.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'pixeloperator8';
+	src: url('./pixeloperator8.ttf') format('truetype');
+}

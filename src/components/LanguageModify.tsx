@@ -108,6 +108,7 @@ const LanguageManagement = () => {
 			x_offset: 0,
 			y_offset: 0,
 			spacing: 0,
+			fontSize: 0,
 		});
 		setSelectedLanguage(null);
 		setIsEditing(false);
@@ -135,13 +136,13 @@ const LanguageManagement = () => {
 				onOperationComplete={onOperationComplete}
 			/>
 
-			<div className="flex-1 flex flex-col overflow-y-scroll  gap-4">
+			<div className="flex-1 flex flex-col   gap-4">
 				{/* Languages List */}
 				<div className="">
-					<div className="bg-white overflow-y-scroll rounded-lg shadow overflow-hidden">
+					<div className="bg-white overflow-y-auto rounded-lg shadow overflow-hidden">
 						<div className="flex justify-between items-center p-4 border-b">
 							<h2 className="text-xl font-semibold">Languages</h2>
-							<div className="flex gap-4">
+							{/* <div className="flex gap-4">
 								<Button
 									className="bg-blue-500 text-sm text-white hover:bg-blue-600 p-4"
 									onClick={() => {
@@ -151,7 +152,7 @@ const LanguageManagement = () => {
 								>
 									Add Language
 								</Button>
-							</div>
+							</div> */}
 						</div>
 
 						<div className="overflow-x-auto">
@@ -164,13 +165,12 @@ const LanguageManagement = () => {
 										<th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
 											Name
 										</th>
-										<th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
+										{/* <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
 											Font File
-										</th>
-										<th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
+										</th> */}
+										{/* <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
 											Font Family
-										</th>
-										
+										</th> */}
 
 										<th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
 											Actions
@@ -183,12 +183,12 @@ const LanguageManagement = () => {
 											<tr key={language.code} className="hover:bg-gray-50">
 												<td className="px-4 py-3 text-sm">{language.code}</td>
 												<td className="px-4 py-3 text-sm">{language.name}</td>
-												<td className="px-4 py-3 text-sm">
+												{/* <td className="px-4 py-3 text-sm">
 													{language.fontFile}
-												</td>
-												<td className="px-4 py-3 text-sm">
+												</td> */}
+												{/* <td className="px-4 py-3 text-sm">
 													{language.fontFamily}
-												</td>
+												</td> */}
 												<td className="px-4 py-3 text-sm whitespace-nowrap">
 													<button
 														onClick={() => handleEdit(language)}

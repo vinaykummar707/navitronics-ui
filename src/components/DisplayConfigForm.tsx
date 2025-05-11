@@ -853,7 +853,7 @@ export const DisplayConfigForm: React.FC = () => {
 		screenConfig: any,
 		setValue: any
 	) => {
-		console.log('Selected Offset:', selectedOffset);
+		// console.log('Selected Offset:', selectedOffset);
 
 		// Get the correct text key's configuration from selectedOffset.config
 		const textConfig = selectedOffset?.config?.[textKey] || {};
@@ -921,9 +921,21 @@ export const DisplayConfigForm: React.FC = () => {
 		}
 	}, [selectedLanguages, offsetConfigs, setValue, watch]);
 
-	const getFontFileByLanguage = (language: string) => {
-		const langObj = offsetConfigs.find((lang) => lang.code === language);
-		return langObj ? langObj.fontFile : 'arial'; // Default to 'arial' if not found
+	const getFontFileByLanguage = (
+		lang: string,
+		key: string,
+		fontHeight: number
+	) => {
+		console.log('Font Height:', fontHeight);
+		console.log('Language:', lang);
+		console.log('Key:', key);
+
+		const langObj = offsetConfigs.find((language) => language.code === lang);
+		console.log('Language Object:', langObj);
+		if (fontHeight <= 8) {
+			return langObj ? langObj.config[key].fontFamily8 : 'Arial';
+		}
+		return langObj ? langObj.config[key].fontFamily16 : 'Arial'; // Default to 'Arial' if not found
 	};
 
 	const getFontFamilyByLanguage = (language: string) => {
@@ -987,8 +999,12 @@ export const DisplayConfigForm: React.FC = () => {
 														screenConfig.format
 													)}
 													text={displayConfig[language][screenKey].texts.text}
-													language={getFontFileByLanguage(language)}
-													fontFamily={getFontFamilyByLanguage(language)}
+													fontFamily={getFontFileByLanguage(
+														language,
+														'text',
+														displayConfig[language][screenKey].texts.text
+															.fontHeight
+													)}
 													onBitmapTextChange={(text) => {
 														setValue(
 															`displayConfig.${language}.${screenKey}.texts.text.bitmap`,
@@ -1030,8 +1046,12 @@ export const DisplayConfigForm: React.FC = () => {
 																	displayConfig[language][screenKey].texts
 																		.routeNumber1
 																}
-																language={getFontFileByLanguage(language)}
-																fontFamily={getFontFamilyByLanguage(language)}
+																fontFamily={getFontFileByLanguage(
+																	language,
+																	'routeNumber1',
+																	displayConfig[language][screenKey].texts
+																		.routeNumber1.fontHeight
+																)}
 																onBitmapTextChange={(text) => {
 																	setValue(
 																		`displayConfig.${language}.${screenKey}.texts.routeNumber1.bitmap`,
@@ -1065,8 +1085,12 @@ export const DisplayConfigForm: React.FC = () => {
 																	displayConfig[language][screenKey].texts
 																		.routeNumber2
 																}
-																language={getFontFileByLanguage(language)}
-																fontFamily={getFontFamilyByLanguage(language)}
+																fontFamily={getFontFileByLanguage(
+																	language,
+																	'routeNumber2',
+																	displayConfig[language][screenKey].texts
+																		.routeNumber2.fontHeight
+																)}
 																onBitmapTextChange={(text) => {
 																	setValue(
 																		`displayConfig.${language}.${screenKey}.texts.routeNumber2.bitmap`,
@@ -1095,8 +1119,12 @@ export const DisplayConfigForm: React.FC = () => {
 																displayConfig[language][screenKey].texts
 																	.sideText
 															}
-															language={getFontFileByLanguage(language)}
-															fontFamily={getFontFamilyByLanguage(language)}
+															fontFamily={getFontFileByLanguage(
+																language,
+																'sideText',
+																displayConfig[language][screenKey].texts
+																	.sideText.fontHeight
+															)}
 															onBitmapTextChange={(text) => {
 																setValue(
 																	`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`,
@@ -1139,8 +1167,12 @@ export const DisplayConfigForm: React.FC = () => {
 																  ))
 														}
 														text={displayConfig[language][screenKey].texts.text}
-														language={getFontFileByLanguage(language)}
-														fontFamily={getFontFamilyByLanguage(language)}
+														fontFamily={getFontFileByLanguage(
+															language,
+															'text',
+															displayConfig[language][screenKey].texts.text
+																.fontHeight
+														)}
 														onBitmapTextChange={(text) => {
 															setValue(
 																`displayConfig.${language}.${screenKey}.texts.text.bitmap`,
@@ -1183,8 +1215,12 @@ export const DisplayConfigForm: React.FC = () => {
 																	displayConfig[language][screenKey].texts
 																		.routeNumber1
 																}
-																language={getFontFileByLanguage(language)}
-																fontFamily={getFontFamilyByLanguage(language)}
+																fontFamily={getFontFileByLanguage(
+																	language,
+																	'routeNumber1',
+																	displayConfig[language][screenKey].texts
+																		.routeNumber1.fontHeight
+																)}
 																onBitmapTextChange={(text) => {
 																	setValue(
 																		`displayConfig.${language}.${screenKey}.texts.routeNumber1.bitmap`,
@@ -1218,8 +1254,12 @@ export const DisplayConfigForm: React.FC = () => {
 																	displayConfig[language][screenKey].texts
 																		.routeNumber2
 																}
-																language={getFontFileByLanguage(language)}
-																fontFamily={getFontFamilyByLanguage(language)}
+																fontFamily={getFontFileByLanguage(
+																	language,
+																	'routeNumber2',
+																	displayConfig[language][screenKey].texts
+																		.routeNumber2.fontHeight
+																)}
 																onBitmapTextChange={(text) => {
 																	setValue(
 																		`displayConfig.${language}.${screenKey}.texts.routeNumber2.bitmap`,
@@ -1248,8 +1288,12 @@ export const DisplayConfigForm: React.FC = () => {
 																displayConfig[language][screenKey].texts
 																	.sideText
 															}
-															language={getFontFileByLanguage(language)}
-															fontFamily={getFontFamilyByLanguage(language)}
+															fontFamily={getFontFileByLanguage(
+																language,
+																'sideText',
+																displayConfig[language][screenKey].texts
+																	.sideText.fontHeight
+															)}
 															onBitmapTextChange={(text) => {
 																setValue(
 																	`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`,
@@ -1282,8 +1326,12 @@ export const DisplayConfigForm: React.FC = () => {
 																displayConfig[language][screenKey].texts
 																	.upperHalfText
 															}
-															language={getFontFileByLanguage(language)}
-															fontFamily={getFontFamilyByLanguage(language)}
+															fontFamily={getFontFileByLanguage(
+																language,
+																'upperHalfText',
+																displayConfig[language][screenKey].texts
+																	.upperHalfText.fontHeight
+															)}
 															onBitmapTextChange={(text) => {
 																setValue(
 																	`displayConfig.${language}.${screenKey}.texts.upperHalfText.bitmap`,
@@ -1314,8 +1362,12 @@ export const DisplayConfigForm: React.FC = () => {
 																displayConfig[language][screenKey].texts
 																	.lowerHalfText
 															}
-															language={getFontFileByLanguage(language)}
-															fontFamily={getFontFamilyByLanguage(language)}
+															fontFamily={getFontFileByLanguage(
+																language,
+																'lowerHalfText',
+																displayConfig[language][screenKey].texts
+																	.lowerHalfText.fontHeight
+															)}
 															onBitmapTextChange={(text) => {
 																setValue(
 																	`displayConfig.${language}.${screenKey}.texts.lowerHalfText.bitmap`,
@@ -1556,9 +1608,9 @@ export const DisplayConfigForm: React.FC = () => {
 																	{...register(
 																		`displayConfig.${language}.${screenKey}.texts.${textKey}.fontSize`
 																	)}
-																	min={0}
-																	max={2.0}
-																	step={0.01}
+																	min={0.1}
+																	max={2}
+																	step={0.1}
 																	className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 																/>
 															</div>
@@ -1794,8 +1846,11 @@ export const DisplayConfigForm: React.FC = () => {
 																	text={watch(
 																		`specialMessages.${index}.${language}`
 																	)}
-																	language={getFontFileByLanguage(language)}
-																	fontFamily={getFontFamilyByLanguage(language)}
+																	fontFamily={getFontFileByLanguage(
+																		language,
+																		'text',
+																		16
+																	)}
 																	onBitmapTextChange={(text) => {
 																		setValue(
 																			`specialMessages.${index}.${language}.bitmap`,
@@ -2026,7 +2081,6 @@ export const DisplayConfigForm: React.FC = () => {
 																Width
 															</label>
 															<input
-																
 																type="number"
 																{...register(
 																	`specialMessages.${index}.${language}.fontSize`

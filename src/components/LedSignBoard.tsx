@@ -2,16 +2,15 @@ import axiosInstance from '@/config/axios';
 import React, { useState, useEffect, useRef } from 'react';
 import EnhancedTextToLEDMatrix from './TextToLedMatrix';
 import { generateLedMatrixFromText } from './canvasUtility';
-import axios from 'axios';
+import LEDBusBoard from './FullScreenBoard';
 
 const LEDBitmapSimulator = ({
 	text,
-	language,
-	fontFamily,
 	rows,
+	fontFamily,
 	cols,
 	horizontalSpacing = 4, // Default horizontal spacing between LEDs
-	verticalSpacing = 4, // Default vertical spacing between rows
+	verticalSpacing = 6, // Default vertical spacing between rows
 	stopScroll,
 	onBitmapTextChange,
 }) => {
@@ -34,6 +33,149 @@ const LEDBitmapSimulator = ({
 	const [ledColumns, setLedColumns] = useState(0); // Auto-calculated
 	const [matrixChars, setMatrixChars] = useState({ dark: '#', light: '.' });
 
+	// Function to draw text on canvas
+	const drawTextOnCanvas = () => {
+		const canvas = canvasRef.current;
+		const ctx = canvas.getContext('2d');
+
+		// Clear previous content
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+		// Set font properties
+		ctx.font = `${text.fontWeight} 100px ${fontFamily}`;
+
+		// Measure text dimensions with proper height calculation
+		const metrics = ctx.measureText(text.text);
+		const textWidth = metrics.width;
+		// Use actualBoundingBoxAscent and actualBoundingBoxDescent for accurate height
+		const textHeight =
+			metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+
+		// Add extra padding for regional languages
+		const verticalPadding = 100 * 0.4; // Increased padding
+		const horizontalPadding = 1;
+
+		// Adjust canvas size to fit text
+		canvas.width = textWidth + horizontalPadding;
+		canvas.height = textHeight + verticalPadding * 2;
+
+		// Need to reset font after canvas resizing
+		ctx.font = `${text.fontWeight} 100px ${fontFamily}`;
+		ctx.textBaseline = 'middle'; // Better vertical alignment
+		ctx.letterSpacing = '-1px';
+
+		// Draw background
+		ctx.fillStyle = '#fff';
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+		// Draw text centered vertically
+		ctx.fillStyle = '#000';
+		ctx.fillText(text.text, horizontalPadding / 2, canvas.height / 2);
+	};
+
+	// Enhanced conversion to LED matrix
+	const convertToLEDMatrix = () => {
+		const canvas = canvasRef.current;
+		if (!canvas) return;
+
+		const ctx = canvas.getContext('2d');
+		const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+		const { data, width, height } = imgData;
+
+		// Step 1: Find text bounds (crop out background)
+		let minX = width,
+			maxX = 0,
+			minY = height,
+			maxY = 0;
+		for (let y = 0; y < height; y++) {
+			for (let x = 0; x < width; x++) {
+				const i = (y * width + x) * 4;
+				const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+
+				// Detect if pixel is text or background based on threshold
+				const isText = invert
+					? brightness >= text.spacing
+					: brightness < 255 - text.spacing;
+
+				if (isText) {
+					minX = Math.min(minX, x);
+					maxX = Math.max(maxX, x);
+					minY = Math.min(minY, y);
+					maxY = Math.max(maxY, y);
+				}
+			}
+		}
+
+		// Check if any text was found
+		if (minX > maxX || minY > maxY) {
+			setLedMatrix('No text found in canvas.');
+			return;
+		}
+
+		const cropWidth = maxX - minX + 1;
+		const cropHeight = maxY - minY + 1;
+
+		// Step 2: Create a temporary canvas for cropping
+		const tempCanvas = document.createElement('canvas');
+		tempCanvas.width = cropWidth;
+		tempCanvas.height = cropHeight;
+		const tempCtx = tempCanvas.getContext('2d');
+
+		// Draw the cropped region to the temporary canvas
+		tempCtx.putImageData(
+			ctx.getImageData(minX, minY, cropWidth, cropHeight),
+			0,
+			0
+		);
+
+		// Step 3: Resize to fit into ledRows
+		const aspectRatio = cropWidth / cropHeight;
+		const targetWidth = Math.round(
+			text.fontHeight * aspectRatio * text.fontSize
+		); // Added 20% more width
+		setLedColumns(targetWidth);
+
+		// Create final canvas with target dimensions
+		const finalCanvas = document.createElement('canvas');
+		finalCanvas.width = targetWidth;
+		finalCanvas.height = text.fontHeight;
+		const finalCtx = finalCanvas.getContext('2d');
+
+		// Draw the resized image
+		finalCtx.drawImage(tempCanvas, 0, 0, targetWidth, text.fontHeight);
+
+		// Get pixel data from the resized image
+		const finalData = finalCtx.getImageData(
+			0,
+			0,
+			targetWidth,
+			text.fontHeight
+		).data;
+
+		// Step 4: Convert to LED matrix string
+		const matrix = [];
+		const binaryMatrix = [];
+		for (let y = 0; y < text.fontHeight; y++) {
+			let row = '';
+			let binaryRow = [];
+			for (let x = 0; x < targetWidth; x++) {
+				const i = (y * targetWidth + x) * 4;
+				const brightness =
+					(finalData[i] + finalData[i + 1] + finalData[i + 2]) / 3;
+				const isDark = invert
+					? brightness >= text.spacing
+					: brightness < 255 - text.spacing;
+
+				row += isDark ? matrixChars.dark : matrixChars.light;
+				binaryRow.push(isDark ? 1 : 0);
+			}
+			matrix.push(row);
+			binaryMatrix.push(binaryRow);
+		}
+
+		setBitmapText(matrix.join('\n'));
+	};
+
 	// Update spacing when props change
 	useEffect(() => {
 		setLedSpacing(horizontalSpacing);
@@ -50,47 +192,27 @@ const LEDBitmapSimulator = ({
 	}, [cols, ledSize, ledSpacing]);
 
 	useEffect(() => {
-		console.log(text, language);
-		const fetchBitmap = async () => {
-			try {
-				const response = await axios.post(
-					'https://bitmap.navitronix.in/api/bitmap',
-					{
-						text: text.text,
-						fontPath:
-							text.fontWeight === 'normal'
-								? `./${language}.ttf`
-								: `./${language}-bold.ttf`,
-						targetRows: parseInt(text.fontHeight) + 1 ,
-						fontWeight: text.fontWeight,
-						aspectRatio: text.fontSize,
-						thresshold: text.spacing,
-						fontFamily: fontFamily,
-						fontSize: 300,
-					}
-				);
-				console.log(response);
-				setBitmapText(response.data || '');
-			} catch (error) {
-				console.error('Error fetching bitmap:', error);
-			}
-		};
+		// const fetchBitmap = async () => {
+		// 	try {
+		// 		const response = await axiosInstance.post(
+		// 			'/routes/getBitmapSimulation',
+		// 			JSON.stringify({
+		// 				text: text,
+		// 				language: language,
+		// 			})
+		// 		);
 
-		fetchBitmap();
+		// 		console.log(response);
+		// 		setBitmapText(response.data || '');
+		// 	} catch (error) {
+		// 		console.error('Error fetching bitmap:', error);
+		// 	}
+		// };
 
-		console.log(text);
+		// fetchBitmap();
 
-		// setBitmapText(
-		// 	generateLedMatrixFromText({
-		// 		text: text.text,
-		// 		fontSize: 100,
-		// 		fontWeight: text.fontWeight,
-		// 		fontFamily: language,
-		// 		brightnessThreshold: text.spacing,
+		console.log(fontFamily);
 
-		// 		ledRows: text.fontHeight,
-		// 	})
-		// );
 		// }
 
 		if (text.scrollType === 'Left To Right') {
@@ -109,10 +231,13 @@ const LEDBitmapSimulator = ({
 		if (text.scrollType !== 'Fixed') {
 			setIsScrolling(stopScroll);
 		}
+		if (text.text.length > 0) {
+			drawTextOnCanvas();
+			convertToLEDMatrix();
+		}
 	}, [
 		text,
 		text.text,
-		language,
 		text.scrollType,
 		text.position,
 		text.scrollSpeed,
@@ -164,6 +289,23 @@ const LEDBitmapSimulator = ({
 		}
 
 		return matrix;
+	};
+
+
+	const getScrollType = (scrollType) => {
+		if (scrollType === 'Left To Right' || scrollType === 'Right To Left') {
+			return 'scroll';
+		}
+		return 'fixed';
+	}
+
+	const getScrollDirection = (scrollType) => {
+		if (scrollType === 'Left To Right') {
+			return 'left';
+		} else if (scrollType === 'Right To Left') {
+			return 'right';
+		}
+		return 'left';
 	};
 
 	useEffect(() => {
@@ -273,9 +415,9 @@ const LEDBitmapSimulator = ({
 				></canvas>
 			)}
 			{/* <pre className="bg-gray-900 text-amber-400 p-2 rounded overflow-auto font-mono text-sm whitespace-pre">
-            {bitmapText}
-          </pre> */}
-			{ledMatrix.length > 0 && (
+				{bitmapText}
+			</pre> */}
+			{/* {ledMatrix.length > 0 && (
 				<div className="bg-neutral-900" style={ledGridStyle}>
 					{ledMatrix.map((row, rowIndex) => (
 						<div
@@ -289,7 +431,6 @@ const LEDBitmapSimulator = ({
 							{row.map((cell, colIndex) => (
 								<div
 									key={`${rowIndex}-${colIndex}`}
-									onClick={() => toggleLed(rowIndex, colIndex)}
 									className={`${
 										cell ? 'bg-amber-500' : 'bg-neutral-700'
 									} rounded-full`}
@@ -305,7 +446,22 @@ const LEDBitmapSimulator = ({
 						</div>
 					))}
 				</div>
-			)}
+			)} */}
+			<LEDBusBoard
+				config={{
+					rows: rows,
+					cols: cols,
+					scrollSpeed: text.scrollSpeed,
+					direction: getScrollDirection(text.scrollType),
+					interval: 0,
+					gap: 200,
+					mode: getScrollType(text.scrollType),
+					fixedPosition: 0,
+					flickerProbability: 0.5,
+				}}
+				data={bitmapText}
+				isRunning={true}
+			/>
 		</div>
 	);
 };
