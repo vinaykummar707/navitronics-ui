@@ -33,7 +33,7 @@ export default function LEDBusBoard({
 	const lastFrameTimeRef = useRef<number>(0);
 	const gapStartTimeRef = useRef<number | null>(null);
 
-	const ledSize = 6;
+	const ledSize = 8;
 
 	useEffect(() => {
 		const lines = data.split('\n');

@@ -1554,8 +1554,8 @@ export const DisplayConfigForm: React.FC = () => {
 																</label>
 																<input
 																	type="number"
-																	min={1}
-																	max={10}
+																	min={0}
+																	max={100}
 																	{...register(
 																		`displayConfig.${language}.${screenKey}.texts.${textKey}.scrollSpeed`
 																	)}

@@ -42,7 +42,7 @@ const LEDBitmapSimulator = ({
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 		// Set font properties
-		ctx.font = `${text.fontWeight} 100px ${fontFamily}`;
+		ctx.font = `${text.fontWeight} 60px ${fontFamily}`;
 
 		// Measure text dimensions with proper height calculation
 		const metrics = ctx.measureText(text.text);
@@ -60,9 +60,8 @@ const LEDBitmapSimulator = ({
 		canvas.height = textHeight + verticalPadding * 2;
 
 		// Need to reset font after canvas resizing
-		ctx.font = `${text.fontWeight} 100px ${fontFamily}`;
+		ctx.font = `${text.fontWeight} 60px ${fontFamily}`;
 		ctx.textBaseline = 'middle'; // Better vertical alignment
-		ctx.letterSpacing = '-1px';
 
 		// Draw background
 		ctx.fillStyle = '#fff';
@@ -231,9 +230,18 @@ const LEDBitmapSimulator = ({
 		if (text.scrollType !== 'Fixed') {
 			setIsScrolling(stopScroll);
 		}
+
+
+		// if (text.bitmap.length > 0) {
+		// 	drawTextOnCanvas();
+		// 	convertToLEDMatrix();
+		// }
+
 		if (text.text.length > 0) {
 			drawTextOnCanvas();
 			convertToLEDMatrix();
+		} else {
+			setBitmapText('');
 		}
 	}, [
 		text,
