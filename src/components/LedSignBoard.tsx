@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import EnhancedTextToLEDMatrix from './TextToLedMatrix';
 import { generateLedMatrixFromText } from './canvasUtility';
 import LEDBusBoard from './FullScreenBoard';
+import LedCanvas from './FullScreenBoard';
 
 const LEDBitmapSimulator = ({
 	text,
@@ -10,7 +11,7 @@ const LEDBitmapSimulator = ({
 	fontFamily,
 	cols,
 	horizontalSpacing = 4, // Default horizontal spacing between LEDs
-	verticalSpacing = 6, // Default vertical spacing between rows
+	verticalSpacing = 4, // Default vertical spacing between rows
 	stopScroll,
 	onBitmapTextChange,
 }) => {
@@ -31,6 +32,7 @@ const LEDBitmapSimulator = ({
 	const canvasRef = useRef(null);
 	const previewCanvasRef = useRef(null);
 	const [ledColumns, setLedColumns] = useState(0); // Auto-calculated
+	const [widthAspect, setWidthAspect] = useState(1.4); // Auto-calculated
 	const [matrixChars, setMatrixChars] = useState({ dark: '#', light: '.' });
 
 	// Function to draw text on canvas
@@ -130,7 +132,7 @@ const LEDBitmapSimulator = ({
 		// Step 3: Resize to fit into ledRows
 		const aspectRatio = cropWidth / cropHeight;
 		const targetWidth = Math.round(
-			text.fontHeight * aspectRatio * text.fontSize
+			text.fontHeight * aspectRatio * widthAspect
 		); // Added 20% more width
 		setLedColumns(targetWidth);
 
@@ -191,28 +193,9 @@ const LEDBitmapSimulator = ({
 	}, [cols, ledSize, ledSpacing]);
 
 	useEffect(() => {
-		// const fetchBitmap = async () => {
-		// 	try {
-		// 		const response = await axiosInstance.post(
-		// 			'/routes/getBitmapSimulation',
-		// 			JSON.stringify({
-		// 				text: text,
-		// 				language: language,
-		// 			})
-		// 		);
-
-		// 		console.log(response);
-		// 		setBitmapText(response.data || '');
-		// 	} catch (error) {
-		// 		console.error('Error fetching bitmap:', error);
-		// 	}
-		// };
-
-		// fetchBitmap();
-
+		
 		console.log(fontFamily);
 
-		// }
 
 		if (text.scrollType === 'Left To Right') {
 			setIsScrolling(true);
@@ -231,17 +214,17 @@ const LEDBitmapSimulator = ({
 			setIsScrolling(stopScroll);
 		}
 
-
-		// if (text.bitmap.length > 0) {
-		// 	drawTextOnCanvas();
-		// 	convertToLEDMatrix();
-		// }
-
 		if (text.text.length > 0) {
 			drawTextOnCanvas();
 			convertToLEDMatrix();
 		} else {
 			setBitmapText('');
+		}
+		console.log(text.fontSize);
+		if (text.fontSize <= 0) {
+			setWidthAspect(0.8);
+		} else {
+			setWidthAspect(text.fontSize);
 		}
 	}, [
 		text,
@@ -299,34 +282,9 @@ const LEDBitmapSimulator = ({
 		return matrix;
 	};
 
-
-	const getScrollType = (scrollType) => {
-		if (scrollType === 'Left To Right' || scrollType === 'Right To Left') {
-			return 'scroll';
-		}
-		return 'fixed';
-	}
-
-	const getScrollDirection = (scrollType) => {
-		if (scrollType === 'Left To Right') {
-			return 'left';
-		} else if (scrollType === 'Right To Left') {
-			return 'right';
-		}
-		return 'left';
-	};
+	
 
 	useEffect(() => {
-		// if(bitmapText !== undefined){
-		// 		setLedMatrix(processBitmapText(generateLedMatrixFromText({
-		// 			text: text.text,
-		// fontSize: 100,
-		// fontWeight: 'bold',
-		// fontFamily: 'english',
-		// brightnessThreshold: 50,
-		// ledRows: 16,
-		// 		})));
-		// 	// }
 		console.log(bitmapText);
 		setLedMatrix(processBitmapText(bitmapText, scrollOffset));
 		onBitmapTextChange(bitmapText);
@@ -377,42 +335,9 @@ const LEDBitmapSimulator = ({
 		};
 	}, [isScrolling, scrollDirection, scrollSpeed, bitmapText]);
 
-	const toggleLed = (rowIndex, colIndex) => {
-		if (isScrolling) return; // Disable editing while scrolling
+	
 
-		const newMatrix = [...ledMatrix];
-		if (newMatrix[rowIndex] && newMatrix[rowIndex][colIndex] !== undefined) {
-			newMatrix[rowIndex][colIndex] = newMatrix[rowIndex][colIndex] ? 0 : 1;
-			setLedMatrix(newMatrix);
-
-			// Update bitmap text based on the matrix
-			const lines = bitmapText.split('\n');
-			const updatedLines = [...lines];
-
-			// Ensure we have enough lines
-			while (updatedLines.length <= rowIndex) {
-				updatedLines.push('.'.repeat(cols));
-			}
-
-			// Convert the line to an array, modify it, and convert back to string
-			let lineArray = Array.from(updatedLines[rowIndex] || '.'.repeat(cols));
-			while (lineArray.length <= colIndex) {
-				lineArray.push('.');
-			}
-			lineArray[colIndex] = newMatrix[rowIndex][colIndex] ? '#' : '.';
-			updatedLines[rowIndex] = lineArray.join('');
-
-			setBitmapText(updatedLines.join('\n'));
-		}
-	};
-
-	// Calculate container width based on LED size
-	const containerStyle = {};
-
-	const ledGridStyle = {
-		padding: `${rowSpacing * 0}px`,
-	};
-
+	
 	return (
 		//
 		<div className="flex flex-col ">
@@ -425,6 +350,7 @@ const LEDBitmapSimulator = ({
 			{/* <pre className="bg-gray-900 text-amber-400 p-2 rounded overflow-auto font-mono text-sm whitespace-pre">
 				{bitmapText}
 			</pre> */}
+			<LedCanvas isScrolling={isScrolling} ledMatrix={ledMatrix} ledSize={4} ledSpacing={4} rowSpacing={4}  />
 			{/* {ledMatrix.length > 0 && (
 				<div className="bg-neutral-900" style={ledGridStyle}>
 					{ledMatrix.map((row, rowIndex) => (
@@ -455,7 +381,7 @@ const LEDBitmapSimulator = ({
 					))}
 				</div>
 			)} */}
-			<LEDBusBoard
+			{/* <LEDBusBoard
 				config={{
 					rows: rows,
 					cols: cols,
@@ -469,7 +395,7 @@ const LEDBitmapSimulator = ({
 				}}
 				data={bitmapText}
 				isRunning={true}
-			/>
+			/> */}
 		</div>
 	);
 };
