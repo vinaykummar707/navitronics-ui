@@ -44,7 +44,7 @@ const LEDBitmapSimulator = ({
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 		// Set font properties
-		ctx.font = `${text.fontWeight} 60px ${fontFamily}`;
+		ctx.font = `${text.fontWeight} 300px ${fontFamily}`;
 
 		// Measure text dimensions with proper height calculation
 		const metrics = ctx.measureText(text.text);
@@ -62,7 +62,7 @@ const LEDBitmapSimulator = ({
 		canvas.height = textHeight + verticalPadding * 2;
 
 		// Need to reset font after canvas resizing
-		ctx.font = `${text.fontWeight} 60px ${fontFamily}`;
+		ctx.font = `${text.fontWeight} 300px ${fontFamily}`;
 		ctx.textBaseline = 'middle'; // Better vertical alignment
 
 		// Draw background
