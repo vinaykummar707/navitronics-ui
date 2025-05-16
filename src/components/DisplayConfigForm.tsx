@@ -50,7 +50,7 @@ const SCROLL_TYPES = [
 	'Left To Right',
 	'Right To Left',
 	'Fixed',
-	'Flicker',
+	// 'Flicker',
 ] as const;
 const POSITIONS = ['Left', 'Right', 'Center'] as const;
 const FORMATS = [
@@ -119,6 +119,8 @@ const PLACE_HOLDER_OPTIONS2 = [
 const PLACEHOLDER_OPTIONS = [
 	{ value: 'routeNumber', label: 'Route Number' },
 	{ value: 'routeNumber1-routeNumber2', label: 'Split Route Number' },
+	{ value: 'routeNumber1', label: 'Route Number 1' },
+	{ value: 'routeNumber2', label: 'Route Number 2' },
 	// { value: 'routeNumber', label: 'Route Number' },
 	{ value: 'source', label: 'Source' },
 	{ value: 'destination', label: 'Destination' },
@@ -713,42 +715,45 @@ export const DisplayConfigForm: React.FC = () => {
 		</div>
 	);
 
-	const renderLanguagesTab = () => (
-		<div className="mb-8 p-6 bg-white rounded-xl shadow-md">
-			<h3 className="text-xl bold mb-4 text-gray-800">Language Selection</h3>
-			<div className="mb-4">
-				<label className="block text-sm font-medium text-gray-600 mb-2">
-					Select Languages (max 3)
-				</label>
-				<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-					{AVAILABLE_LANGUAGES.map((lang) => (
-						<div key={lang.code} className="flex items-center">
-							<input
-								type="checkbox"
-								id={`lang-${lang.code}`}
-								checked={selectedLanguages.includes(lang.code)}
-								onChange={() => handleLanguageChange(lang.code)}
-								disabled={
-									!selectedLanguages.includes(lang.code) &&
-									selectedLanguages.length >= 3
-								}
-								className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-							/>
-							<label
-								htmlFor={`lang-${lang.code}`}
-								className="ml-2 block text-sm text-gray-900"
-							>
-								{lang.name}
+	const renderLanguagesTab = () => {
+		const handleLanguageSelect = (index: number, langCode: string) => {
+			const newSelectedLangs = [...selectedLanguages];
+			newSelectedLangs[index] = langCode;
+			setSelectedLanguages(newSelectedLangs.filter(Boolean));
+		};
+
+		return (
+			<div className="mb-8 p-6 bg-white rounded-xl shadow-md">
+				<h3 className="text-xl bold mb-4 text-gray-800">Language Selection</h3>
+				<div className="mb-4 grid grid-cols-6 gap-4">
+					{[0, 1, 2].map((index) => (
+						<div key={index} className="flex flex-col">
+							<label className="block text-sm font-medium text-gray-600 mb-2">
+								Language {index + 1}
 							</label>
+							<select
+								value={selectedLanguages[index] || ''}
+								onChange={(e) => handleLanguageSelect(index, e.target.value)}
+								className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+							>
+								<option value="">Select Language</option>
+								{AVAILABLE_LANGUAGES.map((lang) => (
+									<option
+										key={lang.code}
+										value={lang.code}
+									>
+										{lang.name}
+									</option>
+								))}
+							</select>
 						</div>
 					))}
 				</div>
-				<p className="text-sm text-gray-500 mt-2">
-					Select between 1 and 3 languages
-				</p>
 			</div>
-		</div>
-	);
+		);
+	};
+	
+	
 
 	const fetchTransliteration = async (
 		text: string,
@@ -783,7 +788,7 @@ export const DisplayConfigForm: React.FC = () => {
 			case 'rear':
 				return getFormatByScreen(96, format);
 			default:
-				return getFormatByScreen(96, format);
+				return getFormatByScreen(112, format);
 		}
 	};
 
@@ -1149,22 +1154,22 @@ export const DisplayConfigForm: React.FC = () => {
 															) -
 															(splitRoute
 																? Math.max(
-																		getBitmapColumns(
-																			watch(
-																				`displayConfig.${language}.${screenKey}.texts.routeNumber1.bitmap`
-																			)
-																		),
-																		getBitmapColumns(
-																			watch(
-																				`displayConfig.${language}.${screenKey}.texts.routeNumber2.bitmap`
-																			)
-																		)
-																  )
-																: getBitmapColumns(
+																	getBitmapColumns(
 																		watch(
-																			`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`
+																			`displayConfig.${language}.${screenKey}.texts.routeNumber1.bitmap`
 																		)
-																  ))
+																	),
+																	getBitmapColumns(
+																		watch(
+																			`displayConfig.${language}.${screenKey}.texts.routeNumber2.bitmap`
+																		)
+																	)
+																)
+																: getBitmapColumns(
+																	watch(
+																		`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`
+																	)
+																))
 														}
 														text={displayConfig[language][screenKey].texts.text}
 														fontFamily={getFontFileByLanguage(
@@ -1590,13 +1595,18 @@ export const DisplayConfigForm: React.FC = () => {
 																<label className="block text-sm font-medium text-gray-600 mb-1">
 																	Font Height
 																</label>
-																<input
-																	type="number"
+																<select
 																	{...register(
 																		`displayConfig.${language}.${screenKey}.texts.${textKey}.fontHeight`
 																	)}
 																	className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-																/>
+																>
+																	{Array.from({ length: 11 }, (_, i) => i + 6).map((height) => (
+																		<option key={height} value={height}>
+																			{height}
+																		</option>
+																	))}
+																</select>
 															</div>
 
 															<div>
@@ -1679,7 +1689,7 @@ export const DisplayConfigForm: React.FC = () => {
 					// Use the text config from offsetConfigs if available, otherwise use default
 					const textConfig =
 						offsetConfig?.config?.text || getDefaultTextConfig();
-					acc[lang] = textConfig;
+					acc[lang] = { ...textConfig, text: 'SPECIAL MESSAGE' };
 					return acc;
 				}, {}),
 			};
@@ -1717,11 +1727,10 @@ export const DisplayConfigForm: React.FC = () => {
 						type="button"
 						onClick={handleAddSpecialMessage}
 						disabled={specialMessages.length >= MAX_SPECIAL_MESSAGES}
-						className={`px-4 text-sm py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-							specialMessages.length >= MAX_SPECIAL_MESSAGES
+						className={`px-4 text-sm py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${specialMessages.length >= MAX_SPECIAL_MESSAGES
 								? 'bg-gray-400 cursor-not-allowed'
 								: 'bg-blue-700 hover:bg-blue-700 text-white'
-						}`}
+							}`}
 					>
 						Add Special Message
 					</button>
@@ -1832,47 +1841,47 @@ export const DisplayConfigForm: React.FC = () => {
 													{watch(
 														`specialMessages.${index}.${language}.previewBoard`
 													) && (
-														<div className="flex items-start gap-2 mb-4">
-															<div className="p-2 bg-neutral-950 border-2  rounded-xl border-neutral-800">
-																<LEDBitmapSimulator
-																	stopScroll={stopScroll}
-																	rows={16}
-																	cols={getColumnsByBoard(
-																		watch(
-																			`specialMessages.${index}.${language}.previewBoard`
-																		),
-																		'single'
-																	)}
-																	text={watch(
-																		`specialMessages.${index}.${language}`
-																	)}
-																	fontFamily={getFontFileByLanguage(
-																		language,
-																		'text',
-																		16
-																	)}
-																	onBitmapTextChange={(text) => {
-																		setValue(
-																			`specialMessages.${index}.${language}.bitmap`,
-																			text
-																		);
+															<div className="flex items-start gap-2 mb-4">
+																<div className="p-2 bg-neutral-950 border-2  rounded-xl border-neutral-800">
+																	<LEDBitmapSimulator
+																		stopScroll={stopScroll}
+																		rows={16}
+																		cols={getColumnsByBoard(
+																			watch(
+																				`specialMessages.${index}.${language}.previewBoard`
+																			),
+																			'single'
+																		)}
+																		text={watch(
+																			`specialMessages.${index}.${language}`
+																		)}
+																		fontFamily={getFontFileByLanguage(
+																			language,
+																			'text',
+																			16
+																		)}
+																		onBitmapTextChange={(text) => {
+																			setValue(
+																				`specialMessages.${index}.${language}.bitmap`,
+																				text
+																			);
 
-																		setValue(
-																			`specialMessages.${index}.${language}.fontWidth`,
-																			getBitmapColumns(text)
-																		);
-																	}}
-																/>
+																			setValue(
+																				`specialMessages.${index}.${language}.fontWidth`,
+																				getBitmapColumns(text)
+																			);
+																		}}
+																	/>
+																</div>
+																<button
+																	type="button"
+																	onClick={() => setStopScroll((value) => !value)}
+																	className="mt-2 bg-red-500 text-red-50 py-2 px-4 text-sm font-medium rounded-md"
+																>
+																	{!stopScroll ? 'Start' : 'Stop'} Scroll
+																</button>
 															</div>
-															<button
-																type="button"
-																onClick={() => setStopScroll((value) => !value)}
-																className="mt-2 bg-red-500 text-red-50 py-2 px-4 text-sm font-medium rounded-md"
-															>
-																{!stopScroll ? 'Start' : 'Stop'} Scroll
-															</button>
-														</div>
-													)}
+														)}
 													<div className="grid grid-cols-9 gap-4 items-start">
 														<div className="w-full col-span-9">
 															<label className="block text-sm font-medium text-gray-600 mb-1">
@@ -1898,10 +1907,9 @@ export const DisplayConfigForm: React.FC = () => {
 																				englishText.trim() !== ''
 																			) {
 																				toast.info(
-																					`Translating to ${
-																						AVAILABLE_LANGUAGES.find(
-																							(l) => l.code === language
-																						)?.name
+																					`Translating to ${AVAILABLE_LANGUAGES.find(
+																						(l) => l.code === language
+																					)?.name
 																					}...`,
 																					{
 																						autoClose: false,
@@ -1922,10 +1930,9 @@ export const DisplayConfigForm: React.FC = () => {
 																						`translating-special-${index}-${language}`
 																					);
 																					toast.success(
-																						`Translated to ${
-																							AVAILABLE_LANGUAGES.find(
-																								(l) => l.code === language
-																							)?.name
+																						`Translated to ${AVAILABLE_LANGUAGES.find(
+																							(l) => l.code === language
+																						)?.name
 																						}`
 																					);
 																				} catch (error) {
@@ -1933,10 +1940,9 @@ export const DisplayConfigForm: React.FC = () => {
 																						`translating-special-${index}-${language}`
 																					);
 																					toast.error(
-																						`Failed to translate to ${
-																							AVAILABLE_LANGUAGES.find(
-																								(l) => l.code === language
-																							)?.name
+																						`Failed to translate to ${AVAILABLE_LANGUAGES.find(
+																							(l) => l.code === language
+																						)?.name
 																						}`
 																					);
 																				}
@@ -2089,7 +2095,7 @@ export const DisplayConfigForm: React.FC = () => {
 															/>
 														</div>
 
-														<div>
+														{/* <div>
 															<label className="block text-sm font-medium text-gray-600 mb-1">
 																Font Height
 															</label>
@@ -2102,7 +2108,25 @@ export const DisplayConfigForm: React.FC = () => {
 																)}
 																className="w-full p-2 border rounded-md"
 															/>
-														</div>
+														</div> */}
+														
+														<div>
+																<label className="block text-sm font-medium text-gray-600 mb-1">
+																	Font Height
+																</label>
+																<select
+																	{...register(
+																		`specialMessages.${index}.${language}.fontHeight`
+																	)}
+																	className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+																>
+																	{Array.from({ length: 11 }, (_, i) => i + 6).map((height) => (
+																		<option key={height} value={height}>
+																			{height}
+																		</option>
+																	))}
+																</select>
+															</div>
 
 														{/* <div>
 															<label className="block text-sm font-medium text-gray-600 mb-1">
@@ -2208,6 +2232,11 @@ export const DisplayConfigForm: React.FC = () => {
 	return (
 		<form
 			onSubmit={handleSubmit(onSubmit)}
+			onKeyDown={(e) => {
+				if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
+					e.preventDefault();
+				}
+			}}
 			className="w-full flex flex-col gap-4 overflow-hidden p-6"
 		>
 			<div className="flex justify-between items-center">
@@ -2216,7 +2245,8 @@ export const DisplayConfigForm: React.FC = () => {
 				{/* <GoogleIME/> */}
 				<button
 					type="submit"
-					className="px-4 text-sm py-2 bg-blue-700 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+					className="px-4 text-sm py-2 bg-blue-700 disabled:bg-neutral-500 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+					disabled={createRouteMutation.isPending || updateRouteMutation.isPending}
 				>
 					{isEdit ? 'Update Configuration' : 'Save Configuration'}
 				</button>
@@ -2227,22 +2257,20 @@ export const DisplayConfigForm: React.FC = () => {
 					<button
 						type="button"
 						onClick={() => setActiveTab('route')}
-						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${
-							activeTab === 'route'
+						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${activeTab === 'route'
 								? 'border-nav_orange bg-white text-nav_blue-500'
 								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-						}`}
+							}`}
 					>
 						Route
 					</button>
 					<button
 						type="button"
 						onClick={() => setActiveTab('languages')}
-						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${
-							activeTab === 'languages'
+						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${activeTab === 'languages'
 								? 'border-nav_orange bg-white text-nav_blue-500'
 								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-						}`}
+							}`}
 					>
 						Languages
 					</button>
@@ -2254,11 +2282,10 @@ export const DisplayConfigForm: React.FC = () => {
 							key={screenType}
 							type="button"
 							onClick={() => setActiveTab(screenType)}
-							className={`py-2 px-3 text-left max-w-[160px]  border-b-2 font-medium text-sm capitalize ${
-								activeTab === screenType
+							className={`py-2 px-3 text-left max-w-[160px]  border-b-2 font-medium text-sm capitalize ${activeTab === screenType
 									? 'border-nav_orange bg-white text-nav_blue-500'
 									: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-							}`}
+								}`}
 						>
 							{screenType}
 						</button>

@@ -31,10 +31,39 @@ const Routes = () => {
 
 	// Reset selections when organization changes
 	useEffect(() => {
-		setSelectedAreaId('');
-		setSelectedDepotId('');
+		
 		ModuleRegistry.registerModules([AllCommunityModule]);
 	}, [selectedOrganization?.organizationId]);
+
+	// Update the useEffect for organization change
+	useEffect(() => {
+		if (selectedOrganization?.organizationId) {
+		  // Clear selections when organization changes
+		  setSelectedAreaId('');
+		  setSelectedDepotId('');
+		//   localStorage.removeItem('selectedAreaId');
+		//   localStorage.removeItem('selectedDepotId');
+		}
+		ModuleRegistry.registerModules([AllCommunityModule]);
+	  }, [selectedOrganization?.organizationId]);
+	
+	 
+
+
+	// Update select handlers
+	const handleAreaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		const newAreaId = e.target.value;
+		setSelectedAreaId(newAreaId);
+		setSelectedDepotId(''); // Reset depot when area changes
+		localStorage.setItem('selectedAreaId', newAreaId);
+		localStorage.removeItem('selectedDepotId'); // Clear saved depot when area changes
+	};
+
+	const handleDepotChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		const newDepotId = e.target.value;
+		setSelectedDepotId(newDepotId);
+		localStorage.setItem('selectedDepotId', newDepotId);
+	};
 
 	// Queries
 	const { data: areas } = useQuery({
@@ -47,7 +76,7 @@ const Routes = () => {
 	});
 	const filteredAreas =
 		user.area &&
-		(user.userRole === 'area_admin' || user.userRole === 'depot_admin')
+			(user.userRole === 'area_admin' || user.userRole === 'depot_admin')
 			? areas?.filter((area) => area.areaId === user.area.areaId)
 			: areas;
 
@@ -56,6 +85,32 @@ const Routes = () => {
 		queryFn: () => depotService.getAll(selectedAreaId),
 		enabled: !!selectedAreaId,
 	});
+
+	 // Update area selection effect
+	 useEffect(() => {
+		if (areas?.length > 0 && !selectedAreaId) {
+		  const savedAreaId = localStorage.getItem('selectedAreaId');
+		  const areaToSelect = savedAreaId && areas.find(area => area.areaId === savedAreaId)
+			? savedAreaId
+			: areas[0].areaId;
+		  
+		  setSelectedAreaId(areaToSelect);
+		  localStorage.setItem('selectedAreaId', areaToSelect);
+		}
+	  }, [areas]);
+	
+	  // Update depot selection effect
+	  useEffect(() => {
+		if (depots?.length > 0 && !selectedDepotId) {
+		  const savedDepotId = localStorage.getItem('selectedDepotId');
+		  const depotToSelect = savedDepotId && depots.find(depot => depot.depotId === savedDepotId)
+			? savedDepotId
+			: depots[0].depotId;
+		  
+		  setSelectedDepotId(depotToSelect);
+		  localStorage.setItem('selectedDepotId', depotToSelect);
+		}
+	  }, [depots]);
 
 	const filteredDepots =
 		user.depot && user.userRole === 'depot_admin'
@@ -73,18 +128,18 @@ const Routes = () => {
 		enabled: !!selectedDepotId,
 	});
 
-	// Auto-select first area and depot
-	useEffect(() => {
-		if (areas && areas.length > 0 && !selectedAreaId) {
-			setSelectedAreaId(areas[0].areaId);
-		}
-	}, [areas]);
+	// // Auto-select first area and depot
+	// useEffect(() => {
+	// 	if (areas && areas.length > 0 && !selectedAreaId) {
+	// 		setSelectedAreaId(areas[0].areaId);
+	// 	}
+	// }, [areas]);
 
-	useEffect(() => {
-		if (depots && depots.length > 0 && !selectedDepotId) {
-			setSelectedDepotId(depots[0].depotId);
-		}
-	}, [depots]);
+	// useEffect(() => {
+	// 	if (depots && depots.length > 0 && !selectedDepotId) {
+	// 		setSelectedDepotId(depots[0].depotId);
+	// 	}
+	// }, [depots]);
 
 	const deleteMutation = useMutation({
 		mutationFn: routeService.delete,
@@ -99,30 +154,7 @@ const Routes = () => {
 		},
 	});
 
-	const generateJson = (data: any) => {
-		// Convert to JSON string with proper formatting
-		const jsonString = JSON.stringify(data, null, 2);
 
-		// Create blob and download link
-		const blob = new Blob([jsonString], { type: 'application/json' });
-		const url = URL.createObjectURL(blob);
-
-		// Create temporary link and trigger download
-		const link = document.createElement('a');
-		link.href = url;
-		link.download = `route_config_${selectedDepotId || 'new'}_${
-			new Date().toISOString().split('T')[0]
-		}.json`;
-		document.body.appendChild(link);
-		link.click();
-
-		// Cleanup
-		document.body.removeChild(link);
-		URL.revokeObjectURL(url);
-
-		// Also log to console for reference
-		console.log('Configuration Saved:', data);
-	};
 
 	const getAllWithConfigMutation = useMutation({
 		mutationFn: async ({
@@ -240,12 +272,12 @@ const Routes = () => {
 	};
 
 	// Event handler for selection change
-const onSelectionChanged = () => {
-	const selectedNodes = gridRef.current?.api.getSelectedNodes(); // Get selected nodes
-	const selectedIds = selectedNodes?.map((node) => node.data.id); // Extract only the IDs from the selected nodes
-	setSelectedRows(selectedIds); // Store only the selected IDs
-	console.log('Selected IDs:', selectedIds); // Log the selected IDs
-};
+	const onSelectionChanged = () => {
+		const selectedNodes = gridRef.current?.api.getSelectedNodes(); // Get selected nodes
+		const selectedIds = selectedNodes?.map((node) => node.data.id); // Extract only the IDs from the selected nodes
+		setSelectedRows(selectedIds); // Store only the selected IDs
+		console.log('Selected IDs:', selectedIds); // Log the selected IDs
+	};
 
 	const columnDefs = [
 		{
@@ -293,6 +325,8 @@ const onSelectionChanged = () => {
 		// },
 	];
 
+
+
 	return (
 		<Container overflow={'scroll'} fluid className="py-4">
 			<div className="flex justify-between items-center mb-2">
@@ -307,7 +341,7 @@ const onSelectionChanged = () => {
 						<select
 							id="area"
 							value={selectedAreaId}
-							onChange={(e) => setSelectedAreaId(e.target.value)}
+							onChange={handleAreaChange}
 							className="border text-sm border-neutral-300 text-neutral-900 p-2 rounded-lg "
 						>
 							<option value="">Select Area</option>
@@ -329,7 +363,7 @@ const onSelectionChanged = () => {
 						<select
 							id="depot"
 							value={selectedDepotId}
-							onChange={(e) => setSelectedDepotId(e.target.value)}
+							onChange={handleDepotChange}
 							className="border text-sm border-neutral-300 text-neutral-900 p-2 rounded-lg "
 						>
 							<option value="">Select Depot</option>
@@ -358,9 +392,8 @@ const onSelectionChanged = () => {
 								})
 							}
 							disabled={!selectedDepotId}
-							className={`bg-indigo-600 text-white text-sm px-3 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-								!selectedDepotId ? 'opacity-50 cursor-not-allowed' : ''
-							}`}
+							className={`bg-indigo-600 text-white text-sm px-3 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${!selectedDepotId ? 'opacity-50 cursor-not-allowed' : ''
+								}`}
 						>
 							Create Route
 						</button>
@@ -374,9 +407,8 @@ const onSelectionChanged = () => {
 							})
 						}
 						disabled={!selectedDepotId}
-						className={`bg-green-600 text-white text-sm px-3 py-2 rounded-md hover:bg-green-700  ${
-							!selectedDepotId ? 'opacity-50 cursor-not-allowed' : ''
-						}`}
+						className={`bg-green-600 text-white text-sm px-3 py-2 rounded-md hover:bg-green-700  ${!selectedDepotId ? 'opacity-50 cursor-not-allowed' : ''
+							}`}
 					>
 						{getAllWithConfigMutation.isPending
 							? 'Exporting...'

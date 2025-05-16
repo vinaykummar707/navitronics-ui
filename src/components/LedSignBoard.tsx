@@ -10,12 +10,12 @@ const LEDBitmapSimulator = ({
 	rows,
 	fontFamily,
 	cols,
-	horizontalSpacing = 4, // Default horizontal spacing between LEDs
-	verticalSpacing = 4, // Default vertical spacing between rows
+	horizontalSpacing = 9, // Default horizontal spacing between LEDs
+	verticalSpacing = 9, // Default vertical spacing between rows
 	stopScroll,
 	onBitmapTextChange,
 }) => {
-	const [ledSize, setLedSize] = useState(6);
+	const [ledSize, setLedSize] = useState(4);
 	const [ledSpacing, setLedSpacing] = useState(horizontalSpacing);
 	const [rowSpacing, setRowSpacing] = useState(verticalSpacing);
 	const [bitmapText, setBitmapText] = useState('');
@@ -350,7 +350,7 @@ const LEDBitmapSimulator = ({
 			{/* <pre className="bg-gray-900 text-amber-400 p-2 rounded overflow-auto font-mono text-sm whitespace-pre">
 				{bitmapText}
 			</pre> */}
-			<LedCanvas isScrolling={isScrolling} ledMatrix={ledMatrix} ledSize={4} ledSpacing={4} rowSpacing={4}  />
+			<LedCanvas position={'center'} isScrolling={isScrolling} ledMatrix={ledMatrix} ledSize={4} ledSpacing={8} rowSpacing={8}  />
 			{/* {ledMatrix.length > 0 && (
 				<div className="bg-neutral-900" style={ledGridStyle}>
 					{ledMatrix.map((row, rowIndex) => (
