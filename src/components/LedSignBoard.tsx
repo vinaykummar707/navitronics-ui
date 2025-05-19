@@ -4,6 +4,7 @@ import EnhancedTextToLEDMatrix from './TextToLedMatrix';
 import { generateLedMatrixFromText } from './canvasUtility';
 import LEDBusBoard from './FullScreenBoard';
 import LedCanvas from './FullScreenBoard';
+import LEDMatrix from './CanvasText';
 
 const LEDBitmapSimulator = ({
 	text,
@@ -44,7 +45,7 @@ const LEDBitmapSimulator = ({
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 		// Set font properties
-		ctx.font = `${text.fontWeight} 300px ${fontFamily}`;
+		ctx.font = `${text.fontWeight} 100px ${fontFamily}`;
 
 		// Measure text dimensions with proper height calculation
 		const metrics = ctx.measureText(text.text);
@@ -62,7 +63,7 @@ const LEDBitmapSimulator = ({
 		canvas.height = textHeight + verticalPadding * 2;
 
 		// Need to reset font after canvas resizing
-		ctx.font = `${text.fontWeight} 300px ${fontFamily}`;
+		ctx.font = `${text.fontWeight} 100px ${fontFamily}`;
 		ctx.textBaseline = 'middle'; // Better vertical alignment
 
 		// Draw background
@@ -71,6 +72,10 @@ const LEDBitmapSimulator = ({
 
 		// Draw text centered vertically
 		ctx.fillStyle = '#000';
+		ctx.imageSmoothingEnabled = false;
+		ctx.mozImageSmoothingEnabled = false;
+		ctx.webkitImageSmoothingEnabled = false;
+		ctx.msImageSmoothingEnabled = false;
 		ctx.fillText(text.text, horizontalPadding / 2, canvas.height / 2);
 	};
 
@@ -107,12 +112,7 @@ const LEDBitmapSimulator = ({
 			}
 		}
 
-		// Check if any text was found
-		if (minX > maxX || minY > maxY) {
-			setLedMatrix('No text found in canvas.');
-			return;
-		}
-
+	
 		const cropWidth = maxX - minX + 1;
 		const cropHeight = maxY - minY + 1;
 
@@ -193,7 +193,7 @@ const LEDBitmapSimulator = ({
 	}, [cols, ledSize, ledSpacing]);
 
 	useEffect(() => {
-		
+
 		console.log(fontFamily);
 
 
@@ -242,104 +242,52 @@ const LEDBitmapSimulator = ({
 		stopScroll,
 	]);
 
-	// Process bitmap text into matrix with scrolling support
-	const processBitmapText = (text, offset = 0) => {
-		if (!text)
-			return Array(rows)
-				.fill()
-				.map(() => Array(cols).fill(0));
-
-		const lines = text.split('\n').filter((line) => line.length > 0);
-		const matrix = [];
-
-		for (let i = 0; i < rows; i++) {
-			const row = [];
-			const line = lines[i] || '';
-
-			// Skip if line is empty
-			if (line.length === 0) {
-				matrix.push(Array(cols).fill(0));
-				continue;
-			}
-
-			// For each column in the display
-			for (let j = 0; j < cols; j++) {
-				// Calculate the position in the bitmap text with offset
-				const textPos = j + offset;
-
-				// Check if the position is within the bitmap text length
-				if (textPos >= 0 && textPos < line.length) {
-					row.push(line[textPos] === '#' ? 1 : 0);
-				} else {
-					// Outside of text bounds, so show empty LED
-					row.push(0);
-				}
-			}
-
-			matrix.push(row);
+	const convertScrollTypeToMarqueeDirection = (scrollType) => {
+		switch (scrollType) {
+		  case 'Left To Right':
+			return 'ltr';
+		  case 'Right To Left':
+			return 'rtl';
+		  case 'Fixed':
+			return 'none';
+		  default:
+			return 'none';
 		}
+	  };
+	  
+	  const convertPositionToAlignment = (position) => {
+		switch (position) {
+		  case 'Left':
+			return 'start';
+		  case 'Right':
+			return 'end';
+		  case 'Center':
+			return 'center';
+		  default:
+			return 'center';
+		}
+	  };
 
-		return matrix;
-	};
+	function convertAsciiToArray(ascii: string): string[] {
+		return ascii
+		  .split('\n')          // Split into lines
+		  .map(line => line.trim()) // Optionally trim whitespace
+		  .filter(line => line.length > 0); // Remove empty lines
+}
 
-	
+
 
 	useEffect(() => {
 		console.log(bitmapText);
-		setLedMatrix(processBitmapText(bitmapText, scrollOffset));
 		onBitmapTextChange(bitmapText);
 	}, [bitmapText, rows, cols, scrollOffset]);
 
-	// Handle scrolling logic
-	useEffect(() => {
-		if (isScrolling) {
-			// Clear any existing interval
-			if (scrollIntervalRef.current) {
-				clearInterval(scrollIntervalRef.current);
-			}
-
-			// Set up new scrolling interval
-			scrollIntervalRef.current = setInterval(() => {
-				setScrollOffset((prev) => {
-					const direction = scrollDirection === 'left' ? 1 : -1;
-					let newOffset = prev + direction;
-
-					// Get the maximum width of any line in the bitmap
-					const maxWidth = Math.max(
-						...bitmapText.split('\n').map((line) => line.length || 0)
-					);
-
-					// Reset offset when text has completely scrolled off screen
-					// For left scrolling (text moves right to left)
-					if (scrollDirection === 'left' && newOffset > maxWidth + cols) {
-						return -cols; // Start with text just off the right edge
-					}
-					// For right scrolling (text moves left to right)
-					else if (scrollDirection === 'right' && newOffset < -maxWidth) {
-						return cols; // Start with text just off the left edge
-					}
-
-					return newOffset;
-				});
-			}, scrollSpeed);
-		} else if (scrollIntervalRef.current) {
-			clearInterval(scrollIntervalRef.current);
-			scrollIntervalRef.current = null;
-		}
-
-		// Cleanup on unmount
-		return () => {
-			if (scrollIntervalRef.current) {
-				clearInterval(scrollIntervalRef.current);
-			}
-		};
-	}, [isScrolling, scrollDirection, scrollSpeed, bitmapText]);
-
 	
 
-	
+
+
+
 	return (
-		//
 		<div className="flex flex-col ">
 			{text.text && (
 				<canvas
@@ -350,52 +298,14 @@ const LEDBitmapSimulator = ({
 			{/* <pre className="bg-gray-900 text-amber-400 p-2 rounded overflow-auto font-mono text-sm whitespace-pre">
 				{bitmapText}
 			</pre> */}
-			<LedCanvas position={'center'} isScrolling={isScrolling} ledMatrix={ledMatrix} ledSize={4} ledSpacing={8} rowSpacing={8}  />
-			{/* {ledMatrix.length > 0 && (
-				<div className="bg-neutral-900" style={ledGridStyle}>
-					{ledMatrix.map((row, rowIndex) => (
-						<div
-							key={rowIndex}
-							style={{
-								height: `${ledSize}px`,
-								lineHeight: 0,
-								marginBottom: `${rowSpacing}px`, // Apply vertical spacing
-							}}
-						>
-							{row.map((cell, colIndex) => (
-								<div
-									key={`${rowIndex}-${colIndex}`}
-									className={`${
-										cell ? 'bg-amber-500' : 'bg-neutral-700'
-									} rounded-full`}
-									style={{
-										width: `${ledSize}px`,
-										height: `${ledSize}px`,
-										display: 'inline-block',
-										margin: `0 ${ledSpacing}px 0 0`, // Apply horizontal spacing
-										cursor: isScrolling ? 'default' : 'pointer',
-									}}
-								/>
-							))}
-						</div>
-					))}
-				</div>
-			)} */}
-			{/* <LEDBusBoard
-				config={{
-					rows: rows,
-					cols: cols,
-					scrollSpeed: text.scrollSpeed,
-					direction: getScrollDirection(text.scrollType),
-					interval: 0,
-					gap: 200,
-					mode: getScrollType(text.scrollType),
-					fixedPosition: 0,
-					flickerProbability: 0.5,
-				}}
-				data={bitmapText}
-				isRunning={true}
-			/> */}
+			<LEDMatrix
+				rows={rows}
+				columns={cols}
+				pattern={convertAsciiToArray(bitmapText)}
+				marqueeDirection={convertScrollTypeToMarqueeDirection(text.scrollType)}
+				scrollSpeed={text.scrollSpeed}
+				alignment={convertPositionToAlignment(text.position)}
+			/>
 		</div>
 	);
 };

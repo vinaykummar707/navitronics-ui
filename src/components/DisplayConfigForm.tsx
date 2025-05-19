@@ -995,7 +995,7 @@ export const DisplayConfigForm: React.FC = () => {
 									</span> */}
 									<div className="flex items-start gap-4">
 										{!isSubmitting && screenConfig.format === 'single' && (
-											<div className="p-2   bg-neutral-950  border-2 rounded-xl border-neutral-800">
+											<div className="p-2   bg-neutral-800  border-2 rounded-xl border-neutral-800">
 												<LEDBitmapSimulator
 													stopScroll={stopScroll}
 													rows={16}
@@ -1026,7 +1026,7 @@ export const DisplayConfigForm: React.FC = () => {
 										)}
 
 										{!isSubmitting && screenConfig.format === 'two' && (
-											<div className="p-2 bg-neutral-950  border-2 rounded-xl border-neutral-800">
+											<div className="p-2 bg-neutral-800  border-2 rounded-xl border-neutral-800">
 												<div className="flex">
 													{routeData.splitRoute ? (
 														<div className="flex flex-col">
@@ -1195,7 +1195,7 @@ export const DisplayConfigForm: React.FC = () => {
 										)}
 
 										{!isSubmitting && screenConfig.format === 'three' && (
-											<div className="p-2 bg-neutral-950  border-2 rounded-xl border-neutral-800">
+											<div className="p-2 bg-neutral-800  border-2 rounded-xl border-neutral-800">
 												<div className="flex flex-row">
 													{routeData.splitRoute ? (
 														<div className="flex flex-col">
@@ -1842,7 +1842,7 @@ export const DisplayConfigForm: React.FC = () => {
 														`specialMessages.${index}.${language}.previewBoard`
 													) && (
 															<div className="flex items-start gap-2 mb-4">
-																<div className="p-2 bg-neutral-950 border-2  rounded-xl border-neutral-800">
+																<div className="p-2 bg-neutral-800 border-2  rounded-xl border-neutral-800">
 																	<LEDBitmapSimulator
 																		stopScroll={stopScroll}
 																		rows={16}
