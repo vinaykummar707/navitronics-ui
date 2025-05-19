@@ -24,15 +24,15 @@ const LEDMatrix: React.FC<LEDMatrixProps> = ({
   dotSpacing = 2,
   onColor = '#ffbf00',
   offColor = '#000',
-  marqueeDirection = 'none',
-  scrollSpeed = 2,
-  alignment = 'center'
+  marqueeDirection = 'rtl',
+  scrollSpeed = 10,
+  alignment = 'start'
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [position, setPosition] = useState(0);
   const [matrix, setMatrix] = useState<boolean[][]>([]);
   const animationFrameRef = useRef<number>();
-
+  const positionRef = useRef(0);
   useEffect(() => {
     if (pattern && pattern.length > 0) {
       const newMatrix = pattern.map(row => 
@@ -60,74 +60,71 @@ const LEDMatrix: React.FC<LEDMatrixProps> = ({
     canvas.height = matrixHeight;
 
     const drawMatrix = (offsetX: number = 0) => {
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      const patternWidth = matrix[0]?.length || 0;
-      const patternHeight = matrix.length;
-      let startX = 0;
-      
-      // Calculate vertical centering offset
-      const startY = Math.floor((rows - patternHeight) / 2) * totalDotSize;
+        const patternWidth = matrix[0]?.length || 0;
+        const patternHeight = matrix.length;
+        let startX = 0;
+        
+        // Calculate vertical centering offset
+        const startY = Math.floor((rows - patternHeight) / 2) * totalDotSize;
 
-      if (marqueeDirection === 'none' && patternWidth < columns) {
-        switch (alignment) {
-          case 'center':
-            startX = Math.floor((columns - patternWidth) / 2) * totalDotSize;
-            break;
-          case 'end':
-            startX = (columns - patternWidth) * totalDotSize;
-            break;
-          default: // 'start'
-            startX = 0;
+        if (marqueeDirection === 'none' && patternWidth < columns) {
+            switch (alignment) {
+                case 'center':
+                    startX = Math.floor((columns - patternWidth) / 2) * totalDotSize;
+                    break;
+                case 'end':
+                    startX = (columns - patternWidth) * totalDotSize;
+                    break;
+                default: // 'start'
+                    startX = 0;
+            }
         }
-      }
 
-      matrix.forEach((row, rowIndex) => {
-        row.forEach((isOn, colIndex) => {
-          let x = colIndex * totalDotSize + startX;
+        matrix.forEach((row, rowIndex) => {
+            row.forEach((isOn, colIndex) => {
+                let x = colIndex * totalDotSize + startX;
 
-          if (marqueeDirection !== 'none') {
-            x = (x + offsetX) % (canvas.width + matrixWidth) - matrixWidth;
-            if (x < -dotSize) x += canvas.width + matrixWidth;
-          }
+                if (marqueeDirection !== 'none') {
+                    x = (x + offsetX) % (canvas.width + matrixWidth) - matrixWidth;
+                    if (x < -dotSize) x += canvas.width + matrixWidth;
+                }
 
-          // Add startY to vertically center the pattern
-          const y = rowIndex * totalDotSize + dotSize/2 + startY;
+                const y = rowIndex * totalDotSize + dotSize/2 + startY;
 
-          if (x >= -dotSize && x <= canvas.width + dotSize) {
-            ctx.beginPath();
-            ctx.arc(x + dotSize/2, y, dotSize/2, 0, Math.PI * 2);
-            ctx.fillStyle = isOn ? onColor : offColor;
-            ctx.fill();
-          }
+                if (x >= -dotSize && x <= canvas.width + dotSize) {
+                    ctx.beginPath();
+                    ctx.arc(x + dotSize/2, y, dotSize/2, 0, Math.PI * 2);
+                    ctx.fillStyle = isOn ? onColor : offColor;
+                    ctx.fill();
+                }
+            });
         });
-      });
     };
 
     const animate = () => {
-      if (marqueeDirection !== 'none') {
-        const newPosition = marqueeDirection === 'ltr' 
-          ? position + scrollSpeed 
-          : position - scrollSpeed;
-        setPosition(newPosition);
-        drawMatrix(newPosition);
-      } else {
-        drawMatrix(0);
-      }
+        if (marqueeDirection !== 'none') {
+            positionRef.current = marqueeDirection === 'ltr' 
+                ? positionRef.current + scrollSpeed 
+                : positionRef.current - scrollSpeed;
+            drawMatrix(positionRef.current);
+        } else {
+            drawMatrix(0);
+        }
 
-      animationFrameRef.current = requestAnimationFrame(animate);
+        animationFrameRef.current = requestAnimationFrame(animate);
     };
 
     animate();
 
     return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
+        if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+        }
     };
-  }, [matrix, dotSize, dotSpacing, onColor, offColor, marqueeDirection, scrollSpeed, position, alignment, columns]);
-
+}, [matrix, dotSize, dotSpacing, onColor, offColor, marqueeDirection, scrollSpeed, alignment, columns]);
   // Handle click to toggle LED state
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
