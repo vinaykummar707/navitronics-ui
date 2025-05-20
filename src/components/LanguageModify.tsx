@@ -164,12 +164,7 @@ const LanguageManagement = () => {
 				<div className="">
 					<div className="bg-white overflow-y-auto rounded-lg shadow overflow-hidden">
 						<div className="flex justify-between items-center p-4 border-b">
-						<LEDMatrix
-				rows={16}
-				columns={160}
-				pattern={defaultPattern}
-
-			/>
+			
 							<h2 className="text-xl font-semibold">Languages</h2>
 							{/* <div className="flex gap-4">
 								<Button
