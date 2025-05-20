@@ -997,37 +997,34 @@ export const DisplayConfigForm: React.FC = () => {
 										{getColumnsByBoard(activeTab, screenConfig.format)} Board
 									</span> */}
 									{screenKey === 'front' && (
-										<div className="">
+										<div className="flex items-end gap-4">
 											<div className="mb-2 font-semibold">
-												Select Front Board Columns:
+												Select Board Width:
 											</div>
 
-											<div className="flex gap-2">
-												<label className="mr-4 flex gap-2">
-													<input
-														type="radio"
-														name="frontBoardCols"
-														value={96}
-														checked={frontBoardCols === 96}
-														onChange={handleFrontBoardColsChange}
-													/>
-													96 Columns
-												</label>
+											<select
+												className="border p-1 rounded"
+												value={frontBoardCols}
+												onChange={(e) =>
+													setFrontBoardCols(Number(e.target.value) as 96 | 160)
+												}
+											>
+												<option value={96}>96</option>
+												<option value={160}>160</option>
+											</select>
 
-												<label className="flex gap-2">
-													<input
-														type="radio"
-														name="frontBoardCols"
-														value={160}
-														checked={frontBoardCols === 160}
-														onChange={handleFrontBoardColsChange}
-													/>
-													160 Columns
-												</label>
-											</div>
+											<button
+												type="button"
+												onClick={() => setStopScroll((value) => !value)}
+												className={` ${
+													stopScroll ? 'bg-green-500' : 'bg-red-500'
+												}  text-red-50 py-2 px-4 text-sm font-medium rounded-md`}
+											>
+												{!stopScroll ? 'Pause' : 'Play'} Simulation
+											</button>
 										</div>
 									)}
-									<div className="flex items-start gap-4">
+									<div className="flex flex-col-reverse items-start gap-4">
 										{!isSubmitting && screenConfig.format === 'single' && (
 											<div className="p-2   bg-neutral-800  border-2 rounded-xl border-neutral-800">
 												<LEDBitmapSimulator
@@ -1423,14 +1420,6 @@ export const DisplayConfigForm: React.FC = () => {
 												</div>
 											</div>
 										)}
-
-										<button
-											type="button"
-											onClick={() => setStopScroll((value) => !value)}
-											className="bg-red-500 text-red-50 py-2 px-4 text-sm font-medium rounded-md"
-										>
-											{!stopScroll ? 'Start' : 'Stop'} Scroll
-										</button>
 									</div>
 
 									<label className="block text-sm font-medium text-gray-600 mb-1">

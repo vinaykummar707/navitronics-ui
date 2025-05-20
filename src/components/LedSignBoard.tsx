@@ -293,6 +293,7 @@ const LEDBitmapSimulator = ({
         marqueeDirection={convertScrollTypeToMarqueeDirection(text.scrollType)}
         scrollSpeed={ parseInt(text.scrollSpeed)} 
         alignment={convertPositionToAlignment(text.position)}
+        paused={stopScroll}
       />
     </div>
   );
