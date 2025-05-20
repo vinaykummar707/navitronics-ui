@@ -738,10 +738,7 @@ export const DisplayConfigForm: React.FC = () => {
 							>
 								<option value="">Select Language</option>
 								{AVAILABLE_LANGUAGES.map((lang) => (
-									<option
-										key={lang.code}
-										value={lang.code}
-									>
+									<option key={lang.code} value={lang.code}>
 										{lang.name}
 									</option>
 								))}
@@ -752,8 +749,6 @@ export const DisplayConfigForm: React.FC = () => {
 			</div>
 		);
 	};
-	
-	
 
 	const fetchTransliteration = async (
 		text: string,
@@ -779,10 +774,18 @@ export const DisplayConfigForm: React.FC = () => {
 		}
 	};
 
+	const [frontBoardCols, setFrontBoardCols] = useState<96 | 160>(160);
+
+	const handleFrontBoardColsChange = (
+		event: React.ChangeEvent<HTMLInputElement>
+	) => {
+		setFrontBoardCols(Number(event.target.value) as 96 | 160);
+	};
+
 	const getColumnsByBoard = (boardType, format) => {
 		switch (boardType) {
 			case 'front':
-				return getFormatByScreen(160, format);
+				return getFormatByScreen(frontBoardCols, format);
 			case 'side':
 				return getFormatByScreen(96, format);
 			case 'rear':
@@ -993,6 +996,37 @@ export const DisplayConfigForm: React.FC = () => {
 										Showing 16 x{' '}
 										{getColumnsByBoard(activeTab, screenConfig.format)} Board
 									</span> */}
+									{screenKey === 'front' && (
+										<div className="">
+											<div className="mb-2 font-semibold">
+												Select Front Board Columns:
+											</div>
+
+											<div className="flex gap-2">
+												<label className="mr-4 flex gap-2">
+													<input
+														type="radio"
+														name="frontBoardCols"
+														value={96}
+														checked={frontBoardCols === 96}
+														onChange={handleFrontBoardColsChange}
+													/>
+													96 Columns
+												</label>
+
+												<label className="flex gap-2">
+													<input
+														type="radio"
+														name="frontBoardCols"
+														value={160}
+														checked={frontBoardCols === 160}
+														onChange={handleFrontBoardColsChange}
+													/>
+													160 Columns
+												</label>
+											</div>
+										</div>
+									)}
 									<div className="flex items-start gap-4">
 										{!isSubmitting && screenConfig.format === 'single' && (
 											<div className="p-2   bg-neutral-800  border-2 rounded-xl border-neutral-800">
@@ -1154,22 +1188,22 @@ export const DisplayConfigForm: React.FC = () => {
 															) -
 															(splitRoute
 																? Math.max(
-																	getBitmapColumns(
-																		watch(
-																			`displayConfig.${language}.${screenKey}.texts.routeNumber1.bitmap`
+																		getBitmapColumns(
+																			watch(
+																				`displayConfig.${language}.${screenKey}.texts.routeNumber1.bitmap`
+																			)
+																		),
+																		getBitmapColumns(
+																			watch(
+																				`displayConfig.${language}.${screenKey}.texts.routeNumber2.bitmap`
+																			)
 																		)
-																	),
-																	getBitmapColumns(
-																		watch(
-																			`displayConfig.${language}.${screenKey}.texts.routeNumber2.bitmap`
-																		)
-																	)
-																)
+																  )
 																: getBitmapColumns(
-																	watch(
-																		`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`
-																	)
-																))
+																		watch(
+																			`displayConfig.${language}.${screenKey}.texts.sideText.bitmap`
+																		)
+																  ))
 														}
 														text={displayConfig[language][screenKey].texts.text}
 														fontFamily={getFontFileByLanguage(
@@ -1601,7 +1635,10 @@ export const DisplayConfigForm: React.FC = () => {
 																	)}
 																	className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 																>
-																	{Array.from({ length: 11 }, (_, i) => i + 6).map((height) => (
+																	{Array.from(
+																		{ length: 11 },
+																		(_, i) => i + 6
+																	).map((height) => (
 																		<option key={height} value={height}>
 																			{height}
 																		</option>
@@ -1727,10 +1764,11 @@ export const DisplayConfigForm: React.FC = () => {
 						type="button"
 						onClick={handleAddSpecialMessage}
 						disabled={specialMessages.length >= MAX_SPECIAL_MESSAGES}
-						className={`px-4 text-sm py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${specialMessages.length >= MAX_SPECIAL_MESSAGES
+						className={`px-4 text-sm py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+							specialMessages.length >= MAX_SPECIAL_MESSAGES
 								? 'bg-gray-400 cursor-not-allowed'
 								: 'bg-blue-700 hover:bg-blue-700 text-white'
-							}`}
+						}`}
 					>
 						Add Special Message
 					</button>
@@ -1841,47 +1879,47 @@ export const DisplayConfigForm: React.FC = () => {
 													{watch(
 														`specialMessages.${index}.${language}.previewBoard`
 													) && (
-															<div className="flex items-start gap-2 mb-4">
-																<div className="p-2 bg-neutral-800 border-2  rounded-xl border-neutral-800">
-																	<LEDBitmapSimulator
-																		stopScroll={stopScroll}
-																		rows={16}
-																		cols={getColumnsByBoard(
-																			watch(
-																				`specialMessages.${index}.${language}.previewBoard`
-																			),
-																			'single'
-																		)}
-																		text={watch(
-																			`specialMessages.${index}.${language}`
-																		)}
-																		fontFamily={getFontFileByLanguage(
-																			language,
-																			'text',
-																			16
-																		)}
-																		onBitmapTextChange={(text) => {
-																			setValue(
-																				`specialMessages.${index}.${language}.bitmap`,
-																				text
-																			);
+														<div className="flex items-start gap-2 mb-4">
+															<div className="p-2 bg-neutral-800 border-2  rounded-xl border-neutral-800">
+																<LEDBitmapSimulator
+																	stopScroll={stopScroll}
+																	rows={16}
+																	cols={getColumnsByBoard(
+																		watch(
+																			`specialMessages.${index}.${language}.previewBoard`
+																		),
+																		'single'
+																	)}
+																	text={watch(
+																		`specialMessages.${index}.${language}`
+																	)}
+																	fontFamily={getFontFileByLanguage(
+																		language,
+																		'text',
+																		16
+																	)}
+																	onBitmapTextChange={(text) => {
+																		setValue(
+																			`specialMessages.${index}.${language}.bitmap`,
+																			text
+																		);
 
-																			setValue(
-																				`specialMessages.${index}.${language}.fontWidth`,
-																				getBitmapColumns(text)
-																			);
-																		}}
-																	/>
-																</div>
-																<button
-																	type="button"
-																	onClick={() => setStopScroll((value) => !value)}
-																	className="mt-2 bg-red-500 text-red-50 py-2 px-4 text-sm font-medium rounded-md"
-																>
-																	{!stopScroll ? 'Start' : 'Stop'} Scroll
-																</button>
+																		setValue(
+																			`specialMessages.${index}.${language}.fontWidth`,
+																			getBitmapColumns(text)
+																		);
+																	}}
+																/>
 															</div>
-														)}
+															<button
+																type="button"
+																onClick={() => setStopScroll((value) => !value)}
+																className="mt-2 bg-red-500 text-red-50 py-2 px-4 text-sm font-medium rounded-md"
+															>
+																{!stopScroll ? 'Start' : 'Stop'} Scroll
+															</button>
+														</div>
+													)}
 													<div className="grid grid-cols-9 gap-4 items-start">
 														<div className="w-full col-span-9">
 															<label className="block text-sm font-medium text-gray-600 mb-1">
@@ -1907,9 +1945,10 @@ export const DisplayConfigForm: React.FC = () => {
 																				englishText.trim() !== ''
 																			) {
 																				toast.info(
-																					`Translating to ${AVAILABLE_LANGUAGES.find(
-																						(l) => l.code === language
-																					)?.name
+																					`Translating to ${
+																						AVAILABLE_LANGUAGES.find(
+																							(l) => l.code === language
+																						)?.name
 																					}...`,
 																					{
 																						autoClose: false,
@@ -1930,9 +1969,10 @@ export const DisplayConfigForm: React.FC = () => {
 																						`translating-special-${index}-${language}`
 																					);
 																					toast.success(
-																						`Translated to ${AVAILABLE_LANGUAGES.find(
-																							(l) => l.code === language
-																						)?.name
+																						`Translated to ${
+																							AVAILABLE_LANGUAGES.find(
+																								(l) => l.code === language
+																							)?.name
 																						}`
 																					);
 																				} catch (error) {
@@ -1940,9 +1980,10 @@ export const DisplayConfigForm: React.FC = () => {
 																						`translating-special-${index}-${language}`
 																					);
 																					toast.error(
-																						`Failed to translate to ${AVAILABLE_LANGUAGES.find(
-																							(l) => l.code === language
-																						)?.name
+																						`Failed to translate to ${
+																							AVAILABLE_LANGUAGES.find(
+																								(l) => l.code === language
+																							)?.name
 																						}`
 																					);
 																				}
@@ -2109,24 +2150,27 @@ export const DisplayConfigForm: React.FC = () => {
 																className="w-full p-2 border rounded-md"
 															/>
 														</div> */}
-														
+
 														<div>
-																<label className="block text-sm font-medium text-gray-600 mb-1">
-																	Font Height
-																</label>
-																<select
-																	{...register(
-																		`specialMessages.${index}.${language}.fontHeight`
-																	)}
-																	className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-																>
-																	{Array.from({ length: 11 }, (_, i) => i + 6).map((height) => (
-																		<option key={height} value={height}>
-																			{height}
-																		</option>
-																	))}
-																</select>
-															</div>
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Font Height
+															</label>
+															<select
+																{...register(
+																	`specialMessages.${index}.${language}.fontHeight`
+																)}
+																className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+															>
+																{Array.from(
+																	{ length: 11 },
+																	(_, i) => i + 6
+																).map((height) => (
+																	<option key={height} value={height}>
+																		{height}
+																	</option>
+																))}
+															</select>
+														</div>
 
 														{/* <div>
 															<label className="block text-sm font-medium text-gray-600 mb-1">
@@ -2246,7 +2290,9 @@ export const DisplayConfigForm: React.FC = () => {
 				<button
 					type="submit"
 					className="px-4 text-sm py-2 bg-blue-700 disabled:bg-neutral-500 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-					disabled={createRouteMutation.isPending || updateRouteMutation.isPending}
+					disabled={
+						createRouteMutation.isPending || updateRouteMutation.isPending
+					}
 				>
 					{isEdit ? 'Update Configuration' : 'Save Configuration'}
 				</button>
@@ -2257,20 +2303,22 @@ export const DisplayConfigForm: React.FC = () => {
 					<button
 						type="button"
 						onClick={() => setActiveTab('route')}
-						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${activeTab === 'route'
+						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${
+							activeTab === 'route'
 								? 'border-nav_orange bg-white text-nav_blue-500'
 								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-							}`}
+						}`}
 					>
 						Route
 					</button>
 					<button
 						type="button"
 						onClick={() => setActiveTab('languages')}
-						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${activeTab === 'languages'
+						className={`py-2 px-3 text-left max-w-[120px]   border-b-2 font-medium text-sm ${
+							activeTab === 'languages'
 								? 'border-nav_orange bg-white text-nav_blue-500'
 								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-							}`}
+						}`}
 					>
 						Languages
 					</button>
@@ -2282,10 +2330,11 @@ export const DisplayConfigForm: React.FC = () => {
 							key={screenType}
 							type="button"
 							onClick={() => setActiveTab(screenType)}
-							className={`py-2 px-3 text-left max-w-[160px]  border-b-2 font-medium text-sm capitalize ${activeTab === screenType
+							className={`py-2 px-3 text-left max-w-[160px]  border-b-2 font-medium text-sm capitalize ${
+								activeTab === screenType
 									? 'border-nav_orange bg-white text-nav_blue-500'
 									: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-								}`}
+							}`}
 						>
 							{screenType}
 						</button>
