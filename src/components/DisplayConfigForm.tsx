@@ -1592,12 +1592,14 @@ export const DisplayConfigForm: React.FC = () => {
 
                               <div>
                                 <label className="block text-sm font-medium text-gray-600 mb-1">
-                                  Scroll Speed
+                                  {
+                                    displayConfig[language][screenKey].texts[textKey]?.scrollType === 'Fixed' ? 'Duration' : 'Scroll Speed'
+                                  }
                                 </label>
                                 <input
                                   type="number"
                                   min={0}
-                                  max={100}
+                                  max={10}
                                   {...register(
                                     `displayConfig.${language}.${screenKey}.texts.${textKey}.scrollSpeed`
                                   )}
