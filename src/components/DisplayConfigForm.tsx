@@ -1630,7 +1630,7 @@ export const DisplayConfigForm: React.FC = () => {
                                 </select>
                               </div>
 
-                              <div>
+                              {/* <div>
                                 <label className="block text-sm font-medium text-gray-600 mb-1">
                                   Font Height
                                 </label>
@@ -1649,20 +1649,18 @@ export const DisplayConfigForm: React.FC = () => {
                                     </option>
                                   ))}
                                 </select>
-                              </div>
+                              </div> */}
 
                               <div>
                                 <label className="block text-sm font-medium text-gray-600 mb-1">
-                                  Width Aspect
+                                  Font Height
                                 </label>
                                 <input
                                   type="number"
                                   {...register(
-                                    `displayConfig.${language}.${screenKey}.texts.${textKey}.fontSize`
+                                    `displayConfig.${language}.${screenKey}.texts.${textKey}.fontHeight`
                                   )}
-                                  min={0.1}
-                                  max={2}
-                                  step={0.1}
+                                  
                                   className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 />
                               </div>
@@ -2146,22 +2144,21 @@ export const DisplayConfigForm: React.FC = () => {
                               />
                             </div>
 
-                            {/* <div>
+                             <div>
 															<label className="block text-sm font-medium text-gray-600 mb-1">
 																Font Height
 															</label>
 															<input
-																min={6}
-																max={16}
+																
 																type="number"
 																{...register(
 																	`specialMessages.${index}.${language}.fontHeight`
 																)}
 																className="w-full p-2 border rounded-md"
 															/>
-														</div> */}
+														</div>
 
-                            <div>
+                            {/* <div>
                               <label className="block text-sm font-medium text-gray-600 mb-1">
                                 Font Height
                               </label>
@@ -2180,7 +2177,7 @@ export const DisplayConfigForm: React.FC = () => {
                                   </option>
                                 ))}
                               </select>
-                            </div>
+                            </div> */}
 
                             {/* <div>
 															<label className="block text-sm font-medium text-gray-600 mb-1">
