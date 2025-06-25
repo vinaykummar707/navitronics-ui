@@ -234,7 +234,7 @@ const LEDBitmapSimulator = ({
 		const fetchBitmap = async () => {
 			try {
 				const response = await axios.get(
-					`http://localhost:5288/api/bitmap?text=${text.text}&height=22`
+					`http://localhost:5288/api/bitmap?text=${text.text}&height=16&weight=${text.fontWeight === 'bold' ? 'Bold' : 'Regular'}`,
 				);
 
 				console.log(response);
