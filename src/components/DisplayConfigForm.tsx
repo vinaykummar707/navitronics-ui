@@ -38,6 +38,7 @@ import ScrollingLEDDisplay from "./LedSignBoard";
 import LEDBitmapSimulator from "./LedSignBoard";
 import axiosInstance from "@/config/axios";
 import { toast } from "react-toastify";
+import FontHeightInput from "./FontHeightControl";
 
 const SCREEN_TYPES = [
   "Special Messages",
@@ -382,6 +383,7 @@ export const DisplayConfigForm: React.FC = () => {
 
   useEffect(() => {
     console.log(isEdit, gotRouteData);
+  
     fetchLanguages();
     if (isEdit && gotRouteData) {
       console.log(Object.keys(gotRouteData.displayConfig));
@@ -685,7 +687,6 @@ export const DisplayConfigForm: React.FC = () => {
             Via
           </label>
           <input
-            required
             {...register("route.via")}
             className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Dont add comma for stops use space instead"
@@ -1467,170 +1468,172 @@ export const DisplayConfigForm: React.FC = () => {
                           return null; // Skip rendering for sideText if splitRoute
                         }
                         return (
-                          <div
-                            key={`${language}-${textKey}`}
-                            className="border p-4 bg-stone-100  rounded-lg mb-4"
-                          >
-                            <h4 className="font-semibold mb-2 text-gray-700 capitalize">
-                              {textKey}
-                            </h4>
+													<div
+														key={`${language}-${textKey}`}
+														className="border p-4 bg-stone-100  rounded-lg mb-4"
+													>
+														<h4 className="font-semibold mb-2 text-gray-700 capitalize">
+															{textKey}
+														</h4>
 
-                            <div className="mb-4 items-start flex gap-2">
-                              <MenuRoot
-                                onSelect={(e) =>
-                                  handlePlaceholderSelect(
-                                    screenKey,
-                                    textKey,
-                                    language,
-                                    e.value
-                                  )
-                                }
-                              >
-                                <MenuTrigger asChild>
-                                  <Button
-                                    className="px-3 h-10 bg-white rounded-md border"
-                                    size="sm"
-                                  >
-                                    Select Text To Display
-                                    <LuChevronDown />
-                                  </Button>
-                                </MenuTrigger>
-                                <MenuContent>
-                                  {PLACEHOLDER_OPTIONS.map((option) => (
-                                    <MenuItem value={option.value}>
-                                      {option.label}
-                                    </MenuItem>
-                                  ))}
-                                </MenuContent>
-                              </MenuRoot>
+														<div className="mb-4 items-start flex gap-2">
+															<MenuRoot
+																onSelect={(e) =>
+																	handlePlaceholderSelect(
+																		screenKey,
+																		textKey,
+																		language,
+																		e.value
+																	)
+																}
+															>
+																<MenuTrigger asChild>
+																	<Button
+																		className="px-3 h-10 bg-white rounded-md border"
+																		size="sm"
+																	>
+																		Select Text To Display
+																		<LuChevronDown />
+																	</Button>
+																</MenuTrigger>
+																<MenuContent>
+																	{PLACEHOLDER_OPTIONS.map((option) => (
+																		<MenuItem value={option.value}>
+																			{option.label}
+																		</MenuItem>
+																	))}
+																</MenuContent>
+															</MenuRoot>
 
-                              <Controller
-                                key={`${language}-${screenKey}-${textKey}`}
-                                name={`displayConfig.${language}.${screenKey}.texts.${textKey}.text`}
-                                control={control}
-                                render={({ field }) => (
-                                  <IMEInput langCode={language} {...field} />
-                                )}
-                              />
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const text = watch(
-                                    `displayConfig.${language}.${screenKey}.texts.${textKey}.text`
-                                  );
-                                  navigator.clipboard.writeText(text);
-                                  // alert(`${text} copied to clipboard`)
-                                }}
-                                className="h-10 px-3 bg-white border hover:bg-neutral-200 rounded-md"
-                                title="Copy text"
-                              >
-                                <LuCopy className="w-4 h-4 text-gray-600" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  const text = watch(
-                                    `displayConfig.${language}.${screenKey}.texts.${textKey}.text`
-                                  );
-                                  const clipboardText =
-                                    await navigator.clipboard.readText();
-                                  setValue(
-                                    `displayConfig.${language}.${screenKey}.texts.${textKey}.text`,
-                                    clipboardText
-                                  );
-                                  // alert(`${text} copied to clipboard`)
-                                }}
-                                className="h-10 px-3 bg-white border hover:bg-neutral-200 rounded-md"
-                                title="Paste text"
-                              >
-                                <LuClipboardPaste className="w-4 h-4 text-gray-600" />
-                              </button>
-                            </div>
+															<Controller
+																key={`${language}-${screenKey}-${textKey}`}
+																name={`displayConfig.${language}.${screenKey}.texts.${textKey}.text`}
+																control={control}
+																render={({ field }) => (
+																	<IMEInput langCode={language} {...field} />
+																)}
+															/>
+															<button
+																type="button"
+																onClick={() => {
+																	const text = watch(
+																		`displayConfig.${language}.${screenKey}.texts.${textKey}.text`
+																	);
+																	navigator.clipboard.writeText(text);
+																	// alert(`${text} copied to clipboard`)
+																}}
+																className="h-10 px-3 bg-white border hover:bg-neutral-200 rounded-md"
+																title="Copy text"
+															>
+																<LuCopy className="w-4 h-4 text-gray-600" />
+															</button>
+															<button
+																type="button"
+																onClick={async () => {
+																	const text = watch(
+																		`displayConfig.${language}.${screenKey}.texts.${textKey}.text`
+																	);
+																	const clipboardText =
+																		await navigator.clipboard.readText();
+																	setValue(
+																		`displayConfig.${language}.${screenKey}.texts.${textKey}.text`,
+																		clipboardText
+																	);
+																	// alert(`${text} copied to clipboard`)
+																}}
+																className="h-10 px-3 bg-white border hover:bg-neutral-200 rounded-md"
+																title="Paste text"
+															>
+																<LuClipboardPaste className="w-4 h-4 text-gray-600" />
+															</button>
+														</div>
 
-                            <div className="grid grid-cols-6 gap-4">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">
-                                  Scroll Type
-                                </label>
-                                <select
-                                  {...register(
-                                    `displayConfig.${language}.${screenKey}.texts.${textKey}.scrollType`
-                                  )}
-                                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                  {SCROLL_TYPES.map((type) => (
-                                    <option key={type} value={type}>
-                                      {type}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
+														<div className="grid grid-cols-6 gap-4">
+															<div>
+																<label className="block text-sm font-medium text-gray-600 mb-1">
+																	Scroll Type
+																</label>
+																<select
+																	{...register(
+																		`displayConfig.${language}.${screenKey}.texts.${textKey}.scrollType`
+																	)}
+																	className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+																>
+																	{SCROLL_TYPES.map((type) => (
+																		<option key={type} value={type}>
+																			{type}
+																		</option>
+																	))}
+																</select>
+															</div>
 
-                              <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">
-                                  Position
-                                </label>
-                                <select
-                                  {...register(
-                                    `displayConfig.${language}.${screenKey}.texts.${textKey}.position`
-                                  )}
-                                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                  {POSITIONS.filter(
-                                    (pos) =>
-                                      !(
-                                        textKey.includes("sideText") &&
-                                        pos === "Center"
-                                      )
-                                  ).map((pos) => (
-                                    <option key={pos} value={pos}>
-                                      {pos}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
+															<div>
+																<label className="block text-sm font-medium text-gray-600 mb-1">
+																	Position
+																</label>
+																<select
+																	{...register(
+																		`displayConfig.${language}.${screenKey}.texts.${textKey}.position`
+																	)}
+																	className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+																>
+																	{POSITIONS.filter(
+																		(pos) =>
+																			!(
+																				textKey.includes('sideText') &&
+																				pos === 'Center'
+																			)
+																	).map((pos) => (
+																		<option key={pos} value={pos}>
+																			{pos}
+																		</option>
+																	))}
+																</select>
+															</div>
 
-                              <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">
-                                  {
-                                    displayConfig[language][screenKey].texts[textKey]?.scrollType === 'Fixed' ? 'Duration' : 'Scroll Speed'
-                                  }
-                                </label>
-                                <input
-                                  type="number"
-                                  min={0}
-                                  max={10}
-                                  {...register(
-                                    `displayConfig.${language}.${screenKey}.texts.${textKey}.scrollSpeed`
-                                  )}
-                                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                />
-                              </div>
+															<div>
+																<label className="block text-sm font-medium text-gray-600 mb-1">
+																	{displayConfig[language][screenKey].texts[
+																		textKey
+																	]?.scrollType === 'Fixed'
+																		? 'Duration'
+																		: 'Scroll Speed'}
+																</label>
+																<input
+																	type="number"
+																	min={0}
+																	max={10}
+																	{...register(
+																		`displayConfig.${language}.${screenKey}.texts.${textKey}.scrollSpeed`
+																	)}
+																	className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+																/>
+															</div>
 
-                              <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">
-                                  Font Weight
-                                </label>
+															<div>
+																<label className="block text-sm font-medium text-gray-600 mb-1">
+																	Font Weight
+																</label>
 
-                                <select
-                                  {...register(
-                                    `displayConfig.${language}.${screenKey}.texts.${textKey}.fontWeight`
-                                  )}
-                                  defaultValue={"Regular"}
-                                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                  {FONT_WEIGHT.map((weight) => (
-                                    <option
-                                      key={weight.value}
-                                      value={weight.value}
-                                    >
-                                      {weight.label}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
+																<select
+																	{...register(
+																		`displayConfig.${language}.${screenKey}.texts.${textKey}.fontWeight`
+																	)}
+																	defaultValue={'Regular'}
+																	className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+																>
+																	{FONT_WEIGHT.map((weight) => (
+																		<option
+																			key={weight.value}
+																			value={weight.value}
+																		>
+																			{weight.label}
+																		</option>
+																	))}
+																</select>
+															</div>
 
-                              {/* <div>
+															{/* <div>
                                 <label className="block text-sm font-medium text-gray-600 mb-1">
                                   Font Height
                                 </label>
@@ -1651,21 +1654,16 @@ export const DisplayConfigForm: React.FC = () => {
                                 </select>
                               </div> */}
 
-                              <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">
-                                  Font Height
-                                </label>
-                                <input
-                                  type="number"
-                                  {...register(
-                                    `displayConfig.${language}.${screenKey}.texts.${textKey}.fontHeight`
-                                  )}
-                                  
-                                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                />
-                              </div>
+															<Controller
+																key={`${language}-${screenKey}-${textKey}-fontHeight`}
+																name={`displayConfig.${language}.${screenKey}.texts.${textKey}.fontHeight`}
+																control={control}
+																render={({ field }) => (
+																	<FontHeightInput  {...field} />
+																)}
+															/>
 
-                              <div>
+															{/* <div>
                                 <label className="block text-sm font-medium text-gray-600 mb-1">
                                   Thresshold
                                 </label>
@@ -1676,10 +1674,10 @@ export const DisplayConfigForm: React.FC = () => {
                                   )}
                                   className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 />
-                              </div>
-                            </div>
-                          </div>
-                        );
+                              </div> */}
+														</div>
+													</div>
+												);
                       }
                     )}
                   </div>
@@ -1868,230 +1866,230 @@ export const DisplayConfigForm: React.FC = () => {
                       AVAILABLE_LANGUAGES.find((l) => l.code === language)
                         ?.name || language.toUpperCase();
                     return (
-                      <AccordionItem
-                        className="py-2 bg-white rounded-xl shadow mb-4 border px-4"
-                        key={language}
-                        value={language}
-                      >
-                        <AccordionItemTrigger>
-                          <span className="text-md py-2 font-semibold text-gray-500">
-                            {langName}
-                          </span>
-                        </AccordionItemTrigger>
-                        <AccordionItemContent className="bg-neutral-20 flex flex-col items-start p-2">
-                          {watch(
-                            `specialMessages.${index}.${language}.previewBoard`
-                          ) && (
-                            <div className="flex items-start gap-2 mb-4">
-                              <div className="p-2 bg-neutral-800 border-2  rounded-xl border-neutral-800">
-                                <LEDBitmapSimulator
-                                  stopScroll={stopScroll}
-                                  rows={16}
-                                  cols={getColumnsByBoard(
-                                    watch(
-                                      `specialMessages.${index}.${language}.previewBoard`
-                                    ),
-                                    "single"
-                                  )}
-                                  text={watch(
-                                    `specialMessages.${index}.${language}`
-                                  )}
-                                  fontFamily={getFontFileByLanguage(
-                                    language,
-                                    "text",
-                                    16
-                                  )}
-                                  onBitmapTextChange={(text) => {
-                                    setValue(
-                                      `specialMessages.${index}.${language}.bitmap`,
-                                      text
-                                    );
+											<AccordionItem
+												className="py-2 bg-white rounded-xl shadow mb-4 border px-4"
+												key={language}
+												value={language}
+											>
+												<AccordionItemTrigger>
+													<span className="text-md py-2 font-semibold text-gray-500">
+														{langName}
+													</span>
+												</AccordionItemTrigger>
+												<AccordionItemContent className="bg-neutral-20 flex flex-col items-start p-2">
+													{watch(
+														`specialMessages.${index}.${language}.previewBoard`
+													) && (
+														<div className="flex items-start gap-2 mb-4">
+															<div className="p-2 bg-neutral-800 border-2  rounded-xl border-neutral-800">
+																<LEDBitmapSimulator
+																	stopScroll={stopScroll}
+																	rows={16}
+																	cols={getColumnsByBoard(
+																		watch(
+																			`specialMessages.${index}.${language}.previewBoard`
+																		),
+																		'single'
+																	)}
+																	text={watch(
+																		`specialMessages.${index}.${language}`
+																	)}
+																	fontFamily={getFontFileByLanguage(
+																		language,
+																		'text',
+																		16
+																	)}
+																	onBitmapTextChange={(text) => {
+																		setValue(
+																			`specialMessages.${index}.${language}.bitmap`,
+																			text
+																		);
 
-                                    setValue(
-                                      `specialMessages.${index}.${language}.fontWidth`,
-                                      getBitmapColumns(text)
-                                    );
-                                  }}
-                                />
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => setStopScroll((value) => !value)}
-                                className={` ${
-                                  stopScroll ? "bg-green-500" : "bg-red-500"
-                                }  text-red-50 py-2 px-4 text-sm font-medium rounded-md`}
-                              >
-                                {!stopScroll ? "Pause" : "Play"} Simulation
-                              </button>
-                            </div>
-                          )}
-                          <div className="grid grid-cols-9 gap-4 items-start">
-                            <div className="w-full col-span-9">
-                              <label className="block text-sm font-medium text-gray-600 mb-1">
-                                Text
-                              </label>
-                              <div className="flex gap-2">
-                                <Controller
-                                  name={`specialMessages.${index}.${language}.text`}
-                                  control={control}
-                                  render={({ field }) => (
-                                    <IMEInput langCode={language} {...field} />
-                                  )}
-                                />
-                                {language !== "en" && (
-                                  <button
-                                    type="button"
-                                    onClick={async () => {
-                                      const englishText = watch(
-                                        `specialMessages.${index}.en.text`
-                                      );
-                                      if (
-                                        englishText &&
-                                        englishText.trim() !== ""
-                                      ) {
-                                        toast.info(
-                                          `Translating to ${
-                                            AVAILABLE_LANGUAGES.find(
-                                              (l) => l.code === language
-                                            )?.name
-                                          }...`,
-                                          {
-                                            autoClose: false,
-                                            toastId: `translating-special-${index}-${language}`,
-                                          }
-                                        );
-                                        try {
-                                          const translatedText =
-                                            await translateText(
-                                              englishText,
-                                              language
-                                            );
-                                          setValue(
-                                            `specialMessages.${index}.${language}.text`,
-                                            translatedText
-                                          );
-                                          toast.dismiss(
-                                            `translating-special-${index}-${language}`
-                                          );
-                                          toast.success(
-                                            `Translated to ${
-                                              AVAILABLE_LANGUAGES.find(
-                                                (l) => l.code === language
-                                              )?.name
-                                            }`
-                                          );
-                                        } catch (error) {
-                                          toast.dismiss(
-                                            `translating-special-${index}-${language}`
-                                          );
-                                          toast.error(
-                                            `Failed to translate to ${
-                                              AVAILABLE_LANGUAGES.find(
-                                                (l) => l.code === language
-                                              )?.name
-                                            }`
-                                          );
-                                        }
-                                      } else {
-                                        toast.warning(
-                                          "Please enter English text first"
-                                        );
-                                      }
-                                    }}
-                                    className="h-10 px-3 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400"
-                                    disabled={
-                                      !watch(`specialMessages.${index}.en.text`)
-                                    }
-                                  >
-                                    Translate from English
-                                  </button>
-                                )}
-                              </div>
-                            </div>
+																		setValue(
+																			`specialMessages.${index}.${language}.fontWidth`,
+																			getBitmapColumns(text)
+																		);
+																	}}
+																/>
+															</div>
+															<button
+																type="button"
+																onClick={() => setStopScroll((value) => !value)}
+																className={` ${
+																	stopScroll ? 'bg-green-500' : 'bg-red-500'
+																}  text-red-50 py-2 px-4 text-sm font-medium rounded-md`}
+															>
+																{!stopScroll ? 'Pause' : 'Play'} Simulation
+															</button>
+														</div>
+													)}
+													<div className="grid grid-cols-9 gap-4 items-start">
+														<div className="w-full col-span-9">
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Text
+															</label>
+															<div className="flex gap-2">
+																<Controller
+																	name={`specialMessages.${index}.${language}.text`}
+																	control={control}
+																	render={({ field }) => (
+																		<IMEInput langCode={language} {...field} />
+																	)}
+																/>
+																{language !== 'en' && (
+																	<button
+																		type="button"
+																		onClick={async () => {
+																			const englishText = watch(
+																				`specialMessages.${index}.en.text`
+																			);
+																			if (
+																				englishText &&
+																				englishText.trim() !== ''
+																			) {
+																				toast.info(
+																					`Translating to ${
+																						AVAILABLE_LANGUAGES.find(
+																							(l) => l.code === language
+																						)?.name
+																					}...`,
+																					{
+																						autoClose: false,
+																						toastId: `translating-special-${index}-${language}`,
+																					}
+																				);
+																				try {
+																					const translatedText =
+																						await translateText(
+																							englishText,
+																							language
+																						);
+																					setValue(
+																						`specialMessages.${index}.${language}.text`,
+																						translatedText
+																					);
+																					toast.dismiss(
+																						`translating-special-${index}-${language}`
+																					);
+																					toast.success(
+																						`Translated to ${
+																							AVAILABLE_LANGUAGES.find(
+																								(l) => l.code === language
+																							)?.name
+																						}`
+																					);
+																				} catch (error) {
+																					toast.dismiss(
+																						`translating-special-${index}-${language}`
+																					);
+																					toast.error(
+																						`Failed to translate to ${
+																							AVAILABLE_LANGUAGES.find(
+																								(l) => l.code === language
+																							)?.name
+																						}`
+																					);
+																				}
+																			} else {
+																				toast.warning(
+																					'Please enter English text first'
+																				);
+																			}
+																		}}
+																		className="h-10 px-3 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400"
+																		disabled={
+																			!watch(`specialMessages.${index}.en.text`)
+																		}
+																	>
+																		Translate from English
+																	</button>
+																)}
+															</div>
+														</div>
 
-                            <div className="w-full col-span-9">
-                              <label className="block text-sm font-medium text-gray-600 mb-1">
-                                Preview Board
-                              </label>
-                              <select
-                                value={
-                                  watch(
-                                    `specialMessages.${index}.${language}.previewBoard`
-                                  ) || ""
-                                }
-                                onChange={(e) =>
-                                  setValue(
-                                    `specialMessages.${index}.${language}.previewBoard`,
-                                    e.target.value
-                                  )
-                                }
-                                className="w-full p-2 border rounded-md"
-                              >
-                                <option value="">Select Board</option>
-                                {["front", "side", "rear", "internal"].map(
-                                  (screen) =>
-                                    watch(
-                                      `specialMessages.${index}.${screen}`
-                                    ) && (
-                                      <option key={screen} value={screen}>
-                                        {screen.charAt(0).toUpperCase() +
-                                          screen.slice(1)}{" "}
-                                        Board
-                                      </option>
-                                    )
-                                )}
-                              </select>
-                            </div>
+														<div className="w-full col-span-9">
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Preview Board
+															</label>
+															<select
+																value={
+																	watch(
+																		`specialMessages.${index}.${language}.previewBoard`
+																	) || ''
+																}
+																onChange={(e) =>
+																	setValue(
+																		`specialMessages.${index}.${language}.previewBoard`,
+																		e.target.value
+																	)
+																}
+																className="w-full p-2 border rounded-md"
+															>
+																<option value="">Select Board</option>
+																{['front', 'side', 'rear', 'internal'].map(
+																	(screen) =>
+																		watch(
+																			`specialMessages.${index}.${screen}`
+																		) && (
+																			<option key={screen} value={screen}>
+																				{screen.charAt(0).toUpperCase() +
+																					screen.slice(1)}{' '}
+																				Board
+																			</option>
+																		)
+																)}
+															</select>
+														</div>
 
-                            <div className="w-full">
-                              <label className="block text-sm font-medium text-gray-600 mb-1">
-                                Scroll Type
-                              </label>
-                              <select
-                                {...register(
-                                  `specialMessages.${index}.${language}.scrollType`
-                                )}
-                                className="w-full p-2 border rounded-md"
-                              >
-                                {SCROLL_TYPES.map((type) => (
-                                  <option key={type} value={type}>
-                                    {type}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-600 mb-1">
-                                Position
-                              </label>
-                              <select
-                                {...register(
-                                  `specialMessages.${index}.${language}.position`
-                                )}
-                                className="w-full p-2 border rounded-md"
-                              >
-                                {POSITIONS.map((pos) => (
-                                  <option key={pos} value={pos}>
-                                    {pos}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-600 mb-1">
-                                Scroll Speed
-                              </label>
-                              <input
-                                type="number"
-                                min={1}
-                                max={10}
-                                {...register(
-                                  `specialMessages.${index}.${language}.scrollSpeed`
-                                )}
-                                className="w-full p-2 border rounded-md"
-                              />
-                            </div>
-                            {/* <div>
+														<div className="w-full">
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Scroll Type
+															</label>
+															<select
+																{...register(
+																	`specialMessages.${index}.${language}.scrollType`
+																)}
+																className="w-full p-2 border rounded-md"
+															>
+																{SCROLL_TYPES.map((type) => (
+																	<option key={type} value={type}>
+																		{type}
+																	</option>
+																))}
+															</select>
+														</div>
+														<div>
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Position
+															</label>
+															<select
+																{...register(
+																	`specialMessages.${index}.${language}.position`
+																)}
+																className="w-full p-2 border rounded-md"
+															>
+																{POSITIONS.map((pos) => (
+																	<option key={pos} value={pos}>
+																		{pos}
+																	</option>
+																))}
+															</select>
+														</div>
+														<div>
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Scroll Speed
+															</label>
+															<input
+																type="number"
+																min={1}
+																max={10}
+																{...register(
+																	`specialMessages.${index}.${language}.scrollSpeed`
+																)}
+																className="w-full p-2 border rounded-md"
+															/>
+														</div>
+														{/* <div>
 															<label className="block text-sm font-medium text-gray-600 mb-1">
 																Font Size
 															</label>
@@ -2108,57 +2106,52 @@ export const DisplayConfigForm: React.FC = () => {
 																))}
 															</select>
 														</div> */}
-                            <div>
-                              <label className="block text-sm font-medium text-gray-600 mb-1">
-                                Font Weight
-                              </label>
-                              <select
-                                {...register(
-                                  `specialMessages.${index}.${language}.fontWeight`
-                                )}
-                                className="w-full p-2 border rounded-md"
-                              >
-                                {FONT_WEIGHT.map((weight) => (
-                                  <option
-                                    key={weight.value}
-                                    value={weight.value}
-                                  >
-                                    {weight.label}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-600 mb-1">
-                                Width
-                              </label>
-                              <input
-                                type="number"
-                                {...register(
-                                  `specialMessages.${index}.${language}.fontSize`
-                                )}
-                                min={0.1}
-                                max={2}
-                                step={0.1}
-                                className="w-full p-2 border rounded-md"
-                              />
-                            </div>
-
-                             <div>
+														<div>
 															<label className="block text-sm font-medium text-gray-600 mb-1">
-																Font Height
+																Font Weight
+															</label>
+															<select
+																{...register(
+																	`specialMessages.${index}.${language}.fontWeight`
+																)}
+																className="w-full p-2 border rounded-md"
+															>
+																{FONT_WEIGHT.map((weight) => (
+																	<option
+																		key={weight.value}
+																		value={weight.value}
+																	>
+																		{weight.label}
+																	</option>
+																))}
+															</select>
+														</div>
+														<div>
+															<label className="block text-sm font-medium text-gray-600 mb-1">
+																Width
 															</label>
 															<input
-																
 																type="number"
 																{...register(
-																	`specialMessages.${index}.${language}.fontHeight`
+																	`specialMessages.${index}.${language}.fontSize`
 																)}
+																min={0.1}
+																max={2}
+																step={0.1}
 																className="w-full p-2 border rounded-md"
 															/>
 														</div>
 
-                            {/* <div>
+														<Controller
+															key={`${language}-${screenKey}-${textKey}-fontHeight`}
+															name={`displayConfig.${language}.${screenKey}.texts.${textKey}.fontHeight`}
+															control={control}
+															render={({ field }) => (
+																<FontHeightInput {...field} />
+															)}
+														/>
+
+														{/* <div>
                               <label className="block text-sm font-medium text-gray-600 mb-1">
                                 Font Height
                               </label>
@@ -2179,7 +2172,7 @@ export const DisplayConfigForm: React.FC = () => {
                               </select>
                             </div> */}
 
-                            {/* <div>
+														{/* <div>
 															<label className="block text-sm font-medium text-gray-600 mb-1">
 																X Offset
 															</label>
@@ -2191,7 +2184,7 @@ export const DisplayConfigForm: React.FC = () => {
 																className="w-full p-2 border rounded-md"
 															/>
 														</div> */}
-                            {/* <div>
+														{/* <div>
 															<label className="block text-sm font-medium text-gray-600 mb-1">
 																Y Offset
 															</label>
@@ -2203,7 +2196,7 @@ export const DisplayConfigForm: React.FC = () => {
 																className="w-full p-2 border rounded-md"
 															/>
 														</div> */}
-                            <div>
+														{/* <div>
                               <label className="block text-sm font-medium text-gray-600 mb-1">
                                 Thresshold
                               </label>
@@ -2214,11 +2207,11 @@ export const DisplayConfigForm: React.FC = () => {
                                 )}
                                 className="w-full p-2 border rounded-md"
                               />
-                            </div>
-                          </div>
-                        </AccordionItemContent>
-                      </AccordionItem>
-                    );
+                            </div> */}
+													</div>
+												</AccordionItemContent>
+											</AccordionItem>
+										);
                   })}
                 </AccordionRoot>
               </AccordionItemContent>
