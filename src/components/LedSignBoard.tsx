@@ -100,14 +100,19 @@ const LEDBitmapSimulator = ({
 		const fetchBitmap = async () => {
 			try {
 				const response = await axios.get(
-					`http://65.0.61.187:5288/api/bitmap?text=${
-						text.text
-					}&height=${text.fontHeight}&weight=${
+					`http://65.0.61.187:5288/api/bitmap?text=${text.text}&height=${
+						text.fontHeight
+					}&weight=${
 						text.fontWeight === 'bold' ? 'Bold' : 'Regular'
 					}&family=${fontFamily}`
 				);
 
 				console.log(response);
+				const lines = response.data.trim().split('\n');
+				if(lines.length > 16) {
+					alert('Text size exceeds 16 lines. Please reduce the text size.');
+					return;
+				}
 				setBitmapText(response.data || '');
 			} catch (error) {
 				console.error('Error fetching bitmap:', error);
@@ -157,6 +162,8 @@ const LEDBitmapSimulator = ({
 	useEffect(() => {
 		setLedMatrix(processBitmapText(bitmapText, scrollOffset));
 	}, [bitmapText]);
+
+	
 
 	const convertScrollTypeToMarqueeDirection = (scrollType) => {
 		switch (scrollType) {

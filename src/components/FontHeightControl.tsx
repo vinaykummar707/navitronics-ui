@@ -25,7 +25,7 @@ const FontHeightInput: React.FC<FontHeightInputProps> = ({
 	return (
 		<div>
 			<label className="block text-sm font-medium text-gray-600 mb-1">
-				Font Height
+				Text Size
 			</label>
 			<div className="flex items-center space-x-1">
 				<button
