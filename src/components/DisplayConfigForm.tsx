@@ -1683,7 +1683,7 @@ export const DisplayConfigForm: React.FC = () => {
 																control={control}
 																render={({ field }) => (
 																	<FontHeightInput
-																		bitmapHeight={getBitmapHeight(
+																		bitmap={getBitmapHeight(
 																			displayConfig[language][screenKey].texts[
 																				textKey
 																			].bitmap
@@ -2178,6 +2178,9 @@ export const DisplayConfigForm: React.FC = () => {
 															control={control}
 															render={({ field }) => (
 																<FontHeightInput
+																	bitmap={getBitmapHeight(
+																		specialMessages[index][language].bitmap
+																	)}
 																	value={
 																		specialMessages[index][language].bitmap
 																	}

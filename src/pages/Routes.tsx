@@ -31,24 +31,20 @@ const Routes = () => {
 
 	// Reset selections when organization changes
 	useEffect(() => {
-		
 		ModuleRegistry.registerModules([AllCommunityModule]);
 	}, [selectedOrganization?.organizationId]);
 
 	// Update the useEffect for organization change
 	useEffect(() => {
 		if (selectedOrganization?.organizationId) {
-		  // Clear selections when organization changes
-		  setSelectedAreaId('');
-		  setSelectedDepotId('');
-		//   localStorage.removeItem('selectedAreaId');
-		//   localStorage.removeItem('selectedDepotId');
+			// Clear selections when organization changes
+			setSelectedAreaId('');
+			setSelectedDepotId('');
+			//   localStorage.removeItem('selectedAreaId');
+			//   localStorage.removeItem('selectedDepotId');
 		}
 		ModuleRegistry.registerModules([AllCommunityModule]);
-	  }, [selectedOrganization?.organizationId]);
-	
-	 
-
+	}, [selectedOrganization?.organizationId]);
 
 	// Update select handlers
 	const handleAreaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -76,7 +72,7 @@ const Routes = () => {
 	});
 	const filteredAreas =
 		user.area &&
-			(user.userRole === 'area_admin' || user.userRole === 'depot_admin')
+		(user.userRole === 'area_admin' || user.userRole === 'depot_admin')
 			? areas?.filter((area) => area.areaId === user.area.areaId)
 			: areas;
 
@@ -86,31 +82,33 @@ const Routes = () => {
 		enabled: !!selectedAreaId,
 	});
 
-	 // Update area selection effect
-	 useEffect(() => {
+	// Update area selection effect
+	useEffect(() => {
 		if (areas?.length > 0 && !selectedAreaId) {
-		  const savedAreaId = localStorage.getItem('selectedAreaId');
-		  const areaToSelect = savedAreaId && areas.find(area => area.areaId === savedAreaId)
-			? savedAreaId
-			: areas[0].areaId;
-		  
-		  setSelectedAreaId(areaToSelect);
-		  localStorage.setItem('selectedAreaId', areaToSelect);
+			const savedAreaId = localStorage.getItem('selectedAreaId');
+			const areaToSelect =
+				savedAreaId && areas.find((area) => area.areaId === savedAreaId)
+					? savedAreaId
+					: areas[0].areaId;
+
+			setSelectedAreaId(areaToSelect);
+			localStorage.setItem('selectedAreaId', areaToSelect);
 		}
-	  }, [areas]);
-	
-	  // Update depot selection effect
-	  useEffect(() => {
+	}, [areas]);
+
+	// Update depot selection effect
+	useEffect(() => {
 		if (depots?.length > 0 && !selectedDepotId) {
-		  const savedDepotId = localStorage.getItem('selectedDepotId');
-		  const depotToSelect = savedDepotId && depots.find(depot => depot.depotId === savedDepotId)
-			? savedDepotId
-			: depots[0].depotId;
-		  
-		  setSelectedDepotId(depotToSelect);
-		  localStorage.setItem('selectedDepotId', depotToSelect);
+			const savedDepotId = localStorage.getItem('selectedDepotId');
+			const depotToSelect =
+				savedDepotId && depots.find((depot) => depot.depotId === savedDepotId)
+					? savedDepotId
+					: depots[0].depotId;
+
+			setSelectedDepotId(depotToSelect);
+			localStorage.setItem('selectedDepotId', depotToSelect);
 		}
-	  }, [depots]);
+	}, [depots]);
 
 	const filteredDepots =
 		user.depot && user.userRole === 'depot_admin'
@@ -153,8 +151,6 @@ const Routes = () => {
 			toast.error('Failed to delete route.');
 		},
 	});
-
-
 
 	const getAllWithConfigMutation = useMutation({
 		mutationFn: async ({
@@ -286,6 +282,14 @@ const Routes = () => {
 			width: 50,
 		},
 		{
+			headerName: 'Sl No',
+			field: 'rowNumber',
+			width: 70,
+			sortable: true,
+			comparator: (a, b) => a - b,
+			valueGetter: (params) => params.node.rowIndex + 1,
+		},
+		{
 			headerName: 'Route No',
 			field: 'route.routeNumber',
 			valueGetter: (params) =>
@@ -310,22 +314,7 @@ const Routes = () => {
 			width: 150,
 			pinned: 'right', // Keep actions column fixed on right
 		},
-		// {
-		// 	headerName: 'Split Route',
-		// 	field: 'route.splitRoute',
-		// 	cellRenderer: 'agCheckboxCellRenderer',
-		// },
-		// { headerName: 'Route No 1', field: 'route.routeNumber1' },
-		// { headerName: 'Route No 2', field: 'route.routeNumber2' },
-		// { headerName: 'Separation', field: 'route.separation' },
-		// {
-		// 	headerName: 'Special Message',
-		// 	field: 'route.specialMessage',
-		// 	cellRenderer: 'agCheckboxCellRenderer',
-		// },
 	];
-
-
 
 	return (
 		<Container overflow={'scroll'} fluid className="py-4">
@@ -392,8 +381,9 @@ const Routes = () => {
 								})
 							}
 							disabled={!selectedDepotId}
-							className={`bg-indigo-600 text-white text-sm px-3 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${!selectedDepotId ? 'opacity-50 cursor-not-allowed' : ''
-								}`}
+							className={`bg-indigo-600 text-white text-sm px-3 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+								!selectedDepotId ? 'opacity-50 cursor-not-allowed' : ''
+							}`}
 						>
 							Create Route
 						</button>
@@ -407,8 +397,9 @@ const Routes = () => {
 							})
 						}
 						disabled={!selectedDepotId}
-						className={`bg-green-600 text-white text-sm px-3 py-2 rounded-md hover:bg-green-700  ${!selectedDepotId ? 'opacity-50 cursor-not-allowed' : ''
-							}`}
+						className={`bg-green-600 text-white text-sm px-3 py-2 rounded-md hover:bg-green-700  ${
+							!selectedDepotId ? 'opacity-50 cursor-not-allowed' : ''
+						}`}
 					>
 						{getAllWithConfigMutation.isPending
 							? 'Exporting...'
@@ -420,6 +411,12 @@ const Routes = () => {
 			{/* Area and Depot Selection */}
 
 			{/* Routes Display */}
+			{routes && (
+				<h1 className="text-lg pb-4 font-bold">
+					Showing Total {routes.length} Routes{' '}
+				</h1>
+			)}
+
 			{selectedDepotId ? (
 				isLoading ? (
 					<div className="flex items-center justify-center h-48">

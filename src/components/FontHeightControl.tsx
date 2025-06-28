@@ -1,31 +1,37 @@
 // FontHeightInput.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface FontHeightInputProps {
 	value: any;
 	onChange: (value: number) => void;
 	min?: number;
 	max?: number;
+	bitmap: number;
 }
 
 const FontHeightInput: React.FC<FontHeightInputProps> = ({
 	value = 1,
 	onChange,
-	min = 1,
-	max = 100,
+	
+	bitmap = 0, // Assuming bitmap is not used in this component
 }) => {
 	const increase = () => {
-		if (parseInt(value) < max) onChange(parseInt(value) + 1);
+		if (bitmap < 16) onChange(parseInt(value) + 1);
 	};
 
 	const decrease = () => {
-		if (parseInt(value) > min) onChange(parseInt(value) - 1);
+		if (bitmap <= 16) onChange(parseInt(value) - 1);
 	};
+
+	useEffect(() => {
+		console.log('FontHeightInput bitmap changed:', bitmap);
+		console.log('va bitmap changed:', value);
+	}, [bitmap,value]);
 
 	return (
 		<div>
 			<label className="block text-sm font-medium text-gray-600 mb-1">
-				Text Size
+				Text Height
 			</label>
 			<div className="flex items-center space-x-1">
 				<button
@@ -35,7 +41,7 @@ const FontHeightInput: React.FC<FontHeightInputProps> = ({
 				>
 					−
 				</button>
-				{/* <span className="min-w-[30px] text-center">{value}</span> */}
+				<span className="min-w-[30px] text-center"> {bitmap}</span>
 				<button
 					type="button"
 					onClick={increase}
