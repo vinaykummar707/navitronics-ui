@@ -314,6 +314,21 @@ const Routes = () => {
 			width: 150,
 			pinned: 'right', // Keep actions column fixed on right
 		},
+		{
+			headerName: 'Created At',
+			field: 'createdAt',
+			valueGetter: (params) => new Date(params.data.createdAt), // Converts string to Date
+			comparator: (a, b) => {
+				return new Date(a).getTime() - new Date(b).getTime();
+			},
+			valueFormatter: (params) =>
+				new Date(params.value).toLocaleString('en-IN', {
+					dateStyle: 'short',
+					timeStyle: 'medium',
+				}), // Optional: Format for display
+			sortable: true,
+			width: 200,
+		},
 	];
 
 	return (
