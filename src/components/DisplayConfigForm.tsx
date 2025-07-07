@@ -394,7 +394,38 @@ export const DisplayConfigForm: React.FC = () => {
 	}, [isEdit, gotRouteData, reset]);
 
 	const splitRoute = watch('route.splitRoute');
-	const isSpecialMessage = watch('route.showSpm');
+  const isSpecialMessage = watch('route.showSpm');
+  
+   const onNewLanguageAdded = (language: string) => {
+    const selectedOffset = offsetConfigs.find(
+      (offset) => offset.code === language
+    );
+    if (!selectedOffset) return;
+
+    const isEnglish = language === "en";
+
+    const sides = {
+      front: getDefaultScreenConfig("single", isEnglish),
+      side: getDefaultScreenConfig("single", isEnglish),
+      rear: getDefaultScreenConfig("single", isEnglish),
+      internal: getDefaultScreenConfig("single", isEnglish),
+    };
+
+    setValue(`displayConfig.${language}`, sides);
+    Object.keys(sides).forEach((screenKey) => {
+      const texts = sides[screenKey].texts;
+      Object.keys(texts).forEach((textKey) => {
+        updateTextConfig(
+          language,
+          screenKey,
+          textKey,
+          selectedOffset,
+          { texts },
+          setValue
+        );
+      });
+    });
+  };
 
 	const handleFormatChange = (
 		screenKey: string,
@@ -985,7 +1016,7 @@ export const DisplayConfigForm: React.FC = () => {
 
 						// Initialize configuration for this language if it doesn't exist
 						if (!displayConfig[language]) {
-							handleFormatChange(screenKey, language, 'single');
+							onNewLanguageAdded(language);
 						}
 
 						const screenConfig = displayConfig[language]?.[screenKey];
