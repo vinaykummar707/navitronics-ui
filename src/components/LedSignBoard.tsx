@@ -109,11 +109,10 @@ const LEDBitmapSimulator = ({
 
 				console.log(response);
 				const lines = response.data.trim().split('\n');
-				if(lines.length > 16) {
-					alert('Text size exceeds 16 lines. Please reduce the text size.');
-					return;
+				if(lines.length <= 16) {
+					setBitmapText(response.data || '');
 				}
-				setBitmapText(response.data || '');
+				
 			} catch (error) {
 				console.error('Error fetching bitmap:', error);
 			}

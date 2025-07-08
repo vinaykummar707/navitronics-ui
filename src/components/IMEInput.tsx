@@ -153,176 +153,190 @@
 //
 // export default IMEInput;
 
-
 import { useState, useRef, useEffect } from "react";
 
 const fetchTransliteration = async (word: string, langCode: string) => {
-	try {
-		const response = await fetch(
-			`https://inputtools.google.com/request?text=${encodeURIComponent(word)}&itc=${langCode}-t-i0-und&num=5&ie=utf-8&oe=utf-8&app=customApp`
-		);
-		const data = await response.json();
+  try {
+    const baseLangCode = langCode.replace(/\d+$/, "");
+    console.log("Original langCode:", langCode);
+    console.log("Base langCode used:", baseLangCode);
+    const response = await fetch(
+      `https://inputtools.google.com/request?text=${encodeURIComponent(
+        word
+      )}&itc=${baseLangCode}-t-i0-und&num=5&ie=utf-8&oe=utf-8&app=customApp`
+    );
+    const data = await response.json();
 
-		if (data[0] === "SUCCESS") {
-			return data[1][0][1]; // Array of suggestions
-		} else {
-			console.error("Transliteration failed:", data);
-			return [];
-		}
-	} catch (error) {
-		console.error("Error fetching transliteration:", error);
-		return [];
-	}
+    if (data[0] === "SUCCESS") {
+      return data[1][0][1]; // Array of suggestions
+    } else {
+      console.error("Transliteration failed:", data);
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching transliteration:", error);
+    return [];
+  }
 };
 
 interface IMEInputProps {
-	langCode: string;
-	value: string;
-	onChange: (value: string) => void;
+  langCode: string;
+  value: string;
+  onChange: (value: string) => void;
 }
 
 const IMEInput: React.FC<IMEInputProps> = ({ langCode, value, onChange }) => {
-	const [suggestions, setSuggestions] = useState<string[]>([]);
-	const [cursorIndex, setCursorIndex] = useState<number>(0);
-	const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState<number>(-1);
-	const inputRef = useRef<HTMLInputElement>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [cursorIndex, setCursorIndex] = useState<number>(0);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] =
+    useState<number>(-1);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-	const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		const newValue = e.target.value;
-		const selectionStart = e.target.selectionStart || 0;
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    const selectionStart = e.target.selectionStart || 0;
 
-		onChange(newValue);
-		setCursorIndex(selectionStart);
-		setSelectedSuggestionIndex(-1); // Reset selection on new input
+    onChange(newValue);
+    setCursorIndex(selectionStart);
+    setSelectedSuggestionIndex(-1); // Reset selection on new input
 
-		// Find the word at the cursor position
-		const words = newValue.split(" ");
-		let wordStart = 0;
-		let wordIndex = -1;
+    // Find the word at the cursor position
+    const words = newValue.split(" ");
+    let wordStart = 0;
+    let wordIndex = -1;
 
-		for (let i = 0; i < words.length; i++) {
-			if (selectionStart >= wordStart && selectionStart <= wordStart + words[i].length) {
-				wordIndex = i;
-				break;
-			}
-			wordStart += words[i].length + 1;
-		}
+    for (let i = 0; i < words.length; i++) {
+      if (
+        selectionStart >= wordStart &&
+        selectionStart <= wordStart + words[i].length
+      ) {
+        wordIndex = i;
+        break;
+      }
+      wordStart += words[i].length + 1;
+    }
 
-		if (wordIndex === -1 || langCode === "en") {
-			setSuggestions([]);
-			return;
-		}
+    if (wordIndex === -1 || langCode === "en") {
+      setSuggestions([]);
+      return;
+    }
 
-		const wordAtCursor = words[wordIndex];
+    const wordAtCursor = words[wordIndex];
 
-		if (wordAtCursor.trim()) {
-			const results = await fetchTransliteration(wordAtCursor, langCode);
-			setSuggestions([...results, wordAtCursor]);
-		} else {
-			setSuggestions([]);
-		}
-	};
+    if (wordAtCursor.trim()) {
+      const results = await fetchTransliteration(wordAtCursor, langCode);
+      setSuggestions([...results, wordAtCursor]);
+    } else {
+      setSuggestions([]);
+    }
+  };
 
-	const handleSuggestionClick = (suggestion: string) => {
-		replaceWordAtCursor(suggestion);
-	};
+  const handleSuggestionClick = (suggestion: string) => {
+    replaceWordAtCursor(suggestion);
+  };
 
-	const replaceWordAtCursor = (suggestion: string) => {
-		const words = value.split(" ");
-		let wordStart = 0;
-		let wordIndex = -1;
+  const replaceWordAtCursor = (suggestion: string) => {
+    const words = value.split(" ");
+    let wordStart = 0;
+    let wordIndex = -1;
 
-		for (let i = 0; i < words.length; i++) {
-			if (cursorIndex >= wordStart && cursorIndex <= wordStart + words[i].length) {
-				wordIndex = i;
-				break;
-			}
-			wordStart += words[i].length + 1;
-		}
+    for (let i = 0; i < words.length; i++) {
+      if (
+        cursorIndex >= wordStart &&
+        cursorIndex <= wordStart + words[i].length
+      ) {
+        wordIndex = i;
+        break;
+      }
+      wordStart += words[i].length + 1;
+    }
 
-		if (wordIndex !== -1) {
-			words[wordIndex] = suggestion;
-			const newText = words.join(" ");
-			const newCursorPos = wordStart + suggestion.length + 1; // Move cursor to next position
+    if (wordIndex !== -1) {
+      words[wordIndex] = suggestion;
+      const newText = words.join(" ");
+      const newCursorPos = wordStart + suggestion.length + 1; // Move cursor to next position
 
-			onChange(newText);
-			setCursorIndex(newCursorPos);
-		}
+      onChange(newText);
+      setCursorIndex(newCursorPos);
+    }
 
-		setSuggestions([]);
-		setSelectedSuggestionIndex(-1);
+    setSuggestions([]);
+    setSelectedSuggestionIndex(-1);
 
-		setTimeout(() => {
-			if (inputRef.current) {
-				inputRef.current.focus();
-				inputRef.current.setSelectionRange(cursorIndex, cursorIndex);
-			}
-		}, 0);
-	};
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.setSelectionRange(cursorIndex, cursorIndex);
+      }
+    }, 0);
+  };
 
-	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-		if (suggestions.length > 0) {
-			if (e.key === "ArrowDown") {
-				e.preventDefault();
-				setSelectedSuggestionIndex((prev) =>
-					prev < suggestions.length - 1 ? prev + 1 : prev
-				);
-			} else if (e.key === "ArrowUp") {
-				e.preventDefault();
-				setSelectedSuggestionIndex((prev) => (prev > 0 ? prev - 1 : -1));
-			} else if (e.key === "Enter" && selectedSuggestionIndex !== -1) {
-				e.preventDefault();
-				replaceWordAtCursor(suggestions[selectedSuggestionIndex]);
-			} else if (e.key === " " && suggestions.length > 0) {
-				e.preventDefault();
-				replaceWordAtCursor(suggestions[0]); // Auto-select first suggestion
-			}
-		}
-	};
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (suggestions.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedSuggestionIndex((prev) =>
+          prev < suggestions.length - 1 ? prev + 1 : prev
+        );
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedSuggestionIndex((prev) => (prev > 0 ? prev - 1 : -1));
+      } else if (e.key === "Enter" && selectedSuggestionIndex !== -1) {
+        e.preventDefault();
+        replaceWordAtCursor(suggestions[selectedSuggestionIndex]);
+      } else if (e.key === " " && suggestions.length > 0) {
+        e.preventDefault();
+        replaceWordAtCursor(suggestions[0]); // Auto-select first suggestion
+      }
+    }
+  };
 
-	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
-			if (inputRef.current && !inputRef.current.contains(event.target as Node)) {
-				setSuggestions([]);
-				setSelectedSuggestionIndex(-1);
-			}
-		};
-		document.addEventListener("mousedown", handleClickOutside);
-		return () => document.removeEventListener("mousedown", handleClickOutside);
-	}, []);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setSuggestions([]);
+        setSelectedSuggestionIndex(-1);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-	return (
-		<div className="relative w-full">
-			<input
-				ref={inputRef}
-				type="text"
-				value={value}
-				onChange={handleChange}
-				onKeyDown={handleKeyDown}
-				onClick={(e) => setCursorIndex(e.currentTarget.selectionStart || 0)}
-				placeholder="Type in English..."
-				className="border w-full p-2  rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-			/>
-			{suggestions.length > 0 && langCode !== "en" && (
-				<ul className=" bg-white border w-full mt-1 shadow-md z-50  overflow-y-auto">
-					{suggestions.map((suggestion, index) => (
-						<li
-							key={index}
-							onMouseDown={(e) => {
-								e.preventDefault();
-								handleSuggestionClick(suggestion);
-							}}
-							className={`p-2 cursor-pointer hover:bg-gray-200 ${
-								selectedSuggestionIndex === index ? "bg-gray-700" : ""
-							}`}
-						>
-							{suggestion}
-						</li>
-					))}
-				</ul>
-			)}
-		</div>
-	);
+  return (
+    <div className="relative w-full">
+      <input
+        ref={inputRef}
+        type="text"
+        value={value}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        onClick={(e) => setCursorIndex(e.currentTarget.selectionStart || 0)}
+        placeholder="Type in English..."
+        className="border w-full p-2  rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      />
+      {suggestions.length > 0 && langCode !== "en" && (
+        <ul className=" bg-white border w-full mt-1 shadow-md z-50  overflow-y-auto">
+          {suggestions.map((suggestion, index) => (
+            <li
+              key={index}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleSuggestionClick(suggestion);
+              }}
+              className={`p-2 cursor-pointer hover:bg-gray-200 ${
+                selectedSuggestionIndex === index ? "bg-gray-700" : ""
+              }`}
+            >
+              {suggestion}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 };
 
 export default IMEInput;
