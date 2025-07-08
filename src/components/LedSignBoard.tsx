@@ -1,229 +1,227 @@
-import axiosInstance from '@/config/axios';
-import React, { useState, useEffect, useRef } from 'react';
-import EnhancedTextToLEDMatrix from './TextToLedMatrix';
-import { generateLedMatrixFromText } from './canvasUtility';
-import LEDBusBoard from './FullScreenBoard';
-import LedCanvas from './FullScreenBoard';
-import LEDMatrix from './CanvasText';
-import axios from 'axios';
+import axiosInstance from "@/config/axios";
+import React, { useState, useEffect, useRef } from "react";
+import EnhancedTextToLEDMatrix from "./TextToLedMatrix";
+import { generateLedMatrixFromText } from "./canvasUtility";
+import LEDBusBoard from "./FullScreenBoard";
+import LedCanvas from "./FullScreenBoard";
+import LEDMatrix from "./CanvasText";
+import axios from "axios";
 
 const LEDBitmapSimulator = ({
-	text,
-	rows,
-	fontFamily,
-	cols,
-	horizontalSpacing = 9, // Default horizontal spacing between LEDs
-	verticalSpacing = 9, // Default vertical spacing between rows
-	stopScroll,
-	onBitmapTextChange,
+  text,
+  rows,
+  fontFamily,
+  cols,
+  horizontalSpacing = 9, // Default horizontal spacing between LEDs
+  verticalSpacing = 9, // Default vertical spacing between rows
+  stopScroll,
+  onBitmapTextChange,
 }) => {
-	const [ledSize, setLedSize] = useState(4);
-	const [ledSpacing, setLedSpacing] = useState(horizontalSpacing);
-	const [rowSpacing, setRowSpacing] = useState(verticalSpacing);
-	const [bitmapText, setBitmapText] = useState('');
-	const [ledMatrix, setLedMatrix] = useState([]);
-	const [ledColor, setLedColor] = useState('#ff0000');
-	const [bgColor, setBgColor] = useState('#000000');
-	const [viewportWidth, setViewportWidth] = useState(800);
-	const [isScrolling, setIsScrolling] = useState(false);
-	const [scrollDirection, setScrollDirection] = useState('left');
-	const [scrollSpeed, setScrollSpeed] = useState(5);
-	const [scrollOffset, setScrollOffset] = useState(0);
-	const scrollIntervalRef = useRef(null);
-	const [invert, setInvert] = useState(false);
-	const canvasRef = useRef(null);
-	const previewCanvasRef = useRef(null);
-	const [ledColumns, setLedColumns] = useState(0); // Auto-calculated
-	const [widthAspect, setWidthAspect] = useState(1.4); // Auto-calculated
-	const [matrixChars, setMatrixChars] = useState({ dark: '#', light: '.' });
+  const [ledSize, setLedSize] = useState(4);
+  const [ledSpacing, setLedSpacing] = useState(horizontalSpacing);
+  const [rowSpacing, setRowSpacing] = useState(verticalSpacing);
+  const [bitmapText, setBitmapText] = useState("");
+  const [ledMatrix, setLedMatrix] = useState([]);
+  const [ledColor, setLedColor] = useState("#ff0000");
+  const [bgColor, setBgColor] = useState("#000000");
+  const [viewportWidth, setViewportWidth] = useState(800);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [scrollDirection, setScrollDirection] = useState("left");
+  const [scrollSpeed, setScrollSpeed] = useState(5);
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const scrollIntervalRef = useRef(null);
+  const [invert, setInvert] = useState(false);
+  const canvasRef = useRef(null);
+  const previewCanvasRef = useRef(null);
+  const [ledColumns, setLedColumns] = useState(0); // Auto-calculated
+  const [widthAspect, setWidthAspect] = useState(1.4); // Auto-calculated
+  const [matrixChars, setMatrixChars] = useState({ dark: "#", light: "." });
 
-	
+  // Update spacing when props change
+  useEffect(() => {
+    setLedSpacing(horizontalSpacing);
+  }, [horizontalSpacing]);
 
+  useEffect(() => {
+    setRowSpacing(verticalSpacing);
+  }, [verticalSpacing]);
 
+  useEffect(() => {
+    setViewportWidth(
+      Math.min(window.innerWidth - 40, cols * (ledSize + ledSpacing))
+    );
+  }, [cols, ledSize, ledSpacing]);
 
-	// Update spacing when props change
-	useEffect(() => {
-		setLedSpacing(horizontalSpacing);
-	}, [horizontalSpacing]);
+  // Process bitmap text into matrix with scrolling support
+  const processBitmapText = (text, offset = 0) => {
+    if (!text)
+      return Array(rows)
+        .fill()
+        .map(() => Array(cols).fill(0));
 
-	useEffect(() => {
-		setRowSpacing(verticalSpacing);
-	}, [verticalSpacing]);
+    const lines = text.split("\n").filter((line) => line.length > 0);
+    const matrix = [];
 
-	useEffect(() => {
-		setViewportWidth(
-			Math.min(window.innerWidth - 40, cols * (ledSize + ledSpacing))
-		);
-	}, [cols, ledSize, ledSpacing]);
+    for (let i = 0; i < rows; i++) {
+      const row = [];
+      const line = lines[i] || "";
 
-	// Process bitmap text into matrix with scrolling support
-	const processBitmapText = (text, offset = 0) => {
-		if (!text)
-			return Array(rows)
-				.fill()
-				.map(() => Array(cols).fill(0));
+      // Skip if line is empty
+      if (line.length === 0) {
+        matrix.push(Array(cols).fill(0));
+        continue;
+      }
 
-		const lines = text.split('\n').filter((line) => line.length > 0);
-		const matrix = [];
+      // For each column in the display
+      for (let j = 0; j < cols; j++) {
+        // Calculate the position in the bitmap text with offset
+        const textPos = j + offset;
 
-		for (let i = 0; i < rows; i++) {
-			const row = [];
-			const line = lines[i] || '';
+        // Check if the position is within the bitmap text length
+        if (textPos >= 0 && textPos < line.length) {
+          row.push(line[textPos] === "#" ? 1 : 0);
+        } else {
+          // Outside of text bounds, so show empty LED
+          row.push(0);
+        }
+      }
 
-			// Skip if line is empty
-			if (line.length === 0) {
-				matrix.push(Array(cols).fill(0));
-				continue;
-			}
+      matrix.push(row);
+    }
 
-			// For each column in the display
-			for (let j = 0; j < cols; j++) {
-				// Calculate the position in the bitmap text with offset
-				const textPos = j + offset;
+    return matrix;
+  };
 
-				// Check if the position is within the bitmap text length
-				if (textPos >= 0 && textPos < line.length) {
-					row.push(line[textPos] === '#' ? 1 : 0);
-				} else {
-					// Outside of text bounds, so show empty LED
-					row.push(0);
-				}
-			}
+  useEffect(() => {
+    console.log(text);
+    setBitmapText("");
 
-			matrix.push(row);
-		}
+    const fetchBitmap = async () => {
+      try {
+        const response = await axios.get(
+          `http://65.0.61.187:5288/api/bitmap?text=${
+            text.text ? text.text : " "
+          }&height=${text.fontHeight}&weight=${
+            text.fontWeight === "bold" ? "Bold" : "Regular"
+          }&family=${fontFamily}`
+        );
 
-		return matrix;
-	};
+        console.log(response);
+        const lines = response.data.trim().split("\n");
+        // if(lines.length <= 16) {
+        setBitmapText(response.data || "");
+        // }
+      } catch (error) {
+        setBitmapText("");
+        console.error("Error fetching bitmap:", error);
+      }
+    };
 
-	useEffect(() => {
-		const fetchBitmap = async () => {
-			try {
-				const response = await axios.get(
-					`http://65.0.61.187:5288/api/bitmap?text=${text.text}&height=${
-						text.fontHeight
-					}&weight=${
-						text.fontWeight === 'bold' ? 'Bold' : 'Regular'
-					}&family=${fontFamily}`
-				);
+    fetchBitmap();
 
-				console.log(response);
-				const lines = response.data.trim().split('\n');
-				if(lines.length <= 16) {
-					setBitmapText(response.data || '');
-				}
-				
-			} catch (error) {
-				console.error('Error fetching bitmap:', error);
-			}
-		};
+    if (text.scrollType === "Left To Right") {
+      setIsScrolling(true);
+      setScrollDirection("right");
+    }
+    if (text.scrollType === "Right To Left") {
+      setIsScrolling(true);
+      setScrollDirection("left");
+    }
+    if (text.scrollType === "Fixed") {
+      setIsScrolling(false);
+      setScrollOffset(0);
+    }
+    setScrollSpeed(text.scrollSpeed);
+    if (text.scrollType !== "Fixed") {
+      setIsScrolling(stopScroll);
+    }
 
-		fetchBitmap();
+    if (text.fontSize <= 0) {
+      setWidthAspect(0.8);
+    } else {
+      setWidthAspect(text.fontSize);
+    }
+  }, [
+    text,
+    text.text,
+    text.scrollType,
+    text.position,
+    text.scrollSpeed,
+    text.fontSize,
+    text.fontWeight,
+    text.fontHeight,
+    text.fontfile,
+    text.x_offset,
+    text.y_offset,
+    text.spacing,
+    stopScroll,
+  ]);
 
-		if (text.scrollType === 'Left To Right') {
-			setIsScrolling(true);
-			setScrollDirection('right');
-		}
-		if (text.scrollType === 'Right To Left') {
-			setIsScrolling(true);
-			setScrollDirection('left');
-		}
-		if (text.scrollType === 'Fixed') {
-			setIsScrolling(false);
-			setScrollOffset(0);
-		}
-		setScrollSpeed(text.scrollSpeed);
-		if (text.scrollType !== 'Fixed') {
-			setIsScrolling(stopScroll);
-		}
+  useEffect(() => {
+    console.log("Bitmap Text Updated:", bitmapText);
+    setLedMatrix(processBitmapText(bitmapText, scrollOffset));
+  }, [bitmapText]);
 
-		if (text.fontSize <= 0) {
-			setWidthAspect(0.8);
-		} else {
-			setWidthAspect(text.fontSize);
-		}
-	}, [
-		text,
-		text.text,
-		text.scrollType,
-		text.position,
-		text.scrollSpeed,
-		text.fontSize,
-		text.fontWeight,
-		text.fontHeight,
-		text.fontfile,
-		text.x_offset,
-		text.y_offset,
-		text.spacing,
-		stopScroll,
-	]);
+  const convertScrollTypeToMarqueeDirection = (scrollType) => {
+    switch (scrollType) {
+      case "Left To Right":
+        return "ltr";
+      case "Right To Left":
+        return "rtl";
+      case "Fixed":
+        return "none";
+      default:
+        return "none";
+    }
+  };
 
-	useEffect(() => {
-		setLedMatrix(processBitmapText(bitmapText, scrollOffset));
-	}, [bitmapText]);
+  const convertPositionToAlignment = (position) => {
+    switch (position) {
+      case "Left":
+        return "start";
+      case "Right":
+        return "end";
+      case "Center":
+        return "center";
+      default:
+        return "center";
+    }
+  };
 
-	
+  function convertAsciiToArray(ascii: string): string[] {
+    return ascii
+      .split("\n") // Split into lines
+      .map((line) => line.trim()) // Optionally trim whitespace
+      .filter((line) => line.length > 0); // Remove empty lines
+  }
 
-	const convertScrollTypeToMarqueeDirection = (scrollType) => {
-		switch (scrollType) {
-			case 'Left To Right':
-				return 'ltr';
-			case 'Right To Left':
-				return 'rtl';
-			case 'Fixed':
-				return 'none';
-			default:
-				return 'none';
-		}
-	};
+  useEffect(() => {
+    console.log(bitmapText);
+    onBitmapTextChange(bitmapText);
+  }, [bitmapText]);
 
-	const convertPositionToAlignment = (position) => {
-		switch (position) {
-			case 'Left':
-				return 'start';
-			case 'Right':
-				return 'end';
-			case 'Center':
-				return 'center';
-			default:
-				return 'center';
-		}
-	};
-
-	function convertAsciiToArray(ascii: string): string[] {
-		return ascii
-			.split('\n') // Split into lines
-			.map((line) => line.trim()) // Optionally trim whitespace
-			.filter((line) => line.length > 0); // Remove empty lines
-	}
-
-	useEffect(() => {
-		console.log(bitmapText);
-		onBitmapTextChange(bitmapText);
-	}, [bitmapText]);
-
-	return (
-		<div className="flex flex-col ">
-			{text.text && (
-				<canvas
-					ref={canvasRef}
-					className="border border-gray-300 mb-4 hidden"
-				></canvas>
-			)}
-			{/* <pre className="bg-gray-900 text-amber-400 p-2 rounded overflow-auto font-mono text-sm whitespace-pre">
+  return (
+    <div className="flex flex-col ">
+      {text.text && (
+        <canvas
+          ref={canvasRef}
+          className="border border-gray-300 mb-4 hidden"
+        ></canvas>
+      )}
+      {/* <pre className="bg-gray-900 text-amber-400 p-2 rounded overflow-auto font-mono text-sm whitespace-pre">
 				{bitmapText}
 			</pre> */}
-			<LEDMatrix
-				rows={rows}
-				columns={cols}
-				pattern={convertAsciiToArray(bitmapText)}
-				marqueeDirection={convertScrollTypeToMarqueeDirection(text.scrollType)}
-				scrollSpeed={parseInt(text.scrollSpeed)}
-				alignment={convertPositionToAlignment(text.position)}
-				paused={stopScroll}
-			/>
-		</div>
-	);
+      <LEDMatrix
+        rows={rows}
+        columns={cols}
+        pattern={convertAsciiToArray(bitmapText)}
+        marqueeDirection={convertScrollTypeToMarqueeDirection(text.scrollType)}
+        scrollSpeed={parseInt(text.scrollSpeed)}
+        alignment={convertPositionToAlignment(text.position)}
+        paused={stopScroll}
+      />
+    </div>
+  );
 };
 
 export default LEDBitmapSimulator;

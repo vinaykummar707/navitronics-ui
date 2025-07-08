@@ -293,7 +293,7 @@ const translateText = async (text: string, targetLang: string) => {
       throw new Error("Translation failed");
     }
   } catch (error) {
-    console.error("Translation error:", error);
+    // console.error("Translation error:", error);
     toast.error("Failed to translate text");
     return text;
   }
@@ -319,9 +319,9 @@ export const DisplayConfigForm: React.FC = () => {
       // if (!response.ok) throw new Error('Failed to fetch languages');
       const data = await response.data;
       setOffsetConfigs(data);
-      console.log(data);
+      // console.log(data);
     } catch (err) {
-      console.error("Error fetching languages:", err);
+      // console.error("Error fetching languages:", err);
     }
   };
 
@@ -333,7 +333,7 @@ export const DisplayConfigForm: React.FC = () => {
       toast.success("Route created successfully!");
     },
     onError: (error) => {
-      console.error("Error creating route:", error);
+      // console.error("Error creating route:", error);
       toast.error("Failed to create route.");
     },
   });
@@ -347,7 +347,7 @@ export const DisplayConfigForm: React.FC = () => {
       toast.success("Route updated successfully!");
     },
     onError: (error) => {
-      console.error("Error updating route:", error);
+      // console.error("Error updating route:", error);
       toast.error("Failed to update route.");
     },
   });
@@ -382,11 +382,11 @@ export const DisplayConfigForm: React.FC = () => {
     });
 
   useEffect(() => {
-    console.log(isEdit, gotRouteData);
+    // console.log(isEdit, gotRouteData);
 
     fetchLanguages();
     if (isEdit && gotRouteData) {
-      console.log(Object.keys(gotRouteData.displayConfig));
+      // console.log(Object.keys(gotRouteData.displayConfig));
       setSelectedLanguages(Object.keys(gotRouteData.displayConfig));
       reset(gotRouteData); // ✅ Reset entire form with new data
       // const languages =
@@ -561,9 +561,9 @@ export const DisplayConfigForm: React.FC = () => {
 
   function getBitmapHeight(bitmap: string): number {
     if (bitmap) {
-      console.log("Bitmap:", bitmap);
+      // // console.log("Bitmap:", bitmap);
       const lines = bitmap.trim().split("\n");
-      console.log("Lines:", lines);
+      // console.log("Lines:", lines);
       return lines.length;
     }
     return 0;
@@ -851,8 +851,8 @@ export const DisplayConfigForm: React.FC = () => {
     
     try {
       const baseLangCode = langCode.replace(/\d+$/, "");
-      console.log("Original langCode:", langCode);
-      console.log("Base langCode used:", baseLangCode);
+      // console.log("Original langCode:", langCode);
+      // console.log("Base langCode used:", baseLangCode);
       const response = await fetch(
         `https://inputtools.google.com/request?text=${encodeURIComponent(
           text
@@ -863,11 +863,11 @@ export const DisplayConfigForm: React.FC = () => {
       if (data[0] === "SUCCESS") {
         return data[1][0][1]; // Array of suggestions
       } else {
-        console.error("Transliteration failed:", data);
+        // console.error("Transliteration failed:", data);
         return [];
       }
     } catch (error) {
-      console.error("Error fetching transliteration:", error);
+      // console.error("Error fetching transliteration:", error);
       return [];
     }
   };
@@ -959,7 +959,7 @@ export const DisplayConfigForm: React.FC = () => {
     screenConfig: any,
     setValue: any
   ) => {
-    console.log("got lang", language);
+    // console.log("got lang", language);
 
     // Get the correct text key's configuration from selectedOffset.config
     const textConfig = selectedOffset?.config?.[textKey] || {};
@@ -1000,8 +1000,8 @@ export const DisplayConfigForm: React.FC = () => {
 
   // useEffect to apply updates
   useEffect(() => {
-    console.log("Selected Languages:", selectedLanguages);
-    console.log("alldisplayconfig:", alldisplayconfig);
+    // console.log("Selected Languages:", selectedLanguages);
+    // console.log("alldisplayconfig:", alldisplayconfig);
     if (offsetConfigs.length > 0) {
       selectedLanguages.forEach((language) => {
         const getBaseLangCode = (code: string) => code.replace(/\d+$/, "");
@@ -1041,12 +1041,12 @@ export const DisplayConfigForm: React.FC = () => {
     key: string,
     fontHeight: number
   ) => {
-    console.log("Font Height:", fontHeight);
-    console.log("Language:", lang);
-    console.log("Key:", key);
+    // console.log("Font Height:", fontHeight);
+    // console.log("Language:", lang);
+    // console.log("Key:", key);
 
     const langObj = offsetConfigs.find((language) => language.code === lang);
-    console.log("Language Object:", langObj);
+    // console.log("Language Object:", langObj);
     if (fontHeight <= 8) {
       return langObj ? langObj.config[key].fontFamily8 : "Arial";
     }
@@ -1077,7 +1077,7 @@ export const DisplayConfigForm: React.FC = () => {
             // 	onNewLanguageAdded(language);
             // }
 
-            console.log("Display Config:", displayConfig);
+            // console.log("Display Config:", displayConfig);
 
             const screenConfig = displayConfig[language]?.[screenKey];
             const routePosition =
@@ -2399,20 +2399,20 @@ export const DisplayConfigForm: React.FC = () => {
         configToSave.specialMessages = [];
       }
 
-      console.log(configToSave.id);
+      // console.log(configToSave.id);
       // Create an array with the config object
       if (isEdit) {
         updateRouteMutation.mutate({ id: configToSave.id, data: configToSave });
       } else {
         createRouteMutation.mutate(configToSave);
-        console.log("====================================");
-        console.log(configToSave);
-        console.log("====================================");
+        // console.log("====================================");
+        // console.log(configToSave);
+        // console.log("====================================");
       }
 
-      console.log("Configuration saved and downloaded", configToSave);
+      // console.log("Configuration saved and downloaded", configToSave);
     } catch (error) {
-      console.error("Error processing configuration:", error);
+      // console.error("Error processing configuration:", error);
     } finally {
       // setIsSubmitting(false);
     }
