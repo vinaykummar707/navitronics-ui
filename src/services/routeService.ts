@@ -46,6 +46,15 @@ export const routeService = {
 		const response = await axiosInstance.delete(`${BASE_PATH}/${routeId}`);
 		return response.data;
 	},
+	deleteBulk: async (ids: number[]): Promise<any> => {
+		const response = await axiosInstance.delete(`${BASE_PATH}/bulk-delete`, {
+			data: ids,
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		});
+		return response.data;
+	},
 
 	generateBitmap: async (text: string, fontFile: string, fontSize: number) => {
 		let size = 1;

@@ -13,7 +13,7 @@ import SimulationDialog from '@/components/SimulationDialog';
 import RBAC from '../components/RBAC';
 import { ROLES } from '../constants/roles';
 import { AgGridReact } from 'ag-grid-react';
-import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+import { AllCommunityModule, GridApi, ModuleRegistry } from 'ag-grid-community';
 import { toast } from 'react-toastify';
 
 const Routes = () => {
@@ -26,7 +26,7 @@ const Routes = () => {
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
 	const user = useAuthStore((state) => state.user);
-	const gridRef = useRef<AgGridReact>(null); // Reference to AG Grid
+	const gridRef = useRef<GridApi | null>(null); // Reference to AG Grid
 	const [selectedRows, setSelectedRows] = useState<any[]>([]); // State to hold selected rows
 
 	// Reset selections when organization changes
@@ -152,6 +152,25 @@ const Routes = () => {
 		},
 	});
 
+	const multipleDeleteMutation = useMutation({
+		mutationFn: routeService.deleteBulk,
+		onSuccess: (data) => {
+			console.log(data);
+			queryClient.invalidateQueries({ queryKey: ['routes', selectedDepotId] });
+			toast.success('Routes deleted successfully!');
+		},
+		onError: (error) => {
+			console.error('Error deleting routes:', error);
+			toast.error('Failed to delete routes.');
+		},
+	});
+
+	const onSelectAllRoutes = () => {
+		const allRouteIds = routes?.map((route) => route.id) || [];
+		setSelectedRows(allRouteIds); // Set all route IDs as selected
+		console.log('All selected IDs:', allRouteIds); // Log all selected IDs
+	};
+
 	const getAllWithConfigMutation = useMutation({
 		mutationFn: async ({
 			areaId,
@@ -274,6 +293,12 @@ const Routes = () => {
 		setSelectedRows(selectedIds); // Store only the selected IDs
 		console.log('Selected IDs:', selectedIds); // Log the selected IDs
 	};
+
+	const onRouteNumberSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const searchValue = e.target.value.toLowerCase();
+		gridRef.current.setQuickFilter(searchValue); // Use AG Grid's quick filter for searching
+		
+	}
 
 	const columnDefs = [
 		{
@@ -420,6 +445,70 @@ const Routes = () => {
 							? 'Exporting...'
 							: 'Export All Routes'}
 					</button>
+					{selectedRows.length && (
+						<RBAC
+							roles={[
+								ROLES.ORGANIZATION_ADMIN,
+								ROLES.AREA_ADMIN,
+								ROLES.DEPOT_ADMIN,
+								ROLES.MASTER,
+							]}
+						>
+							<button
+								onClick={() => {
+									if (selectedRows.length > 0) {
+										if (
+											confirm(
+												`Are you sure you want to delete ${selectedRows.length} routes?`
+											)
+										) {
+											multipleDeleteMutation.mutate(selectedRows);
+										}
+									} else {
+										alert('Please select at least one route to delete');
+									}
+								}}
+								disabled={!selectedDepotId || selectedRows.length === 0}
+								className={`bg-red-600 text-white text-sm px-3 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${
+									!selectedDepotId || selectedRows.length === 0
+										? 'opacity-50 cursor-not-allowed'
+										: ''
+								}`}
+							>
+								{multipleDeleteMutation.isPending
+									? 'Deleting...'
+									: 'Delete Selected Routes'}
+							</button>
+						</RBAC>
+					)}
+
+					<RBAC
+						roles={[
+							ROLES.ORGANIZATION_ADMIN,
+							ROLES.AREA_ADMIN,
+							ROLES.DEPOT_ADMIN,
+							ROLES.MASTER,
+						]}
+					>
+						<button
+							onClick={() => {
+								if (gridRef.current) {
+									if (
+										confirm(
+											`Are you sure you want to delete ${selectedRows.length} routes?`
+										)
+									) {
+										const routeIds = routes.map((route) => parseInt(route.id));
+											console.log('Route IDs to delete:', routeIds);
+										multipleDeleteMutation.mutate(routeIds);
+									}
+								}
+							}}
+							className="bg-red-600 text-white text-sm px-3 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+						>
+							Delete All Routes
+						</button>
+					</RBAC>
 				</Group>
 			</div>
 
