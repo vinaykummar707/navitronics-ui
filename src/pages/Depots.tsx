@@ -47,7 +47,8 @@ const Depots = () => {
   const { data: depots, isLoading } = useQuery({
     queryKey: ['depots', selectedOrganization?.organizationId, selectedAreaId],
     queryFn: () => depotService.getAll(selectedAreaId),
-    enabled: !!selectedOrganization && !!selectedAreaId,
+	  enabled: !!selectedOrganization && !!selectedAreaId,
+	
   });
 
   const filteredDepots = user.depot && user.userRole === 'depot_admin' ? depots?.filter(depot => depot.depotId === user.depot.depotId) : depots;
@@ -164,6 +165,12 @@ const Depots = () => {
 										className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
 									>
 										Status
+									  </th>
+									  <th
+										scope="col"
+										className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
+									>
+										Created At
 									</th>
 									<th
 										scope="col"
@@ -175,7 +182,9 @@ const Depots = () => {
 							</thead>
 							<tbody className="bg-white divide-y divide-stone-200">
 								{filteredDepots && filteredDepots.length > 0 ? (
-									filteredDepots.map((depot) => (
+									  filteredDepots
+										  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+										  .map((depot) => (
 										<tr key={depot.depotId} className="hover:bg-stone-50">
 											<td className="px-6 py-4 whitespace-nowrap">
 												<div className="text-sm font-medium text-stone-900">
@@ -193,6 +202,20 @@ const Depots = () => {
 												>
 													{depot.active ? 'Active' : 'Inactive'}
 												</span>
+											</td>
+
+											<td className="px-6 py-4 whitespace-nowrap">
+												<div className="text-sm text-stone-500">
+													{new Date(depot.createdAt).toLocaleDateString('en-US', {
+														year: 'numeric',
+														month: '2-digit',
+														day: '2-digit',
+														hour: '2-digit',
+														minute: '2-digit',
+														second: '2-digit',
+
+													})}
+												</div>
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
 												<button
