@@ -357,7 +357,7 @@ const Routes = () => {
           timeStyle: "medium",
         }),
       sortable: true,
-      sort: "asc", // Optional: default sort FIFO (oldest first)
+      sort: "desc", // Optional: default sort FIFO (oldest first)
       width: 200,
     },
   ];
