@@ -16,6 +16,7 @@ const LEDBitmapSimulator = ({
   verticalSpacing = 9, // Default vertical spacing between rows
   stopScroll,
   onBitmapTextChange,
+  isRouteNumber = false, // Flag to indicate if this is a route number display
 }) => {
   const [ledSize, setLedSize] = useState(4);
   const [ledSpacing, setLedSpacing] = useState(horizontalSpacing);
@@ -92,20 +93,35 @@ const LEDBitmapSimulator = ({
     return matrix;
   };
 
+  const addPaddingPropertiesInUrl = () => {
+    if (!isRouteNumber) {
+      return `http://65.0.61.187:5288/api/bitmap?text=${
+        text.text ? text.text : " "
+      }&height=${text.fontHeight}&weight=${
+        text.fontWeight === "bold" ? "Bold" : "Regular"
+      }&family=${fontFamily}`;
+    } 
+    return `http://65.0.61.187:5288/api/bitmap?text=${
+      text.text ? text.text : " "
+    }&height=${text.fontHeight}&weight=${
+      text.fontWeight === "bold" ? "Bold" : "Regular"
+    }&family=${fontFamily}&padding=true&pleft=${text.position === "Left" ? 1 : 2}&pright=${
+      text.position === "Right" ? 1 : 2
+    }`;
+  };
+
   useEffect(() => {
     console.log(text);
     setBitmapText("");
 
     const fetchBitmap = async () => {
       try {
+        // Use the function to get the URL with padding properties if needed
+        const url = addPaddingPropertiesInUrl();
+        console.log("Fetching bitmap from URL:", url);
         const response = await axios.get(
-          `http://65.0.61.187:5288/api/bitmap?text=${
-            text.text ? text.text : " "
-          }&height=${text.fontHeight}&weight=${
-            text.fontWeight === "bold" ? "Bold" : "Regular"
-          }&family=${fontFamily}`
+          url
         );
-
         console.log(response);
         const lines = response.data.trim().split("\n");
         // if(lines.length <= 16) {

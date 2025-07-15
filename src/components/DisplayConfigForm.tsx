@@ -1210,6 +1210,7 @@ export const DisplayConfigForm: React.FC = () => {
                           {routeData.splitRoute ? (
                             <div className="flex flex-col">
                               <LEDBitmapSimulator
+                                
                                 stopScroll={stopScroll}
                                 rows={8}
                                 cols={
@@ -1230,6 +1231,7 @@ export const DisplayConfigForm: React.FC = () => {
                                   displayConfig[language][screenKey].texts
                                     .routeNumber1
                                 }
+                                isRouteNumber = {true}
                                 fontFamily={getFontFileByLanguage(
                                   language,
                                   "routeNumber1",
@@ -1269,6 +1271,7 @@ export const DisplayConfigForm: React.FC = () => {
                                   displayConfig[language][screenKey].texts
                                     .routeNumber2
                                 }
+                                isRouteNumber = {true}
                                 fontFamily={getFontFileByLanguage(
                                   language,
                                   "routeNumber2",
@@ -1303,6 +1306,7 @@ export const DisplayConfigForm: React.FC = () => {
                                 displayConfig[language][screenKey].texts
                                   .sideText
                               }
+                                isRouteNumber = {true}
                               fontFamily={getFontFileByLanguage(
                                 language,
                                 "sideText",
@@ -1405,6 +1409,7 @@ export const DisplayConfigForm: React.FC = () => {
                                   displayConfig[language][screenKey].texts
                                     .routeNumber1
                                 }
+                                isRouteNumber = {true}
                                 fontFamily={getFontFileByLanguage(
                                   language,
                                   "routeNumber1",
@@ -1444,6 +1449,7 @@ export const DisplayConfigForm: React.FC = () => {
                                   displayConfig[language][screenKey].texts
                                     .routeNumber2
                                 }
+                                isRouteNumber = {true}
                                 fontFamily={getFontFileByLanguage(
                                   language,
                                   "routeNumber2",
@@ -1478,6 +1484,7 @@ export const DisplayConfigForm: React.FC = () => {
                                 displayConfig[language][screenKey].texts
                                   .sideText
                               }
+                                isRouteNumber = {true}
                               fontFamily={getFontFileByLanguage(
                                 language,
                                 "sideText",
@@ -1723,8 +1730,8 @@ export const DisplayConfigForm: React.FC = () => {
                                 </label>
                                 <input
                                   type="number"
-                                  min={0}
-                                  max={10}
+                                  min={1}
+                                  max={100}
                                   {...register(
                                     `displayConfig.${language}.${screenKey}.texts.${textKey}.scrollSpeed`
                                   )}
@@ -2219,7 +2226,7 @@ export const DisplayConfigForm: React.FC = () => {
                               <input
                                 type="number"
                                 min={1}
-                                max={10}
+                                max={100}
                                 {...register(
                                   `specialMessages.${index}.${language}.scrollSpeed`
                                 )}
