@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // const baseURL =  'https://api.navitronix.in/navitranix/api';
- const baseURL =  'http://localhost:8080/navitranix/api';
+ const baseURL =  'http://31.97.228.29:3090/navitranix/api';
 
 const axiosInstance = axios.create({
 	baseURL,
