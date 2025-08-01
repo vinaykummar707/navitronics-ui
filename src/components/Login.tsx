@@ -7,6 +7,7 @@ import useAuthStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { LuEye, LuEyeClosed } from 'react-icons/lu';
 import { toast } from 'react-toastify';
+import Navbar from './Navbar';
 
 function Login() {
 	const [userId, setUserId] = useState('');
@@ -76,7 +77,7 @@ function Login() {
 			}}
 		>
 			<div className="absolute top-10 left-10">
-				<img src="/assets/navitronix.png" alt="Logo" className="h-40" />
+				<img src="/assets/mg.png" alt="Logo" className="h-40" />
 			</div>
 
 			<div className="flex items-center justify-between w-full max-w-7xl">
