@@ -91,7 +91,7 @@ const NavbarTwo = () => {
               </Link>
             </RBAC>
 
-            <RBAC roles={[ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]}>
+            <RBAC roles={[ROLES.MASTER]}>
               <Link
                 to="/home/fonts"
                 className={`text-sm  ${
