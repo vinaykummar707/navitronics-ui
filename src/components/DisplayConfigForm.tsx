@@ -43,8 +43,8 @@ import FontHeightInput from "./FontHeightControl";
 const SCREEN_TYPES = [
   "Special Messages",
   "front",
-  "side",
   "rear",
+  "side",
   "internal",
 ] as const;
 const SCROLL_TYPES = [
