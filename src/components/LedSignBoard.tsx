@@ -100,14 +100,14 @@ const LEDBitmapSimulator = ({
       }&height=${text.fontHeight}&weight=${
         text.fontWeight === "bold" ? "Bold" : "Regular"
       }&family=${fontFamily}`;
-    } 
+    }
     return `https://bitmap.navitronix.in/api/bitmap?text=${
       text.text ? text.text : " "
     }&height=${text.fontHeight}&weight=${
       text.fontWeight === "bold" ? "Bold" : "Regular"
-    }&family=${fontFamily}&padding=true&pleft=${text.position === "Left" ? 1 : 2}&pright=${
-      text.position === "Right" ? 1 : 2
-    }`;
+    }&family=${fontFamily}&padding=true&pleft=${
+      text.position === "Left" ? 1 : 2
+    }&pright=${text.position === "Right" ? 1 : 2}`;
   };
 
   useEffect(() => {
@@ -119,13 +119,13 @@ const LEDBitmapSimulator = ({
         // Use the function to get the URL with padding properties if needed
         const url = addPaddingPropertiesInUrl();
         console.log("Fetching bitmap from URL:", url);
-        const response = await axios.get(
-          url
-        );
+        const response = await axios.get(url);
         console.log(response);
         const lines = response.data.trim().split("\n");
-        // if(lines.length <= 16) {
-        setBitmapText(response.data || "");
+        
+        console.log("Fetched bitmap lines:", lines);
+        // if (lines.length <= 16) {
+          setBitmapText(response.data);
         // }
       } catch (error) {
         setBitmapText("");

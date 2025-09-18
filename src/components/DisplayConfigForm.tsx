@@ -704,6 +704,7 @@ export const DisplayConfigForm: React.FC = () => {
               {...register("route.routeNumber")}
               className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter route number"
+              maxLength={6}
             />
           </div>
         )}
@@ -848,7 +849,6 @@ export const DisplayConfigForm: React.FC = () => {
     text: string,
     langCode: string = "hi"
   ) => {
-    
     try {
       const baseLangCode = langCode.replace(/\d+$/, "");
       // console.log("Original langCode:", langCode);
@@ -1131,16 +1131,6 @@ export const DisplayConfigForm: React.FC = () => {
                           <option value={96}>96</option>
                           <option value={160}>160</option>
                         </select>
-
-                        <button
-                          type="button"
-                          onClick={() => setStopScroll((value) => !value)}
-                          className={` ${
-                            stopScroll ? "bg-green-500" : "bg-red-500"
-                          }  text-red-50 py-2 px-4 text-sm font-medium rounded-md`}
-                        >
-                          {!stopScroll ? "Pause" : "Play"} Simulation
-                        </button>
                       </div>
                     )}
 
@@ -1164,6 +1154,16 @@ export const DisplayConfigForm: React.FC = () => {
                         </option>
                       ))}
                     </select>
+
+                    <button
+                      type="button"
+                      onClick={() => setStopScroll((value) => !value)}
+                      className={` ${
+                        stopScroll ? "bg-green-500" : "bg-red-500"
+                      }  text-red-50 py-2 px-4 text-sm font-medium rounded-md`}
+                    >
+                      {!stopScroll ? "Pause" : "Play"} Simulation
+                    </button>
                   </div>
 
                   <div className="flex flex-col-reverse items-start gap-4">
@@ -1210,7 +1210,6 @@ export const DisplayConfigForm: React.FC = () => {
                           {routeData.splitRoute ? (
                             <div className="flex flex-col">
                               <LEDBitmapSimulator
-                                
                                 stopScroll={stopScroll}
                                 rows={8}
                                 cols={
@@ -1231,7 +1230,7 @@ export const DisplayConfigForm: React.FC = () => {
                                   displayConfig[language][screenKey].texts
                                     .routeNumber1
                                 }
-                                isRouteNumber = {true}
+                                isRouteNumber={true}
                                 fontFamily={getFontFileByLanguage(
                                   language,
                                   "routeNumber1",
@@ -1271,7 +1270,7 @@ export const DisplayConfigForm: React.FC = () => {
                                   displayConfig[language][screenKey].texts
                                     .routeNumber2
                                 }
-                                isRouteNumber = {true}
+                                isRouteNumber={true}
                                 fontFamily={getFontFileByLanguage(
                                   language,
                                   "routeNumber2",
@@ -1306,7 +1305,7 @@ export const DisplayConfigForm: React.FC = () => {
                                 displayConfig[language][screenKey].texts
                                   .sideText
                               }
-                                isRouteNumber = {true}
+                              isRouteNumber={true}
                               fontFamily={getFontFileByLanguage(
                                 language,
                                 "sideText",
@@ -1409,7 +1408,7 @@ export const DisplayConfigForm: React.FC = () => {
                                   displayConfig[language][screenKey].texts
                                     .routeNumber1
                                 }
-                                isRouteNumber = {true}
+                                isRouteNumber={true}
                                 fontFamily={getFontFileByLanguage(
                                   language,
                                   "routeNumber1",
@@ -1449,7 +1448,7 @@ export const DisplayConfigForm: React.FC = () => {
                                   displayConfig[language][screenKey].texts
                                     .routeNumber2
                                 }
-                                isRouteNumber = {true}
+                                isRouteNumber={true}
                                 fontFamily={getFontFileByLanguage(
                                   language,
                                   "routeNumber2",
@@ -1484,7 +1483,7 @@ export const DisplayConfigForm: React.FC = () => {
                                 displayConfig[language][screenKey].texts
                                   .sideText
                               }
-                                isRouteNumber = {true}
+                              isRouteNumber={true}
                               fontFamily={getFontFileByLanguage(
                                 language,
                                 "sideText",
