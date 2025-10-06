@@ -95,13 +95,13 @@ const LEDBitmapSimulator = ({
 
   const addPaddingPropertiesInUrl = () => {
     if (!isRouteNumber) {
-      return `https://bitmap.navitronix.in/api/bitmap?text=${
+      return `http://3.109.2.66:5288/api/bitmap?text=${
         text.text ? text.text : " "
       }&height=${text.fontHeight}&weight=${
         text.fontWeight === "bold" ? "Bold" : "Regular"
       }&family=${fontFamily}`;
     }
-    return `https://bitmap.navitronix.in/api/bitmap?text=${
+    return `http://3.109.2.66:5288/api/bitmap?text=${
       text.text ? text.text : " "
     }&height=${text.fontHeight}&weight=${
       text.fontWeight === "bold" ? "Bold" : "Regular"
