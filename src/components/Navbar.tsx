@@ -27,12 +27,10 @@ const Navbar = () => {
     <nav className="bg-white  border-b  ">
 
       <Container fluid className='flex  justify-between items-center'>
-        <div className='flex items-center gap-2 w-[300px]'> 
-        <Link to="/" className="">
-          <img className='w-18 h-16 ' src="/assets/mg.png" alt="" srcSet="" />
-        </Link>
-        <span className='text-red-700 fonr-medium text-xl w-full' > <span className='text-red-700 font-bold'>MG</span> Grey Engine LLP </span>
-        </div>
+        <Link to="/" className="text-2xl text-nav_orange gap-2 items-center flex font-bold">
+          <img className='size-20 ' src="/assets/navitronix.jpeg" alt="" srcSet="" />
+          NAVITRONIX
+          </Link>
         {/* <div className="flex items-center space-x-6">
 
           <div className="flex items-center gap-8">
