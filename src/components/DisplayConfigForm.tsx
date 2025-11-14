@@ -41,7 +41,7 @@ import { toast } from "react-toastify";
 import FontHeightInput from "./FontHeightControl";
 
 const SCREEN_TYPES = [
-  "Special Messages",
+  // "Special Messages",
   "front",
   "rear",
   "side",
@@ -872,24 +872,65 @@ export const DisplayConfigForm: React.FC = () => {
     }
   };
 
-  const [frontBoardCols, setFrontBoardCols] = useState<96 | 160>(160);
+  type BoardWidth = 32 | 64 | 96 | 128 | 160 | 192;
+type Side = "front" | "side" | "rear" | "internal";
 
-  const handleFrontBoardColsChange = (
-    event: React.ChangeEvent<HTMLInputElement>
+const [frontBoardCols, setFrontBoardCols] = useState<BoardWidth>(160);
+  const [sideBoardCols, setSideBoardCols] = useState<BoardWidth>(96);
+  const [rearBoardCols, setRearBoardCols] = useState<BoardWidth>(96);
+  const [internalBoardCols, setInternalBoardCols] = useState<BoardWidth>(96);
+  const [boardRows, setBoardRows] = useState<16 | 32>(16);
+
+  const handleBoardColsChange = (
+    event: React.ChangeEvent<HTMLSelectElement>,
+    side: Side
   ) => {
-    setFrontBoardCols(Number(event.target.value) as 96 | 160);
+    const value = Number(event.target.value) as BoardWidth;
+    switch (side) {
+      case "front":
+        setFrontBoardCols(value);
+        break;
+      case "side":
+        setSideBoardCols(value);
+        break;
+      case "rear":
+        setRearBoardCols(value);
+        break;
+      case "internal":
+        setInternalBoardCols(value);
+        break;
+    }
   };
+
+  const renderWidthSelect = (side: Side, value: BoardWidth) => (
+    <div className="flex items-end gap-4 mb-3">
+      <div className="mb-2 font-semibold capitalize">
+        {side} Board Width:
+      </div>
+      <select
+        className="border p-1 rounded"
+        value={value}
+        onChange={(e) => handleBoardColsChange(e, side)}
+      >
+        {[32, 64, 96, 128, 160, 192].map((num) => (
+          <option key={num} value={num}>
+            {num}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
 
   const getColumnsByBoard = (boardType, format) => {
     switch (boardType) {
       case "front":
         return getFormatByScreen(frontBoardCols, format);
       case "side":
-        return getFormatByScreen(96, format);
+        return getFormatByScreen(sideBoardCols, format);
       case "rear":
-        return getFormatByScreen(96, format);
+        return getFormatByScreen(rearBoardCols, format);
       default:
-        return getFormatByScreen(112, format);
+        return getFormatByScreen(internalBoardCols, format);
     }
   };
 
@@ -1112,9 +1153,35 @@ export const DisplayConfigForm: React.FC = () => {
 										Showing 16 x{' '}
 										{getColumnsByBoard(activeTab, screenConfig.format)} Board
 									</span> */}
-                  <div className="flex  w-full items-center gap-2">
-                    {screenKey === "front" && (
-                      <div className="flex w-[30%] items-end gap-4">
+                  <div className="flex w-full items-center gap-4">
+                      
+
+                      <div className="flex  items-end gap-4">
+                        <div className="mb-2 font-semibold">
+                          Select Board Height:
+                        </div>
+
+                        <select
+                          className="border p-1 rounded"
+                          value={boardRows}
+                          onChange={(e) =>
+                            setBoardRows(
+                              Number(e.target.value) as 16 | 32
+                            )
+                          }
+                        >
+                          <option value={16}>16</option>
+                          <option value={32}>32</option> 
+                        </select>
+                      </div>
+
+                    {screenKey === 'front' && renderWidthSelect('front', frontBoardCols)}
+                    {screenKey === 'side' && renderWidthSelect("side", sideBoardCols)}
+                    {screenKey === 'rear' && renderWidthSelect("rear", rearBoardCols)}
+                    {screenKey === 'internal' && renderWidthSelect("internal", internalBoardCols)}
+
+
+                      {/* <div className="flex items-end gap-4">
                         <div className="mb-2 font-semibold">
                           Select Board Width:
                         </div>
@@ -1124,15 +1191,19 @@ export const DisplayConfigForm: React.FC = () => {
                           value={frontBoardCols}
                           onChange={(e) =>
                             setFrontBoardCols(
-                              Number(e.target.value) as 96 | 160
+                              Number(e.target.value) as 32 |64|96 |128| 160|192
                             )
                           }
                         >
+                          <option value={32}>32</option>
+                          <option value={64}>64</option>
                           <option value={96}>96</option>
+                          <option value={128}>128</option>
                           <option value={160}>160</option>
+                          <option value={192}>192</option>
                         </select>
-                      </div>
-                    )}
+                      </div> */}
+                   
 
                     <label className="block text-sm font-medium text-gray-600 mb-1">
                       Format
@@ -1146,7 +1217,7 @@ export const DisplayConfigForm: React.FC = () => {
                           e.target.value as ScreenFormat
                         )
                       }
-                      className="w-[30%] p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className=" p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       {FORMATS.map((format) => (
                         <option key={format.value} value={format.value}>
@@ -1171,7 +1242,7 @@ export const DisplayConfigForm: React.FC = () => {
                       <div className="p-2   bg-neutral-800  border-2 rounded-xl border-neutral-800">
                         <LEDBitmapSimulator
                           stopScroll={stopScroll}
-                          rows={16}
+                          rows={boardRows}
                           cols={getColumnsByBoard(
                             activeTab,
                             screenConfig.format
@@ -1211,7 +1282,7 @@ export const DisplayConfigForm: React.FC = () => {
                             <div className="flex flex-col">
                               <LEDBitmapSimulator
                                 stopScroll={stopScroll}
-                                rows={8}
+                                rows={boardRows/2}
                                 cols={
                                   Math.max(
                                     getBitmapColumns(
@@ -1251,7 +1322,7 @@ export const DisplayConfigForm: React.FC = () => {
                               />
                               <LEDBitmapSimulator
                                 stopScroll={stopScroll}
-                                rows={8}
+                                rows={boardRows/2}
                                 cols={
                                   Math.max(
                                     getBitmapColumns(
@@ -1293,7 +1364,7 @@ export const DisplayConfigForm: React.FC = () => {
                           ) : (
                             <LEDBitmapSimulator
                               stopScroll={stopScroll}
-                              rows={16}
+                              rows={boardRows}
                               cols={
                                 getBitmapColumns(
                                   watch(
@@ -1328,7 +1399,7 @@ export const DisplayConfigForm: React.FC = () => {
 
                           <LEDBitmapSimulator
                             stopScroll={stopScroll}
-                            rows={16}
+                            rows={boardRows}
                             cols={
                               getColumnsByBoard(
                                 activeTab,
@@ -1389,7 +1460,7 @@ export const DisplayConfigForm: React.FC = () => {
                             <div className="flex flex-col">
                               <LEDBitmapSimulator
                                 stopScroll={stopScroll}
-                                rows={8}
+                                rows={boardRows/2}
                                 cols={
                                   Math.max(
                                     getBitmapColumns(
@@ -1429,7 +1500,7 @@ export const DisplayConfigForm: React.FC = () => {
                               />
                               <LEDBitmapSimulator
                                 stopScroll={stopScroll}
-                                rows={8}
+                                rows={boardRows/2}
                                 cols={
                                   Math.max(
                                     getBitmapColumns(
@@ -1471,7 +1542,7 @@ export const DisplayConfigForm: React.FC = () => {
                           ) : (
                             <LEDBitmapSimulator
                               stopScroll={stopScroll}
-                              rows={16}
+                              rows={boardRows}
                               cols={
                                 getBitmapColumns(
                                   watch(
@@ -1506,7 +1577,7 @@ export const DisplayConfigForm: React.FC = () => {
                           <div className="flex flex-col">
                             <LEDBitmapSimulator
                               stopScroll={stopScroll}
-                              rows={8}
+                              rows={boardRows/2}
                               cols={
                                 getColumnsByBoard(
                                   activeTab,
@@ -1542,7 +1613,7 @@ export const DisplayConfigForm: React.FC = () => {
                             />
                             <LEDBitmapSimulator
                               stopScroll={stopScroll}
-                              rows={8}
+                              rows={boardRows/2}
                               cols={
                                 getColumnsByBoard(
                                   activeTab,
@@ -2027,7 +2098,7 @@ export const DisplayConfigForm: React.FC = () => {
                               <div className="p-2 bg-neutral-800 border-2  rounded-xl border-neutral-800">
                                 <LEDBitmapSimulator
                                   stopScroll={stopScroll}
-                                  rows={16}
+                                  rows={boardRows}
                                   cols={getColumnsByBoard(
                                     watch(
                                       `specialMessages.${index}.${language}.previewBoard`

@@ -16,7 +16,7 @@ const FontHeightInput: React.FC<FontHeightInputProps> = ({
   bitmap = 0, // Assuming bitmap is not used in this component
 }) => {
   const increase = () => {
-    if (bitmap < 15) onChange(parseInt(value) + 1);
+    if (bitmap < 33) onChange(parseInt(value) + 1);
   };
 
   const decrease = () => {
@@ -42,7 +42,7 @@ const FontHeightInput: React.FC<FontHeightInputProps> = ({
           −
         </button>
         <span className="min-w-[30px] text-center"> {bitmap}</span>
-        {bitmap < 15 && (
+        {bitmap < 33 && (
           <button
             type="button"
             onClick={increase}
@@ -51,7 +51,7 @@ const FontHeightInput: React.FC<FontHeightInputProps> = ({
             +
           </button>
         )}
-        {bitmap > 15 && (
+        {bitmap > 32 && (
           <span className="text-xs text-red-500">Height limit reached</span>
         )}
       </div>
