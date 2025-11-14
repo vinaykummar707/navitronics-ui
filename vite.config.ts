@@ -8,7 +8,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 2000,
   },
   server: {
-    port: 3090,
+    port: 3060,
   },
   plugins: [react(), tsConfigPaths()],
 });
