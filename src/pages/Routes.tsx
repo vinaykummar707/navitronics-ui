@@ -13,8 +13,8 @@ import SimulationDialog from "@/components/SimulationDialog";
 import RBAC from "../components/RBAC";
 import { ROLES } from "../constants/roles";
 import { AgGridReact } from "ag-grid-react";
-import { AllCommunityModule, GridApi, ModuleRegistry } from "ag-grid-community";
 import { toast } from "react-toastify";
+
 
 const Routes = () => {
   const [selectedAreaId, setSelectedAreaId] = useState<string>("");
@@ -29,10 +29,7 @@ const Routes = () => {
   const gridRef = useRef<GridApi | null>(null); // Reference to AG Grid
   const [selectedRows, setSelectedRows] = useState<any[]>([]); // State to hold selected rows
 
-  // Reset selections when organization changes
-  useEffect(() => {
-    ModuleRegistry.registerModules([AllCommunityModule]);
-  }, [selectedOrganization?.organizationId]);
+
 
   // Update the useEffect for organization change
   useEffect(() => {
@@ -43,7 +40,6 @@ const Routes = () => {
       //   localStorage.removeItem('selectedAreaId');
       //   localStorage.removeItem('selectedDepotId');
     }
-    ModuleRegistry.registerModules([AllCommunityModule]);
   }, [selectedOrganization?.organizationId]);
 
   // Update select handlers
