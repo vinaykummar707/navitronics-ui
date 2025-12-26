@@ -15,7 +15,6 @@ import { ROLES } from "../constants/roles";
 import { AgGridReact } from "ag-grid-react";
 import { toast } from "react-toastify";
 
-
 const Routes = () => {
   const [selectedAreaId, setSelectedAreaId] = useState<string>("");
   const [selectedDepotId, setSelectedDepotId] = useState<string>("");
@@ -28,8 +27,6 @@ const Routes = () => {
   const user = useAuthStore((state) => state.user);
   const gridRef = useRef<GridApi | null>(null); // Reference to AG Grid
   const [selectedRows, setSelectedRows] = useState<any[]>([]); // State to hold selected rows
-
-
 
   // Update the useEffect for organization change
   useEffect(() => {
@@ -321,8 +318,8 @@ const Routes = () => {
     },
     {
       headerName: "Source - Destination",
-		field: "route.combinedRoute",
-	  filter: true,
+      field: "route.combinedRoute",
+      filter: true,
       valueGetter: (params) =>
         `${params.data.route.source} ${params.data.route.separation} ${params.data.route.destination}`,
       editable: false,
@@ -418,9 +415,10 @@ const Routes = () => {
           >
             <button
               onClick={() =>
-                navigate("/home/create-route", {
-                  state: { areaId: selectedAreaId, depotId: selectedDepotId },
-                })
+                window.open(
+                  `http://31.97.228.29:9091/route-create/${selectedAreaId}/${selectedDepotId}`,
+                  "_blank" // Open in a new tab
+                )
               }
               disabled={!selectedDepotId}
               className={`bg-indigo-600 text-white text-sm px-3 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
