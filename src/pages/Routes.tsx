@@ -422,7 +422,7 @@ const Routes = () => {
           >
             <button
               onClick={() =>
-                navigate("/home/create-route", {
+                navigate(`http://localhost:9091/route-create/${selectedAreaId}/${selectedDepotId}`, {
                   state: { areaId: selectedAreaId, depotId: selectedDepotId },
                 })
               }
