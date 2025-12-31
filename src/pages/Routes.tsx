@@ -245,16 +245,13 @@ const Routes = () => {
       >
         {/* Edit Button */}
         <button
+          
           onClick={() =>
-            navigate("/home/create-route", {
-              state: {
-                areaId: selectedAreaId, // Ensure this is defined in scope
-                depotId: selectedDepotId, // Ensure this is defined in scope
-                isEdit: true,
-                gotRouteData: params.data, // Passing route data
-              },
-            })
-          }
+                window.open(
+                  `http://31.97.228.29:9091/route-create/${selectedAreaId}/${selectedDepotId}/${params.data.id}`,
+                  "_blank" // Open in a new tab
+                )
+              }
           className="text-indigo-600 hover:text-indigo-900 mr-4"
         >
           <Icon icon="solar:pen-bold" className="inline-block" />
