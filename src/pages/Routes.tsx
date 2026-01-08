@@ -249,7 +249,7 @@ const Routes = () => {
           onClick={() =>
                 window.open(
                   `http://31.97.228.29:9091/route-create/${selectedAreaId}/${selectedDepotId}/${params.data.id}`,
-                  "_blank" // Open in a new tab
+                  "_self" // Open in a new tab
                 )
               }
           className="text-indigo-600 hover:text-indigo-900 mr-4"
@@ -414,7 +414,7 @@ const Routes = () => {
               onClick={() =>
                 window.open(
                   `http://31.97.228.29:9091/route-create/${selectedAreaId}/${selectedDepotId}`,
-                  "_blank" // Open in a new tab
+                  "_self" // Open in a new tab
                 )
               }
               disabled={!selectedDepotId}
