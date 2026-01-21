@@ -65,7 +65,7 @@ const Routes = () => {
   });
   const filteredAreas =
     user.area &&
-    (user.userRole === "area_admin" || user.userRole === "depot_admin")
+      (user.userRole === "area_admin" || user.userRole === "depot_admin")
       ? areas?.filter((area) => area.areaId === user.area.areaId)
       : areas;
 
@@ -143,6 +143,17 @@ const Routes = () => {
       console.error("Error deleting route:", error);
       toast.error("Failed to delete route.");
     },
+  });
+  const duplicateMutation = useMutation({
+    mutationFn: routeService.duplicate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["routes", selectedDepotId] });
+      toast.success("Route duplicated successfully!");
+    },
+    onError: (error) => {
+      console.error("Duplication failed:", error);
+      toast.error("Failed to duplicate route.");
+    }
   });
 
   const multipleDeleteMutation = useMutation({
@@ -245,17 +256,32 @@ const Routes = () => {
       >
         {/* Edit Button */}
         <button
-          
+
           onClick={() =>
-                window.open(
-                  `http://31.97.228.29:9091/route-create/${selectedAreaId}/${selectedDepotId}/${params.data.id}`,
-                  "_self" // Open in a new tab
-                )
-              }
+            window.open(
+              `http://31.97.228.29:9091/route-create/${selectedAreaId}/${selectedDepotId}/${params.data.id}`,
+              "_self" // Open in a new tab
+            )
+          }
           className="text-indigo-600 hover:text-indigo-900 mr-4"
         >
           <Icon icon="solar:pen-bold" className="inline-block" />
         </button>
+        <button
+          onClick={() => {
+            if (
+              confirm(
+                `Are you sure you want to duplicate route ${route.routeNumber}?`
+              )
+            ) {
+              duplicateMutation.mutate(params.data.id);
+            }
+          }}
+          className="text-yellow-600 hover:text-yellow-800 mr-4"
+        >
+          <Icon icon="solar:copy-bold" className="inline-block" />
+        </button>
+
 
         {/* Delete Button */}
         <button
@@ -418,9 +444,8 @@ const Routes = () => {
                 )
               }
               disabled={!selectedDepotId}
-              className={`bg-indigo-600 text-white text-sm px-3 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                !selectedDepotId ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`bg-indigo-600 text-white text-sm px-3 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${!selectedDepotId ? "opacity-50 cursor-not-allowed" : ""
+                }`}
             >
               Create Route
             </button>
@@ -434,9 +459,8 @@ const Routes = () => {
               })
             }
             disabled={!selectedDepotId}
-            className={`bg-green-600 text-white text-sm px-3 py-2 rounded-md hover:bg-green-700  ${
-              !selectedDepotId ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className={`bg-green-600 text-white text-sm px-3 py-2 rounded-md hover:bg-green-700  ${!selectedDepotId ? "opacity-50 cursor-not-allowed" : ""
+              }`}
           >
             {getAllWithConfigMutation.isPending
               ? "Exporting..."
@@ -466,11 +490,10 @@ const Routes = () => {
                   }
                 }}
                 disabled={!selectedDepotId || selectedRows.length === 0}
-                className={`bg-red-600 text-white text-sm px-3 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${
-                  !selectedDepotId || selectedRows.length === 0
+                className={`bg-red-600 text-white text-sm px-3 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${!selectedDepotId || selectedRows.length === 0
                     ? "opacity-50 cursor-not-allowed"
                     : ""
-                }`}
+                  }`}
               >
                 {multipleDeleteMutation.isPending
                   ? "Deleting..."

@@ -18,6 +18,10 @@ export const routeService = {
 		const response = await axiosInstance.post(`${BASE_PATH}`, routeData);
 		return response.data['data'];
 	},
+	duplicate: async (routeId: string): Promise<any> => {
+		const response = await axiosInstance.post(`${BASE_PATH}/duplicate/${routeId}`);
+		return response.data;
+	},
 	update: async (id: any, routeData: any): Promise<any> => {
 		const response = await axiosInstance.put(`${BASE_PATH}/${id}`, routeData);
 		return response.data;
