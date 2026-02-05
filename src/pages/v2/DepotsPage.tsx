@@ -1,0 +1,121 @@
+import { useDeleteDepot, useDepots } from "@/api/depot/hooks";
+import { useOrganizationStore } from "@/store/useOrganizationStore";
+import { CreateDepotForm, Select } from "@/ui";
+import { Button } from "@/ui/components/Button";
+import { Dialog } from "@/ui/components/Dialog";
+import { OptionsDropdown } from "@/ui/components/OptionsDropdown";
+import { DepotCard } from "@/ui/components/DepotCard";
+import { FeatherBusFront, FeatherMapPin, FeatherPlus } from "@subframe/core";
+import React from "react";
+import { useRegions } from "@/api/region/hooks";
+
+export default function DepotsPage() {
+    const [open, setOpen] = React.useState(false);
+    const { selectedOrganization } = useOrganizationStore();
+    const { data: regionData, loading: regionsLoading, error: regionsError } = useRegions({
+        variables: { organization_id: selectedOrganization.id || "" },
+    });
+    const regions = regionData?.regions || [];
+    const [selectedRegion, setSelectedRegion] = React.useState<string | null>(null);
+    const depotsQueryEnabled = !!selectedRegion;
+    const [editData, setEditData] = React.useState<any>(null);
+    const [deleteDepot, { loading: deleting, error: deleteError }] = useDeleteDepot();
+
+    // Only call useDepots if there's a selectedRegion
+    const { data: depots, loading, error, refetch } = useDepots({
+        variables: { organization_id: selectedOrganization.id || "", region_id: selectedRegion || "" },
+        skip: !depotsQueryEnabled, // Only run if enabled
+    });
+
+    // Set default region once regions are loaded
+    React.useEffect(() => {
+        console.log("Regions loaded:", regions);
+
+        if (regions.length > 0 ) {
+            setSelectedRegion(regions[0].id);
+        }
+    }, [regions]);
+
+    if (regionsLoading) return <p>Loading regions...</p>;
+    if (regionsError) return <p>Error loading regions: {regionsError.message}</p>;
+    if (!selectedRegion) return <p>Please select a region.</p>;
+    if (loading) return <p>Loading depots...</p>;
+    if (error) return <p>Error: {error.message}</p>;
+
+    const handleFormSuccess = () => {
+        setOpen(false);
+        setEditData(null);
+        refetch();
+    };
+
+    return (
+        <div className="flex h-full w-full flex-col items-start gap-4 px-12 py-12">
+            <div className="flex w-full flex-col items-start gap-1">
+                <span className="text-heading-2 font-heading-2 text-default-font text-center">
+                    Depots
+                </span>
+                <span className="text-body font-body text-subtext-color">
+                    Overview of your store&#39;s performance and customer engagement
+                </span>
+            </div>
+            <div className="flex w-full items-center justify-between">
+                <span className="text-caption font-caption text-subtext-color">
+                    Showing {depots?.depots?.length ?? 0} records
+                </span>
+                <div className="flex gap-2">
+                    <Select
+                        className="h-auto  flex-none"
+                        variant="outline"
+                        label=""
+                        placeholder="Select Region"
+                        value={selectedRegion || ""}
+                        onValueChange={val => setSelectedRegion(val)}
+                    >
+                        {regions.map(region => (
+                            <Select.Item key={region.id} value={region.id}>
+                                {region.name}
+                            </Select.Item>
+                        ))}
+                    </Select>
+                    <Button
+                        variant="brand-secondary-2"
+                        icon={<FeatherPlus />}
+                        onClick={() => { setOpen(true); setEditData(null); }}
+                    >
+                        Add Depot
+                    </Button>
+                </div>
+            </div>
+            <div className="w-full flex-col items-start gap-2 grid grid-cols-3">
+                {depots?.depots && depots.depots.map(depot => (
+                    <DepotCard
+                        key={depot.id}
+                        icon={<FeatherBusFront />}
+                        locationName={depot.name}
+                        depotCount={'Created on ' + new Date(depot.created_at).toLocaleDateString()}
+                        actions={
+                            <OptionsDropdown
+                                onDelete={async () => {
+                                    await deleteDepot({ variables: { id: depot.id } });
+                                    refetch();
+                                }}
+                                onEdit={() => { setEditData(depot); setOpen(true); }}
+                            />
+                        }
+                    />
+                ))}
+            </div>
+            <Dialog open={open} onOpenChange={(open: boolean) => { setOpen(open); if (!open) setEditData(null); }}>
+                <Dialog.Content>
+                    <CreateDepotForm
+                        region_id={selectedRegion}
+                        depot={editData}
+                        onSuccess={handleFormSuccess}
+                        onCancel={() => { setOpen(false); setEditData(null); }}
+                        organizationId={selectedOrganization.id || ""}
+                    />
+                </Dialog.Content>
+            </Dialog>
+        </div>
+    );
+};

@@ -1,33 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* * {
-    font-family: 'Inter', serif;
-} */
-@font-face {
-	font-family: 'gautami';
-	src: url('./gautami.ttf') format('truetype');
-}
-
-@font-face {
-	font-family: 'mangal';
-	src: url('./mangal.ttf') format('truetype');
-}
-
-@font-face {
-	font-family: 'notosanstelugu';
-	src: url('./notosanstelugu.ttf') format('truetype');
-}
-
-@font-face {
-	font-family: 'pixeloperator';
-	src: url('./pixeloperator.ttf') format('truetype');
-}
-
-@font-face {
-	font-family: 'pixeloperator8';
-	src: url('./pixeloperator8.ttf') format('truetype');
-}

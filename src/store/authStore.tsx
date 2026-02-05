@@ -18,7 +18,7 @@ interface User {
         depotId: string;
         depotName: string;
     }
-    }
+}
 
 // Define the state and actions type
 interface AuthState {
@@ -39,7 +39,7 @@ const useAuthStore = create<AuthState>()(
             login: (user) => set({ isAuthenticated: true, user }), // Set user details and mark authenticated
             logout: () => {
                 set({ isAuthenticated: false, user: null })
-              
+
             }, // Clear user details and mark unauthenticated
         }), {
         name: "auth-store", // Key for localStorage

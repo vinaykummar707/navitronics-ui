@@ -1,0 +1,173 @@
+{
+    "stops": [
+        {
+            "stopId": "ST001",
+            "stopName": "City Center Bus Terminal",
+            "latitude": 17.385044,
+            "longitude": 78.486671,
+            "audioFile": "city_center.mp3"
+        },
+        {
+            "stopId": "ST002",
+            "stopName": "Paradise Circle",
+            "latitude": 17.443464,
+            "longitude": 78.499148,
+            "audioFile": "paradise_circle.mp3"
+        },
+        {
+            "stopId": "ST003",
+            "stopName": "Secunderabad Junction",
+            "latitude": 17.434599,
+            "longitude": 78.499578,
+            "audioFile": "secunderabad_junction.mp3"
+        },
+        {
+            "stopId": "ST004",
+            "stopName": "Airport Terminal",
+            "latitude": 17.240498,
+            "longitude": 78.429536,
+            "audioFile": "airport_terminal.mp3"
+        }
+    ],
+    "slogans": [
+        {
+            "format": "single",
+            "texts": {
+                "text": {
+                    "text": "KEEP YOUR LUGGAGES SAFE.WHILE OFF BOARDING THE BUS",
+                    "bitmap": "",
+                    "fontWidth": 78,
+                    "scrollType": "Fixed",
+                    "position": "Center",
+                    "scrollSpeed": 1,
+                    "fontWeight": "Regular",
+                    "fontHeight": 12
+                }
+            },
+            "height": 16,
+            "width": 96,
+            "audioFiles": [
+                "keep_your_luggages_safe_en.mp3",
+                "keep_your_luggages_safe_te.mp3",
+                "keep_your_luggages_safe_hi.mp3"
+            ]
+        },
+        {
+            "format": "single",
+            "texts": {
+                "text": {
+                    "text": "Doors will open on the left side",
+                    "bitmap": "",
+                    "fontWidth": 78,
+                    "scrollType": "Fixed",
+                    "position": "Center",
+                    "scrollSpeed": 1,
+                    "fontWeight": "Regular",
+                    "fontHeight": 12
+                }
+            },
+            "height": 16,
+            "width": 96,
+            "audioFiles": [
+                "doors_left_en.mp3",
+                "doors_left_te.mp3",
+                "doors_left_hi.mp3"
+            ]
+        },
+        {
+            "format": "single",
+            "texts": {
+                "text": {
+                    "text": "Please mind the gap between the train and the platform",
+                    "bitmap": "",
+                    "fontWidth": 78,
+                    "scrollType": "Fixed",
+                    "position": "Center",
+                    "scrollSpeed": 1,
+                    "fontWeight": "Regular",
+                    "fontHeight": 12
+                }
+            },
+            "height": 16,
+            "width": 96,
+            "audioFiles": [
+                "mind_the_gap_en.mp3",
+                "mind_the_gap_te.mp3",
+                "mind_the_gap_hi.mp3"
+            ]
+        }
+    ],
+    "specialMessages": [
+        {
+            "format": "single",
+            "texts": {
+                "text": {
+                    "text": "Welcome to City Bus Services",
+                    "bitmap": "",
+                    "fontWidth": 78,
+                    "scrollType": "Fixed",
+                    "position": "Center",
+                    "scrollSpeed": 1,
+                    "fontWeight": "Regular",
+                    "fontHeight": 12
+                }
+            },
+            "height": 16,
+            "width": 96
+        },
+        {
+            "format": "single",
+            "texts": {
+                "text": {
+                    "text": "Thank you for traveling with us",
+                    "bitmap": "",
+                    "fontWidth": 78,
+                    "scrollType": "Fixed",
+                    "position": "Center",
+                    "scrollSpeed": 1,
+                    "fontWeight": "Regular",
+                    "fontHeight": 12
+                }
+            },
+            "height": 16,
+            "width": 96
+        },
+        {
+            "format": "single",
+            "texts": {
+                "text": {
+                    "text": "Have a safe journey",
+                    "bitmap": "",
+                    "fontWidth": 78,
+                    "scrollType": "Fixed",
+                    "position": "Center",
+                    "scrollSpeed": 1,
+                    "fontWeight": "Regular",
+                    "fontHeight": 12
+                }
+            },
+            "height": 16,
+            "width": 96
+        }
+    ],
+    "languages": [
+        "en",
+        "te",
+        "hi"
+    ],
+    "currentStop": [
+        "current_stop_en.mp3",
+        "current_stop_te.mp3",
+        "current_stop_hi.mp3"
+    ],
+    "nextStop": [
+        "next_stop_en.mp3",
+        "next_stop_te.mp3",
+        "next_stop_hi.mp3"
+    ],
+    "arrivingStop": [
+        "arriving_stop_en.mp3",
+        "arriving_stop_te.mp3",
+        "arriving_stop_hi.mp3"
+    ]
+}

@@ -1,6 +1,6 @@
+import { Organization } from '@/api/organization/types';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Organization } from '../types/organization';
 
 interface OrganizationState {
   selectedOrganization: Organization | null;

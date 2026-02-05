@@ -1,0 +1,7 @@
+{
+  "directory": "./src/ui",
+  "importAlias": "@/subframe/ui/*",
+  "projectId": "11b10bc240cf",
+  "teamId": 25925,
+  "cssType": "tailwind"
+}

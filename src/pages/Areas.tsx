@@ -11,6 +11,10 @@ import useAuthStore from '@/store/authStore';
 import RBAC from '../components/RBAC';
 import { ROLES } from '../constants/roles';
 import { toast } from 'react-toastify';
+import { Button } from '@/ui/components/Button';
+import { FeatherEdit2, FeatherMapPin, FeatherTrash } from '@subframe/core';
+import { IconWithBackground } from '@/ui/components/IconWithBackground';
+import { RegionListItem } from '@/ui/components/RegionListItem';
 
 const Areas = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -74,157 +78,205 @@ const Areas = () => {
   }
 
   return (
-    <Container overflow={'scroll'} fluid py={4}>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          {/* <p className="text-stone-600">
-            Organization: {selectedOrganization.organizationName}
-          </p> */}
+    // <Container overflow={'scroll'} fluid py={4}>
+    //   <div className="flex justify-between items-center mb-6">
+    //     <div>
+    //       {/* <p className="text-stone-600">
+    //         Organization: {selectedOrganization.organizationName}
+    //       </p> */}
+    //     </div>
+    //     <RBAC roles={[ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]}>
+    //       <button
+    //         onClick={() => setIsCreateModalOpen(true)}
+    //         className="bg-indigo-600 text-white px-3 py-1.5 text-sm rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+    //       >
+    //         Create Area
+    //       </button>
+    //     </RBAC>
+    //   </div>
+
+    //   {isLoading ? (
+    //     <div className="flex items-center justify-center h-48">
+    //       <div className="text-lg">Loading...</div>
+    //     </div>
+    //   ) : (
+    //     <div className="bg-white rounded-lg shadow overflow-hidden">
+    //       <table className="min-w-full divide-y divide-stone-200">
+    //         <thead className="bg-stone-50">
+    //           <tr>
+    //             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+    //               Area Name
+    //             </th>
+    //             {/* <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+    //               Created By
+    //             </th> */}
+    //             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+    //               Created At
+    //             </th>
+    //             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
+    //               Status
+    //             </th>
+    //             <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider">
+    //               Actions
+    //             </th>
+    //           </tr>
+    //         </thead>
+    //         <tbody className="bg-white divide-y divide-stone-200">
+    //           {filteredAreas && filteredAreas.length > 0 ? (
+    //             filteredAreas.map((area) => (
+    //               <tr key={area.areaId} className="hover:bg-stone-50">
+    //                 <td className="px-6 py-4 whitespace-nowrap">
+    //                   <div className="text-sm font-medium text-stone-900">{area.areaName}</div>
+    //                 </td>
+    //                 {/* <td className="px-6 py-4 whitespace-nowrap">
+    //                   <div className="text-sm text-stone-500">{area.createdBy}</div>
+    //                 </td> */}
+    //                 <td className="px-6 py-4 whitespace-nowrap">
+    //                   <div className="text-sm text-stone-500">
+    //                     {new Date(area.createdAt).toLocaleDateString()}
+    //                   </div>
+    //                 </td>
+    //                 <td className="px-6 py-4 whitespace-nowrap">
+    //                   <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+    //                     area.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+    //                   }`}>
+    //                     {area.active ? 'Active' : 'Inactive'}
+    //                   </span>
+    //                 </td>
+    //                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+    //                   <button
+    //                     onClick={() => setEditingArea(area)}
+    //                     className="text-indigo-600 hover:text-indigo-900 mr-4"
+    //                   >
+    //                     <Icon icon="solar:pen-bold" className="inline-block" />
+    //                   </button>
+    //                   <button
+    //                     onClick={() => {
+    //                       if (confirm('Are you sure you want to delete this area?')) {
+    //                         deleteMutation.mutate(area.areaId);
+    //                       }
+    //                     }}
+    //                     className="text-red-600 hover:text-red-900"
+    //                   >
+    //                     <Icon icon="solar:trash-bin-trash-bold" className="inline-block" />
+    //                   </button>
+    //                 </td>
+    //               </tr>
+    //             ))
+    //           ) : (
+    //             <tr>
+    //               <td colSpan={5} className="px-6 py-4 text-center text-stone-500">
+    //                 No areas found
+    //               </td>
+    //             </tr>
+    //           )}
+    //         </tbody>
+    //       </table>
+    //     </div>
+    //   )}
+
+    //   {/* Create Modal */}
+    //   <Dialog
+    //     open={isCreateModalOpen}
+    //     onClose={() => setIsCreateModalOpen(false)}
+    //     className="relative z-50"
+    //   >
+    //     <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+    //     <div className="fixed inset-0 flex items-center justify-center p-4">
+    //       <Dialog.Panel className="mx-auto max-w-md rounded bg-white p-6">
+    //         <Dialog.Title className="text-lg font-medium mb-4">Create Area</Dialog.Title>
+    //         <AreaForm
+    //           onSubmit={(data) =>
+    //             createMutation.mutate({
+    //               ...data,
+    //               organizationId: selectedOrganization.organizationId,
+    //             })
+    //           }
+    //           onCancel={() => setIsCreateModalOpen(false)}
+    //         />
+    //       </Dialog.Panel>
+    //     </div>
+    //   </Dialog>
+
+    //   {/* Edit Modal */}
+    //   <Dialog
+    //     open={!!editingArea}
+    //     onClose={() => setEditingArea(null)}
+    //     className="relative z-50"
+    //   >
+    //     <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+    //     <div className="fixed inset-0 flex items-center justify-center p-4">
+    //       <Dialog.Panel className="mx-auto max-w-md rounded bg-white p-6">
+    //         <Dialog.Title className="text-lg font-medium mb-4">Edit Area</Dialog.Title>
+    //         {editingArea && (
+    //           <AreaForm
+    //             initialData={editingArea}
+    //             onSubmit={(data) =>
+    //               updateMutation.mutate({
+    //                 data: {
+    //                   ...data,
+    //                   organizationId: selectedOrganization.organizationId,
+    //                   active:editingArea.active,
+    //                   deleted:editingArea.deleted
+    //                 },
+    //                 areaId: editingArea.areaId!,
+    //               })
+    //             }
+    //             onCancel={() => setEditingArea(null)}
+    //           />
+    //         )}
+    //       </Dialog.Panel>
+    //     </div>
+    //   </Dialog>
+    // </Container>
+    <div className="flex h-full w-full flex-col items-start gap-2 bg-default-background px-12 py-12">
+      <div className="flex w-full flex-col items-start">
+        <div className="flex w-full flex-wrap items-end gap-2 px-2 py-2">
+          <div className="flex grow shrink-0 basis-0 items-center gap-2">
+            <span className="text-heading-2 font-heading-2 text-default-font">
+              Regions
+            </span>
+          </div>
+          <div className="flex flex-wrap items-end gap-2">
+            <Button onClick={(event: React.MouseEvent<HTMLButtonElement>) => { }}>
+              Add Region
+            </Button>
+            <Button
+              variant="brand-tertiary"
+              onClick={(event: React.MouseEvent<HTMLButtonElement>) => { }}
+            >
+              Refresh
+            </Button>
+          </div>
         </div>
-        <RBAC roles={[ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]}>
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-indigo-600 text-white px-3 py-1.5 text-sm rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-          >
-            Create Area
-          </button>
-        </RBAC>
       </div>
+      {filteredAreas && filteredAreas.map((area) =>
+        <RegionListItem
+          icon={<FeatherMapPin />}
+          locationName={area.areaName}
+          date={new Date(area.createdAt).toLocaleString()}
 
-      {isLoading ? (
-        <div className="flex items-center justify-center h-48">
-          <div className="text-lg">Loading...</div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-stone-200">
-            <thead className="bg-stone-50">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                  Area Name
-                </th>
-                {/* <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                  Created By
-                </th> */}
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                  Created At
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-stone-200">
-              {filteredAreas && filteredAreas.length > 0 ? (
-                filteredAreas.map((area) => (
-                  <tr key={area.areaId} className="hover:bg-stone-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-stone-900">{area.areaName}</div>
-                    </td>
-                    {/* <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-stone-500">{area.createdBy}</div>
-                    </td> */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-stone-500">
-                        {new Date(area.createdAt).toLocaleDateString()}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        area.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {area.active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => setEditingArea(area)}
-                        className="text-indigo-600 hover:text-indigo-900 mr-4"
-                      >
-                        <Icon icon="solar:pen-bold" className="inline-block" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (confirm('Are you sure you want to delete this area?')) {
-                            deleteMutation.mutate(area.areaId);
-                          }
-                        }}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <Icon icon="solar:trash-bin-trash-bold" className="inline-block" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-stone-500">
-                    No areas found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+          actions={
+            <>
+              <Button
+                variant="brand-secondary"
+                icon={<FeatherEdit2 />}
+                onClick={(event: React.MouseEvent<HTMLButtonElement>) => { }}
+              >
+                Edit Region
+              </Button>
+              <Button
+                variant="neutral-secondary"
+                icon={<FeatherTrash />}
+                onClick={(event: React.MouseEvent<HTMLButtonElement>) => { }}
+              >
+                Delete
+              </Button>
+            </>
+          }
+        />
       )}
-
-      {/* Create Modal */}
-      <Dialog
-        open={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        className="relative z-50"
-      >
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="mx-auto max-w-md rounded bg-white p-6">
-            <Dialog.Title className="text-lg font-medium mb-4">Create Area</Dialog.Title>
-            <AreaForm
-              onSubmit={(data) =>
-                createMutation.mutate({
-                  ...data,
-                  organizationId: selectedOrganization.organizationId,
-                })
-              }
-              onCancel={() => setIsCreateModalOpen(false)}
-            />
-          </Dialog.Panel>
-        </div>
-      </Dialog>
-
-      {/* Edit Modal */}
-      <Dialog
-        open={!!editingArea}
-        onClose={() => setEditingArea(null)}
-        className="relative z-50"
-      >
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="mx-auto max-w-md rounded bg-white p-6">
-            <Dialog.Title className="text-lg font-medium mb-4">Edit Area</Dialog.Title>
-            {editingArea && (
-              <AreaForm
-                initialData={editingArea}
-                onSubmit={(data) =>
-                  updateMutation.mutate({
-                    data: {
-                      ...data,
-                      organizationId: selectedOrganization.organizationId,
-                      active:editingArea.active,
-                      deleted:editingArea.deleted
-                    },
-                    areaId: editingArea.areaId!,
-                  })
-                }
-                onCancel={() => setEditingArea(null)}
-              />
-            )}
-          </Dialog.Panel>
-        </div>
-      </Dialog>
-    </Container>
+    </div>
   );
 };
 

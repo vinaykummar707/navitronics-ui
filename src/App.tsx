@@ -24,6 +24,11 @@ import DisplayConfigForm from "./components/DisplayConfigForm";
 import LanguageModify from "./components/LanguageModify";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import OrganizationsPage from "./pages/v2/OrganizationsPage";
+import AreasPage from "./pages/v2/AreasPage";
+import DepotsPage from "./pages/v2/DepotsPage";
+import { UserLoginForm } from "./ui/components/UserLoginForm";
+import UsersPage from "./pages/v2/UsersPage";
 
 
 const queryClient = new QueryClient({
@@ -38,34 +43,34 @@ const queryClient = new QueryClient({
 function App() {
 
   const user = useAuthStore((state) => state.user);
-    // Define role-based access mapping
-    const accessControl = {
-      organizations: ['organization_admin', 'master'],
-      areas: ['area_admin', 'organization_admin', 'master'],
-      depots: ['depot_admin', 'area_admin', 'organization_admin', 'master'],
-      users: ['organization_admin', 'master'],
-      roles: ['organization_admin', 'master'],
-      fonts: ['organization_admin', 'master'],
-    };
-  
-    const canAccess = (route) => {
-      return accessControl[route]?.includes(user?.userRole);
-    };
+  // Define role-based access mapping
+  const accessControl = {
+    organizations: [ 'master'],
+    regions: ['region_admin', 'organization_admin', 'master'],
+    depots: ['depot_admin', 'region_admin', 'organization_admin', 'master'],
+    users: ['master'],
+    roles: [ 'master'],
+    fonts: ['master'],
+  };
 
-    
+  const canAccess = (route) => {
+    return accessControl[route]?.includes(user?.userRole);
+  };
+
+
 
   return (
-  <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
 
           {/* Protected Routes */}
           <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>}>
-            {canAccess('organizations') && <Route path="organizations" element={<Organizations />} />}
-            {canAccess('areas') && <Route path="areas" element={<Areas />} />}
-            {canAccess('depots') && <Route path="depots" element={<Depots />} />}
-            {canAccess('users') && <Route path="users" element={<Users />} />}
+            {canAccess('organizations') && <Route path="organizations" element={<OrganizationsPage />} />}
+            {canAccess('regions') && <Route path="regions" element={<AreasPage />} />}
+            {canAccess('depots') && <Route path="depots" element={<DepotsPage />} />}
+            {canAccess('users') && <Route path="users" element={<UsersPage />} />}
             {canAccess('roles') && <Route path="roles" element={<Roles />} />}
             {canAccess('fonts') && <Route path="fonts" element={<LanguageModify />} />}
             <Route path="routes" element={<AppRoutes />} />
@@ -74,7 +79,9 @@ function App() {
           </Route>
 
           {/* Public Routes */}
-          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+          <Route path="/login" element={<PublicRoute><div className="flex h-screen w-screen flex-col items-start bg-default-background">
+            <UserLoginForm />
+          </div></PublicRoute>} />
         </Routes>
         <ToastContainer
           position="top-right"

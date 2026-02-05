@@ -3,6 +3,7 @@ export default {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
+    "./src/ui/**/*.{tsx,ts,js,jsx}"
   ],
   theme: {
     extend: {
@@ -29,5 +30,6 @@ export default {
     },
   },
   plugins: [],
+  presets: [require("./src\\ui/tailwind.config.js")]
 }
 

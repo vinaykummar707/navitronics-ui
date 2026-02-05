@@ -9,6 +9,8 @@ export const system = createSystem(defaultConfig)
 
 
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
+import { ApolloProvider } from '@apollo/client/react'
+import client from './api/apolloClient.ts'
 
 // ✅ Register AG Grid community modules
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -16,10 +18,8 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Provider >
-   <App/>
-
-    </Provider>
-   
+    <ApolloProvider client={client}>
+      <App />
+    </ApolloProvider>
   </StrictMode>,
 )
