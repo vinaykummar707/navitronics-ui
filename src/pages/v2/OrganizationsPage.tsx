@@ -16,6 +16,7 @@ import { CreateOrganizationDrawer } from "@/ui";
 import { useOrganizations } from "@/api/organization/hooks";
 import { Organization } from "@/api/organization/types";
 import { ButtonGroup } from "@/ui/components/ButtonGroup";
+import RBAC from "@/components/RBAC";
 
 
 
@@ -45,6 +46,7 @@ function OrganizationsPage() {
                 <span className="text-caption font-caption text-subtext-color">
                     Showing {organizations.length} records
                 </span>
+                <RBAC roles={['master']}>
                 <Button
                     className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
                     variant="neutral-secondary"
@@ -53,6 +55,7 @@ function OrganizationsPage() {
                 >
                     Add Organization
                 </Button>
+                </RBAC>
             </div>
             <OrganizationList>
                 {organizations && organizations.map(org => <OrganizationCard

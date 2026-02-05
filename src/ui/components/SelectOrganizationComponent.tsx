@@ -4,7 +4,7 @@
  * Select — https://app.subframe.com/11b10bc240cf/library?component=Select_bb88f90b-8c43-4b73-9c2f-3558ce7838f3
  * SelectOrganizationComponent — https://app.subframe.com/11b10bc240cf/library?component=SelectOrganizationComponent_662741e4-01f3-4bb5-a909-f60feb1dc4db
  */
-
+// @subframe/sync-disable
 import React, { useEffect } from "react";
 import * as SubframeUtils from "../utils";
 import { Select } from "./Select";

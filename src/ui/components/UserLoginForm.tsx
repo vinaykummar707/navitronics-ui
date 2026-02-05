@@ -8,7 +8,7 @@
  * UserLoginForm — https://app.subframe.com/11b10bc240cf/library?component=UserLoginForm_e5743870-e2c4-4e34-a182-7c38cd5ae2ef
  */
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FeatherKeyRound } from "@subframe/core";
 import { FeatherUser } from "@subframe/core";
 import * as SubframeUtils from "../utils";
@@ -42,7 +42,7 @@ const UserLoginFormRoot = React.forwardRef<
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState(""); // State to hold user ID after login
 
-  const { data: userMetadata, loading: userLoading, error: userError ,refetch} = useUserDetails(userId);
+  const { data: userMetadata, loading: userLoading, error: userError, refetch } = useUserDetails(userId);
   // Update input values and submit handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,36 +63,41 @@ const UserLoginFormRoot = React.forwardRef<
       // Optionally: redirect or call props.onLoginSuccess, etc.
       setError(null);
       setUserId(data.user.id);
-      refetch();
-      console.log(userMetadata.users_by_pk);
-      login({
-        userId: data.user.id,
-        userName: userMetadata?.users_by_pk.email || "",
-        userRole: userMetadata?.users_by_pk.role?.name || "",
-        area: {
-          areaId: userMetadata?.users_by_pk.region?.id || "",
-          areaName: userMetadata?.users_by_pk.region?.name || "",
-        },
-        depot: {
-          depotId: userMetadata?.users_by_pk.depot?.id || "",
-          depotName: userMetadata?.users_by_pk.depot?.name || "",
-        },
-        organization: {
-          organizationId: userMetadata?.users_by_pk.organization?.id || "",
-          organizationName:
-            userMetadata?.users_by_pk.organization?.name || "",
-        },
-      });
-      toast.success("Login successful!");
-      
-      if(userMetadata?.users_by_pk) navigate("/home");
-     // Redirect to dashboard after login
-   
-
     }
   };
 
 
+  // Only try to refetch after login (userId set):
+  useEffect(() => {
+    if (userId) {
+      refetch();
+    }
+  }, [userId, refetch]);
+
+  // Once userMetadata is fetched, login and navigate:
+  useEffect(() => {
+    if (userMetadata?.users_by_pk) {
+      login({
+        userId: userMetadata.users_by_pk.userId,
+        userName: userMetadata.users_by_pk.email || "",
+        userRole: userMetadata.users_by_pk.role?.name || "",
+        area: {
+          areaId: userMetadata.users_by_pk.region?.id || "",
+          areaName: userMetadata.users_by_pk.region?.name || "",
+        },
+        depot: {
+          depotId: userMetadata.users_by_pk.depot?.id || "",
+          depotName: userMetadata.users_by_pk.depot?.name || "",
+        },
+        organization: {
+          organizationId: userMetadata.users_by_pk.organization?.id || "",
+          organizationName: userMetadata.users_by_pk.organization?.name || "",
+        },
+      });
+      toast.success("Login successful!");
+      navigate("/home");
+    }
+  }, [userMetadata, login, navigate]);
 
 
 
@@ -132,7 +137,7 @@ const UserLoginFormRoot = React.forwardRef<
         </div>
       </div>
       <div className="flex w-80 flex-none flex-col items-center justify-center gap-6 self-stretch px-12 py-12">
-        <div className="flex w-full max-w-[448px] flex-col items-start gap-8">
+        <div className="flex w-full  flex-col items-start gap-8">
           <img
             className="h-6 flex-none object-cover"
             src="https://res.cloudinary.com/subframe/image/upload/v1711417507/shared/y2rsnhq3mex4auk54aye.png"

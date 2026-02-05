@@ -8,6 +8,9 @@ import { DepotCard } from "@/ui/components/DepotCard";
 import { FeatherBusFront, FeatherMapPin, FeatherPlus } from "@subframe/core";
 import React from "react";
 import { useRegions } from "@/api/region/hooks";
+import RBAC from "@/components/RBAC";
+import useAuthStore from "@/store/authStore";
+import { ROLES } from "@/constants/roles";
 
 export default function DepotsPage() {
     const [open, setOpen] = React.useState(false);
@@ -27,12 +30,19 @@ export default function DepotsPage() {
         skip: !depotsQueryEnabled, // Only run if enabled
     });
 
+    const user = useAuthStore((state) => state.user); // Get user details
+
     // Set default region once regions are loaded
     React.useEffect(() => {
         console.log("Regions loaded:", regions);
-
-        if (regions.length > 0 ) {
-            setSelectedRegion(regions[0].id);
+        if (regions.length > 0) {
+            if (user.userRole === ROLES.MASTER || user.userRole === ROLES.ORGANIZATION_ADMIN) {
+                setSelectedRegion(regions[0].id);
+            }
+            if (user.userRole === ROLES.REGION_ADMIN || user.userRole === ROLES.DEPOT_ADMIN) {
+                const userRegion = regions.find(region => region.id === user?.area.areaId);
+                setSelectedRegion(userRegion ? userRegion.id : regions[0].id);
+            }
         }
     }, [regions]);
 
@@ -63,27 +73,49 @@ export default function DepotsPage() {
                     Showing {depots?.depots?.length ?? 0} records
                 </span>
                 <div className="flex gap-2">
-                    <Select
-                        className="h-auto  flex-none"
-                        variant="outline"
-                        label=""
-                        placeholder="Select Region"
-                        value={selectedRegion || ""}
-                        onValueChange={val => setSelectedRegion(val)}
-                    >
-                        {regions.map(region => (
-                            <Select.Item key={region.id} value={region.id}>
-                                {region.name}
-                            </Select.Item>
-                        ))}
-                    </Select>
-                    <Button
-                        variant="brand-secondary-2"
-                        icon={<FeatherPlus />}
-                        onClick={() => { setOpen(true); setEditData(null); }}
-                    >
-                        Add Depot
-                    </Button>
+                    <RBAC roles={['depot_admin', 'region_admin',]}>
+                        <Select
+                            className="h-auto  flex-none"
+                            variant="outline"
+                            label=""
+                            placeholder="Select Region"
+                            value={selectedRegion || ""}
+                            onValueChange={val => setSelectedRegion(val)}
+                        >
+                            {regions.filter(region => user?.area.areaId === region.id).map(region => (
+                                <Select.Item key={region.id} value={region.id}>
+                                    {region.name}
+                                </Select.Item>
+                            ))}
+                        </Select>
+                    </RBAC>
+
+                    <RBAC roles={['master', 'organization_admin']}>
+                        <Select
+                            className="h-auto  flex-none"
+                            variant="outline"
+                            label=""
+                            placeholder="Select Region"
+                            value={selectedRegion || ""}
+                            onValueChange={val => setSelectedRegion(val)}
+                        >
+                            {regions.map(region => (
+                                <Select.Item key={region.id} value={region.id}>
+                                    {region.name}
+                                </Select.Item>
+                            ))}
+                        </Select>
+
+                    </RBAC>
+                    <RBAC roles={['region_admin', 'organization_admin', 'master']}>
+                        <Button
+                            variant="brand-secondary-2"
+                            icon={<FeatherPlus />}
+                            onClick={() => { setOpen(true); setEditData(null); }}
+                        >
+                            Add Depot
+                        </Button>
+                    </RBAC>
                 </div>
             </div>
             <div className="w-full flex-col items-start gap-2 grid grid-cols-3">

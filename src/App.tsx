@@ -7,19 +7,11 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import HomePage from "./pages/HomePage";
-import Login from "./components/Login";
-import Organizations from "./pages/Organizations";
-import Areas from "./pages/Areas";
-import Depots from "./pages/Depots";
-import Users from "./pages/Users";
 import AppRoutes from "./pages/Routes";
 import Settings from "./pages/Settings";
 import Roles from "./pages/Roles";
-import useAuthStore from "./store/authStore";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { CreateRoute } from "./pages/CreateRoute";
 import PublicRoute from "./components/PublicRoute";
-import EntryPage from "./components/EntryPage";
 import DisplayConfigForm from "./components/DisplayConfigForm";
 import LanguageModify from "./components/LanguageModify";
 import { ToastContainer } from "react-toastify";
@@ -29,6 +21,10 @@ import AreasPage from "./pages/v2/AreasPage";
 import DepotsPage from "./pages/v2/DepotsPage";
 import { UserLoginForm } from "./ui/components/UserLoginForm";
 import UsersPage from "./pages/v2/UsersPage";
+import RBAC from "./components/RBAC";
+import RBACPage from "./components/RBACPage";
+import { ROLES } from "./constants/roles";
+import useAuthStore from "./store/authStore";
 
 
 const queryClient = new QueryClient({
@@ -41,22 +37,65 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  const protectedRoutes = [
+    {
+      path: "organizations",
+      roles: [ROLES.MASTER],
+      element: <OrganizationsPage />,
+    },
+    {
+      path: "regions",
+      roles: [ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER],
+      element: <AreasPage />,
+    },
+    {
+      path: "depots",
+      roles: [
+        ROLES.REGION_ADMIN,
+        ROLES.ORGANIZATION_ADMIN,
+        ROLES.MASTER,
+      ],
+      element: <DepotsPage />,
+    },
+    {
+      path: "users",
+      roles: [ROLES.MASTER],
+      element: <UsersPage />,
+    },
+    {
+      path: "roles",
+      roles: [ROLES.MASTER],
+      element: <Roles />,
+    },
+    {
+      path: "fonts",
+      roles: [ROLES.MASTER],
+      element: <LanguageModify />,
+    },
+    { path: "routes", element: <AppRoutes /> },
+    { path: "create-route", element: <DisplayConfigForm /> },
+    { path: "settings", element: <Settings /> },
+  ] as const;
 
-  const user = useAuthStore((state) => state.user);
-  // Define role-based access mapping
-  const accessControl = {
-    organizations: [ 'master'],
-    regions: ['region_admin', 'organization_admin', 'master'],
-    depots: ['depot_admin', 'region_admin', 'organization_admin', 'master'],
-    users: ['master'],
-    roles: [ 'master'],
-    fonts: ['master'],
-  };
+  // write a function that return route path based on role to navigate to after login
+  const getDefaultRouteForRole = (role: string) => {
+    switch (role) {
+      case ROLES.MASTER:
+        return "/home/organizations";
+      case ROLES.ORGANIZATION_ADMIN:
+        return "/home/regions";
+      case ROLES.REGION_ADMIN:
+        return "/home/depots";
+      case ROLES.DEPOT_ADMIN:
+        return "/home/routes";
+      case ROLES.USER:
+        return "/home/routes";
+      default:
+        return "/home";
+    }
+  }
 
-  const canAccess = (route) => {
-    return accessControl[route]?.includes(user?.userRole);
-  };
-
+  const user = useAuthStore((state) => state.user); // Get user details
 
 
   return (
@@ -64,18 +103,23 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
-
           {/* Protected Routes */}
           <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>}>
-            {canAccess('organizations') && <Route path="organizations" element={<OrganizationsPage />} />}
-            {canAccess('regions') && <Route path="regions" element={<AreasPage />} />}
-            {canAccess('depots') && <Route path="depots" element={<DepotsPage />} />}
-            {canAccess('users') && <Route path="users" element={<UsersPage />} />}
-            {canAccess('roles') && <Route path="roles" element={<Roles />} />}
-            {canAccess('fonts') && <Route path="fonts" element={<LanguageModify />} />}
-            <Route path="routes" element={<AppRoutes />} />
-            <Route path="create-route" element={<DisplayConfigForm />} />
-            <Route path="settings" element={<Settings />} />
+            <Route index element={<Navigate to={getDefaultRouteForRole(user?.userRole || "")} replace />} />
+
+            {protectedRoutes.map((route: any) => (
+              <Route
+                key={route.path}
+                path={route.path}
+                element={
+                  route.roles ? (
+                    <RBACPage roles={[...route.roles]}>{route.element}</RBACPage>
+                  ) : (
+                    route.element
+                  )
+                }
+              />
+            ))}
           </Route>
 
           {/* Public Routes */}
