@@ -15,9 +15,18 @@ const HomePage = () => {
     const { data: userMetadata, refetch } = useUserDetails(user?.userId);
 
     useEffect(() => {
+        if (userMetadata?.users_by_pk.organization.active === false) {
+            logout();
+            toast.error("Your organization is not active. Please contact support.");
+            localStorage.clear();
+            supabase.auth.signOut();
+            return;
+        }
+
         if (userMetadata?.users_by_pk.active === false) {
             logout();
             toast.error("Your account is not active. Please contact support.");
+            localStorage.clear();
             supabase.auth.signOut();
             return;
         }

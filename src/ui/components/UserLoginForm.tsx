@@ -35,6 +35,7 @@ const UserLoginFormRoot = React.forwardRef<
 ) {
 
   const login = useAuthStore((state) => state.login); // Zustand store
+  const logout = useAuthStore((state) => state.logout); // Zustand store
   const navigate = useNavigate(); // React Router navigation
 
   const [emailOrUsername, setEmailOrUsername] = useState("");
@@ -110,11 +111,13 @@ const UserLoginFormRoot = React.forwardRef<
           navigate("/home");
         } else {
           toast.error("Your account is not active. Please contact support.");
+          logout();
           supabase.auth.signOut();
         }
 
       } else {
         toast.error("Your organization is not active. Please contact support.");
+        logout();
         supabase.auth.signOut();
       }
 

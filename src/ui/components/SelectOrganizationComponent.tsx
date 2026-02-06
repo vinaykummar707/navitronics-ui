@@ -31,7 +31,7 @@ const SelectOrganizationComponentRoot = React.forwardRef<
   const { data, loading } = useOrganizations();
   const orgs = data?.organizations || [];
 
-  console.log("Organizations fetched:", user);
+
 
 
   // Filter organizations based on user's assigned organization
@@ -42,10 +42,21 @@ const SelectOrganizationComponentRoot = React.forwardRef<
     : orgs;
 
   useEffect(() => {
-    if (orgs && orgs.length > 0 && !selectedOrganization) {
-      setSelectedOrganization(orgs[0]); // Set the first organization as selected
+    console.log("Organizations fetched:", data);
+    if (data && data.organizations.length > 0) {
+      // only once on page load If user role is master, select the first organization by default, else select the user's assigned organization
+      if (user?.userRole === "master") {
+        setSelectedOrganization(data.organizations[0]);
+      } else if (user?.organization) {
+        const assignedOrg = data.organizations.find(
+          (org: any) => org.id === user.organization.organizationId
+        );
+        setSelectedOrganization(assignedOrg || null);
+      }
+      
     }
-  }, [orgs, selectedOrganization, setSelectedOrganization]);
+   
+  }, [orgs]);
 
   const handleChange = (value: string) => {
     const selected = orgs.find(

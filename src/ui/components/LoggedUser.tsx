@@ -87,7 +87,7 @@ const LoggedUserRoot = React.forwardRef<HTMLDivElement, LoggedUserRootProps>(
               asChild={true}
             >
               <DropdownMenu>
-                <DropdownMenu.DropdownItem icon={<FeatherLogOut />} onClick={() => {logout(); navigate("/login");}}>
+                <DropdownMenu.DropdownItem icon={<FeatherLogOut />} onClick={() => {localStorage.clear();logout(); navigate("/login");}}>
                   Log out
                 </DropdownMenu.DropdownItem>
               </DropdownMenu>

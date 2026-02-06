@@ -11,7 +11,7 @@ import React from "react";
 export default function AreasPage() {
     const [open, setOpen] = React.useState(false);
     const { selectedOrganization } = useOrganizationStore();
-    const { data: regions, loading, error, refetch } = useRegions({ variables: { organization_id: selectedOrganization.id || "" } })
+    const { data: regions, loading, error, refetch } = useRegions({ variables: { organization_id: selectedOrganization ? selectedOrganization.id : "" } })
     const [editData, setEditData] = React.useState<any>(null);
     const [deleteRegion, { loading: deleting, error: deleteError }] = useDeleteRegion();
 
