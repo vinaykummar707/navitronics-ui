@@ -450,7 +450,7 @@ const Routes = () => {
               Create Route
             </button>
           </RBAC>
-          <button
+         {selectedRows.length > 0 && <button
             onClick={() =>
               getAllWithConfigMutation.mutate({
                 areaId: selectedAreaId,
@@ -464,8 +464,8 @@ const Routes = () => {
           >
             {getAllWithConfigMutation.isPending
               ? "Exporting..."
-              : "Export All Routes"}
-          </button>
+              : "Export Selected Routes"}
+          </button>}
           {selectedRows.length && (
             <RBAC
               roles={[
@@ -502,12 +502,13 @@ const Routes = () => {
             </RBAC>
           )}
 
-          <RBAC
-            roles={[
-              ROLES.ORGANIZATION_ADMIN,
-              ROLES.AREA_ADMIN,
-              ROLES.DEPOT_ADMIN,
-              ROLES.MASTER,
+          {/* {selectedRows.length > 0 && (
+            <RBAC
+              roles={[
+                ROLES.ORGANIZATION_ADMIN,
+                ROLES.AREA_ADMIN,
+                ROLES.DEPOT_ADMIN,
+                ROLES.MASTER,
             ]}
           >
             <button
@@ -528,7 +529,7 @@ const Routes = () => {
             >
               Delete All Routes
             </button>
-          </RBAC>
+          </RBAC>)} */}
         </Group>
       </div>
 
