@@ -6,6 +6,7 @@ interface User {
     userId: string;
     userName: string;
     userRole: string;
+    active: boolean;
     area: {
         areaId: string;
         areaName: string;
@@ -13,6 +14,11 @@ interface User {
     organization: {
         organizationId: string;
         organizationName: string;
+        PIS: boolean;
+        PAS: boolean;
+        ITMS: boolean;
+        active: boolean;
+
     },
     depot: {
         depotId: string;

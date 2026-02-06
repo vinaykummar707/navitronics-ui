@@ -47,14 +47,14 @@ function OrganizationsPage() {
                     Showing {organizations.length} records
                 </span>
                 <RBAC roles={['master']}>
-                <Button
-                    className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
-                    variant="neutral-secondary"
-                    icon={<FeatherPlus />}
-                    onClick={() => { setOpen(true) }}
-                >
-                    Add Organization
-                </Button>
+                    <Button
+                        className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
+                        variant="neutral-secondary"
+                        icon={<FeatherPlus />}
+                        onClick={() => { setOpen(true) }}
+                    >
+                        Add Organization
+                    </Button>
                 </RBAC>
             </div>
             <OrganizationList>
@@ -65,7 +65,7 @@ function OrganizationsPage() {
                     key={org.id}
                     isSuspended={!org.active}
                     logo2={org.logo || undefined}
-                    actions={<OptionsDropdown onEdit={() => { setEditData(org); setOpen(true); }} onDelete={() => { alert(`Delete clicked for ${org.id}`) }} />}
+                    actions={org.name === 'Navitronix Master' ? null : <OptionsDropdown onEdit={() => { setEditData(org); setOpen(true); }} onDelete={() => { alert(`Delete clicked for ${org.id}`) }} />}
                     features={<ButtonGroup pas={org.PAS} pis={org.PIS} itms={org.ITMS} />}
 
                 />)}

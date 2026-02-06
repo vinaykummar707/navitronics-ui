@@ -6,6 +6,10 @@ export interface UserArea {
 export interface UserOrganization {
   id: string;
   name: string;
+  PIS: boolean;
+  PAS: boolean;
+  ITMS: boolean;
+  active: boolean;
 }
 
 export interface UserDepot {
@@ -19,7 +23,7 @@ export interface UserRole {
 }
 
 export interface UserDetails {
-  userId: string;
+  user_id: string;
   email: string;
   password: string;
   region: UserArea | null;

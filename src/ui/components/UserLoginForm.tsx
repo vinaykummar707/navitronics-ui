@@ -21,6 +21,7 @@ import useAuthStore from "@/store/authStore";
 import { useNavigate } from 'react-router-dom';
 import { toast } from "react-toastify";
 import { useUserDetails } from "@/api/users/hooks";
+import { set } from "zod";
 interface UserLoginFormRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
 }
@@ -48,6 +49,7 @@ const UserLoginFormRoot = React.forwardRef<
     e.preventDefault();
     setError(null);
     setLoading(true);
+    setUserId(""); // Clear previous user ID on new login attempt
 
     // Authenticate with Supabase (assuming email)
     const { data, error: supaError } = await supabase.auth.signInWithPassword({
@@ -61,6 +63,7 @@ const UserLoginFormRoot = React.forwardRef<
       toast.error(`Login failed: ${supaError.message}`);
     } else if (data && data.user) {
       // Optionally: redirect or call props.onLoginSuccess, etc.
+      console.log("Login successful, user data:", data.user);
       setError(null);
       setUserId(data.user.id);
     }
@@ -69,18 +72,20 @@ const UserLoginFormRoot = React.forwardRef<
 
   // Only try to refetch after login (userId set):
   useEffect(() => {
+    console.log("User ID for metadata fetch:", userId);
     if (userId) {
       refetch();
     }
-  }, [userId, refetch]);
+  }, [userId]);
 
   // Once userMetadata is fetched, login and navigate:
   useEffect(() => {
     if (userMetadata?.users_by_pk) {
       login({
-        userId: userMetadata.users_by_pk.userId,
+        userId: userMetadata.users_by_pk.user_id,
         userName: userMetadata.users_by_pk.email || "",
         userRole: userMetadata.users_by_pk.role?.name || "",
+        active: userMetadata.users_by_pk.active || false,
         area: {
           areaId: userMetadata.users_by_pk.region?.id || "",
           areaName: userMetadata.users_by_pk.region?.name || "",
@@ -92,10 +97,27 @@ const UserLoginFormRoot = React.forwardRef<
         organization: {
           organizationId: userMetadata.users_by_pk.organization?.id || "",
           organizationName: userMetadata.users_by_pk.organization?.name || "",
+          PIS: userMetadata.users_by_pk.organization?.PIS || false,
+          PAS: userMetadata.users_by_pk.organization?.PAS || false,
+          ITMS: userMetadata.users_by_pk.organization?.ITMS || false,
+          active: userMetadata.users_by_pk.organization?.active || false,
         },
       });
-      toast.success("Login successful!");
-      navigate("/home");
+      if (userMetadata.users_by_pk.organization?.active) {
+
+        if (userMetadata.users_by_pk.active) {
+          toast.success("Login successful!");
+          navigate("/home");
+        } else {
+          toast.error("Your account is not active. Please contact support.");
+          supabase.auth.signOut();
+        }
+
+      } else {
+        toast.error("Your organization is not active. Please contact support.");
+        supabase.auth.signOut();
+      }
+
     }
   }, [userMetadata, login, navigate]);
 
@@ -136,7 +158,7 @@ const UserLoginFormRoot = React.forwardRef<
           </div>
         </div>
       </div>
-      <div className="flex w-80 flex-none flex-col items-center justify-center gap-6 self-stretch px-12 py-12">
+      <div className="flex w-90 flex-none flex-col items-center justify-center gap-6 self-stretch px-12 py-12">
         <div className="flex w-full  flex-col items-start gap-8">
           <img
             className="h-6 flex-none object-cover"

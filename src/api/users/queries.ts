@@ -5,6 +5,7 @@ export const GET_USER_DETAILS = `
       email
       password
       created_at
+      active
       region {
         id
         name
@@ -12,6 +13,10 @@ export const GET_USER_DETAILS = `
       organization {
         id
         name
+        PIS
+        PAS
+        ITMS
+        active
       }
       depot {
         id
@@ -48,6 +53,9 @@ export const GET_USERS_BY_ORGANIZATION = `
       organization {
         id
         name
+        PIS
+        PAS
+        ITMS
       }
       depot {
         id

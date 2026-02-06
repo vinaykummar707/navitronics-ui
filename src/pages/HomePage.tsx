@@ -1,39 +1,33 @@
+import { useUserDetails } from "@/api/users/hooks";
 import Navbar from "@/components/Navbar";
 import NavbarTwo from "@/components/Navbar copy";
 import useAuthStore from "@/store/authStore";
+import { supabase } from "@/supabaseClient";
 import { DefaultPageLayout } from "@/ui";
-import { Flex } from "@chakra-ui/react";
 import { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const HomePage = () => {
     const navigate = useNavigate();
     const user = useAuthStore((state) => state.user);
+    const logout = useAuthStore((state) => state.logout);
+    const { data: userMetadata, refetch } = useUserDetails(user?.userId);
 
     useEffect(() => {
-        // if (user) {
-        //     switch (user.userRole) {
-        //         case 'organization_admin':
-        //             navigate('/home/organizations');
-        //             break;
-        //         case 'area_admin':
-        //             navigate('/home/areas');
-        //             break;
-        //         case 'depot_admin':
-        //             navigate('/home/depots');
-        //             break;
-        //         case 'master':
-        //             navigate('organizations');
-        //             break;
-        //         default:
-        //             navigate('/home'); // Default navigation if role is not recognized
-        //     }
-        // }
-    }, [user]);
+        if (userMetadata?.users_by_pk.active === false) {
+            logout();
+            toast.error("Your account is not active. Please contact support.");
+            supabase.auth.signOut();
+            return;
+        }
+
+    }, [user, userMetadata, navigate]);
+
     return (
-    <DefaultPageLayout>
-        <Outlet />
-    </DefaultPageLayout>
+        <DefaultPageLayout>
+            <Outlet />
+        </DefaultPageLayout>
     )
 };
 export default HomePage;

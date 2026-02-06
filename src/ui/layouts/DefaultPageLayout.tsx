@@ -64,39 +64,39 @@ const DefaultPageLayoutRoot = React.forwardRef<
         footer={<LoggedUser />}
       >
         <SidebarWithSections.NavSection label="Menu">
-          <RBAC roles={["master"]}>
+          <RBAC roles={["master"]} features={[]}>
             <SidebarWithSections.NavItem selected={path.startsWith("/home/organizations")} onClick={() => navigate("/home/organizations")} icon={<FeatherHotel />} >
               Organizations
             </SidebarWithSections.NavItem>
           </RBAC>
-          <RBAC roles={[ROLES.MASTER, ROLES.ORGANIZATION_ADMIN]}>
+          <RBAC roles={[ROLES.MASTER, ROLES.ORGANIZATION_ADMIN]} features={["PIS"]}>
             <SidebarWithSections.NavItem selected={path.startsWith("/home/regions")} onClick={() => navigate("/home/regions")} icon={<FeatherGlobe2 />}>
               Regions
             </SidebarWithSections.NavItem>
           </RBAC>
-          <RBAC roles={[ ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]}>
+          <RBAC roles={[ ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]} features={["PIS"]}>
             <SidebarWithSections.NavItem selected={path.startsWith("/home/depots")} onClick={() => navigate("/home/depots")} icon={<FeatherBusFront />}>
               Depots
             </SidebarWithSections.NavItem>
           </RBAC>
-          <RBAC roles={[ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]}>
+          <RBAC roles={[ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]} features={["PAS"]}>
             <SidebarWithSections.NavItem selected={path.startsWith("/home/stops")} onClick={() => navigate("/home/stops")} icon={<FeatherMapPin />}>
               Stops
             </SidebarWithSections.NavItem>
           </RBAC>
-          <RBAC roles={[ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]}>
+          <RBAC roles={[ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]} features={["PIS"]}>
           <SidebarWithSections.NavItem selected={path.startsWith("/home/routes")} onClick={() => navigate("/home/routes")} icon={<FeatherPlaneTakeoff />}>
             Routes
           </SidebarWithSections.NavItem>
           </RBAC>
-            <RBAC roles={[ROLES.MASTER]}>
+            <RBAC roles={[ROLES.MASTER]} features={[]}>
           <SidebarWithSections.NavItem selected={path.startsWith("/home/users")} onClick={() => navigate("/home/users")} icon={<FeatherUsers />}>
             Users
           </SidebarWithSections.NavItem>
           </RBAC>
         </SidebarWithSections.NavSection>
         
-        <RBAC roles={[ROLES.MASTER]}>
+        <RBAC roles={[ROLES.MASTER]} features={[]}>
         <SidebarWithSections.NavSection label="Administrator">
           <SidebarWithSections.NavItem selected={path.startsWith("/home/utility")} onClick={() => navigate("/home/utility")} icon={<FeatherCpu />}>
             Utility

@@ -25,6 +25,10 @@ import RBAC from "./components/RBAC";
 import RBACPage from "./components/RBACPage";
 import { ROLES } from "./constants/roles";
 import useAuthStore from "./store/authStore";
+import RoutesPage from "./pages/v2/RoutesPage";
+import StopsPage from "./pages/v2/StopsPage";
+import CCTVPage from "./pages/v2/CCTVPage";
+import { features } from "node:process";
 
 
 const queryClient = new QueryClient({
@@ -41,11 +45,13 @@ function App() {
     {
       path: "organizations",
       roles: [ROLES.MASTER],
+      features: [],
       element: <OrganizationsPage />,
     },
     {
       path: "regions",
       roles: [ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER],
+      features: ["PIS"],
       element: <AreasPage />,
     },
     {
@@ -55,24 +61,30 @@ function App() {
         ROLES.ORGANIZATION_ADMIN,
         ROLES.MASTER,
       ],
+      features: ["PIS"],
       element: <DepotsPage />,
     },
     {
       path: "users",
       roles: [ROLES.MASTER],
+      features: [],
       element: <UsersPage />,
     },
     {
       path: "roles",
       roles: [ROLES.MASTER],
+      features: [],
       element: <Roles />,
     },
     {
       path: "fonts",
       roles: [ROLES.MASTER],
+      features: [],
       element: <LanguageModify />,
     },
-    { path: "routes", element: <AppRoutes /> },
+    { path: "routes", element: <RoutesPage />, features: ["PIS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
+    { path: "stops", element: <StopsPage />, features: ["PAS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
+    { path: "cctv", element: <CCTVPage />, features: ["PAS", "ITMS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
     { path: "create-route", element: <DisplayConfigForm /> },
     { path: "settings", element: <Settings /> },
   ] as const;
@@ -113,7 +125,7 @@ function App() {
                 path={route.path}
                 element={
                   route.roles ? (
-                    <RBACPage roles={[...route.roles]}>{route.element}</RBACPage>
+                    <RBACPage roles={route.roles} features={route.features}>{route.element}</RBACPage>
                   ) : (
                     route.element
                   )
@@ -128,6 +140,7 @@ function App() {
           </div></PublicRoute>} />
         </Routes>
         <ToastContainer
+          className={'text-sm'}
           position="top-right"
           autoClose={3000}
           hideProgressBar={false}
@@ -137,7 +150,7 @@ function App() {
           pauseOnFocusLoss
           draggable
           pauseOnHover
-          theme="light"
+          theme="dark"
         />
       </Router>
       <ReactQueryDevtools initialIsOpen={false} />

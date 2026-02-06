@@ -91,7 +91,7 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
               </span>
             </Table.Cell>
             <Table.Cell>
-              <Badge icon={<FeatherCheck />}>{user.active ? "Active" : "Inactive"}</Badge>
+              <Badge variant={user.active ? "success" : "error"} icon={<FeatherCheck />}>{user.active ? "Active" : "Inactive"}</Badge>
             </Table.Cell>
             <Table.Cell>
               <span className="whitespace-nowrap text-body font-body text-subtext-color">
