@@ -21,6 +21,9 @@ import { useForm, Controller, useWatch } from "react-hook-form";
 import { supabase } from "@/supabaseClient";
 import { useMutation } from "@apollo/client/react";
 import { CREATE_USER } from "@/api/users/queries";
+import { UserDetails } from "@/api/users/types";
+import { FeatureToggle } from "./FeatureToggle";
+import { Switch } from "./Switch";
 
 interface FormFields {
   role_id: string;
@@ -29,20 +32,28 @@ interface FormFields {
   email: string;
   password: string;
   organization_id: string;
+  active?: boolean;
+  user_id?: string; // for edit mode
 }
+
 
 interface CreateUserForm2RootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   onUserCreated?: () => void; // callback after user created
-
+  initialData?: UserDetails | null; // <-- Add initialData for edit
+  onCancel?: () => void; // callback for cancel
 }
 
 const CreateUserForm2Root = React.forwardRef<
   HTMLDivElement,
   CreateUserForm2RootProps
->(function CreateUserForm2Root({ className, onUserCreated, ...otherProps }, ref) {
+>(function CreateUserForm2Root({ className, onUserCreated, initialData, onCancel, ...otherProps }, ref) {
   // Stores
   const { selectedOrganization } = useOrganizationStore();
+
+  // Add editMode flag
+  const isEditMode = !!initialData;
+
 
   // API hooks
   const { data: rolesData } = useRoles();
@@ -65,12 +76,14 @@ const CreateUserForm2Root = React.forwardRef<
     formState: { isSubmitting }
   } = useForm<FormFields>({
     defaultValues: {
-      role_id: "",
-      region_id: "",
-      depot_id: "",
-      email: "",
-      password: "",
-      organization_id: selectedOrganization.id || "",
+      role_id: initialData?.role?.id || null,
+      region_id: initialData?.region?.id || null,
+      depot_id: initialData?.depot?.id || null,
+      email: initialData?.email || "",
+      password: initialData?.password || "",
+      organization_id: initialData?.organization?.id || null,
+      user_id: initialData?.user_id || "",
+      active: initialData?.active ?? true,
     },
   });
 
@@ -92,38 +105,132 @@ const CreateUserForm2Root = React.forwardRef<
   });
   const depots = depotsData?.depots || [];
 
-  // Users insert mutation
+
+  // in useEffect watch to selected role if role changes reset region and depot
+  React.useEffect(() => {
+    // If role is changed to one that doesn't need region/depot, reset them
+    if (selectedRole?.name !== "region_admin" && selectedRole?.name !== "depot_admin") {
+      setValue("region_id", null);
+      setValue("depot_id", null);
+    } else if (selectedRole?.name === "region_admin") {
+      // If role is region_admin, reset depot
+      setValue("depot_id", null);
+    }
+  }, [selectedRoleId]);
+
+
+
+  // Handle form submit
+  // const onSubmit = async (data: FormFields) => {
+  //   try {
+  //     // 1. Create user in Supabase Auth
+  //     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+  //       email: data.email,
+  //       password: data.password,
+
+  //     });
+  //     if (signUpError) throw signUpError;
+  //     const userId = signUpData?.user?.id;
+  //     if (!userId) throw new Error("No userId returned from Supabase");
+
+
+  //     // 2. Insert user in Hasura users table
+  //     const { data: insertData, error: insertError } = await supabase.from('users').insert([{
+  //       user_id: userId,
+  //       email: data.email,
+  //       role_id: data.role_id,
+  //       organization_id: selectedOrganization.id,
+  //       region_id: data.region_id || null,
+  //       depot_id: data.depot_id || null,
+  //       password: data.password, // Store hashed password in production!
+  //     }]);
+  //     reset();
+  //     if (onUserCreated) onUserCreated();
+  //   } catch (err: any) {
+  //     alert("Error: " + (err?.message || String(err)));
+  //   }
+  // };
 
   // Handle form submit
   const onSubmit = async (data: FormFields) => {
     try {
-      // 1. Create user in Supabase Auth
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        
-      });
-      if (signUpError) throw signUpError;
-      const userId = signUpData?.user?.id;
-      if (!userId) throw new Error("No userId returned from Supabase");
+      if (isEditMode && initialData?.user_id) {
+        // ------------- EDIT user ---------------
+        // Replace with your "update user" logic
+        const updatePayload = {
+          role_id: data.role_id,
+          region_id: data.region_id,
+          depot_id: data.depot_id,
+          email: data.email,
+          // password: Only update if changed
+          ...(data.password ? { password: data.password } : {}),
+          organization_id: data.organization_id,
+          active: data.active,
+        };
+        // Example for Supabase: update by user id
+        const { data: updateData, error: updateError } = await supabase
+          .from('users')
+          .update(updatePayload)
+          .eq('user_id', initialData.user_id);
 
-   
-      // 2. Insert user in Hasura users table
-      const { data: insertData, error: insertError } = await supabase.from('users').insert([{
-        user_id: userId,
-        email: data.email,
-        role_id: data.role_id,
-        organization_id: selectedOrganization.id,
-        region_id: data.region_id || null,
-        depot_id: data.depot_id || null,
-        password: data.password, // Store hashed password in production!
-      }]);
-      reset();
-      if (onUserCreated) onUserCreated();
+        if (updateError) throw updateError;
+        reset();
+        if (onUserCreated) onUserCreated();
+      } else {
+        // ------------- CREATE user ---------------
+        // ...existing create logic...
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+        });
+        if (signUpError) throw signUpError;
+        const userId = signUpData?.user?.id;
+        if (!userId) throw new Error("No userId returned from Supabase");
+
+        // Insert user in Hasura users table
+        const { data: insertData, error: insertError } = await supabase.from('users').insert([{
+          user_id: userId,
+          email: data.email,
+          role_id: data.role_id,
+          organization_id: selectedOrganization.id,
+          region_id: data.region_id || null,
+          depot_id: data.depot_id || null,
+          password: data.password, // Store hashed password in production!
+        }]);
+        reset();
+        if (onUserCreated) onUserCreated();
+      }
     } catch (err: any) {
       alert("Error: " + (err?.message || String(err)));
     }
+    console.log("Form submitted with data:", data);
   };
+
+
+  // Watch fields for changes in editData/selectedOrganization (like Drawer resets form)
+  // React.useEffect(() => {
+  //   if (isEditMode && initialData) {
+  //     reset({
+  //       role_id: initialData.role?.id || "",
+  //       region_id: initialData.region?.id || "",
+  //       depot_id: initialData.depot?.id || "",
+  //       email: initialData.email || "",
+  //       password: "", // Keep blank for edit; only update if user changes
+  //       organization_id: initialData.organization.organization_id || selectedOrganization.id || "",
+  //       user_id: initialData.user_id || "",
+  //       active: initialData.active ?? true,
+  //     });
+  //   } else {
+  //     reset({
+  //       role_id: "",
+  //       region_id: "",
+  //       depot_id: "",
+  //       email: "",
+  //       password: "",
+  //       organization_id: selectedOrganization.id || "",
+  //     });
+  //   }
+  // }, [isEditMode, initialData, reset, selectedOrganization.id]);
 
   return (
     <div
@@ -136,10 +243,10 @@ const CreateUserForm2Root = React.forwardRef<
     >
       <div className="flex w-full flex-col items-start gap-1">
         <span className="text-heading-3 font-heading-3 text-default-font">
-          Create User
+          {isEditMode ? "Edit User" : "Create User"}
         </span>
         <span className="text-caption font-caption text-subtext-color">
-          Fill in the details below to create a new user
+          Fill in the details below to {isEditMode ? "edit the user" : "create a new user"}
         </span>
       </div>
       <form
@@ -177,10 +284,10 @@ const CreateUserForm2Root = React.forwardRef<
                 label="Select Region"
                 placeholder="Select"
                 {...field}
-                value={field.value || ""}
+                value={field.value || null}
                 onValueChange={(val) => {
                   field.onChange(val);
-                  setValue("depot_id", ""); // Reset depot when region changes
+                  setValue("depot_id", null); // Reset depot when region changes
                 }}
               >
                 {regions.map((region) => (
@@ -203,7 +310,7 @@ const CreateUserForm2Root = React.forwardRef<
                 label="Select Depot"
                 placeholder="Select"
                 {...field}
-                value={field.value || ""}
+                value={field.value || null}
                 onValueChange={field.onChange}
               >
                 {depots.map((depot) => (
@@ -256,6 +363,17 @@ const CreateUserForm2Root = React.forwardRef<
           )}
         />
 
+        <FeatureToggle
+          label="Active"
+          description="Toggle to activate or deactivate the user"
+          toggle={<Switch checked={watch("active")} onCheckedChange={(checked) => setValue("active", checked)} />}
+        />
+
+
+
+
+
+
         <div className="flex w-full flex-col items-start gap-2">
           <Button
             className="h-9 w-full flex-none"
@@ -263,13 +381,16 @@ const CreateUserForm2Root = React.forwardRef<
             type="submit"
             disabled={isSubmitting}
           >
-            Submit
+            {isEditMode ? "Update User" : "Create User"}
           </Button>
           <Button
             className="h-9 w-full flex-none"
             variant="neutral-secondary"
             type="button"
-            onClick={() => reset()}
+            onClick={() => {
+              if (onCancel) onCancel();
+              else reset(); // fallback to just resetting form if no onCancel provided
+            }}
           >
             Cancel
           </Button>

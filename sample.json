@@ -5,7 +5,8 @@
             "stopName": "City Center Bus Terminal",
             "latitude": 17.385044,
             "longitude": 78.486671,
-            "audioFile": "city_center.mp3"
+            "audioFileUrl": "city_center.mp3"
+            
         },
         {
             "stopId": "ST002",

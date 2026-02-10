@@ -13,7 +13,7 @@ const RBAC: React.FC<RBACProps> = ({ roles, features, children }) => {
   const hasAccess = userRole ? roles.includes(userRole) : false;
   const hasFeatureAccess = useAuthStore(state => {
     const userOrganization = state.user?.organization;
-    return features ? features.every(f => userOrganization[f]) : userRole === 'master' ? true : false; // If no features specified, allow access for master role
+    return features ? features.every(f => userOrganization[f]) : false; // If no features specified, allow access for master role
   });
 
   return hasAccess && hasFeatureAccess ? <>{children}</> : <>

@@ -86,6 +86,7 @@ function App() {
     { path: "stops", element: <StopsPage />, features: ["PAS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
     { path: "cctv", element: <CCTVPage />, features: ["PAS", "ITMS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
     { path: "create-route", element: <DisplayConfigForm /> },
+    { path: "routes/create/:areaId/:depotId", features: ['PIS'], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER], element: <DisplayConfigForm /> },
     { path: "settings", element: <Settings /> },
   ] as const;
 
@@ -97,7 +98,7 @@ function App() {
       case ROLES.ORGANIZATION_ADMIN:
         return "/home/regions";
       case ROLES.REGION_ADMIN:
-        return "/home/depots";
+        return "/home/routes";
       case ROLES.DEPOT_ADMIN:
         return "/home/routes";
       case ROLES.USER:

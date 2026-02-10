@@ -46,7 +46,9 @@ const SelectOrganizationComponentRoot = React.forwardRef<
     if (data && data.organizations.length > 0) {
       // only once on page load If user role is master, select the first organization by default, else select the user's assigned organization
       if (user?.userRole === "master") {
-        setSelectedOrganization(data.organizations[0]);
+          if(!selectedOrganization) {
+            setSelectedOrganization(data.organizations[0]);
+          }
       } else if (user?.organization) {
         const assignedOrg = data.organizations.find(
           (org: any) => org.id === user.organization.organizationId

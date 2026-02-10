@@ -26,11 +26,13 @@ import { OptionsDropdown } from "./OptionsDropdown";
 interface UsersTableRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   users: UserDetails[];
+  onEditUser?: (user: UserDetails) => void;
+  onDeleteUser?: (userId: string) => void;
 }
 
 const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
   function UsersTableRoot(
-    { className, users, ...otherProps }: UsersTableRootProps,
+    { className, users, onEditUser, onDeleteUser, ...otherProps }: UsersTableRootProps,
     ref
   ) {
     return (
@@ -57,7 +59,7 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
             </Table.HeaderRow>
           }
         >
-          {users.map((user) => <Table.Row key={user.userId}>
+          {users.map((user) => <Table.Row key={user.user_id}>
             <Table.Cell>
               <span className="whitespace-nowrap text-body-bold font-body-bold text-default-font">
                 {user.email}
@@ -100,7 +102,7 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
             </Table.Cell>
             <Table.Cell>
               <div className="flex grow shrink-0 basis-0 items-center justify-end">
-                <OptionsDropdown />
+                <OptionsDropdown onDelete={() => onDeleteUser && onDeleteUser(user.user_id)} onEdit={() => onEditUser && onEditUser(user)} />
               </div>
             </Table.Cell>
           </Table.Row>)}

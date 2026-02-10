@@ -24,7 +24,8 @@ interface ButtonRootProps
     | "inverse"
     | "brand-secondary-2"
     | "option-1"
-    | "neutral-secondary-2";
+    | "neutral-secondary-2"
+    | "neutral-primary-2";
   size?: "large" | "medium" | "small";
   children?: React.ReactNode;
   icon?: React.ReactNode;
@@ -57,6 +58,8 @@ const ButtonRoot = React.forwardRef<HTMLButtonElement, ButtonRootProps>(
           {
             "h-6 w-auto flex-row flex-nowrap gap-1 px-2 py-0": size === "small",
             "h-10 w-auto px-4 py-0": size === "large",
+            "border border-solid border-neutral-border bg-transparent hover:bg-neutral-200 active:bg-neutral-100":
+              variant === "neutral-primary-2",
             "bg-default-background hover:bg-neutral-50 active:bg-default-background":
               variant === "neutral-secondary-2",
             "border border-solid border-brand-primary bg-brand-50 hover:bg-brand-100 active:bg-brand-50":
@@ -95,6 +98,7 @@ const ButtonRoot = React.forwardRef<HTMLButtonElement, ButtonRootProps>(
                 hidden: loading,
                 "text-heading-3 font-heading-3": size === "large",
                 "text-neutral-700":
+                  variant === "neutral-primary-2" ||
                   variant === "neutral-secondary-2" ||
                   variant === "neutral-tertiary" ||
                   variant === "neutral-secondary" ||
@@ -124,6 +128,7 @@ const ButtonRoot = React.forwardRef<HTMLButtonElement, ButtonRootProps>(
               {
                 "text-caption font-caption": size === "small",
                 "text-neutral-700":
+                  variant === "neutral-primary-2" ||
                   variant === "neutral-secondary-2" ||
                   variant === "neutral-tertiary" ||
                   variant === "neutral-secondary" ||
@@ -147,6 +152,7 @@ const ButtonRoot = React.forwardRef<HTMLButtonElement, ButtonRootProps>(
                 hidden: loading,
                 "text-caption-bold font-caption-bold": size === "small",
                 "text-neutral-700":
+                  variant === "neutral-primary-2" ||
                   variant === "neutral-secondary-2" ||
                   variant === "neutral-tertiary" ||
                   variant === "neutral-secondary" ||
@@ -171,6 +177,7 @@ const ButtonRoot = React.forwardRef<HTMLButtonElement, ButtonRootProps>(
               {
                 "text-heading-3 font-heading-3": size === "large",
                 "text-neutral-700":
+                  variant === "neutral-primary-2" ||
                   variant === "neutral-secondary-2" ||
                   variant === "neutral-tertiary" ||
                   variant === "neutral-secondary" ||

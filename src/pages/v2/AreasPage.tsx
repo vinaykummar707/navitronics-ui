@@ -11,12 +11,11 @@ import React from "react";
 export default function AreasPage() {
     const [open, setOpen] = React.useState(false);
     const { selectedOrganization } = useOrganizationStore();
-    const { data: regions, loading, error, refetch } = useRegions({ variables: { organization_id: selectedOrganization ? selectedOrganization.id : "" } })
+    const { data, loading, error, refetch } = useRegions({ variables: { organization_id: selectedOrganization ? selectedOrganization.id : "" } })
     const [editData, setEditData] = React.useState<any>(null);
     const [deleteRegion, { loading: deleting, error: deleteError }] = useDeleteRegion();
+    const regions = data?.regions || [];
 
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p>Error: {error.message}</p>;
 
     // Handler to call refetch after create/update
     const handleFormSuccess = () => {
@@ -25,9 +24,15 @@ export default function AreasPage() {
         refetch();
     };
 
+    React.useEffect(() => {
+        refetch();
+    }, [selectedOrganization]);
+
+
+
     return (
         <div className="flex h-full w-full flex-col items-start gap-4 px-12 py-12">
-            <div className="flex w-full flex-col items-start gap-1">
+            {regions.length > 0 && <><div className="flex w-full flex-col items-start gap-1">
                 <span className="text-heading-2 font-heading-2 text-default-font text-center">
                     Regions
                 </span>
@@ -35,20 +40,20 @@ export default function AreasPage() {
                     Overview of your store&#39;s performance and customer engagement
                 </span>
             </div>
-            <div className="flex w-full items-center justify-between">
-                <span className="text-caption font-caption text-subtext-color">
-                    Showing {regions.regions?.length ?? 0} records
-                </span>
-                <Button
-                    variant="brand-secondary-2"
-                    icon={<FeatherPlus />}
-                    onClick={() => { setOpen(true); setEditData(null); }}
-                >
-                    Add Region
-                </Button>
-            </div>
+                <div className="flex w-full items-center justify-between">
+                    <span className="text-caption font-caption text-subtext-color">
+                        Showing {regions.length ?? 0} records
+                    </span>
+                    <Button
+                        variant=""
+                        icon={<FeatherPlus />}
+                        onClick={() => { setOpen(true); setEditData(null); }}
+                    >
+                        Add Region
+                    </Button>
+                </div> </>}
             <div className="w-full flex-col items-start gap-2 grid grid-cols-3">
-                {regions.regions && regions.regions.map(region => (
+                {regions && regions.map(region => (
                     <RegionCard
                         key={region.id}
                         icon={<FeatherMapPin />}
@@ -65,7 +70,25 @@ export default function AreasPage() {
                         }
                     />
                 ))}
+
             </div>
+            {!loading && regions.length === 0 && (
+                <div className="w-full h-full flex items-center justify-center bg-background">
+                    <div className="flex h-full w-full flex-col items-center justify-center gap-1">
+                        
+                        <h2 className="text-heading-2 font-heading-2 text-default-font">No Regions Found</h2>
+                        <p className="text-body font-body text-subtext-color">You do not have any regions added yet. Start by adding a new region.</p>
+                        <Button
+                            variant=""
+                            icon={<FeatherPlus />}
+                            onClick={() => { setOpen(true); setEditData(null); }}
+                            className="mt-4"
+                        >
+                            Add Region
+                        </Button>
+                    </div>
+                </div>
+            )}
             <Dialog open={open} onOpenChange={(open: boolean) => { setOpen(open); if (!open) setEditData(null); }}>
                 <Dialog.Content>
                     <CreateRegionForm

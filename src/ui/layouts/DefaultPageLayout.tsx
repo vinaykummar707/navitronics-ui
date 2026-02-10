@@ -54,10 +54,12 @@ const DefaultPageLayoutRoot = React.forwardRef<
         className="mobile:hidden"
         header={
           <>
-            <img
-              className="h-6 flex-none object-cover"
-              src="https://res.cloudinary.com/subframe/image/upload/v1711417507/shared/y2rsnhq3mex4auk54aye.png"
-            />
+            <div className="space-y-2">
+              <img
+                className="h-8 rounded-full flex-none object-cover"
+                src="https://navitronix.in/assets/navitronix.jpeg"
+              />
+            </div>
             <SelectOrganizationComponent />
           </>
         }
@@ -74,7 +76,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
               Regions
             </SidebarWithSections.NavItem>
           </RBAC>
-          <RBAC roles={[ ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]} features={["PIS"]}>
+          <RBAC roles={[ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]} features={["PIS"]}>
             <SidebarWithSections.NavItem selected={path.startsWith("/home/depots")} onClick={() => navigate("/home/depots")} icon={<FeatherBusFront />}>
               Depots
             </SidebarWithSections.NavItem>
@@ -85,29 +87,29 @@ const DefaultPageLayoutRoot = React.forwardRef<
             </SidebarWithSections.NavItem>
           </RBAC>
           <RBAC roles={[ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]} features={["PIS"]}>
-          <SidebarWithSections.NavItem selected={path.startsWith("/home/routes")} onClick={() => navigate("/home/routes")} icon={<FeatherPlaneTakeoff />}>
-            Routes
-          </SidebarWithSections.NavItem>
+            <SidebarWithSections.NavItem selected={path.startsWith("/home/routes")} onClick={() => navigate("/home/routes")} icon={<FeatherPlaneTakeoff />}>
+              Routes
+            </SidebarWithSections.NavItem>
           </RBAC>
-            <RBAC roles={[ROLES.MASTER]} features={[]}>
-          <SidebarWithSections.NavItem selected={path.startsWith("/home/users")} onClick={() => navigate("/home/users")} icon={<FeatherUsers />}>
-            Users
-          </SidebarWithSections.NavItem>
+          <RBAC roles={[ROLES.MASTER]} features={[]}>
+            <SidebarWithSections.NavItem selected={path.startsWith("/home/users")} onClick={() => navigate("/home/users")} icon={<FeatherUsers />}>
+              Users
+            </SidebarWithSections.NavItem>
           </RBAC>
         </SidebarWithSections.NavSection>
-        
+
         <RBAC roles={[ROLES.MASTER]} features={[]}>
-        <SidebarWithSections.NavSection label="Administrator">
-          <SidebarWithSections.NavItem selected={path.startsWith("/home/utility")} onClick={() => navigate("/home/utility")} icon={<FeatherCpu />}>
-            Utility
-          </SidebarWithSections.NavItem>
-          <SidebarWithSections.NavItem selected={path.startsWith("/home/font-configuration")} onClick={() => navigate("/home/font-configuration")} icon={<FeatherType />}>
-            Font Configuration
-          </SidebarWithSections.NavItem>
-          <SidebarWithSections.NavItem selected={path.startsWith("/home/settings")} onClick={() => navigate("/home/settings")} icon={<FeatherSettings />}>
-            Settings
-          </SidebarWithSections.NavItem>
-        </SidebarWithSections.NavSection>
+          <SidebarWithSections.NavSection label="Administrator">
+            <SidebarWithSections.NavItem selected={path.startsWith("/home/utility")} onClick={() => navigate("/home/utility")} icon={<FeatherCpu />}>
+              Utility
+            </SidebarWithSections.NavItem>
+            <SidebarWithSections.NavItem selected={path.startsWith("/home/font-configuration")} onClick={() => navigate("/home/font-configuration")} icon={<FeatherType />}>
+              Font Configuration
+            </SidebarWithSections.NavItem>
+            <SidebarWithSections.NavItem selected={path.startsWith("/home/settings")} onClick={() => navigate("/home/settings")} icon={<FeatherSettings />}>
+              Settings
+            </SidebarWithSections.NavItem>
+          </SidebarWithSections.NavSection>
         </RBAC>
       </SidebarWithSections>
       {children ? (

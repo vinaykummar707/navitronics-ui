@@ -49,7 +49,7 @@ function OrganizationsPage() {
                 <RBAC roles={['master']}>
                     <Button
                         className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
-                        variant="neutral-secondary"
+                        variant=""
                         icon={<FeatherPlus />}
                         onClick={() => { setOpen(true) }}
                     >

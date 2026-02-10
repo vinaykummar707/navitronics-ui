@@ -136,27 +136,20 @@ const UserLoginFormRoot = React.forwardRef<
       {...otherProps}
     >
       <div className="flex grow shrink-0 basis-0 flex-col items-center gap-12 self-stretch bg-brand-50 px-12 py-12">
-        <div className="flex w-full max-w-[288px] grow shrink-0 basis-0 flex-col items-center justify-center gap-8">
+        <div className="flex w-full max-w-[288px] grow shrink-0 basis-0 flex-col items-center justify-center gap-2">
           <Avatar
             size="x-large"
-            image="https://res.cloudinary.com/subframe/image/upload/v1711417514/shared/ubsk7cs5hnnaj798efej.jpg"
+             image="https://navitronix.in/assets/navitronix.jpeg"
           >
             HW
           </Avatar>
           <div className="flex w-full flex-col items-center gap-6">
-            <span className="text-heading-3 font-heading-3 text-brand-800 text-center">
-              &quot;In less than a week I&#39;ve already saved hours upon hours
-              of grunt work – it&#39;s doesn&#39;t get much better than this for
-              the price!&quot;
-            </span>
+            
             <div className="flex flex-wrap items-center justify-center gap-2">
-              <span className="text-body-bold font-body-bold text-brand-800">
-                Howard Wayne
+              <span className="text-body-bold text-heading font-body-bold text-brand-800">
+                Navitronix
               </span>
-              <span className="text-body font-body text-brand-800">–</span>
-              <span className="text-body font-body text-brand-800">
-                Founder, Parachute Inc.
-              </span>
+             
             </div>
           </div>
         </div>
@@ -168,7 +161,7 @@ const UserLoginFormRoot = React.forwardRef<
             src="https://res.cloudinary.com/subframe/image/upload/v1711417507/shared/y2rsnhq3mex4auk54aye.png"
           />
           <span className="text-heading-2 font-heading-2 text-default-font">
-            Sign up to start your journey
+            Sign In
           </span>
           <div className="flex w-full flex-col items-start justify-center gap-2">
             <TextField

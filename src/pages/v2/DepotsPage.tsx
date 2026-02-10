@@ -46,11 +46,7 @@ export default function DepotsPage() {
         }
     }, [regions]);
 
-    if (regionsLoading) return <p>Loading regions...</p>;
-    if (regionsError) return <p>Error loading regions: {regionsError.message}</p>;
-    if (!selectedRegion) return <p>Please select a region.</p>;
-    if (loading) return <p>Loading depots...</p>;
-    if (error) return <p>Error: {error.message}</p>;
+ 
 
     const handleFormSuccess = () => {
         setOpen(false);
@@ -73,7 +69,7 @@ export default function DepotsPage() {
                     Showing {depots?.depots?.length ?? 0} records
                 </span>
                 <div className="flex gap-2">
-                    <RBAC roles={['depot_admin', 'region_admin',]}>
+                    <RBAC features={[]} roles={['depot_admin', 'region_admin',]}>
                         <Select
                             className="h-auto  flex-none"
                             variant="outline"
@@ -90,7 +86,7 @@ export default function DepotsPage() {
                         </Select>
                     </RBAC>
 
-                    <RBAC roles={['master', 'organization_admin']}>
+                    <RBAC features={[]} roles={['master', 'organization_admin']}>
                         <Select
                             className="h-auto  flex-none"
                             variant="outline"
@@ -107,9 +103,9 @@ export default function DepotsPage() {
                         </Select>
 
                     </RBAC>
-                    <RBAC roles={['region_admin', 'organization_admin', 'master']}>
+                    <RBAC features={[]} roles={['region_admin', 'organization_admin', 'master']}>
                         <Button
-                            variant="brand-secondary-2"
+                            variant=""
                             icon={<FeatherPlus />}
                             onClick={() => { setOpen(true); setEditData(null); }}
                         >

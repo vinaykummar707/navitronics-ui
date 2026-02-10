@@ -134,6 +134,8 @@ const CreateOrganizationDrawerRoot = React.forwardRef<HTMLDivElement, Organizati
             }
           });
 
+          onSuccess && onSuccess();
+
       } else {
         await createOrganization(
           {
@@ -150,8 +152,9 @@ const CreateOrganizationDrawerRoot = React.forwardRef<HTMLDivElement, Organizati
               }
             }
           });
-      }
       console.log("Form Submitted:", data);
+          onSuccess && onSuccess();
+      }
     };
 
 
