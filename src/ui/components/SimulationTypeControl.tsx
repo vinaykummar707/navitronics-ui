@@ -15,6 +15,7 @@ import { useFormContext, useWatch } from "react-hook-form";
 import { ControlAccordion } from "./ControlAccordion";
 import { SelectionCardWithIcon } from "./SelectionCardWithIcon";
 import { IconWithBackground } from "./IconWithBackground";
+import { watch } from "node:fs";
 
 interface SimulationTypeControlRootProps extends React.ComponentProps<typeof ControlAccordion> {
   className?: string;
@@ -32,12 +33,10 @@ const SimulationTypeControlRoot = React.forwardRef<
   SimulationTypeControlRootProps
 >((props, ref) => {
   const { className, ...otherProps } = props;
-  const { setValue } = useFormContext<DisplayConfigPostRequest>();
+  const { setValue,watch } = useFormContext<DisplayConfigPostRequest>();
   const selectedTab = useTabsStore(state => state.selectedTab);
   const selectedSimulationIndex = useSimulationStore(state => state.selectedSimulationIndex);
-  const selectedSimulation: Simulation = useWatch({
-    name: `${selectedTab}[${selectedSimulationIndex}]`,
-  });
+  const selectedSimulation: Simulation = watch(`${selectedTab}[${selectedSimulationIndex}]`);
 
   const handleSelection = (type: string) => {
     setValue(`${selectedTab}[${selectedSimulationIndex}].type`, type);

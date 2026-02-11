@@ -23,12 +23,10 @@ const HeightControlRoot = React.forwardRef<
   HeightControlRootProps
 >((props, ref) => {
   const { className, ...otherProps } = props;
-  const { setValue } = useFormContext<DisplayConfigPostRequest>();
+  const { setValue, watch } = useFormContext<DisplayConfigPostRequest>();
   const selectedTab = useTabsStore(state => state.selectedTab);
   const selectedSimulationIndex = useSimulationStore(state => state.selectedSimulationIndex);
-  const selectedSimulation = useWatch({
-    name: `${selectedTab}[${selectedSimulationIndex}]`,
-  });
+  const selectedSimulation:Simulation = watch(`${selectedTab}[${selectedSimulationIndex}]`);
 
   const changeHeight = (heightValue) => {
     setValue(`${selectedTab}[${selectedSimulationIndex}].height`, heightValue);

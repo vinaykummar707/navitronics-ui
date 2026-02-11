@@ -37,6 +37,7 @@ import {
 import { get } from "node:http";
 import useTabsStore from "@/store/useTabsStore";
 import useSimulationStore from "@/store/useSimulationStore";
+import { set } from "zod";
 
 interface SimulationsPlayerPanelRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -57,8 +58,8 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
   const selectedSimulation = useSimulationStore(
     (state) => state.selectedSimulation,
   );
-  const setSelectedSimulation = useSimulationStore(
-    (state) => state.setSelectedSimulation,
+  const setSelectedSimulationIndex = useSimulationStore(
+    (state) => state.setSelectedSimulationIndex,
   );
   const selectedSimulationIndex = useSimulationStore(
     (state) => state.selectedSimulationIndex,
@@ -66,48 +67,43 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
 
   const simulations: Simulation[] = watch(selectedTab);
 
-  // by default select the first simulation in the list when the component mounts or when the selected tab changes
+
+
+  const { fields,append } = useFieldArray({
+    control: methods.control,
+    name: selectedTab,
+  });
+
   useEffect(() => {
-    console.log('index', selectedSimulationIndex)
-    console.log('simulations', simulations[selectedSimulationIndex])
-    if (simulations.length > 0) {
-      setSelectedSimulation(simulations[selectedSimulationIndex]);
-    } else {
-      setSelectedSimulation(null);
-    }
-  }, [simulations, selectedSimulationIndex, setSelectedSimulation]);
+    setSelectedSimulationIndex(-1);
+  }, [selectedTab]);
+
+
+
+
 
   // function to append a new Simulation into the "front" field array
-  const handleAddSimulation = (format: string) => {
-    console.log("Selected Tab for adding simulation:", selectedTab);
-    console.log(
-      "Current values of the selected tab field array:",
-      getValues(selectedTab),
-    );
-    switch (format) {
-      case "single":
-        setValue(selectedTab, [
-          ...getValues(selectedTab),
-          getDefaultSingleSimulation('Single Text Route Simulation'),
-        ]);
-        break;
-      case "two":
-        setValue(selectedTab, [
-          ...getValues(selectedTab),
-          getDefaultTwoSimulation('123','Two Text Route Simulation'),
-        ]);
-        break;
-      case "three":
-        // For three simulation simulation, we can default to single simulation and let the user change it to three simulation in the settings if needed
-        setValue(selectedTab, [
-          ...getValues(selectedTab),
-          getDefaultThreeSimulation('123','Upper Half Text Simulation','Lower Half Text Simulation'),
-        ]);
-        break;
-      default:
-        console.warn("Unsupported format for adding simulation:", format);
-    }
-  };
+ const handleAddSimulation = (format: string) => {
+  let newSimulation;
+  switch (format) {
+    case "single":
+      newSimulation = getDefaultSingleSimulation('Single Text Route Simulation');
+      break;
+    case "two":
+      newSimulation = getDefaultTwoSimulation('123', 'Two Text Route Simulation');
+      break;
+    case "three":
+      newSimulation = getDefaultThreeSimulation('123', 'Upper Half Text Simulation', 'Lower Half Text Simulation');
+      break;
+    default:
+      console.warn("Unsupported format for adding simulation:", format);
+      return;
+  }
+  
+  append(newSimulation);
+  setSelectedSimulationIndex(simulations.length); // Set the newly added simulation as selected
+  
+};
 
   return (
     <div

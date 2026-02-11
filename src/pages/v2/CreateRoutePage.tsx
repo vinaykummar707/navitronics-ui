@@ -22,11 +22,7 @@ const RouteCreatePage: React.FC = () => {
     defaultValues: defaultDisplayConfigPostRequest,
   });
 
-  const allData = methods.watch(); // Watch all form data
-
-  useEffect(() => {
-    console.log("Form Data Changed:", allData);
-  }, [allData]);
+  
 
 
 

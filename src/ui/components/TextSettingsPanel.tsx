@@ -17,6 +17,9 @@ import { PanelHeader } from "./PanelHeader";
 import { RouteNumberControl } from "./RouteNumberControl";
 import { UpperHalfTextControl } from "./UpperHalfTextControl";
 import useSimulationStore from "@/store/useSimulationStore";
+import useTabsStore from "@/store/useTabsStore";
+import { DisplayConfigPostRequest } from "@/types/routeConfigV2";
+import { useFormContext } from "react-hook-form";
 
 interface TextSettingsPanelRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -29,11 +32,14 @@ const TextSettingsPanelRoot = React.forwardRef<
   { className, ...otherProps }: TextSettingsPanelRootProps,
   ref,
 ) {
-  const selectedSimulation = useSimulationStore(
-    (state) => state.selectedSimulation,
-  );
+    const methods = useFormContext<DisplayConfigPostRequest>();
+  
+    const {watch} = methods;
+    const selectedTab = useTabsStore((state) => state.selectedTab);
+  const selectedSimulationIndex = useSimulationStore((state) => state.selectedSimulationIndex);
+    const simulations = watch(selectedTab);
   const renderControls = () => {
-    if (!selectedSimulation)
+    if (!simulations[selectedSimulationIndex])
       return (
         <div className="flex h-full w-full p-6 items-center justify-center">
           <p className="text-xs text-center font-heading-3  text-subtext-color">
@@ -42,7 +48,7 @@ const TextSettingsPanelRoot = React.forwardRef<
         </div>
       );
 
-    const { format } = selectedSimulation;
+    const { format } = simulations[selectedSimulationIndex];
     return (
       <>
         {(format === "two" || format === "three") && <RouteNumberControl />}

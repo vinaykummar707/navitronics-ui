@@ -60,6 +60,7 @@ const SimulationPlayerCardRoot = React.forwardRef<
   const setSelectedSimulationIndex = useSimulationStore(
     (state) => state.setSelectedSimulationIndex,
   );
+  const {setSelectedSimulation} = useSimulationStore();
   const selectedSimulation: Simulation = watch(
     `${selectedTab}[${selectedSimulationIndex}]`,
   );
@@ -95,7 +96,12 @@ const SimulationPlayerCardRoot = React.forwardRef<
         )}
       >
         <Accordion
-          onClick={() => setSelectedSimulationIndex(listIndex)}
+          onClick={() => {
+            setSelectedSimulationIndex(listIndex);
+            // console.log("Selected Simulation Index:", listIndex);
+            // console.log("Selected Simulation:", getValues(`${selectedTab}[${listIndex}]`));
+            // setSelectedSimulation(getValues(`${selectedTab}[${listIndex}]`));
+          }}
           trigger={
             <div className="flex w-full items-center gap-4 px-4 py-4">
               <IconWithBackground

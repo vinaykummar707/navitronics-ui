@@ -27,13 +27,10 @@ const WidthControlRoot = React.forwardRef<
   WidthControlRootProps
 >((props, ref) => {
   const { className, ...otherProps } = props;
-  const { setValue } = useFormContext<DisplayConfigPostRequest>();
+  const { setValue,watch } = useFormContext<DisplayConfigPostRequest>();
   const selectedTab = useTabsStore(state => state.selectedTab);
   const selectedSimulationIndex = useSimulationStore(state => state.selectedSimulationIndex);
-  const selectedSimulation: Simulation = useWatch({
-    name: `${selectedTab}[${selectedSimulationIndex}]`,
-  });
-
+  const selectedSimulation = watch(`${selectedTab}[${selectedSimulationIndex}]`);
   // Helper function to create width selection cards
   const createWidthSelectionCard = (width: number, title: string) => (
     <SelectionCardWithText

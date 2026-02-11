@@ -24,10 +24,10 @@ const FormatSelectionControlRoot = React.forwardRef<
   React.ElementRef<typeof ControlAccordion>,
   FormatSelectionControlRootProps
 >(({ className, ...otherProps }, ref) => {
-  const { setValue } = useFormContext<DisplayConfigPostRequest>();
+  const { setValue,watch } = useFormContext<DisplayConfigPostRequest>();
   const selectedSimulationIndex = useSimulationStore((state) => state.selectedSimulationIndex);
   const selectedTab = useTabsStore((state) => state.selectedTab);
-  const selectedSimulation = useFormContext().watch(`${selectedTab}[${selectedSimulationIndex}]`);
+  const selectedSimulation = watch(`${selectedTab}[${selectedSimulationIndex}]`);
 
   const handleFormatChange = (formatType: string) => {
     const format = simulationFormats.find(f => f.type === formatType);

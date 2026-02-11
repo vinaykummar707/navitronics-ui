@@ -12,7 +12,7 @@
  * WidthControl — https://app.subframe.com/11b10bc240cf/library?component=WidthControl_78413c09-bee6-4d5f-a6b2-4bb68f45b0cf
  */
 
-import React from "react";
+import React, { useEffect } from "react";
 import { FeatherCopy } from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { ControlAccordion } from "./ControlAccordion";
@@ -27,6 +27,7 @@ import useSimulationStore from "@/store/useSimulationStore";
 import { useFormContext, useWatch } from "react-hook-form";
 import { DisplayConfigPostRequest } from "@/types/routeConfigV2";
 import useTabsStore from "@/store/useTabsStore";
+import { set } from "zod";
 
 interface SimulationSettingsPanelRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -42,7 +43,13 @@ const SimulationSettingsPanelRoot = React.forwardRef<
   const methods = useFormContext<DisplayConfigPostRequest>();
   const {watch} = methods;
   const selectedTab = useTabsStore((state) => state.selectedTab);
+  const selectedSimulation = useSimulationStore((state) => state.selectedSimulation);
+  const selectedSimulationIndex = useSimulationStore((state) => state.selectedSimulationIndex);
+  const setSelectedSimulation = useSimulationStore((state) => state.setSelectedSimulation);
   const simulations = watch(selectedTab);
+
+
+
   return (
     <div
       className={SubframeUtils.twClassNames(
@@ -53,7 +60,7 @@ const SimulationSettingsPanelRoot = React.forwardRef<
       {...otherProps}
     >
       <PanelHeader title="Simulation Settings" />
-      {simulations && simulations.length > 0 && (
+      {simulations[selectedSimulationIndex]  && (
         <>
           <SimulationTypeControl />
           <FormatSelectionControl />
@@ -80,7 +87,7 @@ const SimulationSettingsPanelRoot = React.forwardRef<
           />
         </>
       )}
-      {!simulations || simulations.length === 0 && (
+      {!simulations[selectedSimulationIndex]  && (
         <div className="flex h-full w-full p-6 items-center justify-center">
           <p className="text-xs text-center font-heading-3  text-subtext-color">
             Select a simulation or add simulation to edit its settings.
