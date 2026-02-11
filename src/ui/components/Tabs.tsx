@@ -30,7 +30,7 @@ const Item = React.forwardRef<HTMLDivElement, ItemProps>(function Item(
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "group/d5612535 flex h-10 cursor-pointer items-center justify-center gap-2 border-b border-solid border-neutral-border px-2.5 py-0.5",
+        "group/d5612535 flex h-12 cursor-pointer items-center justify-center gap-2 border-b border-solid border-neutral-border px-2.5 py-0.5",
         {
           "border-b-2 border-solid border-brand-600 px-2.5 pt-0.5 pb-px":
             active,
@@ -85,7 +85,7 @@ const TabsRoot = React.forwardRef<HTMLDivElement, TabsRootProps>(
     return (
       <div
         className={SubframeUtils.twClassNames(
-          "flex w-full items-end",
+          "flex h-12 w-full items-end",
           className
         )}
         ref={ref}

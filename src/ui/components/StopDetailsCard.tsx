@@ -72,9 +72,9 @@ const StopDetailsCardRoot = React.forwardRef<
         }
         defaultOpen={true}
       >
-        <div className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-2 border-t border-solid border-neutral-border px-6 pt-4 pb-6">
+        <div className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-2 px-6 pb-6">
           <div className="flex w-full items-start gap-2">
-            <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 border border-solid border-neutral-100 px-4 py-4">
+            <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-md border border-solid border-neutral-100 px-4 py-4">
               <span className="text-caption-bold font-caption-bold text-default-font">
                 Downward Direction
               </span>
@@ -101,7 +101,7 @@ const StopDetailsCardRoot = React.forwardRef<
                 </div>
               </div>
             </div>
-            <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 border border-solid border-neutral-100 px-4 py-4">
+            <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-md border border-solid border-neutral-100 px-4 py-4">
               <span className="text-caption-bold font-caption-bold text-default-font">
                 Upward Direction
               </span>

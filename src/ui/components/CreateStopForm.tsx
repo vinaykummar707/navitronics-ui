@@ -6,7 +6,7 @@
  * Select — https://app.subframe.com/11b10bc240cf/library?component=Select_bb88f90b-8c43-4b73-9c2f-3558ce7838f3
  * Text Field — https://app.subframe.com/11b10bc240cf/library?component=Text+Field_be48ca43-f8e7-4c0e-8870-d219ea11abfe
  */
-
+// @subframe/sync-disable
 import React from "react";
 import { FeatherCheck } from "@subframe/core";
 import { FeatherMapPin } from "@subframe/core";

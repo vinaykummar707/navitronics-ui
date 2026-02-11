@@ -29,6 +29,7 @@ import RoutesPage from "./pages/v2/RoutesPage";
 import StopsPage from "./pages/v2/StopsPage";
 import CCTVPage from "./pages/v2/CCTVPage";
 import { features } from "node:process";
+import RouteCreatePage from "./pages/v2/CreateRoutePage";
 
 
 const queryClient = new QueryClient({
@@ -86,7 +87,7 @@ function App() {
     { path: "stops", element: <StopsPage />, features: ["PAS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
     { path: "cctv", element: <CCTVPage />, features: ["PAS", "ITMS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
     { path: "create-route", element: <DisplayConfigForm /> },
-    { path: "routes/create/:areaId/:depotId", features: ['PIS'], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER], element: <DisplayConfigForm /> },
+    // { path: "routes/create/:areaId/:depotId", features: ['PIS'], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER], element: <RouteCreatePage /> },
     { path: "settings", element: <Settings /> },
   ] as const;
 
@@ -116,6 +117,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="routes/create/:areaId/:depotId" element={<RouteCreatePage/>} />
           {/* Protected Routes */}
           <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>}>
             <Route index element={<Navigate to={getDefaultRouteForRole(user?.userRole || "")} replace />} />

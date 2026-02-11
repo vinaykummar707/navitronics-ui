@@ -1,5 +1,5 @@
 /** 
- * Scroll direction types for text on the screen. 
+ * Scroll direction types for text on the simulation. 
  */
 export const SCROLL_TYPES = ['Left To Right', 'Right To Left', 'Fixed'] as const;
 export type ScrollType = typeof SCROLL_TYPES[number];
@@ -11,16 +11,16 @@ export const POSITIONS = ['Left', 'Right', 'Center'] as const;
 export type Position = typeof POSITIONS[number];
 
 /**
- * Supported screen layouts.
+ * Supported simulation layouts.
  */
-export const SCREEN_FORMATS = ['single', 'two', 'three'] as const;
-export type ScreenFormat = typeof SCREEN_FORMATS[number];
+export const SIMULATION_FORMATS = ['single', 'two', 'three'] as const;
+export type SimulationFormat = typeof SIMULATION_FORMATS[number];
 
 /**
- * Screen type definitions, controls the semantics of the screen.
+ * Simulation type definitions, controls the semantics of the simulation.
  */
-export const SCREEN_TYPES = ['route', 'special message', 'slogan', 'announcement'] as const;
-export type ScreenType = typeof SCREEN_TYPES[number];
+export const SIMULATION_TYPES = ['route', 'special message', 'slogan', 'announcement'] as const;
+export type SimulationType = typeof SIMULATION_TYPES[number];
 
 /**
  * Supported font weights.
@@ -29,12 +29,12 @@ export const FONT_WEIGHTS = ['Regular', 'Bold'] as const;
 export type FontWeight = typeof FONT_WEIGHTS[number];
 
 /**
- * Default allowed screen heights and widths.
+ * Default allowed simulation heights and widths.
  */
-export const DEFAULT_SCREEN_HEIGHTS = [16, 32] as const;
-export type ScreenHeight = typeof DEFAULT_SCREEN_HEIGHTS[number];
-export const DEFAULT_SCREEN_WIDTHS = [64, 96, 128, 160, 192, 224] as const;
-export type ScreenWidth = typeof DEFAULT_SCREEN_WIDTHS[number];
+export const DEFAULT_SIMULATION_HEIGHTS = [16, 32] as const;
+export type SimulationHeight = typeof DEFAULT_SIMULATION_HEIGHTS[number];
+export const DEFAULT_SIMULATION_WIDTHS = [64, 96, 128, 160, 192, 224] as const;
+export type SimulationWidth = typeof DEFAULT_SIMULATION_WIDTHS[number];
 
 /**
  * Scroll speed presets with labels and values.
@@ -59,7 +59,7 @@ export interface BitmapTranslations {
 }
 
 /**
- * Text configuration for a single line/section on a screen.
+ * Text configuration for a single line/section on a simulation.
  */
 export interface TextConfig {
   text: string;
@@ -70,28 +70,29 @@ export interface TextConfig {
   scrollSpeed: number;
   fontWeight: FontWeight;
   fontHeight?: number;
+  language: string;
 }
 
-// Text keys defining different text fields on screen layouts.
-export type ScreenTextKey = 'sideText' | 'upperHalfText' | 'lowerHalfText' | 'text';
+// Text keys defining different text fields on simulation layouts.
+export type SimulationTextKey = 'sideText' | 'upperHalfText' | 'lowerHalfText' | 'text';
 
-export type ScreenTexts<T extends readonly ScreenTextKey[]> = {
+export type SimulationTexts<T extends readonly SimulationTextKey[]> = {
   [K in T[number]]: TextConfig;
 };
 
-export type SingleScreenTexts = ScreenTexts<['text']>;
-export type TwoScreenTexts = ScreenTexts<['sideText', 'text']>;
-export type ThreeScreenTexts = ScreenTexts<['sideText', 'upperHalfText', 'lowerHalfText']>;
+export type SingleSimulationTexts = SimulationTexts<['text']>;
+export type TwoSimulationTexts = SimulationTexts<['sideText', 'text']>;
+export type ThreeSimulationTexts = SimulationTexts<['sideText', 'upperHalfText', 'lowerHalfText']>;
 
 /**
- * Represents a digital screen configuration.
+ * Represents a digital simulation configuration.
  */
-export interface Screen {
-  format: ScreenFormat;
-  texts: SingleScreenTexts | TwoScreenTexts | ThreeScreenTexts;
-  height: ScreenHeight;
-  width: ScreenWidth;
-  type: ScreenType;
+export interface Simulation {
+  format: SimulationFormat;
+  texts: SingleSimulationTexts | TwoSimulationTexts | ThreeSimulationTexts;
+  height: SimulationHeight;
+  width: SimulationWidth;
+  type: SimulationType;
 }
 
 export interface StopRouteConfig {
@@ -114,10 +115,10 @@ export interface DisplayConfigPostRequest {
   route_number_2: string;
   separation: string;
   isSplitRoute: boolean;
-  front: Screen[];
-  side: Screen[];
-  rear: Screen[];
-  internal: Screen[];
+  front: Simulation[];
+  side: Simulation[];
+  rear: Simulation[];
+  internal: Simulation[];
   stops?: StopRouteConfig[];
   version: string;
   depot_id: string;

@@ -65,14 +65,14 @@ const TextFieldRoot = React.forwardRef<HTMLLabelElement, TextFieldRootProps>(
     return (
       <label
         className={SubframeUtils.twClassNames(
-          "group/be48ca43 flex flex-col items-start gap-1",
+          "group/be48ca43 flex flex-col items-start gap-2",
           className
         )}
         ref={ref}
         {...otherProps}
       >
         {label ? (
-          <span className="text-caption-bold font-caption-bold text-default-font">
+          <span className="text-caption font-caption text-default-font">
             {label}
           </span>
         ) : null}
