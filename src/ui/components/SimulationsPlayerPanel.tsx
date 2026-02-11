@@ -115,7 +115,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
       {...otherProps}
     >
       <TabsPanel />
-      <div className="flex w-full overflow-hidden grow shrink-0 basis-0 flex-col items-start gap-4 bg-default-background px-4 py-4">
+      <div className="flex w-full overflow-scroll grow shrink-0 basis-0 flex-col items-start gap-4 bg-default-background px-4 py-4">
         <div className="flex w-full items-center justify-end gap-1">
           <SubframeCore.DropdownMenu.Root>
             <SubframeCore.DropdownMenu.Trigger asChild={true}>
@@ -171,7 +171,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
             </SubframeCore.DropdownMenu.Portal>
           </SubframeCore.DropdownMenu.Root>
         </div>
-        <div className="flex w-full  overflow-y-scroll flex-col items-start gap-2">
+        <div className="flex   flex-col items-start gap-2">
           {simulations.map((simulation, index) => (
             <SimulationPlayerCard
               key={index}

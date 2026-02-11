@@ -149,6 +149,9 @@ import { SelectionCard } from "./SelectionCard";
 import { SelectionCardWithText } from "./SelectionCardWithText";
 import { TextField } from "./TextField";
 import { IconButton } from "./IconButton";
+import AutoTextGenerator from "@/components/AutoTextGenerator";
+import { Select } from "./Select";
+import { AVAILABLE_LANGUAGES } from "@/constants/defaultRouteValues";
 
 interface TextPropertiesControlsRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -175,6 +178,17 @@ const TextPropertiesControlsRoot = React.forwardRef<HTMLDivElement, TextProperti
   };
     return (
       <div className={SubframeUtils.twClassNames("flex w-full flex-col items-start gap-4", className)} ref={ref} {...otherProps}>
+         <ControlItem label="Choose Language">
+          <Select
+            value={watch(`${pathBase}.language`)}
+            onValueChange={(value) => setValue(`${pathBase}.language`, value)}
+            className="w-full"
+          >
+           {AVAILABLE_LANGUAGES.map(lang => (
+            <Select.Item key={lang.code} value={lang.code}>{lang.label}</Select.Item>
+           ))}
+          </Select>
+        </ControlItem>
         <ControlItem label="Text">
           <TextField className="h-9 grow shrink-0 basis-0" label="" helpText="">
             <TextField.Input
@@ -184,11 +198,15 @@ const TextPropertiesControlsRoot = React.forwardRef<HTMLDivElement, TextProperti
             />
           </TextField>
         </ControlItem>
+
+        <ControlItem label="Auto Text Generator">
+          <AutoTextGenerator route={watch()} targetLang={watch(`${pathBase}.language`)} onSelect={(value) => setValue(`${pathBase}.text`, value)} />
+        </ControlItem>
         <ControlItem label="Text Scroll Direction">
           <div className="flex grow shrink-0 basis-0 items-center justify-center gap-1">
-            <SelectionCard icon={<FeatherChevronsLeft />} text="Label" onClick={() => handleSelection("scrollType", "Left To Right")} selected={isSelected("scrollType", "Left To Right")} />
+            <SelectionCard icon={<FeatherChevronsLeft />} text="Label" onClick={() => handleSelection("scrollType", "Right To Left")} selected={isSelected("scrollType", "Right To Left")} />
             <SelectionCard icon={<FeatherAlignHCenter />} text="Label" onClick={() => handleSelection("scrollType", "Fixed")} selected={isSelected("scrollType", "Fixed")} />
-            <SelectionCard icon={<FeatherChevronsRight />} text="Label" onClick={() => handleSelection("scrollType", "Right To Left")} selected={isSelected("scrollType", "Right To Left")} />
+            <SelectionCard icon={<FeatherChevronsRight />} text="Label" onClick={() => handleSelection("scrollType", "Left To Right")} selected={isSelected("scrollType", "Left To Right")} />
           </div>
         </ControlItem>
         <ControlItem label="Text Position">
@@ -229,11 +247,11 @@ const TextPropertiesControlsRoot = React.forwardRef<HTMLDivElement, TextProperti
     </ControlItem>
         <ControlItem label="Scroll Speed">
           <div className="grow shrink-0 basis-0 items-center justify-center gap-1 grid grid-cols-1">
-            <SelectionCardWithText title="Very Fast" onClick={() => handleSelection("scrollSpeed",9)} selected={isSelected("scrollSpeed", 9)} />
-            <SelectionCardWithText title="Medium Fast" onClick={() => handleSelection("scrollSpeed",6)} selected={isSelected("scrollSpeed", 6)} />
+            <SelectionCardWithText title="Very Fast" onClick={() => handleSelection("scrollSpeed",1)} selected={isSelected("scrollSpeed", 1)} />
+            <SelectionCardWithText title="Medium Fast" onClick={() => handleSelection("scrollSpeed",3)} selected={isSelected("scrollSpeed", 3)} />
             <SelectionCardWithText title="Normal" onClick={() => handleSelection("scrollSpeed",4)} selected={isSelected("scrollSpeed", 4)} />
-            <SelectionCardWithText title="Slow" onClick={() => handleSelection("scrollSpeed",3)} selected={isSelected("scrollSpeed", 3)} />
-            <SelectionCardWithText title="Very Slow" onClick={() => handleSelection("scrollSpeed",1)} selected={isSelected("scrollSpeed", 1)} />
+            <SelectionCardWithText title="Slow" onClick={() => handleSelection("scrollSpeed",6)} selected={isSelected("scrollSpeed", 6)} />
+            <SelectionCardWithText title="Very Slow" onClick={() => handleSelection("scrollSpeed",9)} selected={isSelected("scrollSpeed", 9)} />
           </div>
         </ControlItem>
       </div>

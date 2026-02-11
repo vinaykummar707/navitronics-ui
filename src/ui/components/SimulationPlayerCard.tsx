@@ -28,10 +28,11 @@ import {
   Simulation,
 } from "@/types/routeConfigV2";
 import { getSimulationCardText } from "@/utils/simulationUtils";
-import { useFormContext, useWatch } from "react-hook-form";
+import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import useTabsStore from "@/store/useTabsStore";
 import useSimulationStore from "@/store/useSimulationStore";
 import { get } from "node:http";
+import DisplayEditor from "@/components/DisplayEditor";
 
 interface SimulationPlayerCardRootProps extends React.HTMLAttributes<HTMLDivElement> {
   isSelected?: boolean;
@@ -52,7 +53,7 @@ const SimulationPlayerCardRoot = React.forwardRef<
   }: SimulationPlayerCardRootProps,
   ref,
 ) {
-  const { watch, getValues } = useFormContext<DisplayConfigPostRequest>();
+  const { watch, getValues, control,setValue } = useFormContext<DisplayConfigPostRequest>();
   const selectedTab = useTabsStore((state) => state.selectedTab);
   const selectedSimulationIndex = useSimulationStore(
     (state) => state.selectedSimulationIndex,
@@ -64,6 +65,62 @@ const SimulationPlayerCardRoot = React.forwardRef<
   const selectedSimulation: Simulation = watch(
     `${selectedTab}[${selectedSimulationIndex}]`,
   );
+
+
+
+ const simulations = watch(selectedTab);
+
+  const handleRemoveSimulation = (index: number) => {
+    const updatedSimulations = [...simulations];
+    updatedSimulations.splice(index, 1);
+    setValue(selectedTab, updatedSimulations);
+    // If the removed simulation is the currently selected one, reset the selection
+    if (index === selectedSimulationIndex) {
+      setSelectedSimulationIndex(-1);
+    }
+
+  };
+
+  // duplicate simulation
+  const handleDuplicateSimulation = (index: number) => {
+    const simulationToDuplicate = simulations[index];
+    const newSimulation = { ...simulationToDuplicate };
+    const updatedSimulations = [...simulations, newSimulation];
+    setValue(selectedTab, updatedSimulations);
+  };
+
+
+  // move up simulation
+  const handleMoveUpSimulation = (index: number) => {
+    if (index === 0) return;
+    const updatedSimulations = [...simulations];
+    [updatedSimulations[index - 1], updatedSimulations[index]] = [
+      updatedSimulations[index],
+      updatedSimulations[index - 1],
+    ];
+    setValue(selectedTab, updatedSimulations);
+    if (index === selectedSimulationIndex) {
+      setSelectedSimulationIndex(index - 1);
+    } else if (index - 1 === selectedSimulationIndex) {
+      setSelectedSimulationIndex(index);
+    }
+  };
+
+  // move down simulation
+  const handleMoveDownSimulation = (index: number) => {
+    if (index === simulations.length - 1) return;
+    const updatedSimulations = [...simulations];
+    [updatedSimulations[index + 1], updatedSimulations[index]] = [
+      updatedSimulations[index],
+      updatedSimulations[index + 1],
+    ];
+    setValue(selectedTab, updatedSimulations);
+    if (index === selectedSimulationIndex) {
+      setSelectedSimulationIndex(index + 1);
+    } else if (index + 1 === selectedSimulationIndex) {
+      setSelectedSimulationIndex(index);
+    }
+  };
 
   //function to return the text based on the screen format
   const getSimulationCardText = () => {
@@ -91,7 +148,7 @@ const SimulationPlayerCardRoot = React.forwardRef<
     >
       <div
         className={SubframeUtils.twClassNames(
-          "flex w-full flex-col items-start rounded-md border border-solid border-neutral-border bg-neutral-50",
+          "flex  flex-col items-start rounded-md border border-solid border-neutral-border bg-neutral-50",
           { "border border-solid border-brand-400": isSelected },
         )}
       >
@@ -109,7 +166,7 @@ const SimulationPlayerCardRoot = React.forwardRef<
                 size="medium"
                 icon={<FeatherAirplay />}
               />
-              <span className="grow shrink-0 basis-0 text-body-bold font-body-bold text-default-font">
+              <span className="grow shrink-0 truncate line-clamp-1 basis-0 text-body-bold font-body-bold text-default-font">
                 {getSimulationCardText()}
               </span>
               <div className="flex items-center gap-1">
@@ -133,10 +190,11 @@ const SimulationPlayerCardRoot = React.forwardRef<
           }
           defaultOpen={true}
         >
-          <div className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-4 px-4 pb-4">
-            <RadioCardGroup className="h-auto w-full flex-none">
+          <div className="flex w-auto  flex-col items-start gap-4 px-4 pb-4">
+            <RadioCardGroup className="h-auto  flex-none">
               <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2">
-                <div className="flex h-24 w-full flex-none flex-col items-start gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-2 py-2" />
+                  <DisplayEditor listIndex={listIndex}/>
+                
                 <div className="flex w-full items-start gap-1">
                   <Button
                     className="h-9 grow shrink-0 basis-0"
@@ -156,6 +214,7 @@ const SimulationPlayerCardRoot = React.forwardRef<
                     icon={<FeatherCopy />}
                     iconRight={null}
                     loading={false}
+                    onClick={() => handleDuplicateSimulation(listIndex)}
                   >
                     Duplicate
                   </Button>
@@ -167,6 +226,7 @@ const SimulationPlayerCardRoot = React.forwardRef<
                     icon={<FeatherMoveUp />}
                     iconRight={null}
                     loading={false}
+                    onClick={() => handleMoveUpSimulation(listIndex)}
                   >
                     Move Up
                   </Button>
@@ -178,6 +238,7 @@ const SimulationPlayerCardRoot = React.forwardRef<
                     icon={<FeatherMoveDown />}
                     iconRight={null}
                     loading={false}
+                    onClick={() => handleMoveDownSimulation(listIndex)}
                   >
                     Move Down
                   </Button>
@@ -189,6 +250,7 @@ const SimulationPlayerCardRoot = React.forwardRef<
                     icon={<FeatherTrash />}
                     iconRight={null}
                     loading={false}
+                    onClick={() => handleRemoveSimulation(listIndex)}
                   >
                     Delete
                   </Button>
