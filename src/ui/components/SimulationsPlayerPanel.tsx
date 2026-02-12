@@ -78,6 +78,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
 
   const [selectedLanguage, setSelectedLanguage] = React.useState<string>("en");
   const [selectedStop, setSelectedStop] = React.useState<Stop | null>(null);
+  const [selectedUpDown, setSelectedUpDown] = React.useState<"up" | "down">("up");
 
 
 
@@ -143,7 +144,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
       stopStates.forEach(async (stopType) => {
         const text = `${stopType} stop is ${selectedStop.name.toLocaleLowerCase()}`;
         const genText = selectedLanguage === "en" ? text : await translateText(text, selectedLanguage+'-IN');
-         append(getDefaultStopSingleSimulation(genText, "stop", stopType, selectedStop, selectedLanguage, "up"));
+         append(getDefaultStopSingleSimulation(genText, "stop", stopType, selectedStop, selectedLanguage, selectedUpDown));
       })
     }
     
@@ -184,7 +185,9 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
       <TabsPanel />
       <div className="flex w-full overflow-scroll no-scrollbar grow shrink-0 basis-0 flex-col items-start gap-4 bg-default-background px-4 py-4">
         <div className="flex w-full items-center justify-end gap-1">
-          {selectedTab === 'stops' && <> <Select
+          {selectedTab === 'stops' && <> 
+          
+          <Select
             value={selectedLanguage}
             onValueChange={(value) => setSelectedLanguage(value)}
           >
@@ -192,8 +195,15 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
               <Select.Item key={lang.code} value={lang.code}>{lang.label}</Select.Item>
             ))}
           </Select>
+          <Select
+            value={selectedUpDown}
+            onValueChange={(value: "up" | "down") => setSelectedUpDown(value)}
+          >
+            <Select.Item value="up">Up Route Lat Lngs</Select.Item>
+            <Select.Item value="down">Down Route Lat Lngs</Select.Item>
+          </Select>
             {stops && stops.stops.length > 0 &&
-              <Select className="truncate text-xs" placeholder="Up Latitude and Longitude"
+              <Select className="truncate text-xs" placeholder="Select Stop"
                 onValueChange={(value) => {
                   const stop = stops.stops.find(s => s.id === value);
                   setSelectedStop(stop || null);
