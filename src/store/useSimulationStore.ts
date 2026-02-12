@@ -8,6 +8,7 @@ type SimulationStore = {
   setSelectedSimulation: (value: Screen | null) => void;
   selectedSimulationIndex: number;
   setSelectedSimulationIndex: (value: number) => void;
+  
 };
 
 const useSimulationStore = create<SimulationStore>((set) => ({

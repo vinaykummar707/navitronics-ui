@@ -16,6 +16,7 @@ import { RouteSettingsPanel } from "./RouteSettingsPanel";
 import { SimulationSettingsPanel } from "./SimulationSettingsPanel";
 import { SimulationsPlayerPanel } from "./SimulationsPlayerPanel";
 import { TextSettingsPanel } from "./TextSettingsPanel";
+import useToggleStore from "@/store/useToggleStore";
 
 interface RouteCreationLayoutRootProps
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -29,6 +30,8 @@ const RouteCreationLayoutRoot = React.forwardRef<
   { className, ...otherProps }: RouteCreationLayoutRootProps,
   ref
 ) {
+
+  const {isSimulationSettingsPanelOpen,isTextSettingsPanelOpen,isRouteSettingsPanelOpen} = useToggleStore();
   return (
     <div
       className={SubframeUtils.twClassNames(
@@ -40,10 +43,10 @@ const RouteCreationLayoutRoot = React.forwardRef<
     >
       <RouteCreationHeader />
       <div className="flex w-full grow shrink-0 basis-0 items-start overflow-hidden">
-        <RouteSettingsPanel className="h-auto w-64 flex-none self-stretch" />
+        {isRouteSettingsPanelOpen && <RouteSettingsPanel className="h-auto w-64 flex-none self-stretch" />}
         <SimulationsPlayerPanel />
-        <SimulationSettingsPanel  className="h-auto w-64 flex-none self-stretch" />
-        <TextSettingsPanel   className="h-auto w-64 flex-none self-stretch"/>
+        {isSimulationSettingsPanelOpen && <SimulationSettingsPanel  className="h-auto w-64 flex-none self-stretch" />}
+        {isTextSettingsPanelOpen && <TextSettingsPanel   className="h-auto w-64 flex-none self-stretch"/>}
       </div>
     </div>
   );

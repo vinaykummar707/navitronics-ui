@@ -24,7 +24,7 @@ interface SimulationTypeControlRootProps extends React.ComponentProps<typeof Con
 const simulationOptions = [
   { type: "route", icon: FeatherRoute, label: "Route Simulation" },
   { type: "slogan", icon: FeatherSpeech, label: "Slogan Simulation" },
-  { type: "announcement", icon: FeatherHand, label: "Announcement" },
+  // { type: "stop", icon: FeatherHand, label: "Stop Simulation" },
   { type: "special message", icon: FeatherMic2, label: "Special Message" }
 ];
 

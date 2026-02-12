@@ -1,3 +1,5 @@
+import { stopStates } from "@/constants/defaultRouteValues";
+
 /** 
  * Scroll direction types for text on the simulation. 
  */
@@ -19,7 +21,7 @@ export type SimulationFormat = typeof SIMULATION_FORMATS[number];
 /**
  * Simulation type definitions, controls the semantics of the simulation.
  */
-export const SIMULATION_TYPES = ['route', 'special message', 'slogan', 'announcement'] as const;
+export const SIMULATION_TYPES = ['route', 'special message', 'slogan', 'stop'] as const;
 export type SimulationType = typeof SIMULATION_TYPES[number];
 
 /**
@@ -93,14 +95,18 @@ export interface Simulation {
   height: SimulationHeight;
   width: SimulationWidth;
   type: SimulationType;
+  latitude?: number;
+  longitude?: number;
+  audioFileUrl?: string | null;
+  stopType?: typeof stopStates[number];
+  stopTypeAudioFileUrl?: string | null;
 }
 
-export interface StopRouteConfig {
-  id: string;
+export interface StopRouteConfig extends Simulation {
   name: string;
   latitude: number;
   longitude: number;
-  audioFileUrl: string | null;
+  down_longitude: number;
 }
 
 /**
@@ -119,8 +125,9 @@ export interface DisplayConfigPostRequest {
   side: Simulation[];
   rear: Simulation[];
   internal: Simulation[];
-  stops?: StopRouteConfig[];
+  stops?: Simulation[];
   version: string;
   depot_id: string;
   organization_id: string;
+  return: boolean;
 }

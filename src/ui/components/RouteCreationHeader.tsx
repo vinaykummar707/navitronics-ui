@@ -6,7 +6,7 @@
  */
 
 import React from "react";
-import { FeatherChevronLeft } from "@subframe/core";
+import { FeatherChevronLeft, FeatherEyeOff } from "@subframe/core";
 import { FeatherCloud } from "@subframe/core";
 import { FeatherDownload } from "@subframe/core";
 import { FeatherEye } from "@subframe/core";
@@ -14,6 +14,7 @@ import * as SubframeUtils from "../utils";
 import { Button } from "./Button";
 import { SubmitHandler, useFormContext } from "react-hook-form";
 import { DisplayConfigPostRequest } from "@/types/routeConfigV2";
+import useToggleStore from "@/store/useToggleStore";
 
 interface RouteCreationHeaderRootProps
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -28,11 +29,13 @@ const RouteCreationHeaderRoot = React.forwardRef<
   ref
 ) {
 
- const { handleSubmit } = useFormContext<DisplayConfigPostRequest>();
+  const { toggleSimulationSettingsPanel, toggleTextSettingsPanel, isSimulationSettingsPanelOpen, isTextSettingsPanelOpen, toggleRouteSettingsPanel, isRouteSettingsPanelOpen } = useToggleStore();
 
-    const onSubmit: SubmitHandler<DisplayConfigPostRequest> = (data) => {
-      console.log("Form Data Submitted:", data);
-    };
+  const { handleSubmit } = useFormContext<DisplayConfigPostRequest>();
+
+  const onSubmit: SubmitHandler<DisplayConfigPostRequest> = (data) => {
+    console.log("Form Data Submitted:", data);
+  };
 
   return (
     <div
@@ -53,13 +56,17 @@ const RouteCreationHeaderRoot = React.forwardRef<
           Route Creation
         </span>
       </div>
-      <div className="flex w-64 flex-none items-center justify-end gap-2">
-        <Button variant="neutral-secondary" icon={<FeatherEye />}>
-          View JSON
+      <div className="flex w-64 flex-none items-center justify-end gap-1">
+        <Button variant="neutral-secondary" icon={isRouteSettingsPanelOpen ? <FeatherEyeOff /> : <FeatherEye />} onClick={toggleRouteSettingsPanel}>
+          Route Settings
         </Button>
-        <Button variant="neutral-secondary" icon={<FeatherDownload />}>
-          Download JSON
+        <Button variant="neutral-secondary" icon={isSimulationSettingsPanelOpen ? <FeatherEyeOff /> : <FeatherEye />} onClick={toggleSimulationSettingsPanel}>
+          Simulation Settings
         </Button>
+        <Button variant="neutral-secondary" icon={isTextSettingsPanelOpen ? <FeatherEyeOff /> : <FeatherEye />} onClick={toggleTextSettingsPanel}>
+          Text Settings
+        </Button>
+
         <Button type="submit" onClick={handleSubmit(onSubmit)} variant="brand-secondary-2" icon={<FeatherCloud />}>
           Save Route
         </Button>

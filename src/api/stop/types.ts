@@ -20,7 +20,7 @@ export interface Stop {
   deleted: boolean;
   created_at: string;
   active: boolean;
-  stop_audios: StopAudio[];
+  stop_audios: StopAudio;
 }
 
 // ---------- QUERIES/MUTATIONS ----------

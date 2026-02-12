@@ -33,6 +33,8 @@ import useTabsStore from "@/store/useTabsStore";
 import useSimulationStore from "@/store/useSimulationStore";
 import { get } from "node:http";
 import DisplayEditor from "@/components/DisplayEditor";
+import { supabase } from "@/supabaseClient";
+import { useParams } from "react-router-dom";
 
 interface SimulationPlayerCardRootProps extends React.HTMLAttributes<HTMLDivElement> {
   isSelected?: boolean;
@@ -53,7 +55,7 @@ const SimulationPlayerCardRoot = React.forwardRef<
   }: SimulationPlayerCardRootProps,
   ref,
 ) {
-  const { watch, getValues, control,setValue } = useFormContext<DisplayConfigPostRequest>();
+  const { watch, getValues, control, setValue } = useFormContext<DisplayConfigPostRequest>();
   const selectedTab = useTabsStore((state) => state.selectedTab);
   const selectedSimulationIndex = useSimulationStore(
     (state) => state.selectedSimulationIndex,
@@ -61,25 +63,38 @@ const SimulationPlayerCardRoot = React.forwardRef<
   const setSelectedSimulationIndex = useSimulationStore(
     (state) => state.setSelectedSimulationIndex,
   );
-  const {setSelectedSimulation} = useSimulationStore();
+  const { setSelectedSimulation } = useSimulationStore();
   const selectedSimulation: Simulation = watch(
     `${selectedTab}[${selectedSimulationIndex}]`,
   );
 
+  const { areaId, depotId } = useParams<{ areaId: string; depotId: string }>();
 
+  const simulations = watch(selectedTab);
+  const audioFileUrl = watch(`${selectedTab}[${selectedSimulationIndex}].audioFileUrl`);
 
- const simulations = watch(selectedTab);
-
-  const handleRemoveSimulation = (index: number) => {
-    const updatedSimulations = [...simulations];
-    updatedSimulations.splice(index, 1);
-    setValue(selectedTab, updatedSimulations);
-    // If the removed simulation is the currently selected one, reset the selection
-    if (index === selectedSimulationIndex) {
-      setSelectedSimulationIndex(-1);
+const handleRemoveSimulation = async (index: number) => {
+  const updatedSimulations = [...simulations];
+  updatedSimulations.splice(index, 1);
+  setValue(selectedTab, updatedSimulations);
+  // If the removed simulation is the currently selected one, reset the selection
+  if (index === selectedSimulationIndex) {
+    setSelectedSimulationIndex(-1);
+  }
+  console.log(audioFileUrl);
+  if (audioFileUrl) {
+    // Extract the file path relative to the 'audios' bucket
+    const pathMatch = audioFileUrl.match(/\/audios\/(.+)$/);
+    const filePath = pathMatch ? pathMatch[1] : null;
+    console.log("Deleting file from Supabase Storage at path:", filePath);
+    if (filePath) {
+      const { error } = await supabase.storage.from("audios").remove([filePath]);
+      if (error) {
+        console.error("Error deleting file from Supabase Storage:", error);
+      }
     }
-
-  };
+  }
+};
 
   // duplicate simulation
   const handleDuplicateSimulation = (index: number) => {
@@ -127,11 +142,11 @@ const SimulationPlayerCardRoot = React.forwardRef<
     const { format } = getValues(`${selectedTab}[${listIndex}]`) as Simulation;
     switch (format) {
       case "single":
-        return getValues(`${selectedTab}[${listIndex}].texts.text.text`) ;
+        return getValues(`${selectedTab}[${listIndex}].texts.text.text`);
       case "two":
-        return getValues(`${selectedTab}[${listIndex}].texts.text.text`) ;
+        return getValues(`${selectedTab}[${listIndex}].texts.text.text`);
       case "three":
-        return getValues(`${selectedTab}[${listIndex}].texts.upperHalfText.text`) ;
+        return getValues(`${selectedTab}[${listIndex}].texts.upperHalfText.text`);
       default:
         return "Route Simulation";
     }
@@ -148,8 +163,8 @@ const SimulationPlayerCardRoot = React.forwardRef<
     >
       <div
         className={SubframeUtils.twClassNames(
-          "flex  flex-col items-start rounded-md border border-solid border-neutral-border bg-neutral-50",
-          { "border border-solid border-brand-400": isSelected },
+          "flex w-full flex-col items-start rounded-md border border-solid border-neutral-border bg-neutral-50",
+          { "border border-solid border-brand-800": isSelected },
         )}
       >
         <Accordion
@@ -166,7 +181,7 @@ const SimulationPlayerCardRoot = React.forwardRef<
                 size="medium"
                 icon={<FeatherAirplay />}
               />
-              <span className="grow shrink-0 truncate line-clamp-1 basis-0 text-body-bold font-body-bold text-default-font">
+              <span className="grow shrink-0  truncate line-clamp-1 basis-0 text-body-bold font-body-bold text-default-font">
                 {getSimulationCardText()}
               </span>
               <div className="flex items-center gap-1">
@@ -190,11 +205,11 @@ const SimulationPlayerCardRoot = React.forwardRef<
           }
           defaultOpen={true}
         >
-          <div className="flex w-auto  flex-col items-start gap-4 px-4 pb-4">
-            <RadioCardGroup className="h-auto  flex-none">
+          <div className="flex w-full  flex-col items-start gap-4 px-4 pb-4">
+            <RadioCardGroup className="h-auto w-full flex-none">
               <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2">
-                  <DisplayEditor listIndex={listIndex}/>
-                
+                <DisplayEditor listIndex={listIndex} />
+
                 <div className="flex w-full items-start gap-1">
                   <Button
                     className="h-9 grow shrink-0 basis-0"

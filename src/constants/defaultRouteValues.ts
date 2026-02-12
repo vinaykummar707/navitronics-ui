@@ -1,3 +1,4 @@
+import { Stop } from "@/api/stop/types";
 import {
   SimulationFormat,
   SimulationType,
@@ -12,17 +13,18 @@ import {
   DisplayConfigPostRequest,
   DEFAULT_SIMULATION_HEIGHTS,
   DEFAULT_SIMULATION_WIDTHS,
+  SimulationType,
 } from "@/types/routeConfigV2";
 
 // ---- Fundamental defaults ----
 export const DEFAULT_SCROLL_TYPE: ScrollType = "Fixed";
 export const DEFAULT_POSITION: Position = "Center";
-export const DEFAULT_FONT_WEIGHT: FontWeight = "Regular";
-export const DEFAULT_SCROLL_SPEED = 4;
-export const DEFAULT_FONT_HEIGHT = 12;
+export const DEFAULT_FONT_WEIGHT: FontWeight = "Bold";
+export const DEFAULT_SCROLL_SPEED = 9;
+export const DEFAULT_FONT_HEIGHT = 14;
 export const DEFAULT_FONT_WIDTH = 12;
-export const DEFAULT_SIMULATION_HEIGHT = DEFAULT_SIMULATION_HEIGHTS[1];
-export const DEFAULT_SIMULATION_WIDTH = DEFAULT_SIMULATION_WIDTHS[0];
+export const DEFAULT_SIMULATION_HEIGHT = DEFAULT_SIMULATION_HEIGHTS[0];
+export const DEFAULT_SIMULATION_WIDTH = DEFAULT_SIMULATION_WIDTHS[3];
 export const DEFAULT_SIMULATION_TYPE: SimulationType = "route";
 
 // ---- Default TextConfig generators ----
@@ -43,10 +45,12 @@ export function getDefaultTextConfig(
 }
 
 
+export const stopStates = ["current", "next", "coming"] as const;
+
 
 
 // ---- Default texts per format ----
-export const defaultSingleSimulationTexts: SingleSimulationTexts = { 
+export const defaultSingleSimulationTexts: SingleSimulationTexts = {
   text: getDefaultTextConfig("Main Text"),
 };
 
@@ -62,7 +66,7 @@ export const defaultThreeSimulationTexts: ThreeSimulationTexts = {
 };
 
 // ---- Default Simulations per format ----
-export function getDefaultSingleSimulation(text?: string): Simulation {
+export function getDefaultSingleSimulation(text?: string, type: SimulationType = DEFAULT_SIMULATION_TYPE): Simulation {
   return {
     format: "single",
     texts: {
@@ -70,11 +74,30 @@ export function getDefaultSingleSimulation(text?: string): Simulation {
     },
     height: DEFAULT_SIMULATION_HEIGHT,
     width: DEFAULT_SIMULATION_WIDTH,
-    type: DEFAULT_SIMULATION_TYPE,
+    type,
   };
 }
 
-export function getDefaultTwoSimulation(sideText?: string, text?: string): Simulation {
+
+// ---- Default Simulations per format ----
+export function getDefaultStopSingleSimulation(text?: string, type: SimulationType = DEFAULT_SIMULATION_TYPE, stopType?: typeof stopStates[number], stop?: Stop, language?: string, direction?: string): Simulation {
+  return {
+    format: "single",
+    texts: {
+      text: getDefaultTextConfig(text),
+    },
+    height: DEFAULT_SIMULATION_HEIGHT,
+    width: DEFAULT_SIMULATION_WIDTH,
+    type,
+    audioFileUrl: stop.stop_audios.url,
+    stopType,
+    latitude: direction === "up" ? stop.up_latitude : stop.down_latitude,
+    longitude: direction === "up" ? stop.up_longitude : stop.down_longitude,
+    stopTypeAudioFileUrl: AVAILABLE_LANGUAGES.find(lang => lang.code === language)?.current || null,
+  };
+}
+
+export function getDefaultTwoSimulation(sideText?: string, text?: string, type: SimulationType = DEFAULT_SIMULATION_TYPE): Simulation {
   return {
     format: "two",
     texts: {
@@ -83,11 +106,11 @@ export function getDefaultTwoSimulation(sideText?: string, text?: string): Simul
     },
     height: DEFAULT_SIMULATION_HEIGHT,
     width: DEFAULT_SIMULATION_WIDTH,
-    type: DEFAULT_SIMULATION_TYPE,
+    type,
   };
 }
 
-export function getDefaultThreeSimulation(sideText?: string, upperHalfText?: string, lowerHalfText?: string): Simulation {
+export function getDefaultThreeSimulation(sideText?: string, upperHalfText?: string, lowerHalfText?: string, type: SimulationType = DEFAULT_SIMULATION_TYPE): Simulation {
   return {
     format: "three",
     texts: {
@@ -97,7 +120,7 @@ export function getDefaultThreeSimulation(sideText?: string, upperHalfText?: str
     },
     height: DEFAULT_SIMULATION_HEIGHT,
     width: DEFAULT_SIMULATION_WIDTH,
-    type: DEFAULT_SIMULATION_TYPE,
+    type,
   };
 }
 
@@ -135,36 +158,43 @@ export const defaultDisplayConfigPostRequest: DisplayConfigPostRequest = {
   version: "2.0",
   depot_id: "",
   organization_id: "",
+  return: false,
 };
 
 export const AVAILABLE_LANGUAGES = [
-  { code: "en", label: "English" },
-  { code: "hi", label: "Hindi" },
-  { code: "as", label: "Assamese" },
-  { code: "bn", label: "Bengali" },
-  { code: "gu", label: "Gujarati" },
-  { code: "kn", label: "Kannada" },
-  { code: "ml", label: "Malayalam" },
-  { code: "mr", label: "Marathi" },
-  { code: "or", label: "Odia" },
-  { code: "pa", label: "Punjabi" },
-  { code: "ta", label: "Tamil" },
-  { code: "te", label: "Telugu" },
-  { code: "ur", label: "Urdu" },
-  { code: "ks", label: "Kashmiri" },
-  { code: "kok", label: "Konkani" },
-  { code: "mai", label: "Maithili" },
-  { code: "mn", label: "Manipuri" },
-  { code: "ne", label: "Nepali" },
-  { code: "sa", label: "Sanskrit" },
-  { code: "sd", label: "Sindhi" },
-  { code: "si", label: "Sinhala" },
-  { code: "bho", label: "Bhojpuri" },
-  { code: "doi", label: "Dogri" },
-  { code: "gom", label: "Goan Konkani" },
-  { code: "sat", label: "Santali" },
-  { code: "mni", label: "Meitei (Manipuri)" },
-  { code: "brx", label: "Bodo" },
-  { code: "raj", label: "Rajasthani" },
-  { code: "chy", label: "Chhattisgarhi" },
+  {
+    code: "en",
+    label: "English",
+    current: "https://",
+    next: "",
+    coming: "",
+  },
+  { code: "hi", label: "Hindi", current: "https://", next: "", coming: "" },
+  { code: "as", label: "Assamese", current: "", next: "", coming: "" },
+  { code: "bn", label: "Bengali", current: "", next: "", coming: "" },
+  { code: "gu", label: "Gujarati", current: "", next: "", coming: "" },
+  { code: "kn", label: "Kannada", current: "", next: "", coming: "" },
+  { code: "ml", label: "Malayalam", current: "", next: "", coming: "" },
+  { code: "mr", label: "Marathi", current: "", next: "", coming: "" },
+  { code: "or", label: "Odia", current: "", next: "", coming: "" },
+  { code: "pa", label: "Punjabi", current: "", next: "", coming: "" },
+  { code: "ta", label: "Tamil", current: "", next: "", coming: "" },
+  { code: "te", label: "Telugu", current: "", next: "", coming: "" },
+  { code: "ur", label: "Urdu", current: "", next: "", coming: "" },
+  { code: "ks", label: "Kashmiri", current: "", next: "", coming: "" },
+  { code: "kok", label: "Konkani", current: "", next: "", coming: "" },
+  { code: "mai", label: "Maithili", current: "", next: "", coming: "" },
+  { code: "mn", label: "Manipuri", current: "", next: "", coming: "" },
+  { code: "ne", label: "Nepali", current: "", next: "", coming: "" },
+  { code: "sa", label: "Sanskrit", current: "", next: "", coming: "" },
+  { code: "sd", label: "Sindhi", current: "", next: "", coming: "" },
+  { code: "si", label: "Sinhala", current: "", next: "", coming: "" },
+  { code: "bho", label: "Bhojpuri", current: "", next: "", coming: "" },
+  { code: "doi", label: "Dogri", current: "", next: "", coming: "" },
+  { code: "gom", label: "Goan Konkani", current: "", next: "", coming: "" },
+  { code: "sat", label: "Santali", current: "", next: "", coming: "" },
+  { code: "mni", label: "Meitei (Manipuri)", current: "", next: "", coming: "" },
+  { code: "brx", label: "Bodo", current: "", next: "", coming: "" },
+  { code: "raj", label: "Rajasthani", current: "", next: "", coming: "" },
+  { code: "chy", label: "Chhattisgarhi", current: "", next: "", coming: "" },
 ];

@@ -152,6 +152,7 @@ import { IconButton } from "./IconButton";
 import AutoTextGenerator from "@/components/AutoTextGenerator";
 import { Select } from "./Select";
 import { AVAILABLE_LANGUAGES } from "@/constants/defaultRouteValues";
+import { getBitmapHeight } from "@/utils/measurements";
 
 interface TextPropertiesControlsRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -233,7 +234,7 @@ const TextPropertiesControlsRoot = React.forwardRef<HTMLDivElement, TextProperti
         />
         <div className="flex h-9 grow shrink-0 basis-0 flex-col items-center justify-center gap-2 rounded-md border border-solid border-neutral-border bg-default-background">
           <span className="text-caption font-caption text-subtext-color">
-            {getValues(`${pathBase}.fontHeight`)} Rows
+            {getValues(`${pathBase}.fontHeight`)} (Bitmap-{getBitmapHeight(getValues(`${pathBase}.bitmap`))})
           </span>
         </div>
         <IconButton

@@ -16,7 +16,7 @@ const RouteCreatePage: React.FC = () => {
   const { areaId, depotId } = useParams<RouteParams>();
 
   // Logging the parameters to the console
-
+  console.log("Route Parameters:", { areaId, depotId });
 
   const methods = useForm<DisplayConfigPostRequest>({
     defaultValues: defaultDisplayConfigPostRequest,
@@ -24,7 +24,11 @@ const RouteCreatePage: React.FC = () => {
 
   
 
+const watch = methods.watch();
 
+useEffect(() => {
+  console.log("Form Values Changed:", watch);
+}, [watch]);
 
 
 
