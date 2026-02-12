@@ -231,7 +231,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
                   }}
                 />
                 <Checkbox
-                  label="coming"
+                  label="Arriving"
                   checked={selectedStopTypes.includes("coming")}
                   onCheckedChange={(checked: boolean) => {
                     if (checked) {
