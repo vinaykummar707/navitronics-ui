@@ -21,7 +21,7 @@ export const GET_STOPS = `
       down_latitude
       down_longitude
       active
-      stop_audios(where: { deleted: { _eq: false } }) {
+      stop_audios {
         id
         file_name
         url

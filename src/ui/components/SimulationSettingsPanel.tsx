@@ -57,7 +57,9 @@ const SimulationSettingsPanelRoot = React.forwardRef<
   const [finalAudio, setFinalAudio] = React.useState<HTMLAudioElement | null>(null);
   const [generatingAudio, setGeneratingAudio] = React.useState(false);
   const [isLooping, setIsLooping] = React.useState(false);
-
+  const audiopath = methods.watch(`${selectedTab}[${selectedSimulationIndex}].audioFileUrl`);
+  const stopTypeAudioFileUrl = methods.watch(`${selectedTab}[${selectedSimulationIndex}].stopTypeAudioFileUrl`);
+  const currentSimulation = simulations[selectedSimulationIndex];
 
   // get depot id from params
   const { areaId, depotId } = useParams<{ areaId: string; depotId: string }>();
@@ -106,13 +108,25 @@ const SimulationSettingsPanelRoot = React.forwardRef<
 
   };
 
+  // function to play audioFileUrl and stopAudioFileUrl one after other with gap
   const handleLoop = () => {
-    if (finalAudio) {
-      finalAudio.loop = true;
-      finalAudio.play();
-      setIsLooping(true);
+    if (!audiopath || !stopTypeAudioFileUrl) return;
+    setIsLooping(true);
+    audioElementRef.current.setAttribute("src", stopTypeAudioFileUrl);
+    audioElementRef.current!.play();
+    audioElementRef.current!.onended = () => {
+      audioElementRef.current.setAttribute("src", audiopath);
+      audioElementRef.current!.play();
+      audioElementRef.current!.onended = () => { 
+        audioElementRef.current!.pause(); 
+        audioElementRef.current.setAttribute("src", ''); 
+        setIsLooping(false); }
     }
+
   }
+
+
+
 
   const stopLoopingAudio = () => {
     if (finalAudio) {
@@ -149,11 +163,12 @@ const SimulationSettingsPanelRoot = React.forwardRef<
     }
   };
 
-  const audiopath = methods.watch(`${selectedTab}[${selectedSimulationIndex}].audioFileUrl`);
-  const currentSimulation = simulations[selectedSimulationIndex];
+
   // useEffect(() => {
-   
+
   // }, [currentSimulation]);
+
+  const audioElementRef = React.useRef<HTMLAudioElement | null>(null);
 
   return (
     <div
@@ -182,36 +197,25 @@ const SimulationSettingsPanelRoot = React.forwardRef<
             title="Audio"
             controls={
               <div className="w-full items-center justify-center flex flex-col gap-2">
-                {(audioFile || audiopath) && (
+                {(audiopath && stopTypeAudioFileUrl) && (
                   <>
                     {audiopath &&
-                    <>
-                     <audio controls src={ audiopath  } className="w-full" />
-                     <Button variant={isLooping ? "neutral-secondary" : "brand-secondary"} size="medium" className="w-full" onClick={isLooping ? stopLoopingAudio : handleLoop} disabled={generatingAudio}>
-                      {isLooping ? "Stop Loop" : "Play in Loop"}
-                    </Button>
-                    </>
-                     }
+                      <>
+                        <audio ref={audioElementRef} controls className="w-full hidden" />
+                        <Button variant={isLooping ? "neutral-secondary" : "brand-secondary"} size="medium" className="w-full" onClick={handleLoop} disabled={generatingAudio}>
+                          {isLooping ? "Stop Playing" : "Play Audio"}
+                        </Button>
+                      </>
+                    }
 
 
-                    
 
-                    <Button variant="neutral-primary" size="medium" className="w-full" onClick={uploadAudioAndSetUrl} disabled={generatingAudio}>
-                      Upload To Server
-                    </Button>
 
-                    <Button variant="destructive-secondary" size="medium" className="w-full" onClick={() => setAudioFile(null)} disabled={generatingAudio}>
-                      Discard
-                    </Button>
-                    <Button variant="brand-primary" size="medium" className="w-full" onClick={generateAndPlayAudio} disabled={generatingAudio}>
-                      {generatingAudio ? "Generating..." : "Re-generate Audio"}
-                    </Button>
+
                   </>
 
                 )}
-                {currentSimulation && !currentSimulation.audioFileUrl && <Button variant="brand-primary" size="medium" className="w-full" onClick={generateAndPlayAudio} disabled={generatingAudio}>
-                  {generatingAudio ? "Generating..." : "Generate Audio"}
-                </Button>}
+
               </div>
             }
             icon={

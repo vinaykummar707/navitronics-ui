@@ -93,7 +93,7 @@ export function getDefaultStopSingleSimulation(text?: string, type: SimulationTy
     stopType,
     latitude: direction === "up" ? stop.up_latitude : stop.down_latitude,
     longitude: direction === "up" ? stop.up_longitude : stop.down_longitude,
-    stopTypeAudioFileUrl: AVAILABLE_LANGUAGES.find(lang => lang.code === language)?.current || null,
+    stopTypeAudioFileUrl: AVAILABLE_LANGUAGES.find(lang => lang.code === language)?.[stopType] || null,
   };
 }
 
@@ -165,9 +165,9 @@ export const AVAILABLE_LANGUAGES = [
   {
     code: "en",
     label: "English",
-    current: "https://",
-    next: "",
-    coming: "",
+    current: "http://31.97.228.29:8000/storage/v1/object/public/audios/static/en/current_stop_en.mp3",
+    next: "http://31.97.228.29:8000/storage/v1/object/public/audios/static/en/next_stop_en.mp3",
+    coming: "http://31.97.228.29:8000/storage/v1/object/public/audios/static/en/arriving_stop_en.mp3",
   },
   { code: "hi", label: "Hindi", current: "https://", next: "", coming: "" },
   { code: "as", label: "Assamese", current: "", next: "", coming: "" },
