@@ -142,9 +142,9 @@ export default function DepotsPage() {
           </RBAC>
         </div>
       </div>
-      <div className="w-full flex-col items-start gap-2 grid grid-cols-3">
-        {depots?.depots &&
-          depots.depots.map((depot) => (
+      {depots?.depots ? (
+        <div className="w-full flex-col items-start gap-2 grid grid-cols-3">
+          {depots.depots.map((depot) => (
             <DepotCard
               key={depot.id}
               icon={<FeatherBusFront />}
@@ -166,9 +166,8 @@ export default function DepotsPage() {
               }
             />
           ))}
-      </div>
-
-      { depots && depots.depots.length === 0 && (
+        </div>
+      ) : (
         <div className="w-full h-full flex items-center justify-center bg-background">
           <div className="flex h-full w-full flex-col items-center justify-center gap-1">
             <h2 className="text-heading-2 font-heading-2 text-default-font">
@@ -177,7 +176,6 @@ export default function DepotsPage() {
             <p className="text-body font-body text-subtext-color">
               You do not have any depots added yet. Start by adding a new depot.
             </p>
-           
           </div>
         </div>
       )}

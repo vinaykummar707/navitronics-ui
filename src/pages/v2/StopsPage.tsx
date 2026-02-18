@@ -199,21 +199,29 @@ function StopsPage() {
   }
 
   // function to handle delete audio file and then stop audio record
-  async function deleteAudioFileAndStopAudioRecord(fileUrl: string, stopId: string, stop_audio_id?: string) {
+  async function deleteAudioFileAndStopAudioRecord(
+    fileUrl: string,
+    stopId: string,
+    stop_audio_id?: string,
+  ) {
     await deleteAudioFile(fileUrl, stopId);
     if (stop_audio_id) {
       await deleteStopAudio(stop_audio_id);
     }
   }
 
-    // function to handle delete audio file and then stop audio record and then delete the stop itself
-    async function deleteAudioFileAndStopAudioRecordAndStop(fileUrl: string, stopId: string, stop_audio_id?: string) {
-      await deleteAudioFile(fileUrl, stopId);
-      if (stop_audio_id) {
-        await deleteStopAudio(stop_audio_id);
-        await deleteStop(stopId);
-      }
+  // function to handle delete audio file and then stop audio record and then delete the stop itself
+  async function deleteAudioFileAndStopAudioRecordAndStop(
+    fileUrl: string,
+    stopId: string,
+    stop_audio_id?: string,
+  ) {
+    await deleteAudioFile(fileUrl, stopId);
+    if (stop_audio_id) {
+      await deleteStopAudio(stop_audio_id);
+      await deleteStop(stopId);
     }
+  }
 
   const genAudio = async (text: string, stopId: string) => {
     try {
@@ -311,9 +319,9 @@ function StopsPage() {
         </div>
       </div>
 
-      <div className="w-full flex-col items-start gap-2 grid grid-cols-2">
-        {stops &&
-          stops.map((stop) => (
+      {stops && stops.length > 0 ? (
+        <div className="w-full flex-col items-start gap-2 grid grid-cols-2">
+          {stops.map((stop) => (
             <StopDetailsCard
               icon={<FeatherPin />}
               title={stop.name}
@@ -415,16 +423,27 @@ function StopsPage() {
               }
             />
           ))}
-      </div>
+        </div>
+      ) : (
+        <div className="w-full h-full flex items-center justify-center bg-background">
+          <div className="flex h-full w-full flex-col items-center justify-center gap-1">
+            <h2 className="text-heading-2 font-heading-2 text-default-font">
+              No Stops Found
+            </h2>
+            <p className="text-body font-body text-subtext-color">
+              You do not have any stops added yet. Start by adding a new stop.
+            </p>
+          </div>
+        </div>
+      )}
 
-      <Drawer open={open} onOpenChange={setOpen}>
+      <Drawer open={open}>
         <Drawer.Content>
           <CreateStopForm
             depotId={selectedDepot}
             initialData={editData}
             onSuccess={() => {
               setOpen(false);
-              fetchStops();
             }}
             onCancel={() => setOpen(false)}
           />

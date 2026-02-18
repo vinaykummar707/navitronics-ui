@@ -9,6 +9,7 @@ import * as SubframeUtils from "../utils";
 import { useCreateStop, useUpdateStop } from '@/api/stop/hooks';
 import { useOrganizationStore } from '@/store/useOrganizationStore';
 
+// @subframe/sync-disable
 
 
 interface CreateStopFormProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -67,8 +68,9 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<HTMLD
         <TextField
           className="h-auto w-full flex-none"
           label="Stop Name"
-          error={errors.name?.message}
-          helpText="Enter the name of your stop"
+          error={errors?.name}
+          helpText={errors.name ? "Stop name is required" : "Name of the stop"}
+          
           icon={<FeatherMapPin />}
         >
           <TextField.Input {...register('name',{required:true})} placeholder="Gachibowli" />
@@ -114,7 +116,7 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<HTMLD
         <Button className="h-9 w-full flex-none" icon={<FeatherCheck />} type="submit">
           {loading ? 'Submitting...' : 'Submit'}
         </Button>
-        <Button className="h-9 w-full flex-none" variant="neutral-secondary">
+        <Button onClick={() => props.onCancel?.()} className="h-9 w-full flex-none" variant="neutral-secondary">
           Cancel
         </Button>
       </div>
