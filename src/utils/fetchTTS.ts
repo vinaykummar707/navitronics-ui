@@ -100,3 +100,49 @@ export async function uploadAudio(file: File, audio:any,category:string, stopInf
 
     return { fileUrl, size };
 }
+
+// Update uploadAudio to return more data and handle DB insertion
+export async function uploadAudioEnchanced(file: File, stopId: string, lang: string): Promise<{ fileUrl: string; size: number }> {
+    const filePath = `${stopId}/${Date.now()}-${file.name}`;
+
+    // Upload the file to Supabase
+    const { error: uploadError, data: uploadData } = await supabase.storage.from("stops").upload(filePath, file);
+    if (uploadError) throw new Error(`Error uploading file: ${uploadError.message}`);
+
+    // Get public URL for the uploaded file
+    const { data: urlData, error: urlError } = await supabase.storage.from("stops").getPublicUrl(filePath);
+    if (urlError) throw new Error(`Error getting public URL: ${urlError.message}`);
+    const fileUrl = urlData.publicUrl;
+
+    // DB Insert
+    const { error: dbError, data: dbData } = await supabase.from("stop_audios").insert([
+        {
+            stop_id: stopId,
+            url: fileUrl,
+            file_name: file.name,
+            file_size: file.size
+        },
+    ]);
+    if (dbError) throw new Error(`Error inserting audio record: ${dbError.message}`);
+
+    return { fileUrl, size: file.size };
+}
+
+// Add a new function to orchestrate the audio generation, upload, and DB record creation
+export async function handleStopAudioGeneration(stopName: string, stopId: string, lang: string = 'en-IN', speaker: string = 'arya') {
+    try {
+        // Generate TTS audio
+        const base64Audio = await fetchTTS(stopName, lang, speaker);
+        const audioBlob = base64ToBlob(base64Audio, "audio/wav");
+        const audioFile = new File([audioBlob], `tts-${Date.now()}.wav`, { type: "audio/wav" });
+
+        // Upload the audio file and get the URL
+        const { fileUrl, size } = await uploadAudioEnchanced(audioFile, stopId, lang);
+
+        console.log(`Audio generated and uploaded: ${fileUrl}`);
+        return { fileUrl, size };
+    } catch (error) {
+        console.error("Failed to generate and upload audio:", error);
+        throw error;
+    }
+}

@@ -39,10 +39,10 @@ export const CREATE_STOP = `
     $name: String!
     $organization_id: uuid!
     $depot_id: uuid!
-    $up_latitude: float8!
-    $up_longitude: float8!
-    $down_latitude: float8!
-    $down_longitude: float8!
+    $up_latitude: String!
+    $up_longitude: String!
+    $down_latitude: String!
+    $down_longitude: String!
   ) {
     insert_stops_one(object: {
       name: $name
@@ -81,10 +81,10 @@ export const UPDATE_STOP = `
   mutation UpdateStop(
     $id: uuid!
     $name: String
-    $up_latitude: float8
-    $up_longitude: float8
-    $down_latitude: float8
-    $down_longitude: float8
+    $up_latitude: String
+    $up_longitude: String
+    $down_latitude: String
+    $down_longitude: String
   ) {
     update_stops_by_pk(
       pk_columns: { id: $id }
