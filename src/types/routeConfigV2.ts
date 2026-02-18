@@ -120,7 +120,29 @@ export interface DisplayConfigPostRequest {
   route_number_1: string;
   route_number_2: string;
   separation: string;
-  isSplitRoute: boolean;
+  is_split_route: boolean;
+  front: Simulation[];
+  side: Simulation[];
+  rear: Simulation[];
+  internal: Simulation[];
+  stops?: Simulation[];
+  version: string;
+  depot_id: string;
+  organization_id: string;
+  return: boolean;
+}
+
+export interface DisplayConfigGetRequest {
+  id: string;
+  created_at: string;
+  route_number: string;
+  source: string;
+  destination: string;
+  via: string;
+  route_number_1: string;
+  route_number_2: string;
+  separation: string;
+  is_split_route: boolean;
   front: Simulation[];
   side: Simulation[];
   rear: Simulation[];

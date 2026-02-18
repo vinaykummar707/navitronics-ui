@@ -118,6 +118,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="routes/create/:areaId/:depotId" element={<RouteCreatePage/>} />
+          <Route path="routes/create/:areaId/:depotId/:routeId" element={<RouteCreatePage/>} />
           {/* Protected Routes */}
           <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>}>
             <Route index element={<Navigate to={getDefaultRouteForRole(user?.userRole || "")} replace />} />

@@ -149,7 +149,7 @@ export const defaultDisplayConfigPostRequest: DisplayConfigPostRequest = {
   route_number_1: "",
   route_number_2: "",
   separation: "",
-  isSplitRoute: false,
+  is_split_route: false,
   front: [],
   side: [],
   rear: [],

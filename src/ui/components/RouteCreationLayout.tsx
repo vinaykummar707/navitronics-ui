@@ -21,13 +21,14 @@ import useToggleStore from "@/store/useToggleStore";
 interface RouteCreationLayoutRootProps
   extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
+  mode?: "create" | "edit";
 }
 
 const RouteCreationLayoutRoot = React.forwardRef<
   HTMLDivElement,
   RouteCreationLayoutRootProps
 >(function RouteCreationLayoutRoot(
-  { className, ...otherProps }: RouteCreationLayoutRootProps,
+  { className, mode, ...otherProps }: RouteCreationLayoutRootProps,
   ref
 ) {
 
@@ -41,7 +42,7 @@ const RouteCreationLayoutRoot = React.forwardRef<
       ref={ref}
       {...otherProps}
     >
-      <RouteCreationHeader />
+      <RouteCreationHeader mode={mode} />
       <div className="flex w-full grow shrink-0 basis-0 items-start overflow-hidden">
         {isRouteSettingsPanelOpen && <RouteSettingsPanel className="h-auto w-64 flex-none self-stretch" />}
         <SimulationsPlayerPanel />

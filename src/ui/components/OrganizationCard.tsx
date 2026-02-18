@@ -41,7 +41,7 @@ const OrganizationCardRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "group/bb836b5d flex w-full flex-col items-start gap-4 rounded-md border border-solid border-neutral-border bg-default-background px-4 py-4",
+        "group/bb836b5d flex w-full flex-col items-start gap-4 rounded-md border border-solid border-neutral-border bg-neutral-50 px-4 py-4",
         className
       )}
       ref={ref}
@@ -53,12 +53,8 @@ const OrganizationCardRoot = React.forwardRef<
             A
           </Avatar>
         </div>
-        <Badge
-          variant={isSuspended ? "error" : undefined}
-          icon={null}
-          iconRight={null}
-        >
-          {isSuspended ? "Suspended" : "Active"}
+        <Badge icon={null} iconRight={null}>
+          Active
         </Badge>
       </div>
       <div className="flex w-full items-end justify-between">

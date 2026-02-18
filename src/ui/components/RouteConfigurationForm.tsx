@@ -70,11 +70,11 @@ const RouteConfigurationFormRoot = React.forwardRef<
         <TextField.Input placeholder="Enter separation" {...register("separation")} />
       </TextField> */}
       <Checkbox
-        checked={watch("isSplitRoute")}
-        onCheckedChange={(bool) => setValue("isSplitRoute", bool)}
+        checked={watch("is_split_route")}
+        onCheckedChange={(bool) => setValue("is_split_route", bool)}
         label="Is Split Route"
       />
-      {watch("isSplitRoute") && (
+      {watch("is_split_route") && (
         <>
           {" "}
           <TextField

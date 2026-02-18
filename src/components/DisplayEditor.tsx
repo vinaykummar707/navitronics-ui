@@ -54,7 +54,7 @@ export default function DisplayEditor({ listIndex }: DisplayEditorProps) {
 
   const basePath = `${selectedTab}[${listIndex}]`;
   const screenConfig:Simulation = watch(basePath);
-  const routeData = watch("isSplitRoute");
+  const routeData = watch("is_split_route");
 
   if (!screenConfig) return null;
 

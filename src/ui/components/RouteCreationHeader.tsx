@@ -15,27 +15,50 @@ import { Button } from "./Button";
 import { SubmitHandler, useFormContext } from "react-hook-form";
 import { DisplayConfigPostRequest } from "@/types/routeConfigV2";
 import useToggleStore from "@/store/useToggleStore";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/supabaseClient";
 
 interface RouteCreationHeaderRootProps
   extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
+  mode?: "create" | "edit";
 }
 
 const RouteCreationHeaderRoot = React.forwardRef<
   HTMLDivElement,
   RouteCreationHeaderRootProps
 >(function RouteCreationHeaderRoot(
-  { className, ...otherProps }: RouteCreationHeaderRootProps,
+  { className, mode, ...otherProps }: RouteCreationHeaderRootProps,
   ref
 ) {
+
+  const navigate = useNavigate();
 
   const { toggleSimulationSettingsPanel, toggleTextSettingsPanel, isSimulationSettingsPanelOpen, isTextSettingsPanelOpen, toggleRouteSettingsPanel, isRouteSettingsPanelOpen } = useToggleStore();
 
   const { handleSubmit } = useFormContext<DisplayConfigPostRequest>();
 
-  const onSubmit: SubmitHandler<DisplayConfigPostRequest> = (data) => {
-    console.log("Form Data Submitted:", data);
-  };
+  const onSubmit: SubmitHandler<DisplayConfigPostRequest> = async (data) => {
+  if (mode === "edit") {
+    // This branch handles the update operation
+    const { error } = await supabase.from("routes").update(data).eq("id", data.id);
+    if (error) {
+      console.error("Error updating route:", error);
+    } else {
+      console.log("Route updated successfully:", data);
+      navigate(-1); // Navigate back after successful update
+    }
+  } else {
+    // This branch handles the insert operation
+    const { error } = await supabase.from("routes").insert([data]);
+    if (error) {
+      console.error("Error saving route:", error);
+    } else {
+      console.log("Route saved successfully:", data);
+      navigate(-1); // Navigate back after successful save
+    }
+  }
+};
 
   return (
     <div
@@ -47,7 +70,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
       {...otherProps}
     >
       <div className="flex w-64 flex-none items-center justify-between">
-        <Button variant="neutral-secondary" icon={<FeatherChevronLeft />}>
+        <Button  variant="neutral-secondary" icon={<FeatherChevronLeft />} onClick={() => navigate(-1)}>
           Back
         </Button>
       </div>
@@ -68,7 +91,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
         </Button>
 
         <Button type="submit" onClick={handleSubmit(onSubmit)} variant="brand-secondary-2" icon={<FeatherCloud />}>
-          Save Route
+          {mode === "create" ? "Create Route" : "Update Route"}
         </Button>
       </div>
     </div>
