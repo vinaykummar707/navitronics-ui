@@ -153,6 +153,7 @@
 //
 // export default IMEInput;
 
+import { TextField } from "@/ui/components/TextField";
 import { useState, useRef, useEffect } from "react";
 
 const fetchTransliteration = async (word: string, langCode: string) => {
@@ -307,7 +308,7 @@ const IMEInput: React.FC<IMEInputProps> = ({ langCode, value, onChange }) => {
 
   return (
     <div className="relative w-full">
-      <input
+      {/* <input
         ref={inputRef}
         type="text"
         value={value}
@@ -316,9 +317,21 @@ const IMEInput: React.FC<IMEInputProps> = ({ langCode, value, onChange }) => {
         onClick={(e) => setCursorIndex(e.currentTarget.selectionStart || 0)}
         placeholder="Type in English..."
         className="border w-full p-2  rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-      />
+      /> */}
+      <TextField className="h-9 grow shrink-0 basis-0" label="" helpText="">
+        <TextField.Input
+          type="text"
+          value={value}         
+          onKeyDown={handleKeyDown}
+          onClick={(e) => setCursorIndex(e.currentTarget.selectionStart || 0)}
+          onChange={handleChange}
+          ref={inputRef}
+            className="h-9 w-full flex-none"
+            placeholder="Enter your text"
+          />
+        </TextField>
       {suggestions.length > 0 && langCode !== "en" && (
-        <ul className=" bg-white border w-full mt-1 shadow-md z-50  overflow-y-auto">
+        <ul className=" bg-default-background text-default-font border-neutral-border rounded-md border w-full mt-2 shadow-md z-50  overflow-y-auto">
           {suggestions.map((suggestion, index) => (
             <li
               key={index}
@@ -326,7 +339,7 @@ const IMEInput: React.FC<IMEInputProps> = ({ langCode, value, onChange }) => {
                 e.preventDefault();
                 handleSuggestionClick(suggestion);
               }}
-              className={`p-2 cursor-pointer hover:bg-gray-200 ${
+              className={`p-2   cursor-pointer  ${
                 selectedSuggestionIndex === index ? "bg-gray-700" : ""
               }`}
             >

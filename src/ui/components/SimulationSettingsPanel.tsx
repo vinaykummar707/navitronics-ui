@@ -267,7 +267,7 @@ const SimulationSettingsPanelRoot = React.forwardRef<
           /> */}
         </>}
 
-      {currentSimulation && currentSimulation.type !== 'stop' && <ControlAccordion
+     <ControlAccordion
         title="Copy Simulations"
         controls={
           <div className="w-full items-center justify-center gap-1 grid grid-cols-2">
@@ -285,7 +285,7 @@ const SimulationSettingsPanelRoot = React.forwardRef<
             square={false}
           />
         }
-      />}
+      />
       {!simulations[selectedSimulationIndex] && (
         <div className="flex h-full w-full p-6 items-center justify-center">
           <p className="text-xs text-center font-heading-3  text-subtext-color">

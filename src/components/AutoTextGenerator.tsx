@@ -135,15 +135,16 @@ type Props = {
     onSelect: (value: string) => void;
 };
 
-function generateCombinations(route: any): string[] {
+function generateCombinations(route: any, text: string): string[] {
     const combos = [
-        [route.route_number, route.source, route.destination, 'VIA:', route.via].filter(Boolean).join(" - "),
-        [route.source, route.destination, 'VIA:', route.via].filter(Boolean).join(" - "),
+        [route.route_number, route.source, route.destination, , route.via].filter(Boolean).join(" - "),
+        [route.source, route.destination, route.via].filter(Boolean).join(" - "),
         [route.source, route.destination].filter(Boolean).join(" - "),
         [route.destination, route.source].filter(Boolean).join(" - "),
         [route.source].filter(Boolean).join(""),
         [route.destination].filter(Boolean).join(""),
-        ['VIA:', route.via].filter(Boolean).join(""),
+        [route.via].filter(Boolean).join(""),
+        [text].filter(Boolean).join(""),
     ].filter(
         (str, idx, arr) =>
             !!str && str.replace(/-/g, "").trim() !== "" &&
@@ -152,12 +153,12 @@ function generateCombinations(route: any): string[] {
     return combos;
 }
 
-const AutoTextGenerator: React.FC<Props> = ({ route, targetLang, onSelect }) => {
+const AutoTextGenerator: React.FC<Props> = ({ route, targetLang, onSelect, text }) => {
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState(false);
 
-    const englishCombos = generateCombinations(route);
+    const englishCombos = generateCombinations(route, text);
 
 
     useEffect(() => {        // Reset suggestions when route or targetLang changes
@@ -209,14 +210,8 @@ const AutoTextGenerator: React.FC<Props> = ({ route, targetLang, onSelect }) => 
             
         >
             
-                {loading && <div className="px-2 py-1 text-gray-400 text-sm">Transliterating...</div>}
-                {suggestions.map((combo, idx) => (
-                    <Select.Item key={idx} value={combo}>
-                        {combo}
-                    </Select.Item>
-                ))}
-                {/* Add route_number as an option if it's not blank and not in suggestions */}
-                {(route.route_number &&
+            {loading && <div className="px-2 py-1 text-gray-400 text-sm">Transliterating...</div>}
+            {(route.route_number &&
                     typeof route.route_number === "string" &&
                     !suggestions.includes(route.route_number)
                 ) && (
@@ -224,6 +219,13 @@ const AutoTextGenerator: React.FC<Props> = ({ route, targetLang, onSelect }) => 
                             {route.route_number}
                         </Select.Item>
                     )}
+                {suggestions.map((combo, idx) => (
+                    <Select.Item key={idx} value={combo}>
+                        {combo}
+                    </Select.Item>
+                ))}
+                {/* Add route_number as an option if it's not blank and not in suggestions */}
+                
         </Select>
     );
 };

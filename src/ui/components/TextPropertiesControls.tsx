@@ -135,13 +135,21 @@
 
 // export const TextPropertiesControls = TextPropertiesControlsRoot;
 
-
 "use client";
 import React from "react";
-import { FeatherAlignCenter, FeatherAlignHCenter, FeatherAlignLeft, FeatherAlignRight, FeatherChevronsLeft, FeatherChevronsRight, FeatherMinus, FeatherPlus } from "@subframe/core";
+import {
+  FeatherAlignCenter,
+  FeatherAlignHCenter,
+  FeatherAlignLeft,
+  FeatherAlignRight,
+  FeatherChevronsLeft,
+  FeatherChevronsRight,
+  FeatherMinus,
+  FeatherPlus,
+} from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { DisplayConfigPostRequest } from "@/types/routeConfigV2";
-import { useFormContext } from "react-hook-form";
+import { Controller, useFormContext } from "react-hook-form";
 import useTabsStore from "@/store/useTabsStore";
 import useSimulationStore from "@/store/useSimulationStore";
 import { ControlItem } from "./ControlItem";
@@ -153,111 +161,204 @@ import AutoTextGenerator from "@/components/AutoTextGenerator";
 import { Select } from "./Select";
 import { AVAILABLE_LANGUAGES } from "@/constants/defaultRouteValues";
 import { getBitmapHeight } from "@/utils/measurements";
+import IMEInput from "@/components/IMEInput";
 
 interface TextPropertiesControlsRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   textProperty: string;
 }
 
-const TextPropertiesControlsRoot = React.forwardRef<HTMLDivElement, TextPropertiesControlsRootProps>(
-  ({ className, textProperty, ...otherProps }, ref) => {
-    const { register, setValue, watch, getValues } = useFormContext<DisplayConfigPostRequest>();
-    const selectedTab = useTabsStore((state) => state.selectedTab);
-    const selectedSimulationIndex = useSimulationStore((state) => state.selectedSimulationIndex);
-    const pathBase = `${selectedTab}.${selectedSimulationIndex}.texts.${textProperty}`;
+const TextPropertiesControlsRoot = React.forwardRef<
+  HTMLDivElement,
+  TextPropertiesControlsRootProps
+>(({ className, textProperty, ...otherProps }, ref) => {
+  const { register, setValue, watch, getValues, control } =
+    useFormContext<DisplayConfigPostRequest>();
+  const selectedTab = useTabsStore((state) => state.selectedTab);
+  const selectedSimulationIndex = useSimulationStore(
+    (state) => state.selectedSimulationIndex,
+  );
+  const pathBase = `${selectedTab}.${selectedSimulationIndex}.texts.${textProperty}`;
 
-    const isSelected = (field: string, value: string | number) => watch(`${pathBase}.${field}`) === value;
-    const handleSelection = (field: string, value: string | number) => setValue(`${pathBase}.${field}`, value);
-    const handleIncrement = () => {
+  const isSelected = (field: string, value: string | number) =>
+    watch(`${pathBase}.${field}`) === value;
+  const handleSelection = (field: string, value: string | number) =>
+    setValue(`${pathBase}.${field}`, value);
+  const handleIncrement = () => {
+    const currentBitmapHeight = getBitmapHeight(
+      getValues(`${pathBase}.bitmap`),
+    );
     const currentHeight = getValues(`${pathBase}.fontHeight`) as number;
-    setValue(`${pathBase}.fontHeight`, Math.min(32, currentHeight + 1));
+    // we need to increment until currentBitmapHeight is less than or equal to 32
+    if (currentBitmapHeight < 32) {
+      setValue(`${pathBase}.fontHeight`, currentHeight + 1);
+    }
   };
 
   const handleDecrement = () => {
-    const currentHeight = getValues(`${pathBase}.fontHeight`) as number;
-    setValue(`${pathBase}.fontHeight`, Math.max(1, currentHeight - 1));
-  };
-    return (
-      <div className={SubframeUtils.twClassNames("flex w-full flex-col items-start gap-4", className)} ref={ref} {...otherProps}>
-         <ControlItem label="Choose Language">
-          <Select
-            value={watch(`${pathBase}.language`)}
-            onValueChange={(value) => setValue(`${pathBase}.language`, value)}
-            className="w-full"
-          >
-           {AVAILABLE_LANGUAGES.map(lang => (
-            <Select.Item key={lang.code} value={lang.code}>{lang.label}</Select.Item>
-           ))}
-          </Select>
-        </ControlItem>
-        <ControlItem label="Text">
-          <TextField className="h-9 grow shrink-0 basis-0" label="" helpText="">
-            <TextField.Input
-              className="h-9 w-full flex-none"
-              placeholder="Enter your text"
-              {...register(`${pathBase}.text`)}
-            />
-          </TextField>
-        </ControlItem>
-
-        <ControlItem label="Auto Text Generator">
-          <AutoTextGenerator route={watch()} targetLang={watch(`${pathBase}.language`)} onSelect={(value) => setValue(`${pathBase}.text`, value)} />
-        </ControlItem>
-        <ControlItem label="Text Scroll Direction">
-          <div className="flex grow shrink-0 basis-0 items-center justify-center gap-1">
-            <SelectionCard icon={<FeatherChevronsLeft />} text="Label" onClick={() => handleSelection("scrollType", "Right To Left")} selected={isSelected("scrollType", "Right To Left")} />
-            <SelectionCard icon={<FeatherAlignHCenter />} text="Label" onClick={() => handleSelection("scrollType", "Fixed")} selected={isSelected("scrollType", "Fixed")} />
-            <SelectionCard icon={<FeatherChevronsRight />} text="Label" onClick={() => handleSelection("scrollType", "Left To Right")} selected={isSelected("scrollType", "Left To Right")} />
-          </div>
-        </ControlItem>
-        <ControlItem label="Text Position">
-          <div className="flex grow shrink-0 basis-0 items-center justify-center gap-1">
-            <SelectionCard icon={<FeatherAlignLeft />} text="Label" onClick={() => handleSelection("position", "Left")} selected={isSelected("position", "Left")} />
-            <SelectionCard icon={<FeatherAlignCenter />} text="Label" onClick={() => handleSelection("position", "Center")} selected={isSelected("position", "Center")} />
-            <SelectionCard icon={<FeatherAlignRight />} text="Label" onClick={() => handleSelection("position", "Right")} selected={isSelected("position", "Right")} />
-          </div>
-        </ControlItem>
-        <ControlItem label="Text Weight">
-          <div className="flex grow shrink-0 basis-0 items-center justify-center gap-1">
-            <SelectionCardWithText title="Regular" onClick={() => handleSelection("fontWeight", "Regular")} selected={isSelected("fontWeight", "Regular")} />
-            <SelectionCardWithText title="Bold" onClick={() => handleSelection("fontWeight", "Bold")} selected={isSelected("fontWeight", "Bold")} />
-          </div>
-        </ControlItem>
-         <ControlItem label="Text Height">
-      <div className="flex grow shrink-0 basis-0 items-center justify-end gap-1 self-stretch">
-        <IconButton
-          className="h-9 w-9 flex-none"
-          variant="neutral-secondary"
-          size="medium"
-          icon={<FeatherPlus />}
-          onClick={handleIncrement}
-        />
-        <div className="flex h-9 grow shrink-0 basis-0 flex-col items-center justify-center gap-2 rounded-md border border-solid border-neutral-border bg-default-background">
-          <span className="text-caption font-caption text-subtext-color">
-            {getValues(`${pathBase}.fontHeight`)} (Bitmap-{getBitmapHeight(getValues(`${pathBase}.bitmap`))})
-          </span>
-        </div>
-        <IconButton
-          className="h-9 w-9 flex-none"
-          variant="neutral-secondary"
-          size="medium"
-          icon={<FeatherMinus />}
-          onClick={handleDecrement}
-        />
-      </div>
-    </ControlItem>
-        <ControlItem label="Scroll Speed">
-          <div className="grow shrink-0 basis-0 items-center justify-center gap-1 grid grid-cols-1">
-            <SelectionCardWithText title="Very Fast" onClick={() => handleSelection("scrollSpeed",1)} selected={isSelected("scrollSpeed", 1)} />
-            <SelectionCardWithText title="Medium Fast" onClick={() => handleSelection("scrollSpeed",3)} selected={isSelected("scrollSpeed", 3)} />
-            <SelectionCardWithText title="Normal" onClick={() => handleSelection("scrollSpeed",4)} selected={isSelected("scrollSpeed", 4)} />
-            <SelectionCardWithText title="Slow" onClick={() => handleSelection("scrollSpeed",6)} selected={isSelected("scrollSpeed", 6)} />
-            <SelectionCardWithText title="Very Slow" onClick={() => handleSelection("scrollSpeed",9)} selected={isSelected("scrollSpeed", 9)} />
-          </div>
-        </ControlItem>
-      </div>
+    const currentBitmapHeight = getBitmapHeight(
+      getValues(`${pathBase}.bitmap`),
     );
-  }
-);
+    const currentHeight = getValues(`${pathBase}.fontHeight`) as number;
+    // we need to decrement until currentBitmapHeight is greater than or equal to 8
+    if (currentBitmapHeight > 6) {
+      setValue(`${pathBase}.fontHeight`, currentHeight - 1);
+    }
+  };
+  return (
+    <div
+      className={SubframeUtils.twClassNames(
+        "flex w-full flex-col items-start gap-4",
+        className,
+      )}
+      ref={ref}
+      {...otherProps}
+    >
+      <ControlItem label="Choose Language">
+        <Select
+          value={watch(`${pathBase}.language`)}
+          onValueChange={(value) => setValue(`${pathBase}.language`, value)}
+          className="w-full"
+        >
+          {AVAILABLE_LANGUAGES.map((lang) => (
+            <Select.Item key={lang.code} value={lang.code}>
+              {lang.label}
+            </Select.Item>
+          ))}
+        </Select>
+      </ControlItem>
+      <ControlItem label="Text">
+        
+        <Controller
+          key={`${pathBase}.text`}
+          name={`${pathBase}.text`}
+          control={control}
+          render={({ field }) => <IMEInput langCode={watch(`${pathBase}.language`)} {...field} />}
+        />
+      </ControlItem>
+
+      <ControlItem label="Auto Text Generator">
+        <AutoTextGenerator
+          route={watch()}
+          text={watch(`${pathBase}.text`)}
+          targetLang={watch(`${pathBase}.language`)}
+          onSelect={(value) => setValue(`${pathBase}.text`, value)}
+        />
+      </ControlItem>
+      <ControlItem label="Text Scroll Direction">
+        <div className="flex grow shrink-0 basis-0 items-center justify-center gap-1">
+          <SelectionCard
+            icon={<FeatherChevronsLeft />}
+            text="Label"
+            onClick={() => handleSelection("scrollType", "Right To Left")}
+            selected={isSelected("scrollType", "Right To Left")}
+          />
+          <SelectionCard
+            icon={<FeatherAlignHCenter />}
+            text="Label"
+            onClick={() => handleSelection("scrollType", "Fixed")}
+            selected={isSelected("scrollType", "Fixed")}
+          />
+          <SelectionCard
+            icon={<FeatherChevronsRight />}
+            text="Label"
+            onClick={() => handleSelection("scrollType", "Left To Right")}
+            selected={isSelected("scrollType", "Left To Right")}
+          />
+        </div>
+      </ControlItem>
+      <ControlItem label="Text Position">
+        <div className="flex grow shrink-0 basis-0 items-center justify-center gap-1">
+          <SelectionCard
+            icon={<FeatherAlignLeft />}
+            text="Label"
+            onClick={() => handleSelection("position", "Left")}
+            selected={isSelected("position", "Left")}
+          />
+          <SelectionCard
+            icon={<FeatherAlignCenter />}
+            text="Label"
+            onClick={() => handleSelection("position", "Center")}
+            selected={isSelected("position", "Center")}
+          />
+          <SelectionCard
+            icon={<FeatherAlignRight />}
+            text="Label"
+            onClick={() => handleSelection("position", "Right")}
+            selected={isSelected("position", "Right")}
+          />
+        </div>
+      </ControlItem>
+      <ControlItem label="Text Weight">
+        <div className="flex grow shrink-0 basis-0 items-center justify-center gap-1">
+          <SelectionCardWithText
+            title="Regular"
+            onClick={() => handleSelection("fontWeight", "Regular")}
+            selected={isSelected("fontWeight", "Regular")}
+          />
+          <SelectionCardWithText
+            title="Bold"
+            onClick={() => handleSelection("fontWeight", "Bold")}
+            selected={isSelected("fontWeight", "Bold")}
+          />
+        </div>
+      </ControlItem>
+      <ControlItem label="Text Height">
+        <div className="flex grow shrink-0 basis-0 items-center justify-end gap-1 self-stretch">
+          <IconButton
+            className="h-9 w-9 flex-none"
+            variant="neutral-secondary"
+            size="medium"
+            icon={<FeatherMinus />}
+            onClick={handleDecrement}
+          />
+          <div className="flex h-9 grow shrink-0 basis-0 flex-col items-center justify-center gap-2 rounded-md border border-solid border-neutral-border bg-default-background">
+            <span className="text-caption font-caption text-subtext-color">
+              {getValues(`${pathBase}.fontHeight`)} (Bitmap/
+              {getBitmapHeight(getValues(`${pathBase}.bitmap`))})
+            </span>
+          </div>
+
+          <IconButton
+            className="h-9 w-9 flex-none"
+            variant="neutral-secondary"
+            size="medium"
+            icon={<FeatherPlus />}
+            onClick={handleIncrement}
+          />
+        </div>
+      </ControlItem>
+      <ControlItem label="Scroll Speed">
+        <div className="grow shrink-0 basis-0 items-center justify-center gap-1 grid grid-cols-1">
+          <SelectionCardWithText
+            title="Very Fast"
+            onClick={() => handleSelection("scrollSpeed", 1)}
+            selected={isSelected("scrollSpeed", 1)}
+          />
+          <SelectionCardWithText
+            title="Medium Fast"
+            onClick={() => handleSelection("scrollSpeed", 3)}
+            selected={isSelected("scrollSpeed", 3)}
+          />
+          <SelectionCardWithText
+            title="Normal"
+            onClick={() => handleSelection("scrollSpeed", 4)}
+            selected={isSelected("scrollSpeed", 4)}
+          />
+          <SelectionCardWithText
+            title="Slow"
+            onClick={() => handleSelection("scrollSpeed", 6)}
+            selected={isSelected("scrollSpeed", 6)}
+          />
+          <SelectionCardWithText
+            title="Very Slow"
+            onClick={() => handleSelection("scrollSpeed", 9)}
+            selected={isSelected("scrollSpeed", 9)}
+          />
+        </div>
+      </ControlItem>
+    </div>
+  );
+});
 
 export const TextPropertiesControls = TextPropertiesControlsRoot;

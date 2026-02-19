@@ -20,6 +20,8 @@ const simulationFormats = [
   { type: "three", Icon: FeatherRows3, defaultFunc: getDefaultThreeSimulation, label: "Three" }
 ];
 
+// function to generate combinations of
+
 const FormatSelectionControlRoot = React.forwardRef<
   React.ElementRef<typeof ControlAccordion>,
   FormatSelectionControlRootProps
