@@ -22,10 +22,8 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={clientq}>
     <ApolloProvider client={client}>
-      <LanguageConfigProvider>
         <App />
 
-      </LanguageConfigProvider>
     </ApolloProvider>
     </QueryClientProvider>
   </StrictMode>,
