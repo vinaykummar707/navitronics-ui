@@ -8,7 +8,7 @@
  */
 // @subframe/sync-disable
 import React from "react";
-import { FeatherBusFront } from "@subframe/core";
+import { FeatherBusFront, FeatherCctv } from "@subframe/core";
 import { FeatherCpu } from "@subframe/core";
 import { FeatherGlobe2 } from "@subframe/core";
 import { FeatherHotel } from "@subframe/core";
@@ -51,7 +51,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
       {...otherProps}
     >
       <SidebarWithSections
-        className="mobile:hidden"
+        className="mobile:hidden "
         header={
           <>
             <div className="space-y-2">
@@ -60,12 +60,12 @@ const DefaultPageLayoutRoot = React.forwardRef<
                 src="https://navitronix.in/assets/navitronix.jpeg"
               />
             </div>
-            <SelectOrganizationComponent />
+            <SelectOrganizationComponent  className="shrink-0" />
           </>
         }
         footer={<LoggedUser />}
       >
-        <SidebarWithSections.NavSection label="Menu">
+        <SidebarWithSections.NavSection className="no-scrollbar" label="Menu">
           <RBAC roles={["master"]} features={[]}>
             <SidebarWithSections.NavItem selected={path.startsWith("/home/organizations")} onClick={() => navigate("/home/organizations")} icon={<FeatherHotel />} >
               Organizations
@@ -84,6 +84,11 @@ const DefaultPageLayoutRoot = React.forwardRef<
           <RBAC roles={[ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]} features={["PAS"]}>
             <SidebarWithSections.NavItem selected={path.startsWith("/home/stops")} onClick={() => navigate("/home/stops")} icon={<FeatherMapPin />}>
               Stops
+            </SidebarWithSections.NavItem>
+          </RBAC>
+          <RBAC roles={[ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]} features={["PAS"]}>
+            <SidebarWithSections.NavItem selected={path.startsWith("/home/cctv")} onClick={() => navigate("/home/cctv")} icon={<FeatherCctv />}>
+              Live Streaming
             </SidebarWithSections.NavItem>
           </RBAC>
           <RBAC roles={[ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]} features={["PIS"]}>

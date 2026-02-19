@@ -7,29 +7,41 @@ import { Button } from "@/ui/components/Button";
 import { OrganizationCard } from "@/ui/components/OrganizationCard";
 import { OrganizationList } from "@/ui/components/OrganizationList";
 import { DefaultPageLayout } from "@/ui/layouts/DefaultPageLayout";
-import { FeatherPlus } from "@subframe/core";
+import { FeatherMoreHorizontal, FeatherPlus } from "@subframe/core";
 import { useQuery } from "@tanstack/react-query";
 import { organizationService } from "@/services/organizationService";
 import { OptionsDropdown } from "@/ui/components/OptionsDropdown";
 import { Drawer } from "@/ui/components/Drawer";
-import { CreateOrganizationDrawer } from "@/ui";
+import { CreateOrganizationDrawer, IconButton } from "@/ui";
 import { useOrganizations } from "@/api/organization/hooks";
 import { Organization } from "@/api/organization/types";
 import { ButtonGroup } from "@/ui/components/ButtonGroup";
 import RBAC from "@/components/RBAC";
+import { supabase } from "@/supabaseClient";
 
 
 
 
 function OrganizationsPage() {
     // Queries
-    const { data, loading, error } = useOrganizations();
+    const { data, loading, error,refetch } = useOrganizations();
     const organizations = data ? data.organizations : [];
     const [editData, setEditData] = React.useState<Organization | null>(null);
     const [open, setOpen] = React.useState(false);
 
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p>Error: {error.message}</p>;
+   
+
+
+    // function to delete an organization by id using supabase client
+    const handleDelete = async (id: string) => {
+        const { error } = await supabase.from('organizations').delete().eq('id', id);
+        if (error) {
+            console.error("Error deleting organization:", error);
+        } else {
+            console.log("Organization deleted successfully");
+            refetch(); // Refetch organizations after deletion
+        }
+    };
 
 
     return (
@@ -46,7 +58,7 @@ function OrganizationsPage() {
                 <span className="text-caption font-caption text-subtext-color">
                     Showing {organizations.length} records
                 </span>
-                <RBAC roles={['master']}>
+                <RBAC features={[]} roles={['master']}>
                     <Button
                         className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
                         variant=""
@@ -65,7 +77,11 @@ function OrganizationsPage() {
                     key={org.id}
                     isSuspended={!org.active}
                     logo2={org.logo || undefined}
-                    actions={org.name === 'Navitronix Master' ? null : <OptionsDropdown onEdit={() => { setEditData(org); setOpen(true); }} onDelete={() => { alert(`Delete clicked for ${org.id}`) }} />}
+                    actions={org.id === '6b679098-ef69-45f0-9fb1-b457dd882060' ?
+                        <IconButton
+                            disabled
+                              icon={<FeatherMoreHorizontal />}
+                            /> : <OptionsDropdown onEdit={() => { setEditData(org); setOpen(true); }} onDelete={() => { handleDelete(org.id) }} />}
                     features={<ButtonGroup pas={org.PAS} pis={org.PIS} itms={org.ITMS} />}
 
                 />)}
@@ -74,7 +90,7 @@ function OrganizationsPage() {
 
             <Drawer open={open} onOpenChange={setOpen}>
                 <Drawer.Content>
-                    <CreateOrganizationDrawer initialData={editData} onSuccess={() => setOpen(false)} onCancel={() => setOpen(false)} />
+                    <CreateOrganizationDrawer initialData={editData} onSuccess={() => { refetch(); setOpen(false); }} onCancel={() => setOpen(false)} />
                 </Drawer.Content>
             </Drawer>
         </div>

@@ -24,6 +24,7 @@ import { CREATE_USER } from "@/api/users/queries";
 import { UserDetails } from "@/api/users/types";
 import { FeatureToggle } from "./FeatureToggle";
 import { Switch } from "./Switch";
+import useAuthStore from "@/store/authStore";
 
 interface FormFields {
   role_id: string;
@@ -50,6 +51,7 @@ const CreateUserForm2Root = React.forwardRef<
 >(function CreateUserForm2Root({ className, onUserCreated, initialData, onCancel, ...otherProps }, ref) {
   // Stores
   const { selectedOrganization } = useOrganizationStore();
+  const {userRole} = useAuthStore((state) => state.user); // Get user details
 
   // Add editMode flag
   const isEditMode = !!initialData;
@@ -58,9 +60,17 @@ const CreateUserForm2Root = React.forwardRef<
   // API hooks
   const { data: rolesData } = useRoles();
   const roles = useMemo(
-    () => rolesData?.roles?.filter((role) => role.name !== "master") || [],
-    [rolesData]
+    () => {
+      if(userRole === "master") {
+        return rolesData?.roles || [];
+      } else {
+        // For non-master users, filter out master role
+        return rolesData?.roles.filter((role) => role.name !== "master") || [];
+      }
+    },
+    [rolesData, userRole]
   );
+  
   const { data: regionData } = useRegions({
     variables: { organization_id: selectedOrganization.id || "" },
   });
@@ -172,6 +182,14 @@ const CreateUserForm2Root = React.forwardRef<
           .from('users')
           .update(updatePayload)
           .eq('user_id', initialData.user_id);
+        
+        // update user password in Supabase Auth if password provided
+        if (data.password) {
+          const { error: passwordError } = await supabase.auth.admin.updateUserById(initialData.user_id, {  
+            password: data.password,
+          });
+          if (passwordError) throw passwordError;
+        }
 
         if (updateError) throw updateError;
         reset();

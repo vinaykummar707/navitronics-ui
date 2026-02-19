@@ -308,6 +308,7 @@ function StopsPage() {
             <Button
               variant=""
               icon={<FeatherPlus />}
+              disabled={!selectedDepot}
               onClick={() => {
                 setOpen(true);
                 setEditData(null);
@@ -320,7 +321,7 @@ function StopsPage() {
       </div>
 
       {stops && stops.length > 0 ? (
-        <div className="w-full flex-col items-start gap-2 grid grid-cols-2">
+        <div className="w-full flex-col items-start gap-2 grid md:grid-cols-1 lg:grid-cols-2">
           {stops.map((stop) => (
             <StopDetailsCard
               icon={<FeatherPin />}
@@ -444,6 +445,7 @@ function StopsPage() {
             initialData={editData}
             onSuccess={() => {
               setOpen(false);
+              stopsRefetch();
             }}
             onCancel={() => setOpen(false)}
           />

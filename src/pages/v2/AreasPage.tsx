@@ -52,7 +52,7 @@ export default function AreasPage() {
                         Add Region
                     </Button>
                 </div> </>}
-            <div className="w-full flex-col items-start gap-2 grid grid-cols-3">
+            <div className="w-full flex-col items-start gap-2 grid md:grid-cols-2 lg:grid-cols-3">
                 {regions && regions.map(region => (
                     <RegionCard
                         key={region.id}

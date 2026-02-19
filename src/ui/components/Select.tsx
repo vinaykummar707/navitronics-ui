@@ -232,7 +232,7 @@ const SelectRoot = React.forwardRef<HTMLDivElement, SelectRootProps>(
           ) : null}
           <div
             className={SubframeUtils.twClassNames(
-              "flex w-full flex-col items-start rounded-md border border-solid border-neutral-border bg-default-background group-focus-within/bb88f90b:border group-focus-within/bb88f90b:border-solid group-focus-within/bb88f90b:border-brand-primary",
+              "flex w-full flex-col items-start rounded-md border border-solid border-neutral-border bg-neutral-50 group-focus-within/bb88f90b:border group-focus-within/bb88f90b:border-solid group-focus-within/bb88f90b:border-brand-primary",
               {
                 "border border-solid border-neutral-100 bg-neutral-100":
                   variant === "filled",

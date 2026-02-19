@@ -84,7 +84,7 @@ const SelectOrganizationComponentRoot = React.forwardRef<
       {...otherProps}
     >
       <Select
-        className="h-auto w-full flex-none"
+        className="h-auto w-full "
         label="Select Organization"
         placeholder="Select"
         helpText=""

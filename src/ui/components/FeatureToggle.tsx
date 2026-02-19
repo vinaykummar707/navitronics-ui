@@ -30,7 +30,7 @@ const FeatureToggleRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex w-full items-center gap-4 border border-solid border-neutral-border px-3 py-2",
+        "flex w-full items-center gap-4 border border-solid rounded-md border-neutral-border px-3 py-2",
         className
       )}
       ref={ref}
@@ -53,4 +53,4 @@ const FeatureToggleRoot = React.forwardRef<
   );
 });
 
-export const FeatureToggle = FeatureToggleRoot;
+export const  FeatureToggle = FeatureToggleRoot;

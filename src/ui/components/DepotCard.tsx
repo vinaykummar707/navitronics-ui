@@ -6,6 +6,7 @@
  */
 
 import React from "react";
+import { FeatherBusFront } from "@subframe/core";
 import { FeatherMapPin } from "@subframe/core";
 import * as SubframeCore from "@subframe/core";
 import * as SubframeUtils from "../utils";
@@ -34,7 +35,7 @@ const DepotCardRoot = React.forwardRef<HTMLDivElement, DepotCardRootProps>(
     return (
       <div
         className={SubframeUtils.twClassNames(
-          "flex items-center justify-between border border-solid border-neutral-border bg-neutral-50 px-4 py-4",
+          "flex w-full items-center justify-between rounded-md border border-solid border-neutral-border bg-neutral-50 px-4 py-4",
           className
         )}
         ref={ref}
@@ -42,9 +43,9 @@ const DepotCardRoot = React.forwardRef<HTMLDivElement, DepotCardRootProps>(
       >
         <div className="flex items-center justify-center gap-4">
           <IconWithBackground
-            variant="warning-2"
+            variant="success"
             size="large-2"
-            icon={icon}
+            icon={<FeatherBusFront />}
             square={false}
           />
           <div className="flex flex-col items-start justify-center">

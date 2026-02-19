@@ -23,6 +23,7 @@ interface OptionsDropdownRootProps
   className?: string;
   onEdit?: () => void;
   onDelete?: () => void;
+  isDisabled?: boolean;
 }
 
 const OptionsDropdownRoot = React.forwardRef<
@@ -30,7 +31,7 @@ const OptionsDropdownRoot = React.forwardRef<
   OptionsDropdownRootProps
 
 >(function OptionsDropdownRoot(
-  { className, onEdit, onDelete, ...otherProps }: OptionsDropdownRootProps,
+  { className, onEdit, onDelete, isDisabled, ...otherProps }: OptionsDropdownRootProps,
   ref
 ) {
   return (
@@ -40,6 +41,7 @@ const OptionsDropdownRoot = React.forwardRef<
           className={className}
           icon={<FeatherMoreHorizontal />}
           ref={ref}
+          disabled={isDisabled}
           {...otherProps}
         />
       </SubframeCore.DropdownMenu.Trigger>

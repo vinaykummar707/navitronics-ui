@@ -132,6 +132,7 @@ export default function DepotsPage() {
             <Button
               variant=""
               icon={<FeatherPlus />}
+              disabled={!selectedRegion}
               onClick={() => {
                 setOpen(true);
                 setEditData(null);
@@ -143,7 +144,7 @@ export default function DepotsPage() {
         </div>
       </div>
       {depots?.depots ? (
-        <div className="w-full flex-col items-start gap-2 grid grid-cols-3">
+        <div className="w-full flex-col items-start gap-2 grid md:grid-cols-2 lg:grid-cols-3">
           {depots.depots.map((depot) => (
             <DepotCard
               key={depot.id}

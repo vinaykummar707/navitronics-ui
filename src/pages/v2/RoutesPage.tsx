@@ -265,6 +265,7 @@ export default function RoutesPage() {
           >
             <Button
               icon={<FeatherPlus />}
+              disabled={!selectedDepot}
               onClick={() =>
                 navigate(
                   `/routes/create/${selectedOrganization.id}/${selectedDepot}`,

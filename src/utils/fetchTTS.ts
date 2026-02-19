@@ -129,7 +129,7 @@ export async function uploadAudioEnchanced(file: File, stopId: string, lang: str
 }
 
 // Add a new function to orchestrate the audio generation, upload, and DB record creation
-export async function handleStopAudioGeneration(stopName: string, stopId: string, lang: string = 'en-IN', speaker: string = 'arya') {
+export async function handleStopAudioGeneration(stopName: string, stopId: string, lang: string = 'en-IN', speaker: string = 'abhilash') {
     try {
         // Generate TTS audio
         const base64Audio = await fetchTTS(stopName, lang, speaker);

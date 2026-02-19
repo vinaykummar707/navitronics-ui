@@ -23,7 +23,7 @@ const OrganizationListRoot = React.forwardRef<
   return children ? (
     <div
       className={SubframeUtils.twClassNames(
-        "w-full flex-col items-start gap-4 grid grid-cols-4",
+        "w-full flex-col items-start gap-2 grid md:grid-cols-2 lg:grid-cols-3",
         className
       )}
       ref={ref}

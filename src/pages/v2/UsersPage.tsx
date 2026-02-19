@@ -27,6 +27,13 @@ export default function UsersPage() {
             if (error) {
                 throw error;
             }
+
+            // delete the user from the auth.users table as well
+            const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+            if (authError) {
+                throw authError;
+            }
+            console.log("User successfully deleted.");
             refetch();
         } catch (error) {
             console.error("Error deleting user:", error);
@@ -55,7 +62,14 @@ export default function UsersPage() {
                     Add User
                 </Button>
             </div>
-            <UsersTable users={usersData?.users || []} onDeleteUser={handleDeleteUser} onEditUser={(user) => { setEditData(user); setOpen(true); }} />
+            {usersData && usersData.users.length > 0 ? (<UsersTable users={usersData?.users || []} onDeleteUser={handleDeleteUser} onEditUser={(user) => { setEditData(user); setOpen(true); }} />): <div className="w-full h-full flex items-center justify-center bg-background">
+                                <div className="flex h-full w-full flex-col items-center justify-center gap-1">
+                                    
+                                    <h2 className="text-heading-2 font-heading-2 text-default-font">No Users Found</h2>
+                                    <p className="text-body font-body text-subtext-color">You do not have any users added yet. Start by adding a new user.</p>
+                                    
+                                </div>
+                            </div>}
             <Drawer open={open} onOpenChange={(open: boolean) => { setOpen(open); if (!open) setEditData(null); }}>
                 <Drawer.Content>
                     <CreateUserForm2 onCancel={() => setOpen(false)} initialData={editData}  onUserCreated={() => {setOpen(false); refetch(); }} />

@@ -49,7 +49,7 @@ const OrganizationCardRoot = React.forwardRef<
     >
       <div className="flex w-full items-center justify-between">
         <div className="flex items-start justify-between">
-          <Avatar variant="brand" image={logo2} square={false}>
+          <Avatar size="large" variant="brand" image={logo2} square={false}>
             A
           </Avatar>
         </div>

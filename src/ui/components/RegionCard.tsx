@@ -34,7 +34,7 @@ const RegionCardRoot = React.forwardRef<HTMLDivElement, RegionCardRootProps>(
     return (
       <div
         className={SubframeUtils.twClassNames(
-          "flex items-center justify-between border border-solid border-neutral-border bg-neutral-50 px-4 py-4",
+          "flex w-full items-center justify-between rounded-md border border-solid border-neutral-border bg-neutral-50 px-4 py-4",
           className
         )}
         ref={ref}
@@ -42,7 +42,7 @@ const RegionCardRoot = React.forwardRef<HTMLDivElement, RegionCardRootProps>(
       >
         <div className="flex items-center justify-center gap-4">
           <IconWithBackground
-            variant="warning-2"
+            variant="error"
             size="large-2"
             icon={icon}
             square={false}

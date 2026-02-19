@@ -30,6 +30,8 @@ import StopsPage from "./pages/v2/StopsPage";
 import CCTVPage from "./pages/v2/CCTVPage";
 import { features } from "node:process";
 import RouteCreatePage from "./pages/v2/CreateRoutePage";
+import UtilityPage from "./pages/v2/UtilityPage";
+import FontConfigurationPage from "./pages/v2/FontConfiguration";
 
 
 const queryClient = new QueryClient({
@@ -89,6 +91,8 @@ function App() {
     { path: "create-route", element: <DisplayConfigForm /> },
     // { path: "routes/create/:areaId/:depotId", features: ['PIS'], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER], element: <RouteCreatePage /> },
     { path: "settings", element: <Settings /> },
+    { path: "utility", element: <UtilityPage /> },
+    { path: "font-configuration", element: <FontConfigurationPage /> },
   ] as const;
 
   // write a function that return route path based on role to navigate to after login

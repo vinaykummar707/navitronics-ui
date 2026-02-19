@@ -32,7 +32,7 @@ const NavItem = React.forwardRef<HTMLDivElement, NavItemProps>(function NavItem(
     <div
       className={SubframeUtils.twClassNames(
         "group/2713e17b flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 hover:bg-neutral-50 active:bg-neutral-100",
-        { "bg-brand-primary hover:bg-brand-400 active:bg-brand-100": selected },
+        { "bg-brand-600 hover:bg-brand-500 active:bg-brand-100": selected },
         className
       )}
       ref={ref}
@@ -131,17 +131,17 @@ const SidebarWithSectionsRoot = React.forwardRef<
       {...otherProps}
     >
       {header ? (
-        <div className="flex w-full flex-col items-start gap-6 px-6 pt-6 pb-4">
+        <div className="flex w-full flex-col items-start gap-4 px-3 pt-6 pb-4">
           {header}
         </div>
       ) : null}
       {children ? (
-        <div className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-4 px-6 pb-6 overflow-auto">
+        <div className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-2 px-3 pb-6 overflow-auto">
           {children}
         </div>
       ) : null}
       {footer ? (
-        <div className="flex w-full items-center gap-4 border-t border-solid border-neutral-border px-6 py-4">
+        <div className="flex w-full items-center gap-4 border-t border-solid border-neutral-border px-3 py-4">
           {footer}
         </div>
       ) : null}
