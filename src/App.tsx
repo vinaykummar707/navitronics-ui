@@ -103,7 +103,7 @@ function App() {
       case ROLES.ORGANIZATION_ADMIN:
         return "/home/regions";
       case ROLES.REGION_ADMIN:
-        return "/home/routes";
+        return "/home/depots";
       case ROLES.DEPOT_ADMIN:
         return "/home/routes";
       case ROLES.USER:

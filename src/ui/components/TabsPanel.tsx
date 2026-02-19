@@ -13,6 +13,7 @@ import { FeatherRectangleHorizontal } from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { Tabs } from "./Tabs";
 import useTabsStore, { Tab } from "@/store/useTabsStore";
+import RBAC from "@/components/RBAC";
 
 interface TabsPanelRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -62,13 +63,15 @@ const TabsPanelRoot = React.forwardRef<HTMLDivElement, TabsPanelRootProps>(
           >
             Internal
           </Tabs.Item>
+          <RBAC features={['PAS']} roles={["master", "organization_admin", "region_admin", "depot_admin"]}>
           <Tabs.Item
             active={selectedTab === Tab.STOPS}
             onClick={() => setSelectedTab(Tab.STOPS)}
             icon={<FeatherMapPin />}
           >
             Stops
-          </Tabs.Item>
+            </Tabs.Item>
+          </RBAC>
         </Tabs>
       </div>
     );

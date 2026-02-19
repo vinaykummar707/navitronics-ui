@@ -197,7 +197,7 @@ export default function DepotsPage() {
               setOpen(false);
               setEditData(null);
             }}
-            organizationId={selectedOrganization.id || ""}
+            organizationId={selectedOrganization ? selectedOrganization.id : ""}
           />
         </Dialog.Content>
       </Dialog>

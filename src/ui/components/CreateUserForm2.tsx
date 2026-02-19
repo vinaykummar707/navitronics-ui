@@ -37,7 +37,6 @@ interface FormFields {
   user_id?: string; // for edit mode
 }
 
-
 interface CreateUserForm2RootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   onUserCreated?: () => void; // callback after user created
@@ -48,29 +47,28 @@ interface CreateUserForm2RootProps extends React.HTMLAttributes<HTMLDivElement> 
 const CreateUserForm2Root = React.forwardRef<
   HTMLDivElement,
   CreateUserForm2RootProps
->(function CreateUserForm2Root({ className, onUserCreated, initialData, onCancel, ...otherProps }, ref) {
+>(function CreateUserForm2Root(
+  { className, onUserCreated, initialData, onCancel, ...otherProps },
+  ref,
+) {
   // Stores
   const { selectedOrganization } = useOrganizationStore();
-  const {userRole} = useAuthStore((state) => state.user); // Get user details
+  const { userRole } = useAuthStore((state) => state.user); // Get user details
 
   // Add editMode flag
   const isEditMode = !!initialData;
 
-
   // API hooks
   const { data: rolesData } = useRoles();
-  const roles = useMemo(
-    () => {
-      if(userRole === "master") {
-        return rolesData?.roles || [];
-      } else {
-        // For non-master users, filter out master role
-        return rolesData?.roles.filter((role) => role.name !== "master") || [];
-      }
-    },
-    [rolesData, userRole]
-  );
-  
+  const roles = useMemo(() => {
+    if (userRole === "master") {
+      return rolesData?.roles || [];
+    } else {
+      // For non-master users, filter out master role
+      return rolesData?.roles.filter((role) => role.name !== "master") || [];
+    }
+  }, [rolesData, userRole]);
+
   const { data: regionData } = useRegions({
     variables: { organization_id: selectedOrganization.id || "" },
   });
@@ -83,7 +81,7 @@ const CreateUserForm2Root = React.forwardRef<
     setValue,
     watch,
     reset,
-    formState: { isSubmitting }
+    formState: { isSubmitting },
   } = useForm<FormFields>({
     defaultValues: {
       role_id: initialData?.role?.id || null,
@@ -115,11 +113,13 @@ const CreateUserForm2Root = React.forwardRef<
   });
   const depots = depotsData?.depots || [];
 
-
   // in useEffect watch to selected role if role changes reset region and depot
   React.useEffect(() => {
     // If role is changed to one that doesn't need region/depot, reset them
-    if (selectedRole?.name !== "region_admin" && selectedRole?.name !== "depot_admin") {
+    if (
+      selectedRole?.name !== "region_admin" &&
+      selectedRole?.name !== "depot_admin"
+    ) {
       setValue("region_id", null);
       setValue("depot_id", null);
     } else if (selectedRole?.name === "region_admin") {
@@ -127,8 +127,6 @@ const CreateUserForm2Root = React.forwardRef<
       setValue("depot_id", null);
     }
   }, [selectedRoleId]);
-
-
 
   // Handle form submit
   // const onSubmit = async (data: FormFields) => {
@@ -142,7 +140,6 @@ const CreateUserForm2Root = React.forwardRef<
   //     if (signUpError) throw signUpError;
   //     const userId = signUpData?.user?.id;
   //     if (!userId) throw new Error("No userId returned from Supabase");
-
 
   //     // 2. Insert user in Hasura users table
   //     const { data: insertData, error: insertError } = await supabase.from('users').insert([{
@@ -171,50 +168,43 @@ const CreateUserForm2Root = React.forwardRef<
           role_id: data.role_id,
           region_id: data.region_id,
           depot_id: data.depot_id,
-          email: data.email,
-          // password: Only update if changed
-          ...(data.password ? { password: data.password } : {}),
           organization_id: data.organization_id,
           active: data.active,
         };
         // Example for Supabase: update by user id
         const { data: updateData, error: updateError } = await supabase
-          .from('users')
+          .from("users")
           .update(updatePayload)
-          .eq('user_id', initialData.user_id);
-        
-        // update user password in Supabase Auth if password provided
-        if (data.password) {
-          const { error: passwordError } = await supabase.auth.admin.updateUserById(initialData.user_id, {  
-            password: data.password,
-          });
-          if (passwordError) throw passwordError;
-        }
-
+          .eq("user_id", initialData.user_id);
         if (updateError) throw updateError;
         reset();
         if (onUserCreated) onUserCreated();
       } else {
         // ------------- CREATE user ---------------
         // ...existing create logic...
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email: data.email,
-          password: data.password,
-        });
+        const { data: signUpData, error: signUpError } =
+          await supabase.auth.signUp({
+            email: data.email,
+            password: data.password,
+          });
         if (signUpError) throw signUpError;
         const userId = signUpData?.user?.id;
         if (!userId) throw new Error("No userId returned from Supabase");
 
         // Insert user in Hasura users table
-        const { data: insertData, error: insertError } = await supabase.from('users').insert([{
-          user_id: userId,
-          email: data.email,
-          role_id: data.role_id,
-          organization_id: selectedOrganization.id,
-          region_id: data.region_id || null,
-          depot_id: data.depot_id || null,
-          password: data.password, // Store hashed password in production!
-        }]);
+        const { data: insertData, error: insertError } = await supabase
+          .from("users")
+          .insert([
+            {
+              user_id: userId,
+              email: data.email,
+              role_id: data.role_id,
+              organization_id: selectedOrganization.id,
+              region_id: data.region_id || null,
+              depot_id: data.depot_id || null,
+              password: data.password, // Store hashed password in production!
+            },
+          ]);
         reset();
         if (onUserCreated) onUserCreated();
       }
@@ -223,7 +213,6 @@ const CreateUserForm2Root = React.forwardRef<
     }
     console.log("Form submitted with data:", data);
   };
-
 
   // Watch fields for changes in editData/selectedOrganization (like Drawer resets form)
   // React.useEffect(() => {
@@ -254,7 +243,7 @@ const CreateUserForm2Root = React.forwardRef<
     <div
       className={SubframeUtils.twClassNames(
         "flex h-full w-full flex-col items-start gap-4 bg-default-background px-6 py-6",
-        className
+        className,
       )}
       ref={ref}
       {...otherProps}
@@ -264,7 +253,8 @@ const CreateUserForm2Root = React.forwardRef<
           {isEditMode ? "Edit User" : "Create User"}
         </span>
         <span className="text-caption font-caption text-subtext-color">
-          Fill in the details below to {isEditMode ? "edit the user" : "create a new user"}
+          Fill in the details below to{" "}
+          {isEditMode ? "edit the user" : "create a new user"}
         </span>
       </div>
       <form
@@ -292,7 +282,8 @@ const CreateUserForm2Root = React.forwardRef<
           )}
         />
 
-        {(selectedRole?.name === "region_admin" || selectedRole?.name === "depot_admin") && (
+        {(selectedRole?.name === "region_admin" ||
+          selectedRole?.name === "depot_admin") && (
           <Controller
             control={control}
             name="region_id"
@@ -302,7 +293,7 @@ const CreateUserForm2Root = React.forwardRef<
                 label="Select Region"
                 placeholder="Select"
                 {...field}
-                value={field.value || null}
+                value={field.value || 'null'}
                 onValueChange={(val) => {
                   field.onChange(val);
                   setValue("depot_id", null); // Reset depot when region changes
@@ -384,13 +375,13 @@ const CreateUserForm2Root = React.forwardRef<
         <FeatureToggle
           label="Active"
           description="Toggle to activate or deactivate the user"
-          toggle={<Switch checked={watch("active")} onCheckedChange={(checked) => setValue("active", checked)} />}
+          toggle={
+            <Switch
+              checked={watch("active")}
+              onCheckedChange={(checked) => setValue("active", checked)}
+            />
+          }
         />
-
-
-
-
-
 
         <div className="flex w-full flex-col items-start gap-2">
           <Button

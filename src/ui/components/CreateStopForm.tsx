@@ -82,7 +82,7 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<HTMLD
           helpText="Upward Latitude"
           icon={<FeatherPin />}
         >
-          <TextField.Input {...register('up_latitude')} placeholder="17.3850" />
+          <TextField.Input {...register('up_latitude',{required:true})} placeholder="17.3850" />
         </TextField>
         <TextField
           className="h-auto w-full flex-none"
@@ -91,7 +91,7 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<HTMLD
           helpText="Upward Longitude"
           icon={<FeatherPin />}
         >
-          <TextField.Input {...register('up_longitude')} placeholder="78.4867" />
+          <TextField.Input {...register('up_longitude',{required:true})} placeholder="78.4867" />
         </TextField>
         <TextField
           className="h-auto w-full flex-none"
@@ -100,7 +100,7 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<HTMLD
           helpText="Return Latitude"
           icon={<FeatherPin />}
         >
-          <TextField.Input {...register('down_latitude')} placeholder="17.3850" />
+          <TextField.Input {...register('down_latitude',{required:true})} placeholder="17.3850" />
         </TextField>
         <TextField
           className="h-auto w-full flex-none"
@@ -109,7 +109,7 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<HTMLD
           helpText="Return Longitude"
           icon={<FeatherPin />}
         >
-          <TextField.Input {...register('down_longitude')} placeholder="78.4867" />
+          <TextField.Input {...register('down_longitude',{required:true})} placeholder="78.4867" />
         </TextField>
       </div>
       <div className="flex w-full flex-col items-start gap-2">

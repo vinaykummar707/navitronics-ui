@@ -155,7 +155,7 @@ const handleRemoveSimulation = async (index: number) => {
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "group/ef3c3c00 flex w-full flex-col items-start gap-4",
+        "group/ef3c3c00 flex  flex-col items-start gap-4",
         className,
       )}
       ref={ref}

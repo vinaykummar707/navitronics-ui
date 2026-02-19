@@ -261,7 +261,7 @@ export default function RoutesPage() {
 
           <RBAC
             features={[]}
-            roles={["region_admin", "organization_admin", "master"]}
+            roles={["region_admin", "organization_admin", "master", "depot_admin"]}
           >
             <Button
               icon={<FeatherPlus />}

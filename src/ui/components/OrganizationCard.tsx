@@ -53,8 +53,8 @@ const OrganizationCardRoot = React.forwardRef<
             A
           </Avatar>
         </div>
-        <Badge icon={null} iconRight={null}>
-          Active
+        <Badge variant={isSuspended ? "error" : "success"} icon={null} iconRight={null}>
+          {isSuspended ? "Suspended" : "Active"}
         </Badge>
       </div>
       <div className="flex w-full items-end justify-between">
