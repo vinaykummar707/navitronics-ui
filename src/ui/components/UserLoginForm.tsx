@@ -17,12 +17,13 @@ import { Button } from "./Button";
 import { LinkButton } from "./LinkButton";
 import { TextField } from "./TextField";
 import { supabase } from "@/supabaseClient";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useUserDetails } from "@/api/users/hooks";
 import { set } from "zod";
-import { loggedUserCrud, userCrud } from "@/types/IUser";
+import { ILoggedUser, loggedUserCrud, userCrud } from "@/types/IUser";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
+import { useOrganizationStore } from "@/store/useOrganizationStore";
 interface UserLoginFormRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
 }
@@ -32,108 +33,103 @@ const UserLoginFormRoot = React.forwardRef<
   UserLoginFormRootProps
 >(function UserLoginFormRoot(
   { className, ...otherProps }: UserLoginFormRootProps,
-  ref
+  ref,
 ) {
-
   const login = useLoggedUserStore((state) => state.login); // Zustand store
   const logout = useLoggedUserStore((state) => state.logout); // Zustand store
+  const {setSelectedOrganization} = useOrganizationStore((state) => state); // Access organization store if needed
   const navigate = useNavigate(); // React Router navigation
 
   const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState(""); // State to hold user ID after login
-
 
   const { useList } = loggedUserCrud;
 
-  const { data: loggedUserDetails, loading: usersLoading, error: usersError, refetch: usersRefetch } = useList({
+  const {
+    data: loggedUserDetails,
+    isLoading: usersLoading,
+    error: usersError,
+    refetch: usersRefetch,
+  } = useList({
     filters: { user_id: userId },
     custom(query) {
-      return query.select(` *,
+      return query
+        .select(
+          ` *,
         region:region_id (*),
         organization:organization_id (*),
         depot:depot_id (*),
         role:role_id (*)
-      `)
+      `,
+        )
+        .single();
     },
     skip: !userId, // Skip the query until we have a userId
-  }); 
-
-
+  });
 
   // Update input values and submit handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
     setUserId(""); // Clear previous user ID on new login attempt
-
     // Authenticate with Supabase (assuming email)
     const { data, error: supaError } = await supabase.auth.signInWithPassword({
       email: emailOrUsername,
       password,
     });
-    setLoading(false);
-
     if (supaError) {
-      setError(supaError.message);
       toast.error(`Login failed: ${supaError.message}`);
     } else if (data && data.user) {
-      setUserId(data.user.id); 
+      setUserId(data.user.id); // Set user ID to trigger fetching user details
     }
   };
 
+  
 
-    // Only try to refetch after login (userId set):
+ // Fetch user data and handle login
   useEffect(() => {
-    console.log("User ID for metadata fetch:", userId);
-    if (userId) {
-      usersRefetch();
-    }
-  }, [userId]);
-
-
-
-
-  // Once userMetadata is fetched, login and navigate:
-  useEffect(() => {
-    if (loggedUserDetails) {
-      login(loggedUserDetails.data[0]);
-      if (loggedUserDetails.data[0].organization?.active) {
-
-        if (loggedUserDetails.data[0].active) {
-          toast.success("Login successful!");
-          navigate("/home");
-        } else {
-          toast.error("Your account is not active. Please contact support.");
-          logout();
-          supabase.auth.signOut();
+    const processData = async () => {
+      const userData = loggedUserDetails?.data as ILoggedUser;
+      console.log("Fetched user details:", userData);
+      try {
+        if (userData) {
+          login(userData);
+          if (userData.organization?.active) {
+            if (userData.active) {
+              toast.success("Login successful!");
+              setSelectedOrganization(userData.organization);
+              navigate("/home");
+            } else {
+              throw new Error("Your account is not active. Please contact support.");
+            }
+          } else {
+            throw new Error("Your organization is not active. Please contact support.");
+          }
         }
-
-      } else {
-        toast.error("Your organization is not active. Please contact support.");
+      } catch (error) {
+        toast.error(error.message);
         logout();
         supabase.auth.signOut();
       }
+    };
 
-    }
-  }, [loggedUserDetails, login, navigate]);
+    if (userId) processData(); // Only process data if userId is set
+  }, [userId, loggedUserDetails, login, navigate, logout, setSelectedOrganization]);
 
+  // Remaining render part remains the same...
 
 
   return (
     <div
       className={SubframeUtils.twClassNames(
         "flex h-full w-full flex-wrap items-start",
-        className
+        className,
       )}
       ref={ref}
       {...otherProps}
     >
-      <div className="flex grow shrink-0 basis-0 flex-col items-center gap-12 self-stretch bg-brand-50 px-12 py-12">
-        <div className="flex w-full max-w-[288px] grow shrink-0 basis-0 flex-col items-center justify-center gap-2">
+      <div className="flex grow justify-center shrink-0 bg-[url('https://images.pexels.com/photos/9980493/pexels-photo-9980493.jpeg')] bg-no-repeat bg-cover bg-center basis-0 flex-col items-center gap-12 self-stretch bg-brand-50 px-12 py-12">
+        <div className="flex  max-w-[288px] grow shrink-0 basis-0 flex-col items-center  gap-2">
           <Avatar
             size="x-large"
             image="https://navitronix.in/assets/navitronix.jpeg"
@@ -141,12 +137,10 @@ const UserLoginFormRoot = React.forwardRef<
             HW
           </Avatar>
           <div className="flex w-full flex-col items-center gap-6">
-
             <div className="flex flex-wrap items-center justify-center gap-2">
-              <span className="text-body-bold text-heading font-body-bold text-brand-800">
+              <span className=" text-heading text-brand-800">
                 Navitronix
               </span>
-
             </div>
           </div>
         </div>
@@ -189,8 +183,13 @@ const UserLoginFormRoot = React.forwardRef<
                 autoComplete="current-password"
               />
             </TextField>
-            <Button className="h-10 w-full flex-none" size="large" onClick={handleSubmit} disabled={loading}>
-              {loading ? "Loading..." : "Continue"}
+            <Button
+              className="h-10 w-full flex-none"
+              size="large"
+              onClick={handleSubmit}
+              disabled={usersLoading}
+            >
+              {usersLoading ? "Fetching User Details..." : "Submit"}
             </Button>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-1">

@@ -20,6 +20,7 @@ import { IconButton } from "./IconButton";
 import useAuthStore from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
 import { ROLES } from "@/constants/roles";
+import useLoggedUserStore from "@/store/useLoggedUserStore";
 
 interface LoggedUserRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -30,24 +31,24 @@ const LoggedUserRoot = React.forwardRef<HTMLDivElement, LoggedUserRootProps>(
     { className, ...otherProps }: LoggedUserRootProps,
     ref
   ) {
-    const user = useAuthStore((state) => state.user); // Zustand store
-    const logout = useAuthStore((state) => state.logout); // Zustand store
+    const user = useLoggedUserStore((state) => state.user); // Zustand store
+    const logout = useLoggedUserStore((state) => state.logout); // Zustand store
     const navigate = useNavigate(); // React Router navigation4
 
     // write a function that returns assigned organization name, region name and depot name based on user object and role
     const use = (() => {
       if (!user) return "";
-      switch (user.userRole) {
+      switch (user.role.name) {
         case ROLES.MASTER:
           return "Navitronix";
         case ROLES.ORGANIZATION_ADMIN:
-          return user.organization ? user.organization.organizationName : "";
+          return user.organization ? user.organization.name : "";
         case ROLES.REGION_ADMIN:
-          return user.area ? user.area.areaName : "";
+          return user.region ? user.region.name : "";
         case ROLES.DEPOT_ADMIN:
-          return user.depot ? user.depot.depotName : "";
+          return user.depot ? user.depot.name : "";
         case ROLES.USER:
-          return user.depot ? user.depot.depotName : "";
+          return user.depot ? user.depot.name : "";
         default:
           return "";
       }
@@ -64,14 +65,14 @@ const LoggedUserRoot = React.forwardRef<HTMLDivElement, LoggedUserRootProps>(
       >
         <div className="flex grow shrink-0 basis-0 items-start gap-2">
           <Avatar image="">
-            {user?.userName ? user.userName.charAt(0).toUpperCase() : "U"}
+            {user?.email ? user.email.charAt(0).toUpperCase() : "U"}
           </Avatar>
           <div className="flex flex-col items-start">
             <span className="text-caption-bold font-caption-bold text-default-font">
-              {user?.userName || "User Name"}
+              {user?.email || "User Name"}
             </span>
             <span className="text-[11px] capitalize font-caption text-subtext-color">
-             {use}/{user?.userRole.split("_").join(" ") || "User Role"}
+             {use}/{user?.role.name.split("_").join(" ") || "User Role"}
             </span>
           </div>
         </div>

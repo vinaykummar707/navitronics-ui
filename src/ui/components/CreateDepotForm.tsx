@@ -9,6 +9,8 @@ import { Button } from "./Button";
 import { TextField } from "./TextField";
 import { useCreateDepot, useUpdateDepot } from "@/api/depot/hooks";
 import { Select } from "./Select";
+import { depotCrud, IDepot } from "@/types/IDepot";
+import { toast } from "react-toastify";
 
 
 
@@ -16,11 +18,7 @@ interface CreateDepotFormProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   organizationId: string;
   region_id: string;
-  depot?: {
-    id: string;
-    name: string;
-    region_id: string;
-  };
+  initialData?: IDepot | null;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
@@ -34,7 +32,7 @@ const CreateDepotFormRoot = React.forwardRef<
   HTMLDivElement,
   CreateDepotFormProps
 >(function CreateDepotFormRoot(
-  { className, organizationId, region_id, depot, onSuccess, onCancel, ...otherProps },
+  { className, organizationId, region_id, initialData, onSuccess, onCancel, ...otherProps },
   ref
 ) {
   const {
@@ -42,57 +40,70 @@ const CreateDepotFormRoot = React.forwardRef<
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-    setValue,
-  } = useForm<FormValues>({
+  } = useForm<IDepot>({
     defaultValues: {
-      name: depot?.name || "",
-      region_id: depot?.region_id || region_id || "",
+      name: initialData?.name || "",
+      region_id: initialData?.region_id || region_id || "",
     },
   });
 
-  const [createDepot] = useCreateDepot();
-  const [updateDepot] = useUpdateDepot();
   const [apiError, setApiError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
+      const { useCreate, useUpdate } = depotCrud;
+      const { mutate: createDepot, isPending: loading } = useCreate();
+      const { mutate: updateDepot } = useUpdate();
 
-  const isUpdate = !!depot;
+  const isUpdate = !!initialData;
 
   const onSubmit = async (values: FormValues) => {
     setApiError(null);
     setSuccessMessage(null);
-    try {
-      if (isUpdate) {
-        await updateDepot({
-          variables: {
-            id: depot!.id,
-            name: values.name,
-          },
-        });
-        setSuccessMessage("Depot updated successfully.");
-      } else {
-        await createDepot({
-          variables: {
-            name: values.name,
-            organization_id: organizationId,
-            region_id: values.region_id,
-          },
-        });
-        setSuccessMessage("Depot created successfully.");
-        reset({ name: "", region_id: "" });
-      }
-      onSuccess && onSuccess();
-    } catch (err: any) {
-      setApiError(err.message);
+    if (isUpdate && initialData) {
+      await updateDepot({
+        id: initialData.id,
+        payload: {
+          id: initialData.id,
+          name: values.name,
+          region_id: values.region_id,
+          organization_id: organizationId,
+        },
+      }, {
+        onSuccess: () => {
+          toast.success("Depot updated successfully");
+          reset();
+          if (onSuccess) onSuccess();
+        }
+        , onError: (error) => {
+          toast.error(`Failed to update depot: ${error.message}`);
+          console.error("Update Error:", error);
+        }
+      });
+    } else {
+      await createDepot({
+        name: values.name,
+        region_id: values.region_id,
+        organization_id: organizationId,
+      }, {
+        onSuccess: () => {
+          toast.success("Depot created successfully");
+          reset();
+          if (onSuccess) onSuccess();
+        },
+        onError: (error) => {
+          toast.error(`Failed to create depot: ${error.message}`);
+          console.error("Creation Error:", error);
+        }
+      });
     }
   };
 
   const handleCancel = () => {
-    reset(depot
-      ? { name: depot.name, region_id: depot.region_id }
+    reset(initialData
+      ? { name: initialData.name, region_id: initialData.region_id }
       : { name: "", region_id: "" });
     setSuccessMessage(null);
     setApiError(null);
-    onCancel && onCancel();
+    onCancel();
   };
 
   return (

@@ -13,10 +13,11 @@ import { IconButton } from "./IconButton";
 import { FeatherEdit2, FeatherMoreHorizontal } from "@subframe/core";
 import { DropdownMenu } from "./DropdownMenu";
 import { DisplayConfigGetRequest } from "@/types/routeConfigV2";
+import { IRoute } from "@/types/IRoute";
 
 interface RouteTableRootProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: React.ReactNode;
-  routes?: DisplayConfigGetRequest[]; // Replace 'any' with your actual route type
+  routes?: IRoute[]; // Replace 'any' with your actual route type
   className?: string;
   onEdit?: (routeId: string) => void; // Callback for edit action
   onDelete?: (routeId: string) => void; // Callback for delete action
@@ -55,7 +56,7 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
               </Table.HeaderRow>
             }
           >
-            {routes.map((route: DisplayConfigGetRequest) => (
+            {routes.map((route: IRoute) => (
               <Table.Row key={route.id}>
                 <Table.Cell>
                   <span className="whitespace-nowrap text-body-bold font-body-bold text-default-font">

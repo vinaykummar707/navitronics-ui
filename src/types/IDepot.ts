@@ -21,5 +21,5 @@ export type IDepotGet = Pick<IDepot, 'id'>;
 
 
 
-// Create the hooks for 'regions' table
-export const regionCrud = createCrudHooks<IDepot, IDepotCreate, IDepotUpdate>('regions')
+// Create the hooks for 'depots' table
+export const depotCrud = createCrudHooks<IDepot, IDepotCreate, IDepotUpdate>('depots')

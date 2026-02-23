@@ -1,6 +1,7 @@
 import React from 'react';
 import useAuthStore from '../store/authStore';
 import { FeatherShieldQuestion } from '@subframe/core';
+import useLoggedUserStore from '@/store/useLoggedUserStore';
 
 interface RBACProps {
   roles: string[];
@@ -10,9 +11,9 @@ interface RBACProps {
 }
 
 const RBACPage: React.FC<RBACProps> = ({ roles, features, children }) => {
-  const userRole = useAuthStore(state => state.user?.userRole);
+  const userRole = useLoggedUserStore(state => state.user?.role.name); // Assuming role has a name property
   const hasAccess = userRole ? roles.includes(userRole) : false;
-  const hasFeatureAccess = useAuthStore(state => {
+  const hasFeatureAccess = useLoggedUserStore(state => {
     const userOrganization = state.user?.organization;
     return features ? features.every(f => userOrganization[f]) : userRole === 'master' ? true : false; // If no features specified, allow access for master role
   });

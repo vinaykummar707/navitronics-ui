@@ -9,14 +9,12 @@ import * as SubframeUtils from "../utils";
 import { Button } from "./Button";
 import { TextField } from "./TextField";
 import { useCreateRegion, useUpdateRegion } from "@/api/region/hooks";
-
+import { IRegion, IRegionCreate, regionCrud } from "@/types/IRegion";
+import { toast } from "react-toastify";
 interface CreateRegionFormProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   organizationId: string;
-  region?: {
-    id: string;
-    name: string;
-  };
+  initialData?: IRegion | null;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
@@ -29,7 +27,7 @@ const CreateRegionFormRoot = React.forwardRef<
   HTMLDivElement,
   CreateRegionFormProps
 >(function CreateRegionFormRoot(
-  { className, organizationId, region, onSuccess, onCancel, ...otherProps },
+  { className, organizationId, initialData, onSuccess, onCancel, ...otherProps },
   ref
 ) {
   // Setup react-hook-form
@@ -38,51 +36,63 @@ const CreateRegionFormRoot = React.forwardRef<
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-    setError,
-  } = useForm<FormValues>({
-    defaultValues: { name: region?.name || "" },
+  } = useForm<IRegionCreate>({
+    defaultValues: { name: initialData?.name || "" },
   });
 
-  const [createRegion] = useCreateRegion();
-  const [updateRegion] = useUpdateRegion();
+
   const [apiError, setApiError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
 
-  const isUpdate = !!region;
+    const isEditMode = !!initialData;
+    const { useCreate, useUpdate } = regionCrud;
+    const { mutate: createRegion, isPending: loading } = useCreate();
+    const { mutate: updateRegion } = useUpdate();
 
-  const onSubmit = async (values: FormValues) => {
-    setApiError(null);
-    setSuccessMessage(null);
-    try {
-      if (isUpdate) {
-        await updateRegion({
-          variables: {
-            id: region!.id,
-            name: values.name,
-          },
-        });
-        setSuccessMessage("Region updated successfully.");
-      } else {
-        await createRegion({
-          variables: {
-            name: values.name,
-            organization_id: organizationId,
-          },
-        });
-        setSuccessMessage("Region created successfully.");
-        reset();
-      }
-      onSuccess && onSuccess();
-    } catch (err: any) {
-      setApiError(err.message);
-    }
+  const onSubmit = async (values: IRegionCreate) => {
+    if (isEditMode && initialData) {
+      await updateRegion({
+        id: initialData.id,
+        payload: {
+          id: initialData.id,
+          name: values.name,
+          organization_id: organizationId,
+        },
+      }, {
+        onSuccess: () => {
+          toast.success("Region updated successfully");
+          reset(); // Reset form after successful update
+          if (onSuccess) onSuccess();
+        }
+        , onError: (error) => {
+          toast.error(`Failed to update region: ${error.message}`);
+          console.error("Update Error:", error);
+        }
+      });
+    } else {
+      await createRegion({
+        name: values.name,
+        organization_id: organizationId,
+        // Add other fields if necessary
+      }, {
+        onSuccess: () => {
+          toast.success("Region created successfully");
+          reset(); // Reset form after successful creation
+          if (onSuccess) onSuccess();
+        },
+        onError: (error) => {
+          toast.error(`Failed to create region: ${error.message}`);
+          console.error("Creation Error:", error);
+        }
+      });
+     
+    };
   };
-
   const handleCancel = () => {
-    reset(region ? { name: region.name } : { name: "" });
+    reset(initialData ? { name: initialData.name } : { name: "" });
     setSuccessMessage(null);
     setApiError(null);
-    onCancel && onCancel();
+    onCancel();
   };
 
   return (
@@ -97,10 +107,10 @@ const CreateRegionFormRoot = React.forwardRef<
       <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4">
         <div className="flex w-full flex-col items-start gap-1">
           <span className="text-heading-3 font-heading-3 text-default-font">
-            {isUpdate ? "Update Region" : "Create Region"}
+            {isEditMode ? "Update Region" : "Create Region"}
           </span>
           <span className="text-caption font-caption text-subtext-color">
-            {isUpdate
+            {isEditMode
               ? "Edit the details below to update the region"
               : "Fill in the details below to create a new region"}
           </span>
@@ -129,7 +139,7 @@ const CreateRegionFormRoot = React.forwardRef<
             type="submit"
             disabled={isSubmitting}
           >
-            {isUpdate ? "Update" : "Submit"}
+            {isEditMode ? "Update" : "Submit"}
           </Button>
           <Button
             className="h-9 w-full flex-none"
@@ -142,7 +152,7 @@ const CreateRegionFormRoot = React.forwardRef<
           </Button>
           {isSubmitting && (
             <span className="text-sm text-subtext-color">
-              {isUpdate ? "Updating region..." : "Creating region..."}
+              {isEditMode ? "Updating region..." : "Creating region..."}
             </span>
           )}
           {successMessage && (

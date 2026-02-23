@@ -1,13 +1,12 @@
+import { useEffect } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
 import { useUserDetails } from "@/api/users/hooks";
 import Navbar from "@/components/Navbar";
 import NavbarTwo from "@/components/Navbar copy";
-import useAuthStore from "@/store/authStore";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { supabase } from "@/supabaseClient";
-import { loggedUserCrud } from "@/types/IUser";
+import { ILoggedUser, loggedUserCrud } from "@/types/IUser";
 import { DefaultPageLayout } from "@/ui";
-import { useEffect } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const HomePage = () => {
@@ -23,29 +22,37 @@ const HomePage = () => {
             organization:organization_id (*),
             depot:depot_id (*),
             role:role_id (*)
-          `)
+          `).single();
         },
         skip: !user?.id, // Skip the query until we have a userId
     });
 
     useEffect(() => {
-        if (userMetadata?.data[0].organization?.active === false) {
-            logout();
-            toast.error("Your organization is not active. Please contact support.");
-            localStorage.clear();
-            supabase.auth.signOut();
-            return;
-        }
+        console.log("User metadata fetched:", userMetadata);
+        if (userMetadata && !loading && !error) {
+            const userData = userMetadata.data as ILoggedUser;
+            if (userData.organization?.active === false) {
+                handleError("Your organization is not active. Please contact support.");
+                return;
+            }
 
-        if (userMetadata?.data[0].active === false) {
-            logout();
-            toast.error("Your account is not active. Please contact support.");
-            localStorage.clear();
-            supabase.auth.signOut();
-            return;
+            if (userData.active === false) {
+                handleError("Your account is not active. Please contact support.");
+                return;
+            }
+            
+            // Redirect to a specific internal page if everything is okay
+            navigate("/home/dashboard"); // Adjust this route based on your routing setup
         }
-
     }, [user, userMetadata, navigate]);
+
+    function handleError(message) {
+        logout();
+        toast.error(message);
+        localStorage.clear();
+        supabase.auth.signOut();
+        navigate("/login"); // Ensure there is a route to handle login
+    }
 
     return (
         <DefaultPageLayout>
@@ -53,4 +60,5 @@ const HomePage = () => {
         </DefaultPageLayout>
     )
 };
+
 export default HomePage;

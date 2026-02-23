@@ -25,22 +25,22 @@ import { UserDetails } from "@/api/users/types";
 import { FeatureToggle } from "./FeatureToggle";
 import { Switch } from "./Switch";
 import useAuthStore from "@/store/authStore";
-
-interface FormFields {
-  role_id: string;
-  region_id?: string;
-  depot_id?: string;
-  email: string;
-  password: string;
-  organization_id: string;
-  active?: boolean;
-  user_id?: string; // for edit mode
-}
+import {
+  ILoggedUser,
+  IUser,
+  IUserCreate,
+  loggedUserCrud,
+  userCrud,
+} from "@/types/IUser";
+import useLoggedUserStore from "@/store/useLoggedUserStore";
+import { depotCrud } from "@/types/IDepot";
+import { regionCrud } from "@/types/IRegion";
+import { toast } from "react-toastify";
 
 interface CreateUserForm2RootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   onUserCreated?: () => void; // callback after user created
-  initialData?: UserDetails | null; // <-- Add initialData for edit
+  initialData?: ILoggedUser | null; // <-- Add initialData for edit
   onCancel?: () => void; // callback for cancel
 }
 
@@ -53,7 +53,7 @@ const CreateUserForm2Root = React.forwardRef<
 ) {
   // Stores
   const { selectedOrganization } = useOrganizationStore();
-  const { userRole } = useAuthStore((state) => state.user); // Get user details
+  const user = useLoggedUserStore((state) => state.user); // Get user details
 
   // Add editMode flag
   const isEditMode = !!initialData;
@@ -61,18 +61,13 @@ const CreateUserForm2Root = React.forwardRef<
   // API hooks
   const { data: rolesData } = useRoles();
   const roles = useMemo(() => {
-    if (userRole === "master") {
+    if (user?.role?.name === "master") {
       return rolesData?.roles || [];
     } else {
       // For non-master users, filter out master role
       return rolesData?.roles.filter((role) => role.name !== "master") || [];
     }
-  }, [rolesData, userRole]);
-
-  const { data: regionData } = useRegions({
-    variables: { organization_id: selectedOrganization.id || "" },
-  });
-  const regions = regionData?.regions || [];
+  }, [rolesData, user?.role?.name]);
 
   // Setup form
   const {
@@ -82,7 +77,7 @@ const CreateUserForm2Root = React.forwardRef<
     watch,
     reset,
     formState: { isSubmitting },
-  } = useForm<FormFields>({
+  } = useForm<ILoggedUser>({
     defaultValues: {
       role_id: initialData?.role?.id || null,
       region_id: initialData?.region?.id || null,
@@ -102,16 +97,30 @@ const CreateUserForm2Root = React.forwardRef<
 
   // Get current selected role
   const selectedRole = roles.find((role) => role.id === selectedRoleId);
+  const { useList: useDepotList } = depotCrud;
+  const { useList: useRegionList } = regionCrud;
 
   // Depots hook based on organization & region
-  const { data: depotsData } = useDepots({
-    variables: {
+  const { data: depotsData } = useDepotList({
+    filters: {
       organization_id: selectedOrganization?.id || "",
-      region_id: selectedRegionId || "",
+      region_id: selectedRegionId || null,
     },
-    skip: !selectedRegionId, // only fetch when region selected
   });
-  const depots = depotsData?.depots || [];
+  const depots = depotsData?.data || [];
+
+  // Regions hook based on organization
+  const { data: regionsData } = useRegionList({
+    filters: {
+      organization_id: selectedOrganization?.id || "",
+    },
+  });
+  const regions = regionsData?.data || [];
+
+  const { useCreate, useUpdate } = loggedUserCrud;
+
+  const { mutate: createUser, isPending: creating } = useCreate();
+  const { mutate: updateUser, isPending: updating } = useUpdate();
 
   // in useEffect watch to selected role if role changes reset region and depot
   React.useEffect(() => {
@@ -126,118 +135,77 @@ const CreateUserForm2Root = React.forwardRef<
       // If role is region_admin, reset depot
       setValue("depot_id", null);
     }
-  }, [selectedRoleId]);
+  }, [selectedRole?.name, selectedRoleId, setValue]);
 
   // Handle form submit
-  // const onSubmit = async (data: FormFields) => {
-  //   try {
-  //     // 1. Create user in Supabase Auth
-  //     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-  //       email: data.email,
-  //       password: data.password,
-
-  //     });
-  //     if (signUpError) throw signUpError;
-  //     const userId = signUpData?.user?.id;
-  //     if (!userId) throw new Error("No userId returned from Supabase");
-
-  //     // 2. Insert user in Hasura users table
-  //     const { data: insertData, error: insertError } = await supabase.from('users').insert([{
-  //       user_id: userId,
-  //       email: data.email,
-  //       role_id: data.role_id,
-  //       organization_id: selectedOrganization.id,
-  //       region_id: data.region_id || null,
-  //       depot_id: data.depot_id || null,
-  //       password: data.password, // Store hashed password in production!
-  //     }]);
-  //     reset();
-  //     if (onUserCreated) onUserCreated();
-  //   } catch (err: any) {
-  //     alert("Error: " + (err?.message || String(err)));
-  //   }
-  // };
-
-  // Handle form submit
-  const onSubmit = async (data: FormFields) => {
-    try {
-      if (isEditMode && initialData?.user_id) {
-        // ------------- EDIT user ---------------
-        // Replace with your "update user" logic
-        const updatePayload = {
-          role_id: data.role_id,
-          region_id: data.region_id,
-          depot_id: data.depot_id,
-          organization_id: data.organization_id,
-          active: data.active,
-        };
-        // Example for Supabase: update by user id
-        const { data: updateData, error: updateError } = await supabase
-          .from("users")
-          .update(updatePayload)
-          .eq("user_id", initialData.user_id);
-        if (updateError) throw updateError;
-        reset();
-        if (onUserCreated) onUserCreated();
-      } else {
-        // ------------- CREATE user ---------------
-        // ...existing create logic...
-        const { data: signUpData, error: signUpError } =
-          await supabase.auth.signUp({
-            email: data.email,
-            password: data.password,
-          });
-        if (signUpError) throw signUpError;
-        const userId = signUpData?.user?.id;
-        if (!userId) throw new Error("No userId returned from Supabase");
-
-        // Insert user in Hasura users table
-        const { data: insertData, error: insertError } = await supabase
-          .from("users")
-          .insert([
-            {
-              user_id: userId,
-              email: data.email,
-              role_id: data.role_id,
-              organization_id: selectedOrganization.id,
-              region_id: data.region_id || null,
-              depot_id: data.depot_id || null,
-              password: data.password, // Store hashed password in production!
-            },
-          ]);
-        reset();
-        if (onUserCreated) onUserCreated();
+  const onSubmit = async (data: ILoggedUser) => {
+    if (isEditMode && initialData) {
+      // ------------- UPDATE user ---------------
+      await updateUser(
+        {
+          id: initialData.id,
+          payload: {
+            id: initialData.id,
+            role_id: data.role_id,
+            region_id: data.region_id || null,
+            depot_id: data.depot_id || null,
+            organization_id: data.organization
+              ? data.organization_id
+              : initialData.organization?.id || null,
+            active: data.active,
+          },
+        },
+        {
+          onSuccess: () => {
+            toast.success("User updated successfully");
+            reset(); // Reset form after successful update
+            if (onUserCreated) onUserCreated();
+          },
+          onError: (error) => {
+            toast.error(`Failed to update user: ${error.message}`);
+            console.error("Update Error:", error);
+          },
+        },
+      );
+    } else {
+      // ------------- CREATE user ---------------
+      // ...existing create logic...
+      const { data: signUpData, error: signUpError } =
+        await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+        });
+      if (signUpError) {
+        toast.error(`Signup failed: ${signUpError.message}`);
+        return;
       }
-    } catch (err: any) {
-      alert("Error: " + (err?.message || String(err)));
+      const userId = signUpData?.user?.id;
+      if (!userId) throw new Error("No userId returned from Supabase");
+      createUser(
+        {
+          email: data.email,
+          role_id: data.role_id,
+          region_id: data.region_id || null,
+          depot_id: data.depot_id || null,
+          organization_id: selectedOrganization?.id || null,
+          user_id: userId,
+          active: data.active,
+          password: data.password, // Store password if needed for your backend, but be cautious about security
+        },
+        {
+          onSuccess: () => {
+            toast.success("User created successfully");
+            reset(); // Reset form after successful creation
+            if (onUserCreated) onUserCreated();
+          },
+          onError: (error) => {
+            toast.error(`Failed to create user: ${error.message}`);
+            console.error("Creation Error:", error);
+          },
+        },
+      );
     }
-    console.log("Form submitted with data:", data);
   };
-
-  // Watch fields for changes in editData/selectedOrganization (like Drawer resets form)
-  // React.useEffect(() => {
-  //   if (isEditMode && initialData) {
-  //     reset({
-  //       role_id: initialData.role?.id || "",
-  //       region_id: initialData.region?.id || "",
-  //       depot_id: initialData.depot?.id || "",
-  //       email: initialData.email || "",
-  //       password: "", // Keep blank for edit; only update if user changes
-  //       organization_id: initialData.organization.organization_id || selectedOrganization.id || "",
-  //       user_id: initialData.user_id || "",
-  //       active: initialData.active ?? true,
-  //     });
-  //   } else {
-  //     reset({
-  //       role_id: "",
-  //       region_id: "",
-  //       depot_id: "",
-  //       email: "",
-  //       password: "",
-  //       organization_id: selectedOrganization.id || "",
-  //     });
-  //   }
-  // }, [isEditMode, initialData, reset, selectedOrganization.id]);
 
   return (
     <div
@@ -293,7 +261,7 @@ const CreateUserForm2Root = React.forwardRef<
                 label="Select Region"
                 placeholder="Select"
                 {...field}
-                value={field.value || 'null'}
+                value={field.value || "null"}
                 onValueChange={(val) => {
                   field.onChange(val);
                   setValue("depot_id", null); // Reset depot when region changes
@@ -332,45 +300,48 @@ const CreateUserForm2Root = React.forwardRef<
           />
         )}
 
-        <Controller
-          control={control}
-          name="email"
-          rules={{
-            required: "Email is required",
-            pattern: { value: /^\S+@\S+$/, message: "Invalid email" },
-          }}
-          render={({ field, fieldState }) => (
-            <TextField
-              className="h-auto w-full flex-none"
-              label="Email"
-              helpText={fieldState.error?.message || ""}
-              icon={<FeatherUser />}
-              required
-            >
-              <TextField.Input {...field} placeholder="Ex: Kevin123" />
-            </TextField>
-          )}
-        />
-
-        <Controller
-          control={control}
-          name="password"
-          rules={{
-            required: "Password required",
-            minLength: { value: 6, message: "At least 6 characters" },
-          }}
-          render={({ field, fieldState }) => (
-            <TextField
-              className="h-auto w-full flex-none"
-              label="Password"
-              helpText={fieldState.error?.message || "Minimum 6 characters"}
-              icon={<FeatherKey />}
-              required
-            >
-              <TextField.Input type="password" {...field} placeholder="" />
-            </TextField>
-          )}
-        />
+        {!isEditMode && (
+          <>
+            <Controller
+              control={control}
+              name="email"
+              rules={{
+                required: "Email is required",
+                pattern: { value: /^\S+@\S+$/, message: "Invalid email" },
+              }}
+              render={({ field, fieldState }) => (
+                <TextField
+                  className="h-auto w-full flex-none"
+                  label="Email"
+                  helpText={fieldState.error?.message || ""}
+                  icon={<FeatherUser />}
+                  required
+                >
+                  <TextField.Input {...field} placeholder="Ex: Kevin123" />
+                </TextField>
+              )}
+            />
+            <Controller
+              control={control}
+              name="password"
+              rules={{
+                required: "Password required",
+                minLength: { value: 6, message: "At least 6 characters" },
+              }}
+              render={({ field, fieldState }) => (
+                <TextField
+                  className="h-auto w-full flex-none"
+                  label="Password"
+                  helpText={fieldState.error?.message || "Minimum 6 characters"}
+                  icon={<FeatherKey />}
+                  required
+                >
+                  <TextField.Input type="password" {...field} placeholder="" />
+                </TextField>
+              )}
+            />{" "}
+          </>
+        )}
 
         <FeatureToggle
           label="Active"

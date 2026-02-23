@@ -7,7 +7,11 @@ import { Button } from "@/ui/components/Button";
 import { OrganizationCard } from "@/ui/components/OrganizationCard";
 import { OrganizationList } from "@/ui/components/OrganizationList";
 import { DefaultPageLayout } from "@/ui/layouts/DefaultPageLayout";
-import { FeatherMoreHorizontal, FeatherPlus, FeatherRefreshCw } from "@subframe/core";
+import {
+  FeatherMoreHorizontal,
+  FeatherPlus,
+  FeatherRefreshCw,
+} from "@subframe/core";
 import { useQuery } from "@tanstack/react-query";
 import { organizationService } from "@/services/organizationService";
 import { OptionsDropdown } from "@/ui/components/OptionsDropdown";
@@ -20,71 +24,94 @@ import RBAC from "@/components/RBAC";
 import { supabase } from "@/supabaseClient";
 import { IOrganization, organizationCrud } from "@/types/organization";
 import PageHeader from "@/components/PageHeader";
-
-
-
+import { toast } from "react-toastify";
 
 function OrganizationsPage() {
-    // Queries
-    const { useList, useDelete } = organizationCrud
-    const { data, isLoading, isError, refetch } = useList({
-        filters: {deleted: false},
-        orderBy: { column: 'created_at', ascending: true }
+  // Queries
+  const { useList, useDelete } = organizationCrud;
+  const { data, isLoading, isError, refetch } = useList({
+    filters: { deleted: false },
+    orderBy: { column: "created_at", ascending: true },
+  });
+  const { mutate: deleteOrganization } = useDelete();
+  const organizations = data
+    ? (data.data as IOrganization[])
+    : ([] as IOrganization[]);
+  const [editData, setEditData] = React.useState<IOrganization | null>(null);
+  const [open, setOpen] = React.useState(false);
+
+  const handleDelete = (id: string) => {
+    deleteOrganization(id, {
+      onSuccess: () => {
+        refetch();
+        toast.success("Organization deleted successfully");
+      },
+      onError: (error) => {
+        toast.error(`Failed to delete organization: ${error.message}`);
+        console.error("Delete Error:", error);
+      },
     });
-    const { mutate: deleteOrganization } = useDelete()
-    const organizations: IOrganization[] = data ? data.data : [];
-    const [editData, setEditData] = React.useState<IOrganization | null>(null);
-    const [open, setOpen] = React.useState(false);
+  };
 
-    const handleDelete = (id: string) => {
-        deleteOrganization(id, {
-            onSuccess: () => {
-                refetch();
-            }
-        })
-    };
-
-
-
-
-
-
-    return (
-        <div className="flex h-full w-full flex-col items-start gap-6 px-12 py-12">
-            <PageHeader
-                title="Organizations"
-                subtitle="Manage your organizations and their details here."
-                count={organizations.length}
-                onRefetch={refetch}
-                onAdd={() => { setEditData(null); setOpen(true); }}
-                buttonLabel="Add Organization"
+  return (
+    <div className="flex h-full w-full flex-col items-start gap-6 px-12 py-12">
+      <PageHeader
+        title="Organizations"
+        subtitle="Manage your organizations and their details here."
+        count={organizations.length}
+        onRefetch={refetch}
+        onAdd={() => {
+          setEditData(null);
+          setOpen(true);
+        }}
+        buttonLabel="Add Organization"
+        roles={["master"]}
+      />
+      <OrganizationList>
+        {organizations &&
+          organizations.map((org) => (
+            <OrganizationCard
+              title={org.name}
+              subtitle={org.email ? org.email : "No email provided"}
+              key={org.id}
+              isSuspended={!org.active}
+              logo2={org.logo || undefined}
+              actions={
+                org.id === "6b679098-ef69-45f0-9fb1-b457dd882060" ? (
+                  <IconButton disabled icon={<FeatherMoreHorizontal />} />
+                ) : (
+                  <OptionsDropdown
+                    onEdit={() => {
+                      setEditData(org);
+                      setOpen(true);
+                    }}
+                    onDelete={() => {
+                      handleDelete(org.id);
+                    }}
+                  />
+                )
+              }
+              features={
+                <ButtonGroup pas={org.PAS} pis={org.PIS} itms={org.ITMS} />
+              }
             />
-            <OrganizationList>
-                {organizations && organizations.map(org => <OrganizationCard
+          ))}
+      </OrganizationList>
 
-                    title={org.name}
-                    subtitle={org.email ? org.email : "No email provided"}
-                    key={org.id}
-                    isSuspended={!org.active}
-                    logo2={org.logo || undefined}
-                    actions={org.id === '6b679098-ef69-45f0-9fb1-b457dd882060' ?
-                        <IconButton
-                            disabled
-                            icon={<FeatherMoreHorizontal />}
-                        /> : <OptionsDropdown onEdit={() => { setEditData(org); setOpen(true); }} onDelete={() => { handleDelete(org.id) }} />}
-                    features={<ButtonGroup pas={org.PAS} pis={org.PIS} itms={org.ITMS} />}
-
-                />)}
-
-            </OrganizationList>
-
-            <Drawer open={open} onOpenChange={setOpen}>
-                <Drawer.Content>
-                    <CreateOrganizationDrawer initialData={editData} onSuccess={() => { refetch(); setOpen(false); }} onCancel={() => setOpen(false)} />
-                </Drawer.Content>
-            </Drawer>
-        </div>
-    );
+      <Drawer open={open} onOpenChange={setOpen}>
+        <Drawer.Content>
+          <CreateOrganizationDrawer
+            initialData={editData}
+            onSuccess={() => {
+              refetch();
+              setOpen(false);
+            }}
+            onCancel={() => setOpen(false)}
+          />
+        </Drawer.Content>
+      </Drawer>
+    </div>
+  );
 }
 
 export default OrganizationsPage;

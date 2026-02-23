@@ -1,10 +1,11 @@
 import { Organization } from '@/api/organization/types';
+import { IOrganization } from '@/types/organization';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface OrganizationState {
-  selectedOrganization: Organization | null;
-  setSelectedOrganization: (organization: Organization | null) => void;
+  selectedOrganization: IOrganization | null;
+  setSelectedOrganization: (organization: IOrganization | null) => void;
 }
 
 export const useOrganizationStore = create<OrganizationState>()(
@@ -15,6 +16,7 @@ export const useOrganizationStore = create<OrganizationState>()(
     }),
     {
       name: 'organization-storage',
+      partialize: (state) => ({ selectedOrganization: state.selectedOrganization }),
     }
   )
 );

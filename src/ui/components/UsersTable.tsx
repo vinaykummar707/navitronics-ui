@@ -22,11 +22,12 @@ import { IconButton } from "./IconButton";
 import { Table } from "./Table";
 import { UserDetails } from "@/api/users/types";
 import { OptionsDropdown } from "./OptionsDropdown";
+import { ILoggedUser, IUser } from "@/types/IUser";
 
 interface UsersTableRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
-  users: UserDetails[];
-  onEditUser?: (user: UserDetails) => void;
+  users: ILoggedUser[];
+  onEditUser?: (user: ILoggedUser) => void;
   onDeleteUser?: (userId: string) => void;
 }
 
@@ -59,7 +60,7 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
             </Table.HeaderRow>
           }
         >
-          {users.map((user) => <Table.Row key={user.user_id}>
+          {users.map((user: ILoggedUser) => <Table.Row key={user.user_id}>
             <Table.Cell>
               <span className="whitespace-nowrap text-body-bold font-body-bold text-default-font">
                 {user.email}
@@ -102,7 +103,7 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
             </Table.Cell>
             <Table.Cell>
               <div className="flex grow shrink-0 basis-0 items-center justify-end">
-                <OptionsDropdown onDelete={() => onDeleteUser && onDeleteUser(user.user_id)} onEdit={() => onEditUser && onEditUser(user)} />
+                <OptionsDropdown onDelete={() => onDeleteUser && onDeleteUser(user.id)} onEdit={() => onEditUser && onEditUser(user)} />
               </div>
             </Table.Cell>
           </Table.Row>)}

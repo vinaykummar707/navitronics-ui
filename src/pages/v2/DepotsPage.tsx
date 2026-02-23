@@ -5,75 +5,77 @@ import { Button } from "@/ui/components/Button";
 import { Dialog } from "@/ui/components/Dialog";
 import { OptionsDropdown } from "@/ui/components/OptionsDropdown";
 import { DepotCard } from "@/ui/components/DepotCard";
-import { FeatherBusFront, FeatherMapPin, FeatherPlus } from "@subframe/core";
-import React from "react";
+import { FeatherBusFront, FeatherMapPin, FeatherPlus, FeatherRefreshCw } from "@subframe/core";
+import React, { useEffect, useState } from "react";
 import { useRegions } from "@/api/region/hooks";
 import RBAC from "@/components/RBAC";
 import useAuthStore from "@/store/authStore";
 import { ROLES } from "@/constants/roles";
+import useLoggedUserStore from "@/store/useLoggedUserStore";
+import { useRegionStore } from "@/store/useRegionStore";
+import { IRegion, regionCrud } from "@/types/IRegion";
+import { depotCrud, IDepot } from "@/types/IDepot";
+import { toast } from "react-toastify";
 
 export default function DepotsPage() {
-  const [open, setOpen] = React.useState(false);
+   const [open, setOpen] = useState(false);
+  const [editData, setEditData] = useState<IDepot | null>(null);
+  
   const { selectedOrganization } = useOrganizationStore();
-  const {
-    data: regionData,
-    loading: regionsLoading,
-    error: regionsError,
-  } = useRegions({
-    variables: { organization_id: selectedOrganization.id || "" },
-  });
-  const regions = regionData?.regions || [];
-  const [selectedRegion, setSelectedRegion] = React.useState<string | null>(
-    null,
-  );
-  const depotsQueryEnabled = !!selectedRegion;
-  const [editData, setEditData] = React.useState<any>(null);
-  const [deleteDepot, { loading: deleting, error: deleteError }] =
-    useDeleteDepot();
+  const selectedRegion = useRegionStore((state) => state.selectedRegion);
+  const { setSelectedRegion: setSelectedRegionInStore } = useRegionStore();
 
-  // Only call useDepots if there's a selectedRegion
-  const {
-    data: depots,
-    loading,
-    error,
-    refetch,
-  } = useDepots({
-    variables: {
-      organization_id: selectedOrganization.id || "",
-      region_id: selectedRegion || "",
+  const user = useLoggedUserStore((state) => state.user);
+
+  const { useList: useRegionList } = regionCrud;
+  const { data: regionData } = useRegionList({
+    filters: {
+      organization_id: selectedOrganization?.id || "",
+      deleted: false
     },
-    skip: !depotsQueryEnabled, // Only run if enabled
+    orderBy: { column: "created_at", ascending: true }
   });
 
-  const user = useAuthStore((state) => state.user); // Get user details
+  const regions = regionData?.data as IRegion[];
+  
+  const { useList: useDepotList, useDelete } = depotCrud;
+  const { data: depotData, refetch: refetchDepots } = useDepotList({
+    filters: { region_id: selectedRegion?.id || "", deleted: false },
+    orderBy: { column: "created_at", ascending: true },
+    skip: !selectedRegion?.id
+  });
 
-  // Set default region once regions are loaded
-  React.useEffect(() => {
-    console.log("Regions loaded:", regions);
-    if (regions.length > 0) {
-      if (
-        user.userRole === ROLES.MASTER ||
-        user.userRole === ROLES.ORGANIZATION_ADMIN
-      ) {
-        setSelectedRegion(regions[0].id);
-      }
-      if (
-        user.userRole === ROLES.REGION_ADMIN ||
-        user.userRole === ROLES.DEPOT_ADMIN
-      ) {
-        const userRegion = regions.find(
-          (region) => region.id === user?.area.areaId,
-        );
-        setSelectedRegion(userRegion ? userRegion.id : regions[0].id);
-      }
+  const depots = depotData?.data as IDepot[];
+  const { mutate: deleteDepot } = useDelete();
+
+  useEffect(() => {
+    if (!regions) return;
+    if (!selectedRegion && regions.length > 0) {
+      const firstRegion = regions[0];
+      setSelectedRegionInStore(firstRegion);
     }
-  }, [regions]);
+  }, [regions, selectedRegion, setSelectedRegionInStore]);
+
+  const handleDeleteDepot = (depotId: string) => {
+    deleteDepot(depotId, {
+      onSuccess: () => {
+        refetchDepots();
+        toast.success("Depot deleted successfully");
+      },
+      onError: (error) => {
+        toast.error(`Failed to delete depot: ${error.message}`);
+        console.error("Delete Error:", error);        
+    } });
+  };
 
   const handleFormSuccess = () => {
     setOpen(false);
     setEditData(null);
-    refetch();
+    refetchDepots();
   };
+
+  
+
 
   return (
     <div className="flex h-full w-full flex-col items-start gap-4 px-12 py-12">
@@ -87,28 +89,30 @@ export default function DepotsPage() {
       </div>
       <div className="flex w-full items-center justify-between">
         <span className="text-caption font-caption text-subtext-color">
-          Showing {depots?.depots?.length ?? 0} records
+          Showing {depots?.length ?? 0} records
         </span>
-        <div className="flex gap-2">
-
+       {regions && regions.length > 0 && (
+        <div className="flex items-end gap-2">
           <RBAC features={[]} roles={["depot_admin", "region_admin"]}>
             <Select
               className="h-auto  flex-none"
               variant="outline"
-              label=""
+              label="Select Region"
               placeholder="Select Region"
-              value={selectedRegion || ""}
-              onValueChange={(val) => setSelectedRegion(val)}
+              value={selectedRegion ? selectedRegion.id : ""}
+              onValueChange={(val) =>
+                setSelectedRegionInStore(
+                  regions.find((r) => r.id === val) || null,
+                )
+              }
             >
-            {
-              regions
-                .filter((region) => user?.area.areaId === region.id)
+              {regions
+                .filter((region) => user?.region?.id === region.id)
                 .map((region) => (
                   <Select.Item key={region.id} value={region.id}>
                     {region.name}
                   </Select.Item>
-                ))
-            }
+                ))}
             </Select>
           </RBAC>
 
@@ -116,10 +120,14 @@ export default function DepotsPage() {
             <Select
               className="h-auto  flex-none"
               variant="outline"
-              label=""
+              label="Select Region"
               placeholder="Select Region"
-              value={selectedRegion || ""}
-              onValueChange={(val) => setSelectedRegion(val)}
+              value={selectedRegion ? selectedRegion.id : ""}
+              onValueChange={(val) =>
+                setSelectedRegionInStore(
+                  regions.find((r) => r.id === val) || null,
+                )
+              }
             >
               {regions.map((region) => (
                 <Select.Item key={region.id} value={region.id}>
@@ -128,6 +136,16 @@ export default function DepotsPage() {
               ))}
             </Select>
           </RBAC>
+
+             <div className="flex justify-end items-center col-span-4 gap-2">
+                      <Button
+                        variant="neutral-secondary"
+                        className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
+                        icon={<FeatherRefreshCw />}
+                        onClick={() => refetchDepots()}
+                      >
+                        Refresh
+                      </Button>
 
           <RBAC
             features={[]}
@@ -143,13 +161,13 @@ export default function DepotsPage() {
             >
               Add Depot
             </Button>
-          </RBAC>
-
-        </div>
+              </RBAC>
+              </div>
+        </div>)}
       </div>
-      {depots?.depots ? (
+      {depots && depots.length > 0 ? (
         <div className="w-full flex-col items-start gap-2 grid md:grid-cols-2 lg:grid-cols-3">
-          {depots.depots.map((depot) => (
+          {depots.map((depot) => (
             <DepotCard
               key={depot.id}
               icon={<FeatherBusFront />}
@@ -159,10 +177,7 @@ export default function DepotsPage() {
               }
               actions={
                 <OptionsDropdown
-                  onDelete={async () => {
-                    await deleteDepot({ variables: { id: depot.id } });
-                    refetch();
-                  }}
+                  onDelete={() =>handleDeleteDepot(depot.id)}
                   onEdit={() => {
                     setEditData(depot);
                     setOpen(true);
@@ -179,7 +194,7 @@ export default function DepotsPage() {
               No Depots Found
             </h2>
             <p className="text-body font-body text-subtext-color">
-              You do not have any depots added yet. Start by adding a new depot.
+              You do not have any {regions && regions.length === 0 ? "regions" : "depots"} added yet. Start by adding a new {regions && regions.length === 0 ? "region" : "depot"}.
             </p>
           </div>
         </div>
@@ -194,8 +209,8 @@ export default function DepotsPage() {
       >
         <Dialog.Content>
           <CreateDepotForm
-            region_id={selectedRegion}
-            depot={editData}
+            region_id={selectedRegion ? selectedRegion.id : ""}
+            initialData={editData}
             onSuccess={handleFormSuccess}
             onCancel={() => {
               setOpen(false);

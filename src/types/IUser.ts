@@ -26,10 +26,12 @@ export interface ILoggedUser extends IUser {
 }
 
 // Create: everything but id, deleted, created_at; all optional except name
-export type IUserCreate = Omit<Partial<IUser>, 'id' | 'deleted' | 'created_at'> & { name: string };
+export type IUserCreate = Omit<Partial<IUser>, 'id' | 'deleted' | 'created_at'> ;
+export type ILoggedUserCreate = Omit<Partial<IUser>, 'id' | 'deleted' | 'created_at'> ;
 
 // Update: id required, rest optional (except created_at)
 export type IUserUpdate = Pick<IUser, 'id'> & Partial<Omit<IUser, 'id' | 'created_at'>>;
+export type ILoggedUserUpdate = Pick<IUser, 'id'> & Partial<Omit<IUser, 'id' | 'created_at'>>;
 
 // Delete and Get: only id
 export type IUserDelete = Pick<IUser, 'id'>;
@@ -39,4 +41,4 @@ export type IUserGet = Pick<IUser, 'id'>;
 
 // Create the hooks for 'users' table
 export const userCrud = createCrudHooks<IUser, IUserCreate, IUserUpdate>('users')
-export const loggedUserCrud = createCrudHooks<ILoggedUser, IUserCreate, IUserUpdate>('users')
+export const loggedUserCrud = createCrudHooks<ILoggedUser, ILoggedUserCreate, ILoggedUserUpdate>('users')

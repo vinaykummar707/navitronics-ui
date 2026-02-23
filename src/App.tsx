@@ -32,6 +32,7 @@ import { features } from "node:process";
 import RouteCreatePage from "./pages/v2/CreateRoutePage";
 import UtilityPage from "./pages/v2/UtilityPage";
 import FontConfigurationPage from "./pages/v2/FontConfiguration";
+import useLoggedUserStore from "./store/useLoggedUserStore";
 
 
 const queryClient = new QueryClient({
@@ -113,7 +114,7 @@ function App() {
     }
   }
 
-  const user = useAuthStore((state) => state.user); // Get user details
+  const user = useLoggedUserStore((state) => state.user); // Get user details
 
 
   return (
@@ -125,7 +126,7 @@ function App() {
           <Route path="routes/create/:areaId/:depotId/:routeId" element={<RouteCreatePage/>} />
           {/* Protected Routes */}
           <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>}>
-            <Route index element={<Navigate to={getDefaultRouteForRole(user?.userRole || "")} replace />} />
+            <Route index element={<Navigate to={getDefaultRouteForRole(user?.role?.name.toLowerCase() || "")} replace />} />
 
             {protectedRoutes.map((route: any) => (
               <Route

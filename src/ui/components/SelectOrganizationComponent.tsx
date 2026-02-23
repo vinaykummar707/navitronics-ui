@@ -14,9 +14,9 @@ import { useOrganizationStore } from "../../store/useOrganizationStore";
 import useAuthStore from "@/store/authStore";
 import { useOrganizations } from "@/api/organization/hooks";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
+import { IOrganization, organizationCrud } from "@/types/organization";
 
-interface SelectOrganizationComponentRootProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+interface SelectOrganizationComponentRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
 }
 
@@ -25,61 +25,53 @@ const SelectOrganizationComponentRoot = React.forwardRef<
   SelectOrganizationComponentRootProps
 >(function SelectOrganizationComponentRoot(
   { className, ...otherProps }: SelectOrganizationComponentRootProps,
-  ref
+  ref,
 ) {
-  const { selectedOrganization, setSelectedOrganization } = useOrganizationStore();
+  const { selectedOrganization, setSelectedOrganization } =
+    useOrganizationStore();
   const user = useLoggedUserStore((state) => state.user); // Get user details
-  const { data, loading } = useOrganizations();
-  const orgs = data?.organizations || [];
+  const { useList } = organizationCrud;
+  const { data, isLoading } = useList({
+    filters: { deleted: false },
+    orderBy: { column: "created_at", ascending: true },
+  });
 
+  // Safe access to organization data
+  const orgs = data?.data as IOrganization[] | undefined;
 
-
-
-  // Filter organizations based on user's assigned organization
-  const filteredOrganizations = user?.organization
-    ? orgs.filter(
-      (org: any) => org.id === user.organization.id
-    )
-    : orgs;
-
+  // UseEffect for setting default organization selection
   useEffect(() => {
     console.log("Organizations fetched:", data);
-    if (data && data.organizations.length > 0) {
-      // only once on page load If user role is master, select the first organization by default, else select the user's assigned organization
-      if (user.role.name === "master") {
-          if(!selectedOrganization) {
-            setSelectedOrganization(data.organizations[0]);
-          }
-      } else if (user?.organization) {
-        const assignedOrg = data.organizations.find(
-          (org: any) => org.id === user.organization.id
-        );
-        setSelectedOrganization(assignedOrg || null);
+    if (orgs && orgs.length > 0 && user) {
+      if (user.role?.name === "master" && !selectedOrganization) {
+        if(!selectedOrganization) setSelectedOrganization(orgs[0]);
+      } else if (user.organization?.id) {
+        const assignedOrg = orgs.find(org => org.id === user.organization.id);
+        if(!selectedOrganization) setSelectedOrganization(assignedOrg || null);
       }
-      
     }
-   
-  }, [orgs]);
+  }, [orgs, user]);
 
   const handleChange = (value: string) => {
-    const selected = orgs.find(
-      (org: any) => org.id === value
-    );
+    const selected = orgs?.find(org => org.id === value);
     setSelectedOrganization(selected || null);
   };
 
-  const orgsToShow =
-    user.role.name === "master" ? orgs : filteredOrganizations;
+  // Only shown organizations based on role or if they are assigned to one
+  const orgsToShow = user && user.role?.name === "master" ? orgs : orgs?.filter(org => org.id === user.organization?.id);
 
-  if (loading) {
+  if (isLoading) {
     return <div>Loading organizations...</div>;
+  } else if (!orgsToShow || orgsToShow.length === 0) {
+    // Handling case where no organizations are available to show
+    return <div>No organizations available or you do not have permission to view any.</div>;
   }
 
   return (
     <div
       className={SubframeUtils.twClassNames(
         "flex w-full flex-col items-start gap-2",
-        className
+        className,
       )}
       ref={ref}
       {...otherProps}
@@ -92,14 +84,13 @@ const SelectOrganizationComponentRoot = React.forwardRef<
         value={selectedOrganization?.id || ""}
         onValueChange={handleChange}
       >
-        {orgsToShow && orgsToShow?.map((org: any) => (
-          <Select.Item key={org.id} value={org.id}>
-            {org.name}
-          </Select.Item>
-        ))}
+        {orgsToShow.map((org: IOrganization) => (
+            <Select.Item key={org.id} value={org.id}>
+              {org.name}
+            </Select.Item>
+          ))}
       </Select>
     </div>
   );
 });
-
 export const SelectOrganizationComponent = SelectOrganizationComponentRoot;
