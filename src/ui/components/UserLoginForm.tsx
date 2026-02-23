@@ -17,11 +17,12 @@ import { Button } from "./Button";
 import { LinkButton } from "./LinkButton";
 import { TextField } from "./TextField";
 import { supabase } from "@/supabaseClient";
-import useAuthStore from "@/store/authStore";
 import { useNavigate } from 'react-router-dom';
 import { toast } from "react-toastify";
 import { useUserDetails } from "@/api/users/hooks";
 import { set } from "zod";
+import { loggedUserCrud, userCrud } from "@/types/IUser";
+import useLoggedUserStore from "@/store/useLoggedUserStore";
 interface UserLoginFormRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
 }
@@ -34,8 +35,8 @@ const UserLoginFormRoot = React.forwardRef<
   ref
 ) {
 
-  const login = useAuthStore((state) => state.login); // Zustand store
-  const logout = useAuthStore((state) => state.logout); // Zustand store
+  const login = useLoggedUserStore((state) => state.login); // Zustand store
+  const logout = useLoggedUserStore((state) => state.logout); // Zustand store
   const navigate = useNavigate(); // React Router navigation
 
   const [emailOrUsername, setEmailOrUsername] = useState("");
@@ -44,7 +45,24 @@ const UserLoginFormRoot = React.forwardRef<
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState(""); // State to hold user ID after login
 
-  const { data: userMetadata, loading: userLoading, error: userError, refetch } = useUserDetails(userId);
+
+  const { useList } = loggedUserCrud;
+
+  const { data: loggedUserDetails, loading: usersLoading, error: usersError, refetch: usersRefetch } = useList({
+    filters: { user_id: userId },
+    custom(query) {
+      return query.select(` *,
+        region:region_id (*),
+        organization:organization_id (*),
+        depot:depot_id (*),
+        role:role_id (*)
+      `)
+    },
+    skip: !userId, // Skip the query until we have a userId
+  }); 
+
+
+
   // Update input values and submit handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,50 +81,29 @@ const UserLoginFormRoot = React.forwardRef<
       setError(supaError.message);
       toast.error(`Login failed: ${supaError.message}`);
     } else if (data && data.user) {
-      // Optionally: redirect or call props.onLoginSuccess, etc.
-      console.log("Login successful, user data:", data.user);
-      setError(null);
-      setUserId(data.user.id);
+      setUserId(data.user.id); 
     }
   };
 
 
-  // Only try to refetch after login (userId set):
+    // Only try to refetch after login (userId set):
   useEffect(() => {
     console.log("User ID for metadata fetch:", userId);
     if (userId) {
-      refetch();
+      usersRefetch();
     }
   }, [userId]);
 
+
+
+
   // Once userMetadata is fetched, login and navigate:
   useEffect(() => {
-    if (userMetadata?.users_by_pk) {
-      login({
-        userId: userMetadata.users_by_pk.user_id,
-        userName: userMetadata.users_by_pk.email || "",
-        userRole: userMetadata.users_by_pk.role?.name || "",
-        active: userMetadata.users_by_pk.active || false,
-        area: {
-          areaId: userMetadata.users_by_pk.region?.id || "",
-          areaName: userMetadata.users_by_pk.region?.name || "",
-        },
-        depot: {
-          depotId: userMetadata.users_by_pk.depot?.id || "",
-          depotName: userMetadata.users_by_pk.depot?.name || "",
-        },
-        organization: {
-          organizationId: userMetadata.users_by_pk.organization?.id || "",
-          organizationName: userMetadata.users_by_pk.organization?.name || "",
-          PIS: userMetadata.users_by_pk.organization?.PIS || false,
-          PAS: userMetadata.users_by_pk.organization?.PAS || false,
-          ITMS: userMetadata.users_by_pk.organization?.ITMS || false,
-          active: userMetadata.users_by_pk.organization?.active || false,
-        },
-      });
-      if (userMetadata.users_by_pk.organization?.active) {
+    if (loggedUserDetails) {
+      login(loggedUserDetails.data[0]);
+      if (loggedUserDetails.data[0].organization?.active) {
 
-        if (userMetadata.users_by_pk.active) {
+        if (loggedUserDetails.data[0].active) {
           toast.success("Login successful!");
           navigate("/home");
         } else {
@@ -122,7 +119,7 @@ const UserLoginFormRoot = React.forwardRef<
       }
 
     }
-  }, [userMetadata, login, navigate]);
+  }, [loggedUserDetails, login, navigate]);
 
 
 
@@ -139,17 +136,17 @@ const UserLoginFormRoot = React.forwardRef<
         <div className="flex w-full max-w-[288px] grow shrink-0 basis-0 flex-col items-center justify-center gap-2">
           <Avatar
             size="x-large"
-             image="https://navitronix.in/assets/navitronix.jpeg"
+            image="https://navitronix.in/assets/navitronix.jpeg"
           >
             HW
           </Avatar>
           <div className="flex w-full flex-col items-center gap-6">
-            
+
             <div className="flex flex-wrap items-center justify-center gap-2">
               <span className="text-body-bold text-heading font-body-bold text-brand-800">
                 Navitronix
               </span>
-             
+
             </div>
           </div>
         </div>

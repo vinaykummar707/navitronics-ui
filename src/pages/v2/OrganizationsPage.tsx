@@ -7,7 +7,7 @@ import { Button } from "@/ui/components/Button";
 import { OrganizationCard } from "@/ui/components/OrganizationCard";
 import { OrganizationList } from "@/ui/components/OrganizationList";
 import { DefaultPageLayout } from "@/ui/layouts/DefaultPageLayout";
-import { FeatherMoreHorizontal, FeatherPlus } from "@subframe/core";
+import { FeatherMoreHorizontal, FeatherPlus, FeatherRefreshCw } from "@subframe/core";
 import { useQuery } from "@tanstack/react-query";
 import { organizationService } from "@/services/organizationService";
 import { OptionsDropdown } from "@/ui/components/OptionsDropdown";
@@ -18,70 +18,60 @@ import { Organization } from "@/api/organization/types";
 import { ButtonGroup } from "@/ui/components/ButtonGroup";
 import RBAC from "@/components/RBAC";
 import { supabase } from "@/supabaseClient";
+import { IOrganization, organizationCrud } from "@/types/organization";
+import PageHeader from "@/components/PageHeader";
 
 
 
 
 function OrganizationsPage() {
     // Queries
-    const { data, loading, error,refetch } = useOrganizations();
-    const organizations = data ? data.organizations : [];
-    const [editData, setEditData] = React.useState<Organization | null>(null);
+    const { useList, useDelete } = organizationCrud
+    const { data, isLoading, isError, refetch } = useList({
+        filters: {deleted: false},
+        orderBy: { column: 'created_at', ascending: true }
+    });
+    const { mutate: deleteOrganization } = useDelete()
+    const organizations: IOrganization[] = data ? data.data : [];
+    const [editData, setEditData] = React.useState<IOrganization | null>(null);
     const [open, setOpen] = React.useState(false);
 
-   
-
-
-    // function to delete an organization by id using supabase client
-    const handleDelete = async (id: string) => {
-        const { error } = await supabase.from('organizations').delete().eq('id', id);
-        if (error) {
-            console.error("Error deleting organization:", error);
-        } else {
-            console.log("Organization deleted successfully");
-            refetch(); // Refetch organizations after deletion
-        }
+    const handleDelete = (id: string) => {
+        deleteOrganization(id, {
+            onSuccess: () => {
+                refetch();
+            }
+        })
     };
+
+
+
+
 
 
     return (
         <div className="flex h-full w-full flex-col items-start gap-6 px-12 py-12">
-            <div className="flex w-full flex-col items-start gap-1">
-                <span className="w-full text-heading-2 font-heading-2 text-default-font">
-                    Organizations
-                </span>
-                <span className="text-body font-body text-subtext-color">
-                    Overview of your store&#39;s performance and customer engagement
-                </span>
-            </div>
-            <div className="flex w-full items-center justify-between">
-                <span className="text-caption font-caption text-subtext-color">
-                    Showing {organizations.length} records
-                </span>
-                <RBAC features={[]} roles={['master']}>
-                    <Button
-                        className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
-                        variant=""
-                        icon={<FeatherPlus />}
-                        onClick={() => { setOpen(true) }}
-                    >
-                        Add Organization
-                    </Button>
-                </RBAC>
-            </div>
+            <PageHeader
+                title="Organizations"
+                subtitle="Manage your organizations and their details here."
+                count={organizations.length}
+                onRefetch={refetch}
+                onAdd={() => { setEditData(null); setOpen(true); }}
+                buttonLabel="Add Organization"
+            />
             <OrganizationList>
                 {organizations && organizations.map(org => <OrganizationCard
 
                     title={org.name}
-                    subtitle={`${org.email}/${org.regions_aggregate.aggregate.count} Regions/${org.depots_aggregate.aggregate.count} Depots` || "No email provided"}
+                    subtitle={org.email ? org.email : "No email provided"}
                     key={org.id}
                     isSuspended={!org.active}
                     logo2={org.logo || undefined}
                     actions={org.id === '6b679098-ef69-45f0-9fb1-b457dd882060' ?
                         <IconButton
                             disabled
-                              icon={<FeatherMoreHorizontal />}
-                            /> : <OptionsDropdown onEdit={() => { setEditData(org); setOpen(true); }} onDelete={() => { handleDelete(org.id) }} />}
+                            icon={<FeatherMoreHorizontal />}
+                        /> : <OptionsDropdown onEdit={() => { setEditData(org); setOpen(true); }} onDelete={() => { handleDelete(org.id) }} />}
                     features={<ButtonGroup pas={org.PAS} pis={org.PIS} itms={org.ITMS} />}
 
                 />)}

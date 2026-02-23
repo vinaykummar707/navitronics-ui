@@ -17,7 +17,7 @@ import LanguageModify from "./components/LanguageModify";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import OrganizationsPage from "./pages/v2/OrganizationsPage";
-import AreasPage from "./pages/v2/AreasPage";
+import AreasPage from "./pages/v2/RegionsPage";
 import DepotsPage from "./pages/v2/DepotsPage";
 import { UserLoginForm } from "./ui/components/UserLoginForm";
 import UsersPage from "./pages/v2/UsersPage";

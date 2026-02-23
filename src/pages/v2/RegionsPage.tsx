@@ -1,5 +1,7 @@
 import { useDeleteRegion, useRegions } from "@/api/region/hooks";
+import PageHeader from "@/components/PageHeader";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
+import { IRegion, regionCrud } from "@/types/IRegion";
 import { CreateRegionForm } from "@/ui";
 import { Button } from "@/ui/components/Button";
 import { Dialog } from "@/ui/components/Dialog";
@@ -11,10 +13,14 @@ import React from "react";
 export default function AreasPage() {
     const [open, setOpen] = React.useState(false);
     const { selectedOrganization } = useOrganizationStore();
-    const { data, loading, error, refetch } = useRegions({ variables: { organization_id: selectedOrganization ? selectedOrganization.id : "" } })
+    const { useList, useDelete } = regionCrud;
+    const { data, isLoading: loading, isError, refetch } = useList({
+        filters: { organization_id: selectedOrganization ? selectedOrganization.id : "", deleted: false },
+        orderBy: { column: 'created_at', ascending: true }
+    });
+    const { mutate: deleteRegion } = useDelete();
     const [editData, setEditData] = React.useState<any>(null);
-    const [deleteRegion, { loading: deleting, error: deleteError }] = useDeleteRegion();
-    const regions = data?.regions || [];
+    const regions: IRegion[] = data?.data || [];
 
 
     // Handler to call refetch after create/update
@@ -28,43 +34,39 @@ export default function AreasPage() {
         refetch();
     }, [selectedOrganization]);
 
+    const handleDeleteRegion = (region: IRegion) => {
+        deleteRegion(region.id, {
+            onSuccess: () => {
+                refetch();
+            }
+        })
+    }
+
 
 
     return (
         <div className="flex h-full w-full flex-col items-start gap-4 px-12 py-12">
-            {regions.length > 0 && <><div className="flex w-full flex-col items-start gap-1">
-                <span className="text-heading-2 font-heading-2 text-default-font text-center">
-                    Regions
-                </span>
-                <span className="text-body font-body text-subtext-color">
-                    Overview of your store&#39;s performance and customer engagement
-                </span>
-            </div>
-                <div className="flex w-full items-center justify-between">
-                    <span className="text-caption font-caption text-subtext-color">
-                        Showing {regions.length ?? 0} records
-                    </span>
-                    <Button
-                        variant=""
-                        icon={<FeatherPlus />}
-                        onClick={() => { setOpen(true); setEditData(null); }}
-                    >
-                        Add Region
-                    </Button>
-                </div> </>}
+            {regions.length > 0 && 
+            <PageHeader
+                title="Regions"
+                subtitle="Overview of your store's performance and customer engagement"
+                count={regions.length}
+                onRefetch={refetch}
+                onAdd={() => { setOpen(true); setEditData(null); }}
+                buttonLabel="Add Region"
+            />}
             <div className="w-full flex-col items-start gap-2 grid md:grid-cols-2 lg:grid-cols-3">
                 {regions && regions.map(region => (
                     <RegionCard
                         key={region.id}
                         icon={<FeatherMapPin />}
                         locationName={region.name}
-                        depotCount={region.depots_aggregate.aggregate.count + ' Depots Found'}
+                        depotCount={
+                            "Created on " + new Date(region.created_at).toLocaleDateString()
+                        }
                         actions={
                             <OptionsDropdown
-                                onDelete={async () => {
-                                    await deleteRegion({ variables: { id: region.id } });
-                                    refetch(); // Refetch regions after delete
-                                }}
+                                onDelete={() => handleDeleteRegion(region)}
                                 onEdit={() => { setEditData(region); setOpen(true); }}
                             />
                         }
@@ -75,7 +77,7 @@ export default function AreasPage() {
             {!loading && regions.length === 0 && (
                 <div className="w-full h-full flex items-center justify-center bg-background">
                     <div className="flex h-full w-full flex-col items-center justify-center gap-1">
-                        
+
                         <h2 className="text-heading-2 font-heading-2 text-default-font">No Regions Found</h2>
                         <p className="text-body font-body text-subtext-color">You do not have any regions added yet. Start by adding a new region.</p>
                         <Button

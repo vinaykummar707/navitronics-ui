@@ -90,6 +90,7 @@ export default function DepotsPage() {
           Showing {depots?.depots?.length ?? 0} records
         </span>
         <div className="flex gap-2">
+
           <RBAC features={[]} roles={["depot_admin", "region_admin"]}>
             <Select
               className="h-auto  flex-none"
@@ -99,13 +100,15 @@ export default function DepotsPage() {
               value={selectedRegion || ""}
               onValueChange={(val) => setSelectedRegion(val)}
             >
-              {regions
+            {
+              regions
                 .filter((region) => user?.area.areaId === region.id)
                 .map((region) => (
                   <Select.Item key={region.id} value={region.id}>
                     {region.name}
                   </Select.Item>
-                ))}
+                ))
+            }
             </Select>
           </RBAC>
 
@@ -125,12 +128,12 @@ export default function DepotsPage() {
               ))}
             </Select>
           </RBAC>
+
           <RBAC
             features={[]}
             roles={["region_admin", "organization_admin", "master"]}
           >
             <Button
-              variant=""
               icon={<FeatherPlus />}
               disabled={!selectedRegion}
               onClick={() => {
@@ -141,6 +144,7 @@ export default function DepotsPage() {
               Add Depot
             </Button>
           </RBAC>
+
         </div>
       </div>
       {depots?.depots ? (

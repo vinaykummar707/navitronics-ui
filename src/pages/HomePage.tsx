@@ -2,7 +2,9 @@ import { useUserDetails } from "@/api/users/hooks";
 import Navbar from "@/components/Navbar";
 import NavbarTwo from "@/components/Navbar copy";
 import useAuthStore from "@/store/authStore";
+import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { supabase } from "@/supabaseClient";
+import { loggedUserCrud } from "@/types/IUser";
 import { DefaultPageLayout } from "@/ui";
 import { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
@@ -10,12 +12,24 @@ import { toast } from "react-toastify";
 
 const HomePage = () => {
     const navigate = useNavigate();
-    const user = useAuthStore((state) => state.user);
-    const logout = useAuthStore((state) => state.logout);
-    const { data: userMetadata, refetch } = useUserDetails(user?.userId);
+    const user = useLoggedUserStore((state) => state.user);
+    const logout = useLoggedUserStore((state) => state.logout);
+    const { useList } = loggedUserCrud;
+    const { data: userMetadata, loading, error } = useList({
+        filters: { user_id: user?.id || "" },
+        custom(query) {
+          return query.select(` *,
+            region:region_id (*),
+            organization:organization_id (*),
+            depot:depot_id (*),
+            role:role_id (*)
+          `)
+        },
+        skip: !user?.id, // Skip the query until we have a userId
+    });
 
     useEffect(() => {
-        if (userMetadata?.users_by_pk.organization.active === false) {
+        if (userMetadata?.data[0].organization?.active === false) {
             logout();
             toast.error("Your organization is not active. Please contact support.");
             localStorage.clear();
@@ -23,7 +37,7 @@ const HomePage = () => {
             return;
         }
 
-        if (userMetadata?.users_by_pk.active === false) {
+        if (userMetadata?.data[0].active === false) {
             logout();
             toast.error("Your account is not active. Please contact support.");
             localStorage.clear();

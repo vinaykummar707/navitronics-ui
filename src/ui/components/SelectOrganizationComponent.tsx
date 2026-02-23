@@ -13,6 +13,7 @@ import { organizationService } from "../../services/organizationService";
 import { useOrganizationStore } from "../../store/useOrganizationStore";
 import useAuthStore from "@/store/authStore";
 import { useOrganizations } from "@/api/organization/hooks";
+import useLoggedUserStore from "@/store/useLoggedUserStore";
 
 interface SelectOrganizationComponentRootProps
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -27,7 +28,7 @@ const SelectOrganizationComponentRoot = React.forwardRef<
   ref
 ) {
   const { selectedOrganization, setSelectedOrganization } = useOrganizationStore();
-  const user = useAuthStore((state) => state.user); // Get user details
+  const user = useLoggedUserStore((state) => state.user); // Get user details
   const { data, loading } = useOrganizations();
   const orgs = data?.organizations || [];
 
@@ -37,7 +38,7 @@ const SelectOrganizationComponentRoot = React.forwardRef<
   // Filter organizations based on user's assigned organization
   const filteredOrganizations = user?.organization
     ? orgs.filter(
-      (org: any) => org.id === user.organization.organizationId
+      (org: any) => org.id === user.organization.id
     )
     : orgs;
 
@@ -45,13 +46,13 @@ const SelectOrganizationComponentRoot = React.forwardRef<
     console.log("Organizations fetched:", data);
     if (data && data.organizations.length > 0) {
       // only once on page load If user role is master, select the first organization by default, else select the user's assigned organization
-      if (user?.userRole === "master") {
+      if (user.role.name === "master") {
           if(!selectedOrganization) {
             setSelectedOrganization(data.organizations[0]);
           }
       } else if (user?.organization) {
         const assignedOrg = data.organizations.find(
-          (org: any) => org.id === user.organization.organizationId
+          (org: any) => org.id === user.organization.id
         );
         setSelectedOrganization(assignedOrg || null);
       }
@@ -68,7 +69,7 @@ const SelectOrganizationComponentRoot = React.forwardRef<
   };
 
   const orgsToShow =
-    user.userRole === "master" ? orgs : filteredOrganizations;
+    user.role.name === "master" ? orgs : filteredOrganizations;
 
   if (loading) {
     return <div>Loading organizations...</div>;

@@ -16,6 +16,7 @@ import { organizationService } from "@/services/organizationService";
 import { FeatureToggle } from "./FeatureToggle";
 import { useCreateOrganization, useUpdateOrganization } from "@/api/organization/hooks";
 import { Organization } from "@/api/organization/types";
+import { organizationCrud } from "@/types/organization";
 
 // ----------------------------------------------------------------------
 // 1. Zod Validation Schema
@@ -57,8 +58,8 @@ const CreateOrganizationDrawerRoot = React.forwardRef<HTMLDivElement, Organizati
     ref
   ) {
     const isEditMode = !!initialData;
-    const queryClient = useQueryClient();
-    const [createOrganization, { loading, error, data }] = useCreateOrganization();
+    const { useCreate } = organizationCrud;
+    const { mutate: createOrganization, isPending: loading, isError } = useCreate()
     const [updateOrganization, { loading: updating, error: updateError }] = useUpdateOrganization();
 
     // -- Form Setup --
@@ -134,26 +135,23 @@ const CreateOrganizationDrawerRoot = React.forwardRef<HTMLDivElement, Organizati
             }
           });
 
-          onSuccess && onSuccess();
+        onSuccess && onSuccess();
 
       } else {
-        await createOrganization(
+        createOrganization(
           {
-            variables: {
-              object: {
-                name: data.name,
-                email: data.email,
-                phone: data.phone,
-                logo: data.logo,
-                PIS: data.PIS,
-                PAS: data.PAS,
-                ITMS: data.ITMS,
-                active: data.active,
-              }
-            }
-          });
-      console.log("Form Submitted:", data);
-          onSuccess && onSuccess();
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            logo: data.logo,
+            PIS: data.PIS,
+            PAS: data.PAS,
+            ITMS: data.ITMS,
+            active: data.active,
+          }
+        );
+        console.log("Form Submitted:", data);
+        onSuccess && onSuccess();
       }
     };
 

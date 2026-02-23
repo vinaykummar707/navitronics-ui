@@ -14,3 +14,9 @@ export interface UpdateRoleDto {
   active: boolean;
   deleted: boolean;
 }
+
+
+export interface IRole {
+  id: string;
+  name: string;
+}
