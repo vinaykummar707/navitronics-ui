@@ -44,6 +44,7 @@ import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { useDepotStore } from "@/store/useDepotStore";
 import { depotCrud, IDepot } from "@/types/IDepot";
 import { IRoute, routeCrud } from "@/types/IRoute";
+import { toast } from "react-toastify";
 
 export default function RoutesPage() {
   const navigate = useNavigate();
@@ -77,7 +78,7 @@ export default function RoutesPage() {
   const { useList: useRoutesList, useDelete } = routeCrud;
   const { data: routesData, refetch: refetchRoutes } = useRoutesList({
     filters: { depot_id: selectedDepot?.id || "", deleted: false },
-    orderBy: { column: "created_at", ascending: true },
+    orderBy: { column: "created_at", ascending: false },
     skip: !selectedDepot?.id,
   });
 
@@ -122,16 +123,25 @@ export default function RoutesPage() {
     );
   }
 
-  const deleteRoute = async (routeId: string) => {
-    const { error } = await supabase
-      .from("routes")
-      .delete()
-      .match({ id: routeId });
+  const { mutate: deleteRoute, isPending: isDeletingRoute } =
+    routeCrud.useDelete();
+  const { useCreate } = routeCrud;
+  const { mutate: createRoute, isPending: isCreatingRoute } = useCreate();
 
-    if (error) {
-      console.error("Error deleting route:", error);
-      return;
-    }
+  const handleDeleteRoute = async (routeId: string) => {
+    deleteRoute(routeId, {
+      onSuccess: () => {
+        console.log("Route deleted successfully:", routeId);
+        toast.success("Route deleted successfully");
+        refetchRoutes(); // Refetch routes after deletion
+      },
+      onError: (error) => {
+        console.error("Error deleting route:", error);
+        toast.error(
+          `Error deleting route: ${error.message || "Unknown error"}`,
+        );
+      },
+    });
   };
 
   const duplicateRoute = async (routeId: string, routeNumberSuffix: string) => {
@@ -150,16 +160,22 @@ export default function RoutesPage() {
     const { id, ...routeWithoutId } = originalRoute;
     const newRouteNumber = `${originalRoute.route_number}${routeNumberSuffix}`;
 
-    const { data: duplicatedRoute, error: duplicateError } = await supabase
-      .from("routes")
-      .insert([{ ...routeWithoutId, route_number: newRouteNumber }]);
-
-    if (duplicateError) {
-      console.error("Error duplicating route:", duplicateError);
-      return;
-    }
-
-    console.log("Duplicated route successfully:", duplicatedRoute);
+    createRoute(
+      { ...routeWithoutId, route_number: newRouteNumber, created_at: new Date().toISOString() },
+      {
+        onSuccess: (data) => {
+          console.log("Route duplicated successfully:", data);
+          toast.success("Route duplicated successfully");
+          refetchRoutes(); // Refetch routes after duplication
+        },
+        onError: (error) => {
+          console.error("Error duplicating route:", error);
+          toast.error(
+            `Error duplicating route: ${error.message || "Unknown error"}`,
+          );
+        },
+      },
+    );
   };
 
   return (
@@ -282,17 +298,20 @@ export default function RoutesPage() {
         <RouteTable
           routes={routes}
           onEdit={handleEditRoute}
-          onDelete={deleteRoute}
+          onDelete={handleDeleteRoute}
           onDuplicate={duplicateRoute}
         />
       ) : (
         <div className="w-full h-full flex items-center justify-center bg-background">
           <div className="flex h-full w-full flex-col items-center justify-center gap-1">
             <h2 className="text-heading-2 font-heading-2 text-default-font">
-              No {depots.length === 0 ? "depots" : "routes"} Found
+              No {depots && depots.length === 0 ? "depots" : "routes"} Found
             </h2>
             <p className="text-body font-body text-subtext-color">
-              You do not have any {depots.length === 0 ? "depots" : "routes"} added yet. Start by adding a new {depots.length === 0 ? "depot" : "route"}.
+              You do not have any{" "}
+              {depots && depots.length === 0 ? "depots" : "routes"} added yet.
+              Start by adding a new{" "}
+              {depots && depots.length === 0 ? "depot" : "route"}.
             </p>
           </div>
         </div>

@@ -27,7 +27,7 @@ export interface IRoute {
 export type IRouteCreate = Omit<
   Partial<IRoute>,
   "id" | "deleted" | "created_at"
-> & { name: string };
+>;
 
 // Update: id required, rest optional (except created_at)
 export type IRouteUpdate = Pick<IRoute, "id"> &
