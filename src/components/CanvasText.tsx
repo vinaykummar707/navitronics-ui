@@ -88,6 +88,7 @@ const LEDMatrix: React.FC<LEDMatrixProps> = ({
 
       // When no marquee, apply alignment for patterns smaller than canvas
       if (marqueeDirection === "none" && patternPixelWidth < canvasWidth) {
+        
         switch (alignment) {
           case "center":
             staticStartX = Math.floor((canvasWidth - patternPixelWidth) / 2);
@@ -157,6 +158,7 @@ const LEDMatrix: React.FC<LEDMatrixProps> = ({
           // Only draw if the dot is within the visible canvas area
           // or is part of the wrapping pattern that will soon be visible.
           if (marqueeDirection === "none") {
+            currentScrollPositionRef.current = 0;
             // Static position drawing
             if (
               xWithOffset + staticStartX + dotSize / 2 > -dotSize &&
@@ -251,7 +253,7 @@ const LEDMatrix: React.FC<LEDMatrixProps> = ({
     };
 
     // Initialize scroll position when marquee direction changes or on mount
-    currentScrollPositionRef.current = 0;
+    // currentScrollPositionRef.current = 0;
     animate();
 
     return () => {
