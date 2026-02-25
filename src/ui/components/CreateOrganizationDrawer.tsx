@@ -37,7 +37,7 @@ const organizationSchema = z.object({
   name: z.string().min(1, "Organization name is required"),
   email: z.string().email("Invalid email address"),
   phone: z.string().min(5, "Phone number is required"),
-  logo: z.string().min(1, "Contact person is required"),
+  logo: z.string().optional(),
   PIS: z.boolean().optional(),
   PAS: z.boolean().optional(),
   ITMS: z.boolean().optional(),
@@ -117,7 +117,7 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
   // -- Submit Handler --
   const onSubmit = async (data: OrganizationFormValues) => {
     if (isEditMode && initialData) {
-      await updateOrganization({
+      updateOrganization({
         id: initialData.id,
         payload: {
           id: initialData.id,

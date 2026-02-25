@@ -11,10 +11,13 @@ import * as SubframeUtils from "../utils";
 import { Avatar } from "./Avatar";
 import { Badge } from "./Badge";
 
+import Avvvatars from 'avvvatars-react'
+
+
 interface OrganizationCardRootProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
-  title?: React.ReactNode;
-  subtitle?: React.ReactNode;
+  title?: string;
+  subtitle?: string;
   isSuspended?: boolean;
   logo2?: string;
   actions?: React.ReactNode;
@@ -49,9 +52,9 @@ const OrganizationCardRoot = React.forwardRef<
     >
       <div className="flex w-full items-center justify-between">
         <div className="flex items-start justify-between">
-          <Avatar size="large" variant="brand" image={logo2 ?? null} square={false}>
+          {logo2 ? <Avatar size="large" variant="brand" image={logo2} square={false}>
             A
-          </Avatar>
+          </Avatar> : <Avvvatars style="shape" value={subtitle} size={48} />}
         </div>
         <Badge variant={isSuspended ? "error" : "success"} icon={null} iconRight={null}>
           {isSuspended ? "Suspended" : "Active"}
@@ -60,7 +63,7 @@ const OrganizationCardRoot = React.forwardRef<
       <div className="flex w-full items-end justify-between">
         <div className="flex flex-col items-start gap-1">
           {title ? (
-            <span className="text-body-bold font-body-bold text-default-font">
+            <span className="text-heading-3 font-body-bold text-default-font">
               {title}
             </span>
           ) : null}

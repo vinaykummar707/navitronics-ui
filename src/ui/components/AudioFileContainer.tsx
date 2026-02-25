@@ -38,14 +38,14 @@ const AudioFileContainerRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "group/cb573e3c flex w-full flex-col items-start gap-2 border border-solid border-neutral-100",
+        "group/cb573e3c flex w-full flex-col items-start gap-2 rounded-md border  border-neutral-100",
         className
       )}
       ref={ref}
       {...otherProps}
     >
       <div className="flex w-full flex-col items-start gap-2">
-        <div className="flex w-full flex-col items-start gap-2 border border-solid border-neutral-border px-4 py-4">
+        <div className="flex w-full flex-col items-start gap-2  px-4 py-4">
           <div
             className={SubframeUtils.twClassNames(
               "flex w-full items-start justify-between",

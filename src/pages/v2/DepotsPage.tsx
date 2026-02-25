@@ -40,7 +40,7 @@ export default function DepotsPage() {
   
   const { useList: useDepotList, useDelete } = depotCrud;
   const { data: depotData, refetch: refetchDepots } = useDepotList({
-    filters: { region_id: selectedRegion?.id || "", deleted: false },
+    filters: { region_id: selectedRegion?.id || "", deleted: false, organization_id: selectedOrganization?.id || "" },
     orderBy: { column: "created_at", ascending: true },
     skip: !selectedRegion?.id
   });

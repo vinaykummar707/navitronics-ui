@@ -15,7 +15,7 @@ const HomePage = () => {
     const logout = useLoggedUserStore((state) => state.logout);
     const { useList } = loggedUserCrud;
     const { data: userMetadata, loading, error } = useList({
-        filters: { user_id: user?.id || "" },
+        filters: { user_id: user?.user_id || "" },
         custom(query) {
           return query.select(` *,
             region:region_id (*),
@@ -42,7 +42,6 @@ const HomePage = () => {
             }
             
             // Redirect to a specific internal page if everything is okay
-            navigate("/home/dashboard"); // Adjust this route based on your routing setup
         }
     }, [user, userMetadata, navigate]);
 

@@ -8,6 +8,8 @@ import { TextField } from "./TextField";
 import * as SubframeUtils from "../utils";
 import { useCreateStop, useUpdateStop } from '@/api/stop/hooks';
 import { useOrganizationStore } from '@/store/useOrganizationStore';
+import { IStop, IStopCreate, stopCrud } from '@/types/IStop';
+import { toast } from 'react-toastify';
 
 // @subframe/sync-disable
 
@@ -21,11 +23,22 @@ interface CreateStopFormProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<HTMLDivElement, CreateStopFormProps>((props, ref) => {
-  const { className, initialData, ...otherProps } = props;
-  const { register, handleSubmit, formState: { errors } ,reset} = useForm();
-  const [createStop, { loading, error }] = useCreateStop();
-  const [updateStop, { loading: updating }] = useUpdateStop();
+  const { className, initialData, onSuccess, onCancel,depotId, ...otherProps } = props;
   const selectedOrganization = useOrganizationStore((state) => state.selectedOrganization);
+
+  const { register, handleSubmit, formState: { errors } ,reset} = useForm<IStopCreate>({
+    defaultValues:{
+      depot_id:depotId,
+      organization_id: selectedOrganization.id,
+      down_latitude: '',
+      down_longitude: '',
+      name: '',
+      up_latitude: '',
+      up_longitude:''
+    }
+  });
+  const {mutate: createStop, isPending: isCreatingStop } = stopCrud.useCreate();
+   const { mutate: updateStop, isPending: isUpdatingStop } = stopCrud.useUpdate();
 
     // Set initial form values when initialData is provided
   React.useEffect(() => {
@@ -34,22 +47,57 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<HTMLD
     }
   }, [initialData, reset]);
 
+  const mode = !!initialData
+
   const onSubmit = async (data) => {
-    console.log('Form data:', data);
-    try {
-      let response;
-      if (initialData) {
-        // Update existing stop
-        response = await updateStop({ variables: { ...data, id: initialData.id } });
-        console.log('Stop updated:', response);
-      } else {
-        // Create new stop
-        response = await createStop({ variables: { ...data, depot_id: props.depotId, organization_id: selectedOrganization?.id } });
-        console.log('Stop created:', response);
-      }
-      props.onSuccess?.();
-    } catch (err) {
-      console.error('Error submitting stop:', err);
+    // console.log('Form data:', data);
+    // try {
+    //   let response;
+    //   if (initialData) {
+    //     // Update existing stop
+    //     response = await updateStop({ variables: { ...data, id: initialData.id } });
+    //     console.log('Stop updated:', response);
+    //   } else {
+    //     // Create new stop
+    //     response = await createStop({ variables: { ...data, depot_id: props.depotId, organization_id: selectedOrganization?.id } });
+    //     console.log('Stop created:', response);
+    //   }
+    //   props.onSuccess?.();
+    // } catch (err) {
+    //   console.error('Error submitting stop:', err);
+    // }
+    if (initialData) {
+      delete data.stop_audios;
+      updateStop(
+        {
+          id: data.id,
+          payload: data,
+        },
+        {
+          onSuccess: () => {
+            console.log("Stop updated successfully:", data);
+            toast.success("Stop updated successfully");
+            onSuccess()
+          },
+          onError: (error) => {
+            console.error("Error updating Stop:", error);
+            toast.error("Error updating Stop");
+          },
+        },
+      );
+    } else {
+      createStop(data, {
+        onSuccess: () => {
+          console.log("Stop created successfully:", data);
+          toast.success("Stop created successfully");
+          onSuccess()
+        },
+        onError: (error) => {
+          console.error("Error creating Stop:", error);
+          toast.error("Error creating Stop");
+        },
+      });
+
     }
   };
 
@@ -114,7 +162,7 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<HTMLD
       </div>
       <div className="flex w-full flex-col items-start gap-2">
         <Button className="h-9 w-full flex-none" icon={<FeatherCheck />} type="submit">
-          {loading ? 'Submitting...' : 'Submit'}
+          {(isCreatingStop || isUpdatingStop) ? 'Submitting...' : 'Submit'}
         </Button>
         <Button onClick={() => props.onCancel?.()} className="h-9 w-full flex-none" variant="neutral-secondary">
           Cancel

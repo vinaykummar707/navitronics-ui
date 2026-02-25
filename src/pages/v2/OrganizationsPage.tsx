@@ -77,10 +77,9 @@ function OrganizationsPage() {
               isSuspended={!org.active}
               logo2={org.logo || undefined}
               actions={
-                org.id === "6b679098-ef69-45f0-9fb1-b457dd882060" ? (
-                  <IconButton disabled icon={<FeatherMoreHorizontal />} />
-                ) : (
-                  <OptionsDropdown
+                
+                <OptionsDropdown
+                  isDisabled={org.id === "6b679098-ef69-45f0-9fb1-b457dd882060"}
                     onEdit={() => {
                       setEditData(org);
                       setOpen(true);
@@ -89,7 +88,7 @@ function OrganizationsPage() {
                       handleDelete(org.id);
                     }}
                   />
-                )
+                
               }
               features={
                 <ButtonGroup pas={org.PAS} pis={org.PIS} itms={org.ITMS} />

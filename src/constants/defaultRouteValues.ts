@@ -1,4 +1,5 @@
 import { Stop } from "@/api/stop/types";
+import { IRouteCreate } from "@/types/IRoute";
 import {
   SimulationFormat,
   SimulationType,
@@ -141,7 +142,7 @@ export const defaultStopRouteConfig: StopRouteConfig = {
 };
 
 // ---- Example overall default DisplayConfigPostRequest ----
-export const defaultDisplayConfigPostRequest: DisplayConfigPostRequest = {
+export const defaultDisplayConfigPostRequest: IRouteCreate = {
   route_number: "123",
   source: "SOURCE",
   destination: "DESTINATION",

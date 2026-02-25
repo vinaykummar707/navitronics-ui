@@ -61,13 +61,9 @@ const CreateUserForm2Root = React.forwardRef<
   // API hooks
   const { data: rolesData } = useRoles();
   const roles = useMemo(() => {
-    if (user?.role?.name === "master") {
-      return rolesData?.roles || [];
-    } else {
       // For non-master users, filter out master role
       return rolesData?.roles.filter((role) => role.name !== "master") || [];
-    }
-  }, [rolesData, user?.role?.name]);
+  }, [rolesData]);
 
   // Setup form
   const {

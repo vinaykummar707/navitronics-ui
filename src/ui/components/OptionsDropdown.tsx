@@ -18,8 +18,9 @@ import { IconButton } from "./IconButton";
 
 //implement output events for edit and delete actions later
 
-interface OptionsDropdownRootProps
-  extends React.ComponentProps<typeof IconButton> {
+interface OptionsDropdownRootProps extends React.ComponentProps<
+  typeof IconButton
+> {
   className?: string;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -29,40 +30,55 @@ interface OptionsDropdownRootProps
 const OptionsDropdownRoot = React.forwardRef<
   React.ElementRef<typeof IconButton>,
   OptionsDropdownRootProps
-
 >(function OptionsDropdownRoot(
-  { className, onEdit, onDelete, isDisabled, ...otherProps }: OptionsDropdownRootProps,
-  ref
+  {
+    className,
+    onEdit,
+    onDelete,
+    isDisabled,
+    ...otherProps
+  }: OptionsDropdownRootProps,
+  ref,
 ) {
   return (
-    <SubframeCore.DropdownMenu.Root>
-      <SubframeCore.DropdownMenu.Trigger asChild={true}>
-        <IconButton
-          className={className}
-          icon={<FeatherMoreHorizontal />}
-          ref={ref}
-          disabled={isDisabled}
-          {...otherProps}
-        />
-      </SubframeCore.DropdownMenu.Trigger>
-      <SubframeCore.DropdownMenu.Portal>
-        <SubframeCore.DropdownMenu.Content
-          side="bottom"
-          align="end"
-          sideOffset={8}
-          asChild={true}
-        >
-          <DropdownMenu>
-            <DropdownMenu.DropdownItem onClick={onEdit} icon={<FeatherPencil />}>
-              Edit
-            </DropdownMenu.DropdownItem>
-            <DropdownMenu.DropdownItem onClick={onDelete} icon={<FeatherTrash />}>
-              Delete
-            </DropdownMenu.DropdownItem>
-          </DropdownMenu>
-        </SubframeCore.DropdownMenu.Content>
-      </SubframeCore.DropdownMenu.Portal>
-    </SubframeCore.DropdownMenu.Root>
+    <>
+      {isDisabled ? <IconButton disabled icon={<FeatherMoreHorizontal />} /> : (
+        <SubframeCore.DropdownMenu.Root>
+          <SubframeCore.DropdownMenu.Trigger asChild={true}>
+            <IconButton
+              className={className}
+              icon={<FeatherMoreHorizontal />}
+              ref={ref}
+              disabled={isDisabled}
+              {...otherProps}
+            />
+          </SubframeCore.DropdownMenu.Trigger>
+          <SubframeCore.DropdownMenu.Portal>
+            <SubframeCore.DropdownMenu.Content
+              side="bottom"
+              align="end"
+              sideOffset={8}
+              asChild={true}
+            >
+              <DropdownMenu>
+                <DropdownMenu.DropdownItem
+                  onClick={onEdit}
+                  icon={<FeatherPencil />}
+                >
+                  Edit
+                </DropdownMenu.DropdownItem>
+                <DropdownMenu.DropdownItem
+                  onClick={onDelete}
+                  icon={<FeatherTrash />}
+                >
+                  Delete
+                </DropdownMenu.DropdownItem>
+              </DropdownMenu>
+            </SubframeCore.DropdownMenu.Content>
+          </SubframeCore.DropdownMenu.Portal>
+        </SubframeCore.DropdownMenu.Root>
+      )}
+    </>
   );
 });
 

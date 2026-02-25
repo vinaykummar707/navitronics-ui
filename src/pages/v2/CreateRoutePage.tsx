@@ -1,5 +1,7 @@
 import { defaultDisplayConfigPostRequest } from "@/constants/defaultRouteValues";
+import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { supabase } from "@/supabaseClient";
+import { IRouteCreate } from "@/types/IRoute";
 import { DisplayConfigPostRequest } from "@/types/routeConfigV2";
 import { RouteCreationLayout } from "@/ui/components/RouteCreationLayout";
 import React, { useEffect } from "react";
@@ -18,15 +20,17 @@ const RouteCreatePage: React.FC = ({ initialData }) => {
   // Using `useParams` with a type parameter to ensure type safety
   const { areaId, depotId, routeId } = useParams<RouteParams>();
   const [mode, setMode] = React.useState<"create" | "edit">("create");
+  const user = useLoggedUserStore((state) => state.user); // Zustand store
 
   // Logging the parameters to the console
   console.log("Route Parameters:", { areaId, depotId });
 
-  const methods = useForm<DisplayConfigPostRequest>({
+  const methods = useForm<IRouteCreate>({
     defaultValues: {
       ...defaultDisplayConfigPostRequest,
       organization_id: areaId,
       depot_id: depotId,
+      created_by: user?.id || "",
     },
   });
 

@@ -131,17 +131,17 @@ const SidebarWithSectionsRoot = React.forwardRef<
       {...otherProps}
     >
       {header ? (
-        <div className="flex w-full flex-col items-start gap-4 px-3 pt-6 pb-4">
+        <div className="flex w-full flex-col items-start gap-4 px-5 pt-6 pb-4">
           {header}
         </div>
       ) : null}
       {children ? (
-        <div className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-2 px-3 pb-6 overflow-auto">
+        <div className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-2 px-5 pb-6 overflow-auto">
           {children}
         </div>
       ) : null}
       {footer ? (
-        <div className="flex w-full items-center gap-4 border-t border-solid border-neutral-border px-3 py-4">
+        <div className="flex w-full items-center gap-4 border-t border-solid border-neutral-border px-5 py-4">
           {footer}
         </div>
       ) : null}

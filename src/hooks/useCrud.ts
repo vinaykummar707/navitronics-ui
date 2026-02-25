@@ -147,6 +147,22 @@ export function createCrudHooks<
         queryClient.invalidateQueries({ queryKey: [table] })
       },
     })
+  
+  const useDeleteAll = () =>
+    useMutation({
+      mutationFn: async (ids: string[]) => {
+        const { error } = await supabase
+          .from(table)
+          .update({ deleted: true }) // Soft delete by setting 'deleted' flag
+          .in('id', ids)
+
+        if (error) throw error
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: [table] })
+      },
+    })
+    
 
   return {
     useList,
@@ -154,5 +170,6 @@ export function createCrudHooks<
     useCreate,
     useUpdate,
     useDelete,
+    useDeleteAll,
   }
 }

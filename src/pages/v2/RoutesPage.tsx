@@ -1,147 +1,174 @@
 import React, { useEffect } from "react";
-import { Avatar } from "@/ui/components/Avatar";
-import { Badge } from "@/ui/components/Badge";
 import { Button } from "@/ui/components/Button";
-import { OrganizationCard } from "@/ui/components/OrganizationCard";
-import { OrganizationList } from "@/ui/components/OrganizationList";
 import { DefaultPageLayout } from "@/ui/layouts/DefaultPageLayout";
-import {
-  FeatherMusic,
-  FeatherPin,
-  FeatherPlay,
-  FeatherPlus,
-  FeatherRefreshCw,
-  FeatherTrash,
-} from "@subframe/core";
-import { useQuery } from "@tanstack/react-query";
-import { organizationService } from "@/services/organizationService";
-import { OptionsDropdown } from "@/ui/components/OptionsDropdown";
-import { Drawer } from "@/ui/components/Drawer";
-import { CreateOrganizationDrawer, Select } from "@/ui";
-import { useOrganizations } from "@/api/organization/hooks";
-import { Organization } from "@/api/organization/types";
-import { ButtonGroup } from "@/ui/components/ButtonGroup";
-import RBAC from "@/components/RBAC";
-import { CreateStopForm } from "@/ui/components/CreateStopForm";
-import { useStops } from "@/api/stop/hooks";
+import { FeatherPlus, FeatherRefreshCw, FeatherTrash } from "@subframe/core";
+import { Select } from "@/ui";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
-import { useRegions } from "@/api/region/hooks";
-import useAuthStore from "@/store/authStore";
-import { useDepots } from "@/api/depot/hooks";
-import { de } from "zod/v4/locales";
-import { StopDetailsCard } from "@/ui/components/StopDetailsCard";
-import { AudioFileContainer } from "@/ui/components/AudioFileContainer";
-import { supabase } from "@/supabaseClient";
-import { handleStopAudioGeneration } from "@/utils/fetchTTS";
-import { Stop } from "@/api/stop/types";
-import { useNavigate } from "react-router-dom";
-import { RouteTable } from "@/ui/components/RouteTable";
-import { DisplayConfigGetRequest } from "@/types/routeConfigV2";
-import { get } from "node:http";
 import { useRegionStore } from "@/store/useRegionStore";
-import { IRegion, regionCrud } from "@/types/IRegion";
-import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { useDepotStore } from "@/store/useDepotStore";
-import { depotCrud, IDepot } from "@/types/IDepot";
+import { IRegion, regionCrud } from "@/types/IRegion";
+import { IDepot, depotCrud } from "@/types/IDepot";
 import { IRoute, routeCrud } from "@/types/IRoute";
+import useLoggedUserStore from "@/store/useLoggedUserStore";
+import RBAC from "@/components/RBAC";
+import { RouteTable } from "@/ui/components/RouteTable";
+import { supabase } from "@/supabaseClient";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { RegionSelect } from "@/components/RegionSelect";
+import { EmptyState } from "@/components/EmptyState";
 
-export default function RoutesPage() {
-  const navigate = useNavigate();
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+// ─── Sub-components ──────────────────────────────
+ function useRoutesPageData() {
   const { selectedOrganization } = useOrganizationStore();
-
   const selectedRegion = useRegionStore((state) => state.selectedRegion);
   const { setSelectedRegion: setSelectedRegionInStore } = useRegionStore();
-  const { useList: useRegionList } = regionCrud;
-  const { data: regionData, refetch: refetchRegions } = useRegionList({
-    filters: {
-      organization_id: selectedOrganization?.id || "",
-      deleted: false,
-    },
+  const selectedDepot = useDepotStore((state) => state.selectedDepot);
+  const { setSelectedDepot: setSelectedDepotInStore } = useDepotStore();
+  const user = useLoggedUserStore((state) => state.user);
+
+  const { data: regionData, refetch: refetchRegions } = regionCrud.useList({
+    filters: { organization_id: selectedOrganization?.id || "", deleted: false },
     orderBy: { column: "created_at", ascending: true },
   });
 
-  const regions = regionData?.data as IRegion[];
-  const user = useLoggedUserStore((state) => state.user);
-
-  const selectedDepot = useDepotStore((state) => state.selectedDepot);
-  const { setSelectedDepot: setSelectedDepotInStore } = useDepotStore();
-  const { useList: useDepotList } = depotCrud;
-  const { data: depotData, refetch: refetchDepots } = useDepotList({
+  const { data: depotData, refetch: refetchDepots } = depotCrud.useList({
     filters: { region_id: selectedRegion?.id || "", deleted: false },
     orderBy: { column: "created_at", ascending: true },
     skip: !selectedRegion?.id,
   });
 
-  const depots = depotData?.data as IDepot[];
-
-  const { useList: useRoutesList, useDelete } = routeCrud;
-  const { data: routesData, refetch: refetchRoutes } = useRoutesList({
+  const { data: routesData, refetch: refetchRoutes } = routeCrud.useList({
     filters: { depot_id: selectedDepot?.id || "", deleted: false },
     orderBy: { column: "created_at", ascending: false },
+    custom(query) {
+      return query.select(`*, created_by_user:created_by (email)`);
+    },
     skip: !selectedDepot?.id,
   });
 
+  const regions = regionData?.data as IRegion[];
+  const depots = depotData?.data as IDepot[];
   const routes = routesData?.data as IRoute[];
 
+  // Auto-select first region
   useEffect(() => {
-    if (!regions) return;
-    if (!selectedRegion && regions.length > 0) {
-      const firstRegion = regions[0];
-      setSelectedRegionInStore(firstRegion);
+    if (regions?.length > 0 && !selectedRegion) {
+      setSelectedRegionInStore(regions[0]);
     }
   }, [regions, selectedRegion, setSelectedRegionInStore]);
 
-  // by default select first depot
-
+  // Auto-select / clear depot
   useEffect(() => {
-    if (selectedDepot && depots && depots.length === 0) {
+    if (!depots) return;
+    if (depots.length === 0 && selectedDepot) {
       setSelectedDepotInStore(null);
-    }
-    if (!selectedDepot && depots && depots.length > 0) {
-      const firstDepot = depots[0];
-      setSelectedDepotInStore(firstDepot);
+    } else if (depots.length > 0 && !selectedDepot) {
+      setSelectedDepotInStore(depots[0]);
     }
   }, [depots, selectedDepot, setSelectedDepotInStore]);
 
-  //refetch regions when selectedOrganization changes and refetch depots when selectedRegion changes in useEffect
-  useEffect(() => {
-    refetchRegions();
-  }, [selectedOrganization, refetchRegions]);
+  // Refetch on dependency changes
+  useEffect(() => { refetchRegions(); }, [selectedOrganization, refetchRegions]);
+  useEffect(() => { refetchDepots(); }, [selectedRegion, refetchDepots]);
+  useEffect(() => { refetchRoutes(); }, [selectedDepot, selectedRegion, refetchRoutes]);
 
-  useEffect(() => {
-    refetchDepots();
-  }, [selectedRegion, refetchDepots]);
+  return {
+    user,
+    regions,
+    depots,
+    routes,
+    selectedRegion,
+    selectedDepot,
+    selectedOrganization,
+    setSelectedRegionInStore,
+    setSelectedDepotInStore,
+    refetchRoutes,
+  };
+}
 
-  useEffect(() => {
-    refetchRoutes();
-  }, [selectedDepot, refetchRoutes, selectedRegion]);
 
-  function handleEditRoute(routeId: string): void {
-    navigate(
-      `/routes/create/${selectedOrganization?.id}/${selectedDepot}/${routeId}`,
-    );
-  }
 
-  const { mutate: deleteRoute, isPending: isDeletingRoute } =
-    routeCrud.useDelete();
-  const { useCreate } = routeCrud;
-  const { mutate: createRoute, isPending: isCreatingRoute } = useCreate();
 
-  const handleDeleteRoute = async (routeId: string) => {
+
+
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+export default function RoutesPage() {
+  const navigate = useNavigate();
+  const {
+    user,
+    regions,
+    depots,
+    routes,
+    selectedRegion,
+    selectedDepot,
+    selectedOrganization,
+    setSelectedRegionInStore,
+    setSelectedDepotInStore,
+    refetchRoutes,
+  } = useRoutesPageData();
+
+  const { mutate: deleteRoute } = routeCrud.useDelete();
+  const { mutate: deleteSelectedRoutes } = routeCrud.useDeleteAll();
+  const { mutate: createRoute } = routeCrud.useCreate();
+
+  const handleRegionChange = (val: string) =>
+    setSelectedRegionInStore(regions.find((r) => r.id === val) || null);
+
+  const handleDepotChange = (val: string) =>
+    setSelectedDepotInStore(depots.find((d) => d.id === val) || null);
+
+  const handleEditRoute = (routeId: string) => {
+    navigate(`/routes/create/${selectedOrganization?.id}/${selectedDepot?.id}/${routeId}`);
+  };
+
+  const handleDeleteRoute = (routeId: string) => {
     deleteRoute(routeId, {
       onSuccess: () => {
-        console.log("Route deleted successfully:", routeId);
         toast.success("Route deleted successfully");
-        refetchRoutes(); // Refetch routes after deletion
+        refetchRoutes();
       },
       onError: (error) => {
-        console.error("Error deleting route:", error);
-        toast.error(
-          `Error deleting route: ${error.message || "Unknown error"}`,
-        );
+        toast.error(`Error deleting route: ${error.message || "Unknown error"}`);
       },
     });
+  };
+
+  const handleReturn = async (routeId: string, routeNumberSuffix: string) => {
+    const { data: originalRoute, error: fetchError } = await supabase
+      .from("routes")
+      .select("*")
+      .eq("id", routeId)
+      .single();
+
+    if (fetchError || !originalRoute) {
+      toast.error("Error fetching return Route");
+      return;
+    }
+
+    const { id, ...routeWithoutId } = originalRoute;
+    createRoute(
+      {
+        ...routeWithoutId,
+        route_number: `${originalRoute.route_number}${routeNumberSuffix}`,
+        created_at: new Date().toISOString(),
+        return: true,
+        created_by: user?.id || "",
+      },
+      {
+        onSuccess: () => {
+          toast.success("Return Route Created successfully");
+          refetchRoutes();
+        },
+        onError: (error) => {
+          toast.error(`Error eturn Route: ${error.message || "Unknown error"}`);
+        },
+      },
+    );
   };
 
   const duplicateRoute = async (routeId: string, routeNumberSuffix: string) => {
@@ -152,104 +179,114 @@ export default function RoutesPage() {
       .single();
 
     if (fetchError || !originalRoute) {
-      console.error("Error fetching route to duplicate:", fetchError);
+      toast.error("Error fetching route to duplicate");
       return;
     }
 
-    // Destructuring to exclude 'id' from the new route object
     const { id, ...routeWithoutId } = originalRoute;
-    const newRouteNumber = `${originalRoute.route_number}${routeNumberSuffix}`;
-
     createRoute(
-      { ...routeWithoutId, route_number: newRouteNumber, created_at: new Date().toISOString() },
       {
-        onSuccess: (data) => {
-          console.log("Route duplicated successfully:", data);
+        ...routeWithoutId,
+        route_number: `${originalRoute.route_number}${routeNumberSuffix}`,
+        created_at: new Date().toISOString(),
+        created_by: user?.id || "",
+      },
+      {
+        onSuccess: () => {
           toast.success("Route duplicated successfully");
-          refetchRoutes(); // Refetch routes after duplication
+          refetchRoutes();
         },
         onError: (error) => {
-          console.error("Error duplicating route:", error);
-          toast.error(
-            `Error duplicating route: ${error.message || "Unknown error"}`,
-          );
+          toast.error(`Error duplicating route: ${error.message || "Unknown error"}`);
         },
       },
     );
   };
 
+  const hasRegions = regions && regions.length > 0;
+  const hasDepots = depots && depots.length > 0;
+  const hasRoutes = routes && routes.length > 0;
+
+  const [selectedRouteIds, setSelectedRouteIds] = React.useState<string[]>([]);
+
+  const handleSelectedChange = (routeId: string, selected: boolean) => {
+    setSelectedRouteIds((prev) => {
+      if (selected) {
+        return [...prev, routeId];
+      } else {
+        return prev.filter((id) => id !== routeId);
+      }
+    });
+  };
+
+  useEffect(() => {
+    if (routes) {
+      const validSelectedIds = selectedRouteIds.filter((id) => routes.some((route) => route.id === id));
+      if (validSelectedIds.length !== selectedRouteIds.length) {
+        setSelectedRouteIds(validSelectedIds);
+      } 
+    }
+    console.log("Selected Route IDs:", selectedRouteIds);
+  }, [routes, selectedRouteIds]);
+
+
+  const handleDeleteSelectedRoutes = () => {
+    deleteSelectedRoutes(selectedRouteIds, {
+      onSuccess: () => {
+        toast.success("Selected routes deleted successfully");
+        setSelectedRouteIds([]);
+        refetchRoutes();
+      },
+      onError: (error) => {
+        toast.error(`Error deleting selected routes: ${error.message || "Unknown error"}`);
+      },
+    });
+  };
+
   return (
     <div className="flex h-full w-full flex-col items-start gap-4 px-12 py-12">
+      {/* Page Header */}
       <div className="flex w-full flex-col items-start gap-1">
-        <span className="w-full text-heading-2 font-heading-2 text-default-font">
-          Routes
-        </span>
+        <span className="w-full text-heading-2 font-heading-2 text-default-font">Routes</span>
         <span className="text-body font-body text-subtext-color">
           Manage routes for your Depot
         </span>
       </div>
+
+      {/* Toolbar */}
       <div className="flex w-full items-center justify-between">
-        <span className="text-caption font-caption text-subtext-color">
-          Showing records
-        </span>
-        {regions && regions.length > 0 && (
+        <span className="text-caption font-caption text-subtext-color">Showing records</span>
+
+        {hasRegions && (
           <div className="flex items-end gap-2">
+            {/* Region Select — restricted roles */}
             <RBAC features={[]} roles={["depot_admin", "region_admin"]}>
-              <Select
-                className="h-auto  flex-none"
-                variant="outline"
-                label=" Select Region"
-                placeholder="Select Region"
-                value={selectedRegion ? selectedRegion.id : ""}
-                onValueChange={(val) =>
-                  setSelectedRegionInStore(
-                    regions.find((r) => r.id === val) || null,
-                  )
-                }
-              >
-                {regions
-                  .filter((region) => user?.region?.id === region.id)
-                  .map((region) => (
-                    <Select.Item key={region.id} value={region.id}>
-                      {region.name}
-                    </Select.Item>
-                  ))}
-              </Select>
+              <RegionSelect
+                regions={regions.filter((r) => user?.region?.id === r.id)}
+                selectedRegionId={selectedRegion?.id ?? ""}
+                onValueChange={handleRegionChange}
+              />
             </RBAC>
 
+            {/* Region Select — admin roles */}
             <RBAC features={[]} roles={["master", "organization_admin"]}>
-              <Select
-                className="h-auto  flex-none"
-                variant="outline"
-                label="Select Region"
-                placeholder="Select Region"
-                value={selectedRegion ? selectedRegion.id : ""}
-                onValueChange={(val) =>
-                  setSelectedRegionInStore(
-                    regions.find((r) => r.id === val) || null,
-                  )
-                }
-              >
-                {regions.map((region) => (
-                  <Select.Item key={region.id} value={region.id}>
-                    {region.name}
-                  </Select.Item>
-                ))}
-              </Select>
+              <RegionSelect
+                regions={regions}
+                selectedRegionId={selectedRegion?.id ?? ""}
+                onValueChange={handleRegionChange}
+              />
             </RBAC>
-            {depots && depots.length > 0 && (
+
+            {/* Depot Select */}
+            {hasDepots && (
               <RBAC features={[]} roles={["master", "organization_admin"]}>
                 <Select
-                  className="h-auto  flex-none"
+                  className="h-auto flex-none"
                   variant="outline"
-                  label=" Select Depot"
+                  label="Select Depot"
                   placeholder="Select Depot"
-                  value={selectedDepot ? selectedDepot.id : ""}
-                  onValueChange={(val) =>
-                    setSelectedDepotInStore(
-                      depots.find((d) => d.id === val) || null,
-                    )
-                  }
+                  value={selectedDepot?.id ?? ""}
+                  onValueChange={handleDepotChange}
                 >
                   {depots.map((depot) => (
                     <Select.Item key={depot.id} value={depot.id}>
@@ -269,52 +306,44 @@ export default function RoutesPage() {
               Refresh
             </Button>
 
-            <RBAC
-              features={[]}
-              roles={[
-                "region_admin",
-                "organization_admin",
-                "master",
-                "depot_admin",
-              ]}
-            >
+            <RBAC features={[]} roles={["region_admin", "organization_admin", "master", "depot_admin"]}>
               <Button
                 icon={<FeatherPlus />}
                 disabled={!selectedDepot}
                 onClick={() =>
-                  navigate(
-                    `/routes/create/${selectedOrganization.id}/${selectedDepot.id}`,
-                  )
+                  navigate(`/routes/create/${selectedOrganization?.id}/${selectedDepot?.id}`)
                 }
               >
                 Add Route
               </Button>
             </RBAC>
+            {selectedRouteIds.length > 0 && <RBAC features={[]} roles={["region_admin", "organization_admin", "master", "depot_admin"]}>
+              <Button
+                icon={<FeatherTrash />}
+                variant="destructive-secondary"
+                disabled={!selectedDepot || selectedRouteIds.length === 0}
+                onClick={() => handleDeleteSelectedRoutes()}
+              >
+                Delete Selected Routes
+              </Button>
+            </RBAC>}
           </div>
         )}
       </div>
 
-      {routes && routes.length > 0 ? (
+      {/* Content */}
+      {hasRoutes ? (
         <RouteTable
           routes={routes}
           onEdit={handleEditRoute}
           onDelete={handleDeleteRoute}
           onDuplicate={duplicateRoute}
+          onReturn={handleReturn}
+          selectedRouteIds={selectedRouteIds}
+          onSelectedChange={handleSelectedChange}
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center bg-background">
-          <div className="flex h-full w-full flex-col items-center justify-center gap-1">
-            <h2 className="text-heading-2 font-heading-2 text-default-font">
-              No {depots && depots.length === 0 ? "depots" : "routes"} Found
-            </h2>
-            <p className="text-body font-body text-subtext-color">
-              You do not have any{" "}
-              {depots && depots.length === 0 ? "depots" : "routes"} added yet.
-              Start by adding a new{" "}
-              {depots && depots.length === 0 ? "depot" : "route"}.
-            </p>
-          </div>
-        </div>
+        <EmptyState title="Routes" hasDepots={!!hasDepots} />
       )}
     </div>
   );

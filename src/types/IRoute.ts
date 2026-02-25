@@ -21,6 +21,10 @@ export interface IRoute {
   depot_id: string;
   version: string;
   return: boolean;
+  created_by: string;
+  created_by_user?: {
+    email: string;
+  };
 }
 
 // Create: everything but id, deleted, created_at; all optional except name
