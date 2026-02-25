@@ -9,7 +9,7 @@
  */
 
 import React, { useEffect, useState } from "react";
-import { FeatherKeyRound } from "@subframe/core";
+import {  FeatherKeyRound } from "@subframe/core";
 import { FeatherUser } from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { Avatar } from "./Avatar";
@@ -24,6 +24,8 @@ import { set } from "zod";
 import { ILoggedUser, loggedUserCrud, userCrud } from "@/types/IUser";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
+import { Dialog } from "./Dialog";
+import { ResetPasswordForm } from "./ResetPassword";
 interface UserLoginFormRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
 }
@@ -118,6 +120,8 @@ const UserLoginFormRoot = React.forwardRef<
 
   // Remaining render part remains the same...
 
+  const [showResetDialog, setShowResetDialog] = useState(false);
+
 
   return (
     <div
@@ -138,14 +142,14 @@ const UserLoginFormRoot = React.forwardRef<
           </Avatar>
           <div className="flex w-full flex-col items-center gap-6">
             <div className="flex flex-wrap items-center justify-center gap-2">
-              <span className=" text-heading text-brand-800">
+              <span className=" text-heading text-white-default font-heading text-center">
                 Navitronix
               </span>
             </div>
           </div>
         </div>
       </div>
-      <div className="flex w-90 flex-none flex-col items-center justify-center gap-6 self-stretch px-12 py-12">
+      <div className="flex w-[380px] flex-none flex-col items-center justify-center gap-6 self-stretch px-12 py-12">
         <div className="flex w-full  flex-col items-start gap-8">
           <img
             className="h-6 flex-none object-cover"
@@ -184,7 +188,7 @@ const UserLoginFormRoot = React.forwardRef<
               />
             </TextField>
             <Button
-              className="h-10 w-full flex-none"
+              className="h-10 mt-3 w-full flex-none"
               size="large"
               onClick={handleSubmit}
               disabled={usersLoading}
@@ -192,14 +196,19 @@ const UserLoginFormRoot = React.forwardRef<
               {usersLoading ? "Fetching User Details..." : "Submit"}
             </Button>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-1">
+          {/* <div className="flex flex-wrap items-center justify-center gap-1">
             <span className="text-body font-body text-subtext-color text-center">
-              Use below link to reset your password
+              Use this link to reset your password
             </span>
-            <LinkButton variant="brand">Reset Password</LinkButton>
-          </div>
+            <LinkButton onClick={() => setShowResetDialog(true)} variant="brand">Reset Password</LinkButton>
+          </div> */}
         </div>
       </div>
+      <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <Dialog.Content>
+          <ResetPasswordForm onSuccess={() => setShowResetDialog(false)} onCancel={() => setShowResetDialog(false)} />
+        </Dialog.Content>
+      </Dialog>
     </div>
   );
 });

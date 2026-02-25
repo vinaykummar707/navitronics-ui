@@ -41,7 +41,7 @@ import { EmptyState } from "@/components/EmptyState";
   });
 
   const { data: routesData, refetch: refetchRoutes } = routeCrud.useList({
-    filters: { depot_id: selectedDepot?.id || "", deleted: false },
+    filters: { depot_id: selectedDepot?.id || "", deleted: false, organization_id: selectedOrganization?.id || "" },
     orderBy: { column: "created_at", ascending: false },
     custom(query) {
       return query.select(`*, created_by_user:created_by (email)`);
