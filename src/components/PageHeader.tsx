@@ -2,6 +2,7 @@ import { Button } from "@/ui/components/Button";
 import { FeatherPlus, FeatherRefreshCw } from "@subframe/core";
 import React from "react";
 import RBAC from "./RBAC";
+import { toast } from "react-toastify";
 
 interface PageHeaderProps {
   title: string;
@@ -37,7 +38,10 @@ const PageHeader: React.FC<PageHeaderProps> = ({
             variant="neutral-secondary"
             className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
             icon={<FeatherRefreshCw />}
-            onClick={onRefetch}
+            onClick={() => {
+              toast.success(`${title} refreshed successfully`);
+              onRefetch();
+            }}
           >
             Refresh
           </Button>

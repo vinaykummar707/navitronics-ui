@@ -31,7 +31,7 @@ import CCTVPage from "./pages/v2/CCTVPage";
 import { features } from "node:process";
 import RouteCreatePage from "./pages/v2/CreateRoutePage";
 import UtilityPage from "./pages/v2/UtilityPage";
-import FontConfigurationPage from "./pages/v2/FontConfiguration";
+import FontConfigurationPage from "./pages/v2/FontConfigurationPage";
 import useLoggedUserStore from "./store/useLoggedUserStore";
 
 

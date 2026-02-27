@@ -126,7 +126,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
           icon={<FeatherCloud />}
           disabled={isCreatingRoute || isUpdatingRoute}
         >
-          {mode === "create" ? isCreatingRoute ? "Creating Route..." : "Create Route" : isUpdatingRoute ? "Updating Route..." : "Update Route"}
+          {mode === "create" ? isCreatingRoute ? "Saving Route..." : "Save Route" : isUpdatingRoute ? "Updating Route..." : "Update Route"}
         </Button>
       </div>
     </div>

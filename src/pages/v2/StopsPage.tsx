@@ -762,7 +762,10 @@ export default function StopsPage() {
               variant="neutral-secondary"
               className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
               icon={<FeatherRefreshCw />}
-              onClick={() => refetchStops()}
+              onClick={() => {
+                toast.success("Stops refreshed successfully");
+                refetchStops();
+              }}
             >
               Refresh
             </Button>

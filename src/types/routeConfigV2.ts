@@ -76,15 +76,15 @@ export interface TextConfig {
 }
 
 // Text keys defining different text fields on simulation layouts.
-export type SimulationTextKey = 'sideText' | 'upperHalfText' | 'lowerHalfText' | 'text';
+export type SimulationTextKey = 'sideText' | 'upperHalfText' | 'lowerHalfText' | 'text' | 'routeNumber1' | 'routeNumber2';
 
 export type SimulationTexts<T extends readonly SimulationTextKey[]> = {
   [K in T[number]]: TextConfig;
 };
 
 export type SingleSimulationTexts = SimulationTexts<['text']>;
-export type TwoSimulationTexts = SimulationTexts<['sideText', 'text']>;
-export type ThreeSimulationTexts = SimulationTexts<['sideText', 'upperHalfText', 'lowerHalfText']>;
+export type TwoSimulationTexts = SimulationTexts<['sideText', 'text', 'routeNumber1', 'routeNumber2']>; // Added route numbers for two-screen format
+export type ThreeSimulationTexts = SimulationTexts<['sideText', 'upperHalfText', 'lowerHalfText', 'routeNumber1', 'routeNumber2']>;
 
 /**
  * Represents a digital simulation configuration.

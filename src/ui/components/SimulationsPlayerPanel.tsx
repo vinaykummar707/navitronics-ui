@@ -124,11 +124,12 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
     defaultText?: string,
   ) => {
     let newSimulation;
+    const isSplitRoute = watch("is_split_route");
     switch (format) {
       case "single":
         newSimulation = getDefaultSingleSimulation(
           generateCombinations([
-            getValues("route_number"),
+            isSplitRoute ? getValues("route_number_1")+"/"+getValues("route_number_2") : getValues("route_number"),
             getValues("source"),
             getValues("destination"),
             getValues("via"),
@@ -145,6 +146,9 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
             getValues("via"),
           ]),
           type,
+          getValues("route_number_1"),
+          getValues("route_number_2"),
+          isSplitRoute,
         );
         break;
       case "three":
@@ -153,6 +157,9 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
           generateCombinations([getValues("source"), getValues("destination")]),
           generateCombinations([getValues("via")]),
           type,
+          getValues("route_number_1"),
+          getValues("route_number_2"),
+          isSplitRoute,
         );
         break;
       default:

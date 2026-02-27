@@ -301,7 +301,10 @@ export default function RoutesPage() {
               variant="neutral-secondary"
               className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
               icon={<FeatherRefreshCw />}
-              onClick={() => refetchRoutes()}
+              onClick={() => {
+                toast.success("Routes refreshed successfully");
+                refetchRoutes();
+              }}
             >
               Refresh
             </Button>

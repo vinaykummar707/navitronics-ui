@@ -20,6 +20,8 @@ import useSimulationStore from "@/store/useSimulationStore";
 import useTabsStore from "@/store/useTabsStore";
 import { DisplayConfigPostRequest } from "@/types/routeConfigV2";
 import { useFormContext } from "react-hook-form";
+import { RouteNumberControl1 } from "./RouteNumberControl1";
+import { RouteNumberControl2 } from "./RouteNumberControl2";
 
 interface TextSettingsPanelRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -49,9 +51,16 @@ const TextSettingsPanelRoot = React.forwardRef<
       );
 
     const { format } = simulations[selectedSimulationIndex];
+    const isSplitRoute = watch('is_split_route')
     return (
       <>
-        {(format === "two" || format === "three") && <RouteNumberControl />}
+        {(format === "two" || format === "three") && !isSplitRoute && <RouteNumberControl />}
+        {(format === "three" || format === "two") && isSplitRoute && <>
+        
+        <RouteNumberControl1/>
+        <RouteNumberControl2/>
+        
+        </>}
         {(format === "single" || format === "two") && <MainTextControl />}
         {format === "three" && (
           <>
@@ -59,6 +68,7 @@ const TextSettingsPanelRoot = React.forwardRef<
             <LowerHalfTextControl />
           </>
         )}
+
       </>
     );
   };

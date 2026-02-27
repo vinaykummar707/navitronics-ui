@@ -142,7 +142,10 @@ export default function DepotsPage() {
                         variant="neutral-secondary"
                         className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
                         icon={<FeatherRefreshCw />}
-                        onClick={() => refetchDepots()}
+                        onClick={() =>{ 
+                          toast.success("Depots refreshed successfully");
+                          refetchDepots();
+                        }}
                       >
                         Refresh
                       </Button>

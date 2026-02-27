@@ -73,7 +73,7 @@ export default function DisplayEditor({ listIndex }: DisplayEditorProps) {
 
   // Layout Logic for Multi-screen formats
   const renderMultiLayout = () => {
-    const splitRoute = routeData;
+    const splitRoute = watch("is_split_route");
     const sideTextBitmap = watch(`${basePath}.texts.sideText.bitmap`);
     const routeBitmap1 = watch(`${basePath}.texts.routeNumber1.bitmap`);
     const routeBitmap2 = watch(`${basePath}.texts.routeNumber2.bitmap`);

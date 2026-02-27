@@ -215,9 +215,18 @@ const AutoTextGenerator: React.FC<Props> = ({ route, targetLang, onSelect, text 
                     typeof route.route_number === "string" &&
                     !suggestions.includes(route.route_number)
                 ) && (
+                    <>
                         <Select.Item value={route.route_number}>
                             {route.route_number}
                         </Select.Item>
+                         <Select.Item value={route.route_number_1}>
+                            {route.route_number_1}
+                        </Select.Item>
+                         <Select.Item value={route.route_number_2}>
+                            {route.route_number_2}
+                        </Select.Item>
+                        </>
+                        
                     )}
                 {suggestions.map((combo, idx) => (
                     <Select.Item key={idx} value={combo}>

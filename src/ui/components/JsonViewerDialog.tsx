@@ -80,10 +80,10 @@ const JsonViewerDialogRoot = React.forwardRef<
             <div className="flex w-full no-scrollbar grow shrink-0 basis-0 items-start justify-start overflow-auto rounded-md border border-solid border-neutral-border bg-default-background p-2">
               {jsonContent ? (
                 <ReactJson
-                  
+
                   src={JSON.parse(jsonContent)}
                   name={null}
-                  theme="embers"
+                  theme="apathy"
                   collapsed={false}
                   enableClipboard={false}
                   displayDataTypes={false}

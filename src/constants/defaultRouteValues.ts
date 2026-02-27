@@ -98,10 +98,12 @@ export function getDefaultStopSingleSimulation(text?: string, type: SimulationTy
   };
 }
 
-export function getDefaultTwoSimulation(sideText?: string, text?: string, type: SimulationType = DEFAULT_SIMULATION_TYPE): Simulation {
+export function getDefaultTwoSimulation(sideText?: string, text?: string, type: SimulationType = DEFAULT_SIMULATION_TYPE, routeNumber1?: string, routeNumber2?: string, isSplitRoute?: boolean): Simulation {
   return {
     format: "two",
     texts: {
+      routeNumber1: getDefaultTextConfig(routeNumber1 || "Route 1"),
+      routeNumber2: getDefaultTextConfig(routeNumber2 || "Route 2"),
       sideText: getDefaultTextConfig(sideText),
       text: getDefaultTextConfig(text),
     },
@@ -111,10 +113,12 @@ export function getDefaultTwoSimulation(sideText?: string, text?: string, type: 
   };
 }
 
-export function getDefaultThreeSimulation(sideText?: string, upperHalfText?: string, lowerHalfText?: string, type: SimulationType = DEFAULT_SIMULATION_TYPE): Simulation {
+export function getDefaultThreeSimulation(sideText?: string, upperHalfText?: string, lowerHalfText?: string, type: SimulationType = DEFAULT_SIMULATION_TYPE, routeNumber1?: string, routeNumber2?: string, isSplitRoute?: boolean): Simulation {
   return {
     format: "three",
     texts: {
+      routeNumber1: getDefaultTextConfig(routeNumber1 || "Route 1"),
+      routeNumber2: getDefaultTextConfig(routeNumber2 || "Route 2"),
       sideText: getDefaultTextConfig(sideText),
       upperHalfText: getDefaultTextConfig(upperHalfText),
       lowerHalfText: getDefaultTextConfig(lowerHalfText),

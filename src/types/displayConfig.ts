@@ -33,11 +33,15 @@ export interface SingleScreenTexts {
 }
 
 export interface TwoScreenTexts {
+	routeNumber1?: TextConfig;
+	routeNumber2?: TextConfig;
 	sideText: TextConfig;
 	text: TextConfig;
 }
 
 export interface ThreeScreenTexts {
+	routeNumber1?: TextConfig;
+	routeNumber2?: TextConfig;
 	sideText: TextConfig;
 	upperHalfText: TextConfig;
 	lowerHalfText: TextConfig;

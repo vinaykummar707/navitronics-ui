@@ -74,7 +74,10 @@ export default function UsersPage() {
             variant="neutral-secondary"
             className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
             icon={<FeatherRefreshCw />}
-            onClick={() => refetch()}
+            onClick={() => {
+              toast.success("Users refreshed successfully");
+              refetch();
+            }}
           >
             Refresh
           </Button>
