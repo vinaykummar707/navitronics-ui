@@ -1,8 +1,9 @@
+import { fontSettingsCrud, ITextConfig } from "@/types/ITextConfig";
 import { useQuery } from "@tanstack/react-query";
 import React, { createContext, useContext } from "react";
 
 type LanguageConfigContextType = {
-  configs: any[];
+  configs: ITextConfig[];
   isLoading: boolean;
   isError: boolean;
 };
@@ -20,13 +21,13 @@ const fetchConfigs = async () => {
 };
 
 export const LanguageConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["languageConfigs"],
-    queryFn: fetchConfigs,
-    initialData: [],
-    retry:false
-  });
+  const { data, isLoading, isError } = fontSettingsCrud.useList({filters: { deleted: false }});
+   const fontSettings = data ? (data.data as ITextConfig[]).map((item) => ({
+      ...item,
+      config: typeof item.config === 'string' ? JSON.parse(item.config) : item.config
+    })) : [];
   // Optional: Show loading UI while fetching
+  console.log("Language configs: ", fontSettings);
   if (isLoading) {
     return <div>Loading language configs...</div>;
   }
@@ -36,7 +37,7 @@ export const LanguageConfigProvider: React.FC<{ children: React.ReactNode }> = (
   }
 
   return (
-    <LanguageConfigContext.Provider value={{ configs: data || [], isLoading, isError }}>
+    <LanguageConfigContext.Provider value={{ configs: fontSettings, isLoading, isError }}>
       {children}
     </LanguageConfigContext.Provider>
   );

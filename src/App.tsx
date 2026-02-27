@@ -33,6 +33,7 @@ import RouteCreatePage from "./pages/v2/CreateRoutePage";
 import UtilityPage from "./pages/v2/UtilityPage";
 import FontConfigurationPage from "./pages/v2/FontConfigurationPage";
 import useLoggedUserStore from "./store/useLoggedUserStore";
+import { LanguageConfigProvider } from "./context/LanguageConfigContext";
 
 
 const queryClient = new QueryClient({
@@ -122,8 +123,8 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="routes/create/:areaId/:depotId" element={<RouteCreatePage/>} />
-          <Route path="routes/create/:areaId/:depotId/:routeId" element={<RouteCreatePage/>} />
+          <Route path="routes/create/:areaId/:depotId" element={<LanguageConfigProvider><RouteCreatePage /></LanguageConfigProvider>} />
+          <Route path="routes/create/:areaId/:depotId/:routeId" element={<LanguageConfigProvider><RouteCreatePage /></LanguageConfigProvider>} />
           {/* Protected Routes */}
           <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>}>
             <Route index element={<Navigate to={getDefaultRouteForRole(user?.role?.name.toLowerCase() || "")} replace />} />

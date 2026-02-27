@@ -162,6 +162,8 @@ import { Select } from "./Select";
 import { AVAILABLE_LANGUAGES } from "@/constants/defaultRouteValues";
 import { getBitmapHeight } from "@/utils/measurements";
 import IMEInput from "@/components/IMEInput";
+import { useLanguageConfigs } from "@/context/LanguageConfigContext";
+import { getDefaultFontHeightForLanguage, useFontHeightForLanguage } from "@/utils/getFontFileByLanguage";
 
 interface TextPropertiesControlsRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -205,6 +207,13 @@ const TextPropertiesControlsRoot = React.forwardRef<
       setValue(`${pathBase}.fontHeight`, currentHeight - 1);
     }
   };
+
+  const getDefaultFontHeightForLanguage = useFontHeightForLanguage();
+
+ 
+
+
+
   return (
     <div
       className={SubframeUtils.twClassNames(
@@ -217,7 +226,11 @@ const TextPropertiesControlsRoot = React.forwardRef<
       <ControlItem label="Choose Language">
         <Select
           value={watch(`${pathBase}.language`)}
-          onValueChange={(value) => setValue(`${pathBase}.language`, value)}
+          onValueChange={(value) => {
+            const defaultFontHeight = getDefaultFontHeightForLanguage(value, textProperty);
+            setValue(`${pathBase}.fontHeight`, defaultFontHeight);
+            setValue(`${pathBase}.language`, value)
+          }}
           className="w-full"
         >
           {AVAILABLE_LANGUAGES.map((lang) => (

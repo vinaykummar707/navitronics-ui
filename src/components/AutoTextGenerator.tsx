@@ -203,38 +203,51 @@ const AutoTextGenerator: React.FC<Props> = ({ route, targetLang, onSelect, text 
     return (
         <Select
             aria-label="Auto Text Generator"
-           placeholder={loading ? "Transliterating..." : "Auto Text..."}
+            placeholder={loading ? "Transliterating..." : "Auto Text..."}
             onValueChange={val => onSelect(val)}
             disabled={loading && !suggestions.length}
             className="w-full truncate line-clamp-1"
-            
+
         >
-            
+
             {loading && <div className="px-2 py-1 text-gray-400 text-sm">Transliterating...</div>}
             {(route.route_number &&
-                    typeof route.route_number === "string" &&
-                    !suggestions.includes(route.route_number)
+                typeof route.route_number === "string" &&
+                !suggestions.includes(route.route_number)
+            ) && (
+                    <Select.Item value={route.route_number}>
+                        {route.route_number}
+                    </Select.Item>
+
+
+                )}
+            {(route.route_number_1 &&
+                typeof route.route_number_1 === "string" &&
+                !suggestions.includes(route.route_number_1)
+            ) && (
+                    <Select.Item value={route.route_number_1}>
+                        {route.route_number_1}
+                    </Select.Item>
+
+
+                )}
+                {(route.route_number_2 &&
+                    typeof route.route_number_2 === "string" &&
+                    !suggestions.includes(route.route_number_2)
                 ) && (
-                    <>
-                        <Select.Item value={route.route_number}>
-                            {route.route_number}
-                        </Select.Item>
-                         <Select.Item value={route.route_number_1}>
-                            {route.route_number_1}
-                        </Select.Item>
-                         <Select.Item value={route.route_number_2}>
+                        <Select.Item value={route.route_number_2}>
                             {route.route_number_2}
                         </Select.Item>
-                        </>
+                        
                         
                     )}
-                {suggestions.map((combo, idx) => (
-                    <Select.Item key={idx} value={combo}>
-                        {combo}
-                    </Select.Item>
-                ))}
-                {/* Add route_number as an option if it's not blank and not in suggestions */}
-                
+            {suggestions.map((combo, idx) => (
+                <Select.Item key={idx} value={combo}>
+                    {combo}
+                </Select.Item>
+            ))}
+            {/* Add route_number as an option if it's not blank and not in suggestions */}
+
         </Select>
     );
 };
