@@ -14,11 +14,7 @@ interface FormatSelectionControlRootProps extends React.ComponentProps<typeof Co
   className?: string;
 }
 
-const simulationFormats = [
-  { type: "single", Icon: FeatherRectangleHorizontal, defaultFunc: getDefaultSingleSimulation, label: "Single" },
-  { type: "two", Icon: FeatherColumns, defaultFunc: getDefaultTwoSimulation, label: "Two" },
-  { type: "three", Icon: FeatherRows3, defaultFunc: getDefaultThreeSimulation, label: "Three" }
-];
+
 
 // function to generate combinations of
 
@@ -26,16 +22,99 @@ const FormatSelectionControlRoot = React.forwardRef<
   React.ElementRef<typeof ControlAccordion>,
   FormatSelectionControlRootProps
 >(({ className, ...otherProps }, ref) => {
-  const { setValue,watch } = useFormContext<DisplayConfigPostRequest>();
+  const { setValue, watch, getValues } = useFormContext<DisplayConfigPostRequest>();
   const selectedSimulationIndex = useSimulationStore((state) => state.selectedSimulationIndex);
   const selectedTab = useTabsStore((state) => state.selectedTab);
   const selectedSimulation = watch(`${selectedTab}[${selectedSimulationIndex}]`);
+  const generateCombinations = (texts: (string | undefined)[]): string => {
+    return texts.filter(Boolean).join(" - ");
+  };
+  const isSplitRoute = watch("is_split_route");
 
-  const handleFormatChange = (formatType: string) => {
+  const simulationFormats = [
+    {
+      type: "single", Icon: FeatherRectangleHorizontal, defaultFunc: getDefaultSingleSimulation, label: "Single"
+    },
+    {
+      type: "two", Icon: FeatherColumns, defaultFunc: getDefaultTwoSimulation(
+        generateCombinations([getValues("route_number")]),
+        generateCombinations([
+          getValues("source"),
+          getValues("destination"),
+          getValues("via"),
+        ]),
+        'route',
+        getValues("route_number_1"),
+        getValues("route_number_2"),
+        isSplitRoute,
+      ), label: "Two"
+    },
+    {
+      type: "three", Icon: FeatherRows3, defaultFunc: getDefaultThreeSimulation(
+        generateCombinations([getValues("route_number")]),
+        generateCombinations([getValues("source"), getValues("destination")]),
+        generateCombinations([getValues("via")]),
+        'route',
+        getValues("route_number_1"),
+        getValues("route_number_2"),
+        isSplitRoute,
+      ), label: "Three"
+    }
+  ];
+ 
+
+  const formatFunctions = (format: string) => {
+    let newSimulation;
+    switch (format) {
+      case "single":
+        newSimulation = getDefaultSingleSimulation(
+          generateCombinations([
+            isSplitRoute ? getValues("route_number_1") + "/" + getValues("route_number_2") : getValues("route_number"),
+            getValues("source"),
+            getValues("destination"),
+            getValues("via"),
+          ]),
+          'route',
+        );
+        break;
+      case "two":
+        newSimulation = getDefaultTwoSimulation(
+          generateCombinations([getValues("route_number")]),
+          generateCombinations([
+            getValues("source"),
+            getValues("destination"),
+            getValues("via"),
+          ]),
+          'route',
+          getValues("route_number_1"),
+          getValues("route_number_2"),
+          isSplitRoute,
+        );
+        break;
+      case "three":
+        newSimulation = getDefaultThreeSimulation(
+          generateCombinations([getValues("route_number")]),
+          generateCombinations([getValues("source"), getValues("destination")]),
+          generateCombinations([getValues("via")]),
+          'route',
+          getValues("route_number_1"),
+          getValues("route_number_2"),
+          isSplitRoute,
+        );
+        break;
+      default:
+        console.warn("Unsupported format for adding simulation:", format);
+        return;
+    }
+
+    return newSimulation;
+  }
+
+   const handleFormatChange = (formatType: string) => {
     const format = simulationFormats.find(f => f.type === formatType);
     if (format) {
       setValue(`${selectedTab}[${selectedSimulationIndex}]`, {
-        ...format.defaultFunc(format.label),
+        ...formatFunctions(formatType),
         height: selectedSimulation?.height,
         width: selectedSimulation?.width,
       });

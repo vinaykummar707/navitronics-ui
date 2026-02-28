@@ -34,6 +34,7 @@ import { useStops } from "@/api/stop/hooks";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { useParams } from "react-router-dom";
 import { Select } from "./Select";
+import { toast } from "react-toastify";
 
 interface SimulationSettingsPanelRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -80,9 +81,10 @@ const SimulationSettingsPanelRoot = React.forwardRef<
   const copySimulations = (destinationTab: string) => {
     const sourceSimulations = simulations;
     const destinationSimulations = watch(destinationTab);
-    const updatedDestinationSimulations = [...destinationSimulations, ...sourceSimulations];
+    const updatedDestinationSimulations = [...sourceSimulations];
     // Update the destination tab with the copied simulations
     methods.setValue(destinationTab, updatedDestinationSimulations);
+    toast.success(`Simulations copied to ${destinationTab} tab successfully!`);
   };
 
 

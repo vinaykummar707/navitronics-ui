@@ -113,7 +113,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
   });
 
   // function to return combined text from passed string array
-  const generateCombinations = (texts: (string | undefined)[]): string => {
+   const generateCombinations = (texts: (string | undefined)[]): string => {
     return texts.filter(Boolean).join(" - ");
   };
 
