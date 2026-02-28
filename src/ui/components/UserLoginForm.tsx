@@ -90,6 +90,7 @@ const UserLoginFormRoot = React.forwardRef<
 
  // Fetch user data and handle login
   useEffect(() => {
+    usersRefetch();
     const processData = async () => {
       const userData = loggedUserDetails?.data as ILoggedUser;
       console.log("Fetched user details:", userData);
@@ -97,12 +98,12 @@ const UserLoginFormRoot = React.forwardRef<
         if (userData) {
           login(userData);
           if (userData.organization?.active) {
-            if (userData.active) {
+            if (userData.active && !userData.deleted) {
               toast.success("Login successful!");
               setSelectedOrganization(userData.organization);
               navigate("/home");
             } else {
-              throw new Error("Your account is not active. Please contact support.");
+              throw new Error("Your account is not active or has been deleted. Please contact support.");
             }
           } else {
             throw new Error("Your organization is not active. Please contact support.");

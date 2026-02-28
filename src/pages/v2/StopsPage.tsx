@@ -694,13 +694,18 @@ export default function StopsPage() {
     }
   }
 
+  const [generatingAudio, setGeneratingAudio] = React.useState<boolean>(false);
+
   const genAudio = async (text: string, stopId: string) => {
     try {
+      setGeneratingAudio(true);
       const { fileUrl, size } = await handleStopAudioGeneration(text, stopId);
       console.log("Generated audio URL:", fileUrl, "Size:", size);
       refetchStops(); // Refresh the stops data to reflect the new audio
     } catch (err) {
       console.error("Error generating audio:", err);
+    } finally {
+      setGeneratingAudio(false);
     }
   };
 
@@ -826,7 +831,7 @@ export default function StopsPage() {
                     <>
                       <Button
                         className="h-8 w-auto flex-none"
-                        disabled={false}
+                        disabled={generatingAudio}
                         variant="brand-primary"
                         size="medium"
                         icon={<FeatherMusic />}
@@ -836,7 +841,7 @@ export default function StopsPage() {
                           genAudio(stop.name, stop.id)
                         }
                       >
-                        Generate Audio
+                        {generatingAudio ? "Generating..." : "Generate Audio"}
                       </Button>
                     </>
                   }

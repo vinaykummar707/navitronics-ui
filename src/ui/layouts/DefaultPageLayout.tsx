@@ -105,15 +105,15 @@ const DefaultPageLayoutRoot = React.forwardRef<
 
         <RBAC roles={[ROLES.MASTER]} features={[]}>
           <SidebarWithSections.NavSection label="Administrator">
-            <SidebarWithSections.NavItem selected={path.startsWith("/home/utility")} onClick={() => navigate("/home/utility")} icon={<FeatherCpu />}>
+            {/* <SidebarWithSections.NavItem selected={path.startsWith("/home/utility")} onClick={() => navigate("/home/utility")} icon={<FeatherCpu />}>
               Utility
-            </SidebarWithSections.NavItem>
+            </SidebarWithSections.NavItem> */}
             <SidebarWithSections.NavItem selected={path.startsWith("/home/font-configuration")} onClick={() => navigate("/home/font-configuration")} icon={<FeatherType />}>
               Font Configuration
             </SidebarWithSections.NavItem>
-            <SidebarWithSections.NavItem selected={path.startsWith("/home/settings")} onClick={() => navigate("/home/settings")} icon={<FeatherSettings />}>
+            {/* <SidebarWithSections.NavItem selected={path.startsWith("/home/settings")} onClick={() => navigate("/home/settings")} icon={<FeatherSettings />}>
               Settings
-            </SidebarWithSections.NavItem>
+            </SidebarWithSections.NavItem> */}
           </SidebarWithSections.NavSection>
         </RBAC>
       </SidebarWithSections>

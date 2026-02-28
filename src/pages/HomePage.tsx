@@ -36,8 +36,8 @@ const HomePage = () => {
                 return;
             }
 
-            if (userData.active === false) {
-                handleError("Your account is not active. Please contact support.");
+            if (userData.active === false || userData.deleted) {
+                handleError("Your account is not active or has been deleted. Please contact support.");
                 return;
             }
             

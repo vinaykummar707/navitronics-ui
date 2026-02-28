@@ -126,8 +126,8 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<HTMLD
         <TextField
           className="h-auto w-full flex-none"
           label="Up Latitude"
-          error={errors.up_latitude?.message}
-          helpText="Upward Latitude"
+          error={errors.up_latitude}
+          helpText={errors.up_latitude ? "Up Latitude is required" : "Upward Latitude"}
           icon={<FeatherPin />}
         >
           <TextField.Input {...register('up_latitude',{required:true})} placeholder="17.3850" />
@@ -135,8 +135,8 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<HTMLD
         <TextField
           className="h-auto w-full flex-none"
           label="Up Longitude"
-          error={errors.up_longitude?.message}
-          helpText="Upward Longitude"
+          error={errors.up_longitude}
+          helpText={errors.up_longitude ? "Up Longitude is required" : "Upward Longitude"}
           icon={<FeatherPin />}
         >
           <TextField.Input {...register('up_longitude',{required:true})} placeholder="78.4867" />
@@ -144,8 +144,8 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<HTMLD
         <TextField
           className="h-auto w-full flex-none"
           label="Down Latitude"
-          error={errors.down_latitude?.message}
-          helpText="Return Latitude"
+          error={errors.down_latitude}
+          helpText={errors.down_latitude ? "Down Latitude is required" : "Return Latitude"}
           icon={<FeatherPin />}
         >
           <TextField.Input {...register('down_latitude',{required:true})} placeholder="17.3850" />
@@ -153,8 +153,8 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<HTMLD
         <TextField
           className="h-auto w-full flex-none"
           label="Down Longitude"
-          error={errors.down_longitude?.message}
-          helpText="Return Longitude"
+          error={errors.down_longitude}
+          helpText={errors.down_longitude ? "Down Longitude is required" : "Return Longitude"}
           icon={<FeatherPin />}
         >
           <TextField.Input {...register('down_longitude',{required:true})} placeholder="78.4867" />
