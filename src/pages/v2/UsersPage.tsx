@@ -42,7 +42,6 @@ export default function UsersPage() {
 
   // write a function to soft delete a user by setting deleted to true and active to false, and then refetch the users list using supabase client, and also handle any errors that may occur during the process
   const handleDeleteUser = async (userId: string) => {
-    
     deleteMutate(userId, {
       onSuccess: () => {
         toast.success("User deleted successfully");
@@ -56,7 +55,7 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="flex h-full w-full flex-col items-start gap-4 px-12 py-12">
+    <div className="flex h-full  overflow-hidden w-full flex-col items-start gap-4 ">
       <div className="flex w-full flex-col items-start gap-1">
         <span className="text-heading-2 font-heading-2 text-default-font text-center">
           Users
@@ -65,7 +64,7 @@ export default function UsersPage() {
           Overview of your store&#39;s performance and customer engagement
         </span>
       </div>
-      <div className="flex w-full items-center justify-between">
+      <div className="flex w-full items-center justify-between mobile:flex-col mobile:items-start gap-4">
         <span className="text-caption font-caption text-subtext-color">
           Showing {usersData?.length || 0} records
         </span>
@@ -96,7 +95,11 @@ export default function UsersPage() {
         <UsersTable
           users={usersData || []}
           onDeleteUser={(id) => {
-            if(confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
+            if (
+              confirm(
+                "Are you sure you want to delete this user? This action cannot be undone.",
+              )
+            ) {
               handleDeleteUser(id);
             }
           }}

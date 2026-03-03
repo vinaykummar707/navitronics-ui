@@ -52,13 +52,14 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
     return (
       <div
         className={SubframeUtils.twClassNames(
-          "flex w-full flex-col items-start gap-6 rounded-md border border-solid border-neutral-border bg-neutral-50 px-4 py-4",
+          "flex flex-col overflow-auto w-full items-start gap-6 rounded-md border border-solid border-neutral-border bg-neutral-50 px-4 py-4",
           className,
         )}
         ref={ref}
         {...otherProps}
       >
         <Table
+          className="overflow-auto"
           header={
             <Table.HeaderRow>
               <Table.HeaderCell >

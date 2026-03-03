@@ -8,7 +8,7 @@
  */
 // @subframe/sync-disable
 import React from "react";
-import { FeatherBusFront, FeatherCctv } from "@subframe/core";
+import { FeatherBusFront, FeatherCctv, FeatherPanelLeft } from "@subframe/core";
 import { FeatherCpu } from "@subframe/core";
 import { FeatherGlobe2 } from "@subframe/core";
 import { FeatherHotel } from "@subframe/core";
@@ -24,6 +24,8 @@ import * as SubframeUtils from "../utils";
 import { useLocation, useNavigate } from "react-router-dom";
 import RBAC from "@/components/RBAC";
 import { ROLES } from "@/constants/roles";
+import useToggleStore from "@/store/useToggleStore";
+import { IconButton } from "../components/IconButton";
 
 interface DefaultPageLayoutRootProps
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -41,6 +43,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
   const navigate = useNavigate();
   const location = useLocation();
   const path = location.pathname;
+  const {showSidebar,toggleSidebar} = useToggleStore()
   return (
     <div
       className={SubframeUtils.twClassNames(
@@ -51,7 +54,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
       {...otherProps}
     >
       <SidebarWithSections
-        className="mobile:hidden "
+        className={showSidebar ? "flex-shrink-0" : "hidden"}
         header={
           <>
             <div className="space-y-2">
@@ -118,7 +121,8 @@ const DefaultPageLayoutRoot = React.forwardRef<
         </RBAC>
       </SidebarWithSections>
       {children ? (
-        <div className="flex grow shrink-0 basis-0 flex-col items-start gap-4 self-stretch overflow-y-auto bg-default-background">
+        <div className="flex grow shrink-0 basis-0 flex-col items-start gap-4 self-stretch overflow-y-auto bg-default-background px-8 py-8">
+          <IconButton className="shrink-0" variant="neutral-secondary" onClick={toggleSidebar} icon={<FeatherPanelLeft />} />
           {children}
         </div>
       ) : null}

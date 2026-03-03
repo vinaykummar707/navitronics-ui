@@ -60,13 +60,13 @@ const ConfigurationDetailsViewRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex h-full w-full items-start rounded-md border border-solid border-neutral-border bg-neutral-50 overflow-hidden",
+        "flex h-full w-full items-start rounded-md border border-solid border-neutral-border bg-neutral-50 overflow-hidden mobile:flex-col",
         className
       )}
       ref={ref}
       {...otherProps}
     >
-      <div className="flex w-64 flex-none flex-col items-start gap-4 self-stretch border-r border-solid border-neutral-border px-4 py-4 overflow-hidden">
+      <div className="flex w-64 mobile:w-full flex-none flex-col items-start gap-4 self-stretch border-r border-solid border-neutral-border px-4 py-4 overflow-hidden">
         <div className="flex w-full flex-col items-start gap-2">
           {sidebarTitle ? (
             <span className="text-heading-2 font-heading-2 text-default-font">

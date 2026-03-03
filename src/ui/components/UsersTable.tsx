@@ -44,7 +44,7 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
     return (
       <div
         className={SubframeUtils.twClassNames(
-          "flex w-full flex-col items-start gap-2  rounded-md border border-solid border-neutral-border bg-neutral-50 px-4 py-4",
+          "flex w-full flex-col items-start gap-2 overflow-auto   rounded-md border border-solid border-neutral-border bg-neutral-50 px-4 py-4",
           className
         )}
         ref={ref}

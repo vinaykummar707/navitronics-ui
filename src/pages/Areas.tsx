@@ -1,20 +1,20 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { areaService } from '../services/areaService';
-import { Area, UpdateAreaDto } from '../types/area';
-import { AreaForm } from '../components/areas/AreaForm';
-import { Dialog } from '@headlessui/react';
-import { useOrganizationStore } from '../store/useOrganizationStore';
-import { Icon } from '@iconify-icon/react';
-import { Container } from '@chakra-ui/react';
-import useAuthStore from '@/store/authStore';
-import RBAC from '../components/RBAC';
-import { ROLES } from '../constants/roles';
-import { toast } from 'react-toastify';
-import { Button } from '@/ui/components/Button';
-import { FeatherEdit2, FeatherMapPin, FeatherTrash } from '@subframe/core';
-import { IconWithBackground } from '@/ui/components/IconWithBackground';
-import { RegionListItem } from '@/ui/components/RegionListItem';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { areaService } from "../services/areaService";
+import { Area, UpdateAreaDto } from "../types/area";
+import { AreaForm } from "../components/areas/AreaForm";
+import { Dialog } from "@headlessui/react";
+import { useOrganizationStore } from "../store/useOrganizationStore";
+import { Icon } from "@iconify-icon/react";
+import { Container } from "@chakra-ui/react";
+import useAuthStore from "@/store/authStore";
+import RBAC from "../components/RBAC";
+import { ROLES } from "../constants/roles";
+import { toast } from "react-toastify";
+import { Button } from "@/ui/components/Button";
+import { FeatherEdit2, FeatherMapPin, FeatherTrash } from "@subframe/core";
+import { IconWithBackground } from "@/ui/components/IconWithBackground";
+import { RegionListItem } from "@/ui/components/RegionListItem";
 
 const Areas = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -24,55 +24,67 @@ const Areas = () => {
   const user = useAuthStore((state) => state.user);
 
   const { data: areas, isLoading } = useQuery({
-    queryKey: ['areas', selectedOrganization?.organizationId],
+    queryKey: ["areas", selectedOrganization?.organizationId],
     queryFn: () =>
-      selectedOrganization ? areaService.getAll(selectedOrganization.organizationId) : Promise.resolve([]),
+      selectedOrganization
+        ? areaService.getAll(selectedOrganization.organizationId)
+        : Promise.resolve([]),
     enabled: !!selectedOrganization,
   });
 
-  const filteredAreas = user.area && user.userRole === 'area_admin' ? areas?.filter(area => area.areaId === user.area.areaId) : areas;
-
+  const filteredAreas =
+    user.area && user.userRole === "area_admin"
+      ? areas?.filter((area) => area.areaId === user.area.areaId)
+      : areas;
 
   const createMutation = useMutation({
     mutationFn: areaService.create,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['areas', selectedOrganization?.organizationId] });
+      queryClient.invalidateQueries({
+        queryKey: ["areas", selectedOrganization?.organizationId],
+      });
       setIsCreateModalOpen(false);
-      toast.success('Area created successfully');
+      toast.success("Area created successfully");
     },
     onError: (error) => {
-      toast.error('Failed to create area');
-    }
+      toast.error("Failed to create area");
+    },
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ data, areaId }: { data: UpdateAreaDto; areaId: string }) =>
       areaService.update(data, areaId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['areas', selectedOrganization?.organizationId] });
+      queryClient.invalidateQueries({
+        queryKey: ["areas", selectedOrganization?.organizationId],
+      });
       setEditingArea(null);
-      toast.success('Area updated successfully');
+      toast.success("Area updated successfully");
     },
     onError: (error) => {
-      toast.error('Failed to update area');
-    }
+      toast.error("Failed to update area");
+    },
   });
 
   const deleteMutation = useMutation({
     mutationFn: areaService.delete,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['areas', selectedOrganization?.organizationId] });
-      toast.success('Area deleted successfully');
+      queryClient.invalidateQueries({
+        queryKey: ["areas", selectedOrganization?.organizationId],
+      });
+      toast.success("Area deleted successfully");
     },
     onError: (error) => {
-      toast.error('Failed to delete area');
-    }
+      toast.error("Failed to delete area");
+    },
   });
 
   if (!selectedOrganization) {
     return (
       <div className="container mx-auto p-4">
-        <div className="text-center text-stone-500">Please select an organization first</div>
+        <div className="text-center text-stone-500">
+          Please select an organization first
+        </div>
       </div>
     );
   }
@@ -229,7 +241,7 @@ const Areas = () => {
     //     </div>
     //   </Dialog>
     // </Container>
-    <div className="flex h-full w-full flex-col items-start gap-2 bg-default-background px-12 py-12">
+    <div className="flex h-full w-full flex-col items-start gap-2 bg-default-background ">
       <div className="flex w-full flex-col items-start">
         <div className="flex w-full flex-wrap items-end gap-2 px-2 py-2">
           <div className="flex grow shrink-0 basis-0 items-center gap-2">
@@ -238,44 +250,46 @@ const Areas = () => {
             </span>
           </div>
           <div className="flex flex-wrap items-end gap-2">
-            <Button onClick={(event: React.MouseEvent<HTMLButtonElement>) => { }}>
+            <Button
+              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+            >
               Add Region
             </Button>
             <Button
               variant="brand-tertiary"
-              onClick={(event: React.MouseEvent<HTMLButtonElement>) => { }}
+              onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
             >
               Refresh
             </Button>
           </div>
         </div>
       </div>
-      {filteredAreas && filteredAreas.map((area) =>
-        <RegionListItem
-          icon={<FeatherMapPin />}
-          locationName={area.areaName}
-          date={new Date(area.createdAt).toLocaleString()}
-
-          actions={
-            <>
-              <Button
-                variant="brand-secondary"
-                icon={<FeatherEdit2 />}
-                onClick={(event: React.MouseEvent<HTMLButtonElement>) => { }}
-              >
-                Edit Region
-              </Button>
-              <Button
-                variant="neutral-secondary"
-                icon={<FeatherTrash />}
-                onClick={(event: React.MouseEvent<HTMLButtonElement>) => { }}
-              >
-                Delete
-              </Button>
-            </>
-          }
-        />
-      )}
+      {filteredAreas &&
+        filteredAreas.map((area) => (
+          <RegionListItem
+            icon={<FeatherMapPin />}
+            locationName={area.areaName}
+            date={new Date(area.createdAt).toLocaleString()}
+            actions={
+              <>
+                <Button
+                  variant="brand-secondary"
+                  icon={<FeatherEdit2 />}
+                  onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+                >
+                  Edit Region
+                </Button>
+                <Button
+                  variant="neutral-secondary"
+                  icon={<FeatherTrash />}
+                  onClick={(event: React.MouseEvent<HTMLButtonElement>) => {}}
+                >
+                  Delete
+                </Button>
+              </>
+            }
+          />
+        ))}
     </div>
   );
 };

@@ -10,43 +10,47 @@ import { toast } from "react-toastify";
 export default function FontConfigurationPage() {
   const [showDrawer, setShowDrawer] = React.useState(false);
   const [editData, setEditData] = React.useState<ITextConfig>(null);
-  const {data, refetch: refetchFontSettings} = fontSettingsCrud.useList({
-    filters:{deleted: false},
+  const { data, refetch: refetchFontSettings } = fontSettingsCrud.useList({
+    filters: { deleted: false },
   });
-  const {mutate: deleteFontSetting} = fontSettingsCrud.useDelete();
-  const fontSettings = data ? (data.data as ITextConfig[]).map((item) => ({
-    ...item,
-    config: typeof item.config === 'string' ? JSON.parse(item.config) : item.config
-  })) : [];
+  const { mutate: deleteFontSetting } = fontSettingsCrud.useDelete();
+  const fontSettings = data
+    ? (data.data as ITextConfig[]).map((item) => ({
+        ...item,
+        config:
+          typeof item.config === "string"
+            ? JSON.parse(item.config)
+            : item.config,
+      }))
+    : [];
 
   const handleDelete = (id: string) => {
     deleteFontSetting(id, {
-        onSuccess: () => {
-          toast.success("Font configuration deleted successfully");
-          refetchFontSettings();
-        },
-        onError: (error) => {
-          toast.error(`Failed to delete font configuration: ${error.message}`);
-        }
+      onSuccess: () => {
+        toast.success("Font configuration deleted successfully");
+        refetchFontSettings();
+      },
+      onError: (error) => {
+        toast.error(`Failed to delete font configuration: ${error.message}`);
+      },
     });
   };
 
   console.log("Font settings: ", fontSettings);
 
   return (
-    <div className="flex h-full w-full flex-col items-start gap-6 px-12 py-12">
+    <div className="flex h-full w-full flex-col items-start gap-6 ">
       <div className="flex w-full flex-col items-start gap-1">
         <span className="w-full text-heading-2 font-heading-2 text-default-font">
-          FontConfiguration 
+          FontConfiguration
         </span>
         <span className="text-body font-body text-subtext-color">
           FontConfiguration overview and management
         </span>
-
       </div>
 
-       <div className="flex w-full items-center justify-between">
-        <span className="text-caption font-caption text-subtext-color">
+      <div className="flex w-full items-center justify-between  mobile:flex-col mobile:items-start gap-4">
+        <span className="text-caption font-caption text-subtext-color ">
           Showing {fontSettings.length || 0} records
         </span>
         <div className="flex justify-end items-center col-span-4 gap-2">
@@ -56,7 +60,8 @@ export default function FontConfigurationPage() {
             icon={<FeatherRefreshCw />}
             onClick={() => {
               toast.success("Refreshed font settings");
-              refetchFontSettings()}}
+              refetchFontSettings();
+            }}
           >
             Refresh
           </Button>
@@ -73,30 +78,29 @@ export default function FontConfigurationPage() {
       </div>
 
       <ConfigurationDetailsView
-      sidebarTitle="Configurations"
-      sidebarDescription="Select a configuration to view details"
-      fontSettings={fontSettings}
-      onEditConfig={(config) => {
-        setEditData(config);
-        setShowDrawer(true);
-      }}
-      onDeleteConfig={(configId) => {
-        handleDelete(configId);
-      }}
-    />
+        sidebarTitle="Configurations"
+        sidebarDescription="Select a configuration to view details"
+        fontSettings={fontSettings}
+        onEditConfig={(config) => {
+          setEditData(config);
+          setShowDrawer(true);
+        }}
+        onDeleteConfig={(configId) => {
+          handleDelete(configId);
+        }}
+      />
 
-
-      <Drawer open={showDrawer} onOpenChange={(open) => setShowDrawer(open)} >
+      <Drawer open={showDrawer} onOpenChange={(open) => setShowDrawer(open)}>
         <Drawer.Content>
           <FontSettingsDrawerWrapper
-            initialData={editData} 
-          onSuccess={() => {
-            setShowDrawer(false);
-            refetchFontSettings();
-          }}
-          onCancel={() => {           
-             setShowDrawer(false);
-           }}
+            initialData={editData}
+            onSuccess={() => {
+              setShowDrawer(false);
+              refetchFontSettings();
+            }}
+            onCancel={() => {
+              setShowDrawer(false);
+            }}
           />
         </Drawer.Content>
       </Drawer>

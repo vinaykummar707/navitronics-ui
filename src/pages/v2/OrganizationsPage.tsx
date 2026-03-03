@@ -54,7 +54,7 @@ function OrganizationsPage() {
   };
 
   return (
-    <div className="flex h-full w-full flex-col items-start gap-6 px-12 py-12">
+    <div className="flex h-full w-full flex-col items-start gap-6 ">
       <PageHeader
         title="Organizations"
         subtitle="Manage your organizations and their details here."
@@ -77,20 +77,22 @@ function OrganizationsPage() {
               isSuspended={!org.active}
               logo2={org.logo || undefined}
               actions={
-                
                 <OptionsDropdown
                   isDisabled={org.id === "6b679098-ef69-45f0-9fb1-b457dd882060"}
-                    onEdit={() => {
-                      setEditData(org);
-                      setOpen(true);
-                    }}
+                  onEdit={() => {
+                    setEditData(org);
+                    setOpen(true);
+                  }}
                   onDelete={() => {
-                      if(confirm("Are you sure you want to delete this organization? This action cannot be undone.")) {
-                        handleDelete(org.id);
-                      }
-                    }}
-                  />
-                
+                    if (
+                      confirm(
+                        "Are you sure you want to delete this organization? This action cannot be undone.",
+                      )
+                    ) {
+                      handleDelete(org.id);
+                    }
+                  }}
+                />
               }
               features={
                 <ButtonGroup pas={org.PAS} pis={org.PIS} itms={org.ITMS} />

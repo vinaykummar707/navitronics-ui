@@ -12,7 +12,7 @@ export function EmptyState({ hasDepots, title }: EmptyStateProps) {
         <h2 className="text-heading-2 font-heading-2 text-default-font">
           No {entity} Found
         </h2>
-        <p className="text-body font-body text-subtext-color">
+        <p className="text-body font-body text-center text-subtext-color">
           You do not have any {entity} added yet. Start by adding a new {entity.slice(0, -1)}.
         </p>
       </div>

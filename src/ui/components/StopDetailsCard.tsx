@@ -49,7 +49,7 @@ const StopDetailsCardRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex w-full flex-col items-start gap-4 rounded-md border border-solid border-neutral-border bg-neutral-50 px-4 py-4",
+        "flex w-[328px] flex-col items-start gap-4 rounded-md border border-solid border-neutral-border bg-neutral-50 px-4 py-4",
         className
       )}
       ref={ref}
@@ -73,9 +73,9 @@ const StopDetailsCardRoot = React.forwardRef<
           />
         </div>
       </div>
-      <div className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-2">
-        <div className="flex w-full items-start gap-2">
-          <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-md border border-solid border-neutral-100 px-4 py-4">
+      <div className="flex  grow shrink-0 basis-0 flex-col items-start gap-2  ">
+        <div className="flex w-full items-start gap-2 mobile:flex-col">
+          <div className="flex w-[300px] flex-col items-start gap-2 rounded-md border border-solid border-neutral-100 px-4 py-4">
             <span className="text-caption-bold font-caption-bold text-default-font">
               Downward Direction
             </span>
@@ -102,7 +102,7 @@ const StopDetailsCardRoot = React.forwardRef<
               </div>
             </div>
           </div>
-          <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 rounded-md border border-solid border-neutral-100 px-4 py-4">
+          <div className="flex w-[300px] flex-col items-start gap-2 rounded-md border border-solid border-neutral-100 px-4 py-4">
             <span className="text-caption-bold font-caption-bold text-default-font">
               Upward Direction
             </span>

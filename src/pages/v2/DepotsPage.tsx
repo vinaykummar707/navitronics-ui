@@ -58,7 +58,7 @@ export default function DepotsPage() {
   const { mutate: deleteDepot } = useDelete();
 
   useEffect(() => {
-    const firstRegion = regions[0];
+    const firstRegion = regions?  regions[0] : [];
     const isSelectedRegionValid = regions?.some(
       (region) => region.id === selectedRegion?.id,
     );
@@ -91,7 +91,7 @@ export default function DepotsPage() {
   };
 
   return (
-    <div className="flex h-full w-full flex-col items-start gap-4 px-12 py-12">
+    <div className="flex h-full w-full flex-col items-start gap-4 ">
       <div className="flex w-full flex-col items-start gap-1">
         <span className="text-heading-2 font-heading-2 text-default-font text-center">
           Depots
@@ -100,7 +100,7 @@ export default function DepotsPage() {
           Overview of your store&#39;s performance and customer engagement
         </span>
       </div>
-      <div className="flex w-full items-center justify-between">
+      <div className="flex w-full items-center justify-between mobile:flex-col mobile:items-start gap-4">
         <span className="text-caption font-caption text-subtext-color">
           Showing {depots?.length ?? 0} records
         </span>

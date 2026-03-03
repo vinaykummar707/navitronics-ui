@@ -8,6 +8,8 @@ interface ToggleState {
     toggleSimulationSettingsPanel: () => void;
     toggleTextSettingsPanel: () => void;
     toggleRouteSettingsPanel: () => void;
+    showSidebar: boolean;
+    toggleSidebar: () => void;
 }
 
 const useToggleStore = create<ToggleState>((set) => ({
@@ -17,6 +19,8 @@ const useToggleStore = create<ToggleState>((set) => ({
     toggleSimulationSettingsPanel: () => set((state) => ({ isSimulationSettingsPanelOpen: !state.isSimulationSettingsPanelOpen })),
     toggleTextSettingsPanel: () => set((state) => ({ isTextSettingsPanelOpen: !state.isTextSettingsPanelOpen })),
     toggleRouteSettingsPanel: () => set((state) => ({ isRouteSettingsPanelOpen: !state.isRouteSettingsPanelOpen })),
+    showSidebar: false,
+    toggleSidebar: () => set((state) => ({ showSidebar: !state.showSidebar })),
 }));
 
 export default useToggleStore;

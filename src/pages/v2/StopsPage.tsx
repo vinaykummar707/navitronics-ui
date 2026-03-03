@@ -234,7 +234,7 @@
 //   };
 
 //   return (
-//     <div className="flex h-full w-full flex-col items-start gap-6 px-12 py-12">
+//     <div className="flex h-full w-full flex-col items-start gap-6 ">
 //       <div className="flex w-full flex-col items-start gap-1">
 //         <span className="w-full text-heading-2 font-heading-2 text-default-font">
 //           Stops
@@ -722,7 +722,7 @@ export default function StopsPage() {
   };
 
   return (
-    <div className="flex h-full w-full flex-col items-start gap-4 px-12 py-12">
+    <div className="flex h-full w-full flex-col items-start gap-4 ">
       {/* Page Header */}
       <div className="flex w-full flex-col items-start gap-1">
         <span className="w-full text-heading-2 font-heading-2 text-default-font">
@@ -734,13 +734,13 @@ export default function StopsPage() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex w-full items-center justify-between">
+      <div className="flex w-full items-center justify-between mobile:flex-col mobile:items-start gap-4">
         <span className="text-caption font-caption text-subtext-color">
           Showing records
         </span>
 
         {hasRegions && (
-          <div className="flex items-end gap-2">
+          <div className="flex items-end gap-2 mobile:grid mobile:grid-cols-2 mobile:w-full">
             {/* Region Select — restricted roles */}
             <RBAC features={[]} roles={["depot_admin", "region_admin"]}>
               <RegionSelect

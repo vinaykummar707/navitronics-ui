@@ -31,7 +31,7 @@ export default function AreasPage() {
   const { mutate: deleteRegion } = useDelete();
   const [editData, setEditData] = React.useState<IRegion | null>(null);
   const regions = data ? (data.data as IRegion[]) : ([] as IRegion[]);
-  const {setSelectedRegion, selectedRegion} = useRegionStore()
+  const { setSelectedRegion, selectedRegion } = useRegionStore();
 
   // Handler to call refetch after create/update
   const handleFormSuccess = () => {
@@ -48,20 +48,20 @@ export default function AreasPage() {
     deleteRegion(region.id, {
       onSuccess: () => {
         refetch();
-        if(setSelectedRegion && region.id === selectedRegion?.id) {
+        if (setSelectedRegion && region.id === selectedRegion?.id) {
           setSelectedRegion(null);
         }
-        toast.success("Region deleted successfully")
+        toast.success("Region deleted successfully");
       },
       onError: (error) => {
         toast.error(`Failed to delete region: ${error.message}`);
         console.error("Delete Error:", error);
-      }
+      },
     });
   };
 
   return (
-    <div className="flex h-full w-full flex-col items-start gap-4 px-12 py-12">
+    <div className="flex h-full w-full flex-col items-start gap-4 ">
       {regions.length > 0 && (
         <PageHeader
           title="Regions"
@@ -74,7 +74,6 @@ export default function AreasPage() {
           }}
           buttonLabel="Add Region"
           roles={["region_admin", "organization_admin", "master"]}
-          
         />
       )}
       <div className="w-full flex-col items-start gap-2 grid md:grid-cols-2 lg:grid-cols-3">
@@ -90,7 +89,9 @@ export default function AreasPage() {
               actions={
                 <OptionsDropdown
                   onDelete={() => {
-                    if (confirm("Are you sure you want to delete this region?")) {
+                    if (
+                      confirm("Are you sure you want to delete this region?")
+                    ) {
                       handleDeleteRegion(region);
                     }
                   }}

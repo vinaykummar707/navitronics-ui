@@ -71,11 +71,11 @@ const AudioFileContainerRoot = React.forwardRef<
           </div>
           <div
             className={SubframeUtils.twClassNames(
-              "hidden w-full items-start justify-between",
+              "hidden w-full items-start justify-between mobile:flex-col mobile:items-start gap-2",
               { flex: isAudioAvailable }
             )}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 ">
               <IconWithBackground
                 variant="error"
                 size="medium"
@@ -96,7 +96,7 @@ const AudioFileContainerRoot = React.forwardRef<
               </div>
             </div>
             {audioFileActions ? (
-              <div className="flex items-center gap-2">{audioFileActions}</div>
+              <div className="flex items-center gap-2 mobile:flex-col mobile:items-stretch mobile:w-full">{audioFileActions}</div>
             ) : null}
           </div>
         </div>

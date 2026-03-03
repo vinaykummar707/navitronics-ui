@@ -52,7 +52,7 @@ const LanguageDetailsPanelRoot = React.forwardRef<
         ) : null}
       </div>
       {detailsCards ? (
-        <div className="w-full flex-col items-start gap-2 grid grid-cols-4">
+        <div className="w-full flex-col items-start gap-2 grid grid-cols-4 mobile:grid-cols-1">
           {detailsCards}
         </div>
       ) : null}

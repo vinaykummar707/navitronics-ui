@@ -71,7 +71,7 @@ function FontSettingsDrawerWrapper({ initialData, onSuccess, onCancel }: FontSet
 
 
         return (
-            <form className="h-full w-[420px]" onSubmit={handleSubmit(onSubmit)}>
+            <form className="h-full w-[420px] mobile:w-full" onSubmit={handleSubmit(onSubmit)}>
                 <FontConfigDrawer
                     title="Display Configuration"
                     description="Configure text properties for the LED display board"

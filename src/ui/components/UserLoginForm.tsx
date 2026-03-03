@@ -9,7 +9,7 @@
  */
 
 import React, { useEffect, useState } from "react";
-import {  FeatherKeyRound } from "@subframe/core";
+import { FeatherKeyRound } from "@subframe/core";
 import { FeatherUser } from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { Avatar } from "./Avatar";
@@ -39,7 +39,7 @@ const UserLoginFormRoot = React.forwardRef<
 ) {
   const login = useLoggedUserStore((state) => state.login); // Zustand store
   const logout = useLoggedUserStore((state) => state.logout); // Zustand store
-  const {setSelectedOrganization} = useOrganizationStore((state) => state); // Access organization store if needed
+  const { setSelectedOrganization } = useOrganizationStore((state) => state); // Access organization store if needed
   const navigate = useNavigate(); // React Router navigation
 
   const [emailOrUsername, setEmailOrUsername] = useState("");
@@ -86,9 +86,7 @@ const UserLoginFormRoot = React.forwardRef<
     }
   };
 
-  
-
- // Fetch user data and handle login
+  // Fetch user data and handle login
   useEffect(() => {
     usersRefetch();
     const processData = async () => {
@@ -103,10 +101,14 @@ const UserLoginFormRoot = React.forwardRef<
               setSelectedOrganization(userData.organization);
               navigate("/home");
             } else {
-              throw new Error("Your account is not active or has been deleted. Please contact support.");
+              throw new Error(
+                "Your account is not active or has been deleted. Please contact support.",
+              );
             }
           } else {
-            throw new Error("Your organization is not active. Please contact support.");
+            throw new Error(
+              "Your organization is not active. Please contact support.",
+            );
           }
         }
       } catch (error) {
@@ -117,12 +119,18 @@ const UserLoginFormRoot = React.forwardRef<
     };
 
     if (userId) processData(); // Only process data if userId is set
-  }, [userId, loggedUserDetails, login, navigate, logout, setSelectedOrganization]);
+  }, [
+    userId,
+    loggedUserDetails,
+    login,
+    navigate,
+    logout,
+    setSelectedOrganization,
+  ]);
 
   // Remaining render part remains the same...
 
   const [showResetDialog, setShowResetDialog] = useState(false);
-
 
   return (
     <div
@@ -133,7 +141,7 @@ const UserLoginFormRoot = React.forwardRef<
       ref={ref}
       {...otherProps}
     >
-      <div className="flex grow justify-center shrink-0 bg-[url('https://images.pexels.com/photos/9980493/pexels-photo-9980493.jpeg')] bg-no-repeat bg-cover bg-center basis-0 flex-col items-center gap-12 self-stretch bg-brand-50 px-12 py-12">
+      <div className="flex grow justify-center shrink-0 bg-[url('https://images.pexels.com/photos/9980493/pexels-photo-9980493.jpeg')] bg-no-repeat bg-cover bg-center basis-0 flex-col items-center gap-12 self-stretch bg-brand-50 ">
         <div className="flex  max-w-[288px] grow shrink-0 basis-0 flex-col items-center  gap-2">
           <Avatar
             size="x-large"
@@ -150,7 +158,7 @@ const UserLoginFormRoot = React.forwardRef<
           </div>
         </div>
       </div>
-      <div className="flex w-[380px] flex-none flex-col items-center justify-center gap-6 self-stretch px-12 py-12">
+      <div className="flex w-[380px] flex-none flex-col items-center justify-center gap-6 self-stretch ">
         <div className="flex w-full  flex-col items-start gap-8">
           <img
             className="h-6 flex-none object-cover"
@@ -207,7 +215,10 @@ const UserLoginFormRoot = React.forwardRef<
       </div>
       <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
         <Dialog.Content>
-          <ResetPasswordForm onSuccess={() => setShowResetDialog(false)} onCancel={() => setShowResetDialog(false)} />
+          <ResetPasswordForm
+            onSuccess={() => setShowResetDialog(false)}
+            onCancel={() => setShowResetDialog(false)}
+          />
         </Dialog.Content>
       </Dialog>
     </div>
