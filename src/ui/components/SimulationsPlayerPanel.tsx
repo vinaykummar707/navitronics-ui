@@ -53,6 +53,8 @@ import { useParams } from "react-router-dom";
 import { Stop } from "@/api/stop/types";
 import { CheckboxGroup } from "./CheckboxGroup";
 import { Checkbox } from "./Checkbox";
+import { toast } from "react-toastify";
+import { IStopWithAudio, stopCrud } from "@/types/IStop";
 
 interface SimulationsPlayerPanelRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -97,20 +99,39 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
   });
 
   useEffect(() => {
-    setSelectedSimulationIndex(-1);
-  }, [selectedTab]);
+    if(!simulations || simulations.length === 0) {
+      setSelectedSimulationIndex(-1);
+    } else if (selectedSimulationIndex === -1) {
+      setSelectedSimulationIndex(0);
+    }
+  }, [selectedTab, setSelectedSimulationIndex, simulations, selectedSimulationIndex]);
 
   // get depot id from params
   const { areaId, depotId } = useParams<{ areaId: string; depotId: string }>();
 
   const { selectedOrganization } = useOrganizationStore();
 
-  const { data: stops } = useStops({
-    variables: {
-      organization_id: selectedOrganization?.id || "",
-      depot_id: depotId || "",
+ const { data: stopsData, refetch: refetchStops } = stopCrud.useList({
+    filters: { depot_id: depotId || "", deleted: false, organization_id: selectedOrganization.id },
+    orderBy: { column: "created_at", ascending: false },
+    custom(query) {
+      return query
+        .select(
+          `*,
+           stop_audios (
+      id,
+      url,
+      file_name,file_size
+    )
+          ` // Verify this line. It should correctly reflect your schema relationships.
+        )
+        
     },
+    skip: !depotId,
   });
+
+
+   const stops = stopsData?.data as IStopWithAudio[];
 
   // function to return combined text from passed string array
    const generateCombinations = (texts: (string | undefined)[]): string => {
@@ -181,7 +202,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
   // handle add simulation for stop route config when selected stop
 
   const generateStopSimulations = async () => {
-    if (selectedStop && selectedLanguage) {
+    if (selectedStop && selectedLanguage && selectedStopTypes.length > 0 && (selectedUpDown || selectedUpDown)) {
       selectedStopTypes.forEach(async (stopType) => {
         const text = `${stopType} stop is ${selectedStop.name.toLocaleLowerCase()}`;
         const genText =
@@ -199,6 +220,8 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
           ),
         );
       });
+    } else {
+      toast.error("Please select a stop, language, stop type and up/down route to generate simulations");
     }
   };
 
@@ -310,17 +333,17 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
                 </CheckboxGroup>
               </div>
 
-              {stops && stops.stops.length > 0 && (
+              {stops && stops.length > 0 && (
                 <Select
                   className="truncate text-xs"
                   placeholder="Select Stop"
                   onValueChange={(value) => {
-                    const stop = stops.stops.find((s) => s.id === value);
+                    const stop = stops.find((s) => s.id === value);
                     setSelectedStop(stop || null);
                   }}
                   value={selectedStop?.id || ""}
                 >
-                  {stops.stops?.map((stop) => (
+                  {stops?.map((stop) => (
                     <Select.Item key={stop.id} value={stop.id}>
                       {stop.name}
                     </Select.Item>
@@ -417,8 +440,11 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
             icon={<FeatherTrash />}
             loading={false}
             onClick={() => {
-              setValue(selectedTab, []);
-              setSelectedSimulationIndex(-1);
+              if(confirm("Are you sure you want to delete all simulations?")) {
+                 setValue(selectedTab, []);
+                setSelectedSimulationIndex(-1);
+                
+              }
             }}
           >
             Delete All

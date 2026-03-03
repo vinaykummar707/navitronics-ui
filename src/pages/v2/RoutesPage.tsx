@@ -325,7 +325,11 @@ export default function RoutesPage() {
                 icon={<FeatherTrash />}
                 variant="destructive-secondary"
                 disabled={!selectedDepot || selectedRouteIds.length === 0}
-                onClick={() => handleDeleteSelectedRoutes()}
+                onClick={() => {
+                  if(confirm(`Are you sure you want to delete ${selectedRouteIds.length} selected route(s)?`)) {
+                    handleDeleteSelectedRoutes();
+                  }
+                }}
               >
                 Delete Selected Routes
               </Button>
@@ -339,7 +343,11 @@ export default function RoutesPage() {
         <RouteTable
           routes={routes}
           onEdit={handleEditRoute}
-          onDelete={handleDeleteRoute}
+          onDelete={(routeId: string) => {
+            if(confirm("Are you sure you want to delete this route? This action cannot be undone.")) {
+              handleDeleteRoute(routeId);
+            }
+          }}
           onDuplicate={duplicateRoute}
           onReturn={handleReturn}
           selectedRouteIds={selectedRouteIds}

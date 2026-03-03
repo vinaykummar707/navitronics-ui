@@ -95,7 +95,11 @@ export default function UsersPage() {
       {usersData && usersData.length > 0 ? (
         <UsersTable
           users={usersData || []}
-          onDeleteUser={handleDeleteUser}
+          onDeleteUser={(id) => {
+            if(confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
+              handleDeleteUser(id);
+            }
+          }}
           onEditUser={(user) => {
             setEditData(user);
             setOpen(true);

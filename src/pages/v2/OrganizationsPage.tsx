@@ -84,8 +84,10 @@ function OrganizationsPage() {
                       setEditData(org);
                       setOpen(true);
                     }}
-                    onDelete={() => {
-                      handleDelete(org.id);
+                  onDelete={() => {
+                      if(confirm("Are you sure you want to delete this organization? This action cannot be undone.")) {
+                        handleDelete(org.id);
+                      }
                     }}
                   />
                 

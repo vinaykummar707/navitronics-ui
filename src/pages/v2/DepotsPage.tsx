@@ -5,7 +5,12 @@ import { Button } from "@/ui/components/Button";
 import { Dialog } from "@/ui/components/Dialog";
 import { OptionsDropdown } from "@/ui/components/OptionsDropdown";
 import { DepotCard } from "@/ui/components/DepotCard";
-import { FeatherBusFront, FeatherMapPin, FeatherPlus, FeatherRefreshCw } from "@subframe/core";
+import {
+  FeatherBusFront,
+  FeatherMapPin,
+  FeatherPlus,
+  FeatherRefreshCw,
+} from "@subframe/core";
 import React, { useEffect, useState } from "react";
 import { useRegions } from "@/api/region/hooks";
 import RBAC from "@/components/RBAC";
@@ -18,9 +23,9 @@ import { depotCrud, IDepot } from "@/types/IDepot";
 import { toast } from "react-toastify";
 
 export default function DepotsPage() {
-   const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const [editData, setEditData] = useState<IDepot | null>(null);
-  
+
   const { selectedOrganization } = useOrganizationStore();
   const selectedRegion = useRegionStore((state) => state.selectedRegion);
   const { setSelectedRegion: setSelectedRegionInStore } = useRegionStore();
@@ -31,30 +36,40 @@ export default function DepotsPage() {
   const { data: regionData } = useRegionList({
     filters: {
       organization_id: selectedOrganization?.id || "",
-      deleted: false
+      deleted: false,
     },
-    orderBy: { column: "created_at", ascending: true }
+    orderBy: { column: "created_at", ascending: true },
   });
 
   const regions = regionData?.data as IRegion[];
-  
+
   const { useList: useDepotList, useDelete } = depotCrud;
   const { data: depotData, refetch: refetchDepots } = useDepotList({
-    filters: { region_id: selectedRegion?.id || "", deleted: false, organization_id: selectedOrganization?.id || "" },
+    filters: {
+      region_id: selectedRegion?.id || "",
+      deleted: false,
+      organization_id: selectedOrganization?.id || "",
+    },
     orderBy: { column: "created_at", ascending: true },
-    skip: !selectedRegion?.id
+    skip: !selectedRegion?.id,
   });
 
   const depots = depotData?.data as IDepot[];
   const { mutate: deleteDepot } = useDelete();
 
   useEffect(() => {
+    const firstRegion = regions[0];
+    const isSelectedRegionValid = regions?.some(
+      (region) => region.id === selectedRegion?.id,
+    );
+    const noSelectedRegionFound = !selectedRegion && regions.length > 0;
+
     if (!regions) return;
-    if (!selectedRegion && regions.length > 0) {
-      const firstRegion = regions[0];
+
+    if ((noSelectedRegionFound || !isSelectedRegionValid) && firstRegion) {
       setSelectedRegionInStore(firstRegion);
     }
-  }, [regions, selectedRegion, setSelectedRegionInStore]);
+  }, [regions, selectedRegion, setSelectedRegionInStore, selectedOrganization]);
 
   const handleDeleteDepot = (depotId: string) => {
     deleteDepot(depotId, {
@@ -64,8 +79,9 @@ export default function DepotsPage() {
       },
       onError: (error) => {
         toast.error(`Failed to delete depot: ${error.message}`);
-        console.error("Delete Error:", error);        
-    } });
+        console.error("Delete Error:", error);
+      },
+    });
   };
 
   const handleFormSuccess = () => {
@@ -73,9 +89,6 @@ export default function DepotsPage() {
     setEditData(null);
     refetchDepots();
   };
-
-  
-
 
   return (
     <div className="flex h-full w-full flex-col items-start gap-4 px-12 py-12">
@@ -91,82 +104,83 @@ export default function DepotsPage() {
         <span className="text-caption font-caption text-subtext-color">
           Showing {depots?.length ?? 0} records
         </span>
-       {regions && regions.length > 0 && (
-        <div className="flex items-end gap-2">
-          <RBAC features={[]} roles={["depot_admin", "region_admin"]}>
-            <Select
-              className="h-auto  flex-none"
-              variant="outline"
-              label="Select Region"
-              placeholder="Select Region"
-              value={selectedRegion ? selectedRegion.id : ""}
-              onValueChange={(val) =>
-                setSelectedRegionInStore(
-                  regions.find((r) => r.id === val) || null,
-                )
-              }
-            >
-              {regions
-                .filter((region) => user?.region?.id === region.id)
-                .map((region) => (
+        {regions && regions.length > 0 && (
+          <div className="flex items-end gap-2">
+            <RBAC features={[]} roles={["depot_admin", "region_admin"]}>
+              <Select
+                className="h-auto  flex-none"
+                variant="outline"
+                label="Select Region"
+                placeholder="Select Region"
+                value={selectedRegion ? selectedRegion.id : ""}
+                onValueChange={(val) =>
+                  setSelectedRegionInStore(
+                    regions.find((r) => r.id === val) || null,
+                  )
+                }
+              >
+                {regions
+                  .filter((region) => user?.region?.id === region.id)
+                  .map((region) => (
+                    <Select.Item key={region.id} value={region.id}>
+                      {region.name}
+                    </Select.Item>
+                  ))}
+              </Select>
+            </RBAC>
+
+            <RBAC features={[]} roles={["master", "organization_admin"]}>
+              <Select
+                className="h-auto  flex-none"
+                variant="outline"
+                label="Select Region"
+                placeholder="Select Region"
+                value={selectedRegion ? selectedRegion.id : ""}
+                onValueChange={(val) =>
+                  setSelectedRegionInStore(
+                    regions.find((r) => r.id === val) || null,
+                  )
+                }
+              >
+                {regions.map((region) => (
                   <Select.Item key={region.id} value={region.id}>
                     {region.name}
                   </Select.Item>
                 ))}
-            </Select>
-          </RBAC>
+              </Select>
+            </RBAC>
 
-          <RBAC features={[]} roles={["master", "organization_admin"]}>
-            <Select
-              className="h-auto  flex-none"
-              variant="outline"
-              label="Select Region"
-              placeholder="Select Region"
-              value={selectedRegion ? selectedRegion.id : ""}
-              onValueChange={(val) =>
-                setSelectedRegionInStore(
-                  regions.find((r) => r.id === val) || null,
-                )
-              }
-            >
-              {regions.map((region) => (
-                <Select.Item key={region.id} value={region.id}>
-                  {region.name}
-                </Select.Item>
-              ))}
-            </Select>
-          </RBAC>
+            <div className="flex justify-end items-center col-span-4 gap-2">
+              <Button
+                variant="neutral-secondary"
+                className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
+                icon={<FeatherRefreshCw />}
+                onClick={() => {
+                  toast.success("Depots refreshed successfully");
+                  refetchDepots();
+                }}
+              >
+                Refresh
+              </Button>
 
-             <div className="flex justify-end items-center col-span-4 gap-2">
-                      <Button
-                        variant="neutral-secondary"
-                        className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
-                        icon={<FeatherRefreshCw />}
-                        onClick={() =>{ 
-                          toast.success("Depots refreshed successfully");
-                          refetchDepots();
-                        }}
-                      >
-                        Refresh
-                      </Button>
-
-          <RBAC
-            features={[]}
-            roles={["region_admin", "organization_admin", "master"]}
-          >
-            <Button
-              icon={<FeatherPlus />}
-              disabled={!selectedRegion}
-              onClick={() => {
-                setOpen(true);
-                setEditData(null);
-              }}
-            >
-              Add Depot
-            </Button>
+              <RBAC
+                features={[]}
+                roles={["region_admin", "organization_admin", "master"]}
+              >
+                <Button
+                  icon={<FeatherPlus />}
+                  disabled={!selectedRegion}
+                  onClick={() => {
+                    setOpen(true);
+                    setEditData(null);
+                  }}
+                >
+                  Add Depot
+                </Button>
               </RBAC>
-              </div>
-        </div>)}
+            </div>
+          </div>
+        )}
       </div>
       {depots && depots.length > 0 ? (
         <div className="w-full flex-col items-start gap-2 grid md:grid-cols-2 lg:grid-cols-3">
@@ -180,7 +194,13 @@ export default function DepotsPage() {
               }
               actions={
                 <OptionsDropdown
-                  onDelete={() =>handleDeleteDepot(depot.id)}
+                  onDelete={() => {
+                    if (
+                      confirm("Are you sure you want to delete this depot?")
+                    ) {
+                      handleDeleteDepot(depot.id);
+                    }
+                  }}
                   onEdit={() => {
                     setEditData(depot);
                     setOpen(true);
@@ -197,7 +217,10 @@ export default function DepotsPage() {
               No Depots Found
             </h2>
             <p className="text-body font-body text-subtext-color">
-              You do not have any {regions && regions.length === 0 ? "regions" : "depots"} added yet. Start by adding a new {regions && regions.length === 0 ? "region" : "depot"}.
+              You do not have any{" "}
+              {regions && regions.length === 0 ? "regions" : "depots"} added
+              yet. Start by adding a new{" "}
+              {regions && regions.length === 0 ? "region" : "depot"}.
             </p>
           </div>
         </div>

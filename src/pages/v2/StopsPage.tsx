@@ -457,11 +457,17 @@
 
 // export default StopsPage;
 
-
 import React, { useEffect } from "react";
 import { Button } from "@/ui/components/Button";
 import { DefaultPageLayout } from "@/ui/layouts/DefaultPageLayout";
-import { FeatherMusic, FeatherPin, FeatherPlay, FeatherPlus, FeatherRefreshCw, FeatherTrash } from "@subframe/core";
+import {
+  FeatherMusic,
+  FeatherPin,
+  FeatherPlay,
+  FeatherPlus,
+  FeatherRefreshCw,
+  FeatherTrash,
+} from "@subframe/core";
 import { Drawer, Select } from "@/ui";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { useRegionStore } from "@/store/useRegionStore";
@@ -495,7 +501,10 @@ function useStopsPageData() {
   const user = useLoggedUserStore((state) => state.user);
 
   const { data: regionData, refetch: refetchRegions } = regionCrud.useList({
-    filters: { organization_id: selectedOrganization?.id || "", deleted: false },
+    filters: {
+      organization_id: selectedOrganization?.id || "",
+      deleted: false,
+    },
     orderBy: { column: "created_at", ascending: true },
   });
 
@@ -506,20 +515,22 @@ function useStopsPageData() {
   });
 
   const { data: stopsData, refetch: refetchStops } = stopCrud.useList({
-    filters: { depot_id: selectedDepot?.id || "", deleted: false, organization_id: selectedOrganization.id },
+    filters: {
+      depot_id: selectedDepot?.id || "",
+      deleted: false,
+      organization_id: selectedOrganization.id,
+    },
     orderBy: { column: "created_at", ascending: false },
     custom(query) {
-      return query
-        .select(
-          `*,
+      return query.select(
+        `*,
            stop_audios (
       id,
       url,
       file_name,file_size
     )
-          ` // Verify this line. It should correctly reflect your schema relationships.
-        )
-        
+          `, // Verify this line. It should correctly reflect your schema relationships.
+      );
     },
     skip: !selectedDepot?.id,
   });
@@ -546,9 +557,15 @@ function useStopsPageData() {
   }, [depots, selectedDepot, setSelectedDepotInStore]);
 
   // Refetch on dependency changes
-  useEffect(() => { refetchRegions(); }, [selectedOrganization, refetchRegions]);
-  useEffect(() => { refetchDepots(); }, [selectedRegion, refetchDepots]);
-  useEffect(() => { refetchStops(); }, [selectedDepot, selectedRegion, refetchStops]);
+  useEffect(() => {
+    refetchRegions();
+  }, [selectedOrganization, refetchRegions]);
+  useEffect(() => {
+    refetchDepots();
+  }, [selectedRegion, refetchDepots]);
+  useEffect(() => {
+    refetchStops();
+  }, [selectedDepot, selectedRegion, refetchStops]);
 
   return {
     user,
@@ -563,12 +580,6 @@ function useStopsPageData() {
     refetchStops,
   };
 }
-
-
-
-
-
-
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -599,11 +610,10 @@ export default function StopsPage() {
     setSelectedDepotInStore(depots.find((d) => d.id === val) || null);
 
   const handleEditRoute = (routeId: string) => {
-    navigate(`/routes/create/${selectedOrganization?.id}/${selectedDepot?.id}/${routeId}`);
+    navigate(
+      `/routes/create/${selectedOrganization?.id}/${selectedDepot?.id}/${routeId}`,
+    );
   };
-
-
-
 
   const hasRegions = regions && regions.length > 0;
   const hasDepots = depots && depots.length > 0;
@@ -626,7 +636,9 @@ export default function StopsPage() {
         refetchStops();
       },
       onError: (error) => {
-        toast.error(`Error deleting route: ${error.message || "Unknown error"}`);
+        toast.error(
+          `Error deleting route: ${error.message || "Unknown error"}`,
+        );
       },
     });
   }
@@ -713,7 +725,9 @@ export default function StopsPage() {
     <div className="flex h-full w-full flex-col items-start gap-4 px-12 py-12">
       {/* Page Header */}
       <div className="flex w-full flex-col items-start gap-1">
-        <span className="w-full text-heading-2 font-heading-2 text-default-font">Stops</span>
+        <span className="w-full text-heading-2 font-heading-2 text-default-font">
+          Stops
+        </span>
         <span className="text-body font-body text-subtext-color">
           Manage Stops for your Depot
         </span>
@@ -721,7 +735,9 @@ export default function StopsPage() {
 
       {/* Toolbar */}
       <div className="flex w-full items-center justify-between">
-        <span className="text-caption font-caption text-subtext-color">Showing records</span>
+        <span className="text-caption font-caption text-subtext-color">
+          Showing records
+        </span>
 
         {hasRegions && (
           <div className="flex items-end gap-2">
@@ -775,7 +791,15 @@ export default function StopsPage() {
               Refresh
             </Button>
 
-            <RBAC features={[]} roles={["region_admin", "organization_admin", "master", "depot_admin"]}>
+            <RBAC
+              features={[]}
+              roles={[
+                "region_admin",
+                "organization_admin",
+                "master",
+                "depot_admin",
+              ]}
+            >
               <Button
                 icon={<FeatherPlus />}
                 disabled={!selectedDepot}
@@ -800,14 +824,20 @@ export default function StopsPage() {
               upwardLatitude={stop.up_latitude}
               upwardLongitude={stop.up_longitude}
               onDeleteClick={() => {
-                if (stop.stop_audios && stop.stop_audios.url) {
-                  deleteAudioFileAndStopAudioRecordAndStop(
-                    stop.stop_audios.url,
-                    stop.id || "",
-                    stop.stop_audios.id || undefined,
-                  );
-                } else {
-                  handleDeleteStop(stop.id || "");
+                if (
+                  confirm(
+                    "Are you sure you want to delete this stop? This action cannot be undone.",
+                  )
+                ) {
+                  if (stop.stop_audios && stop.stop_audios.url) {
+                    deleteAudioFileAndStopAudioRecordAndStop(
+                      stop.stop_audios.url,
+                      stop.id || "",
+                      stop.stop_audios.id || undefined,
+                    );
+                  } else {
+                    handleDeleteStop(stop.id || "");
+                  }
                 }
               }}
               onEditClick={() => {
@@ -877,13 +907,21 @@ export default function StopsPage() {
                         icon={<FeatherTrash />}
                         iconRight={null}
                         loading={false}
-                        onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
-                          deleteAudioFileAndStopAudioRecord(
-                            stop.stop_audios?.url || "",
-                            stop.id || "",
-                            stop.stop_audios?.id || undefined,
-                          )
-                        }
+                        onClick={(
+                          event: React.MouseEvent<HTMLButtonElement>,
+                        ) => {
+                          if (
+                            confirm(
+                              "Are you sure you want to delete this audio? This action cannot be undone.",
+                            )
+                          ) {
+                            deleteAudioFileAndStopAudioRecord(
+                              stop.stop_audios?.url || "",
+                              stop.id || "",
+                              stop.stop_audios?.id || undefined,
+                            );
+                          }
+                        }}
                       >
                         Delete
                       </Button>
@@ -894,26 +932,24 @@ export default function StopsPage() {
             />
           ))}
         </div>
-
       ) : (
-        <EmptyState hasDepots={!!hasDepots} title={'Stops'} />
+        <EmptyState hasDepots={!!hasDepots} title={"Stops"} />
       )}
-
 
       <Drawer open={open}>
         <Drawer.Content>
           <CreateStopForm
             depotId={selectedDepot ? selectedDepot.id : undefined}
             initialData={editData}
-            onSuccess={() => {
+            onSuccess={(stop: IStop) => {
               setOpen(false);
               refetchStops();
+              genAudio(stop.name, stop.id || "");
             }}
             onCancel={() => setOpen(false)}
           />
         </Drawer.Content>
       </Drawer>
     </div>
-
   );
 }

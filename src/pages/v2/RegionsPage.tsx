@@ -89,7 +89,11 @@ export default function AreasPage() {
               }
               actions={
                 <OptionsDropdown
-                  onDelete={() => handleDeleteRegion(region)}
+                  onDelete={() => {
+                    if (confirm("Are you sure you want to delete this region?")) {
+                      handleDeleteRegion(region);
+                    }
+                  }}
                   onEdit={() => {
                     setEditData(region);
                     setOpen(true);
