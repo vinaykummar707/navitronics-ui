@@ -42,6 +42,10 @@ const SelectOrganizationComponentRoot = React.forwardRef<
   // UseEffect for setting default organization selection
   useEffect(() => {
     console.log("Organizations fetched:", data);
+    const isSelectedOrgValid = orgs?.some(org => org.id === selectedOrganization?.id);
+    if (selectedOrganization && !isSelectedOrgValid && orgs && orgs.length > 0) {
+      setSelectedOrganization(orgs[0]); // Clear selection if it's no longer valid
+    }
     if (orgs && orgs.length > 0 && user) {
       if (user.role?.name === "master" && !selectedOrganization) {
         if(!selectedOrganization) setSelectedOrganization(orgs[0]);
