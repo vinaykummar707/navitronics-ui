@@ -29,12 +29,13 @@ import { DisplayConfigPostRequest } from "@/types/routeConfigV2";
 import useTabsStore from "@/store/useTabsStore";
 import { set } from "zod";
 import { Button } from "./Button";
-import { generateAudio, uploadAudio } from "@/utils/fetchTTS";
+import { generateAudio, handleSloganAudioGeneration, handleStopAudioGeneration, uploadAudio } from "@/utils/fetchTTS";
 import { useStops } from "@/api/stop/hooks";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { useParams } from "react-router-dom";
 import { Select } from "./Select";
 import { toast } from "react-toastify";
+import { supabase } from "@/supabaseClient";
 
 interface SimulationSettingsPanelRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -112,18 +113,32 @@ const SimulationSettingsPanelRoot = React.forwardRef<
 
   // function to play audioFileUrl and stopAudioFileUrl one after other with gap
   const handleLoop = () => {
-    if (!audiopath || !stopTypeAudioFileUrl) return;
     setIsLooping(true);
-    audioElementRef.current.setAttribute("src", stopTypeAudioFileUrl);
-    audioElementRef.current!.play();
-    audioElementRef.current!.onended = () => {
+
+    if ( simulations[selectedSimulationIndex]?.type === 'stop' && stopTypeAudioFileUrl) {
+      audioElementRef.current.setAttribute("src", stopTypeAudioFileUrl);
+      audioElementRef.current!.play();
+      audioElementRef.current!.onended = () => {
+        audioElementRef.current.setAttribute("src", audiopath);
+        audioElementRef.current!.play();
+        audioElementRef.current!.onended = () => {
+          audioElementRef.current!.pause();
+          audioElementRef.current.setAttribute("src", '');
+          setIsLooping(false);
+        }
+      }
+    } else {
+      console.warn("Audio URL not found for the selected simulation.");
       audioElementRef.current.setAttribute("src", audiopath);
       audioElementRef.current!.play();
-      audioElementRef.current!.onended = () => { 
-        audioElementRef.current!.pause(); 
-        audioElementRef.current.setAttribute("src", ''); 
-        setIsLooping(false); }
+      audioElementRef.current!.onended = () => {
+        audioElementRef.current!.pause();
+        audioElementRef.current.setAttribute("src", '');
+        setIsLooping(false);
+      }
     }
+
+
 
   }
 
@@ -151,17 +166,47 @@ const SimulationSettingsPanelRoot = React.forwardRef<
     methods.setValue(`${selectedTab}[${selectedSimulationIndex}]`, updatedSimulation);
   };
 
-  // upload audio file to supabase and get the public URL and then update the simulation object in the form with the audio file URL so that it can be used in the simulation player panel to play the audio from the URL
-  const uploadAudioAndSetUrl = async () => {
+  async function deleteAudioFile(fileUrl: string, stopId: string) {
+    // Extract the path of the file from the URL
+    const path = fileUrl.split("/").pop(); // adjust this line according to how your URLs are structured
+    if (!path) {
+      console.error("Invalid file path");
+      return;
+    }
     try {
-      const { fileUrl } = await uploadAudio(audioFile as File, audioFile, "route-audios", `${depotId}`, simulations[selectedSimulationIndex]?.texts.text.language || "en-IN");
+      const { error: deleteError } = await supabase.storage
+
+        .from("stops")
+        .remove([`${stopId}/${path}`]);
+      if (deleteError) {
+        throw new Error(`Failed to delete file: ${deleteError.message}`);
+      }
+      
+      methods.setValue(`${selectedTab}[${selectedSimulationIndex}].audioFileUrl`, null);
+      methods.setValue(`${selectedTab}[${selectedSimulationIndex}].audioFileName`, null);
+      console.log("File deleted successfully");
+    } catch (err) {
+      console.error("Delete operation failed:", err);
+    }
+  }
+
+
+  const genAudio = async (text: string, stopId: string) => {
+    try {
+      setGeneratingAudio(true);
+      const { fileUrl, size, fileName } = await handleSloganAudioGeneration(text, stopId);
+      console.log("Generated audio URL:", fileUrl, "Size:", size);
       const updatedSimulation = {
         ...simulations[selectedSimulationIndex],
         audioFileUrl: fileUrl,
+        audioFileName: fileName,
       };
       methods.setValue(`${selectedTab}[${selectedSimulationIndex}]`, updatedSimulation);
-    } catch (error) {
-      console.error("Error uploading audio:", error);
+      console.log("Updated simulation with audio URL:", updatedSimulation);
+    } catch (err) {
+      console.error("Error generating audio:", err);
+    } finally {
+      setGeneratingAudio(false);
     }
   };
 
@@ -171,6 +216,9 @@ const SimulationSettingsPanelRoot = React.forwardRef<
   // }, [currentSimulation]);
 
   const audioElementRef = React.useRef<HTMLAudioElement | null>(null);
+
+
+
 
   return (
     <div
@@ -199,16 +247,27 @@ const SimulationSettingsPanelRoot = React.forwardRef<
             title="Audio"
             controls={
               <div className="w-full items-center justify-center flex flex-col gap-2">
-                {(audiopath && stopTypeAudioFileUrl) && (
+                {(audiopath || stopTypeAudioFileUrl) ? (
                   <>
-                    {audiopath &&
-                      <>
-                        <audio ref={audioElementRef} controls className="w-full hidden" />
-                        <Button variant={isLooping ? "neutral-secondary" : "brand-secondary"} size="medium" className="w-full" onClick={handleLoop} disabled={generatingAudio}>
-                          {isLooping ? "Stop Playing" : "Play Audio"}
-                        </Button>
-                      </>
-                    }
+                    <>
+                      <audio ref={audioElementRef} controls className="w-full hidden" />
+                      <Button variant={isLooping ? "neutral-secondary" : "brand-secondary"} size="medium" className="w-full" onClick={handleLoop} disabled={generatingAudio}>
+                        {isLooping ? "Stop Playing" : "Play Audio"}
+                      </Button>
+                      
+                       {audiopath && !stopTypeAudioFileUrl &&
+                       <>
+                       <Button variant={"brand-secondary"} size="medium" className="w-full" onClick={async () => {
+                        await deleteAudioFile(audiopath, depotId);
+                        genAudio(simulations[selectedSimulationIndex]?.texts?.text?.text || "", depotId);
+                      }} disabled={generatingAudio}>
+                        Generate Again
+                      </Button>
+                       <Button variant={"destructive-secondary"} size="medium" className="w-full" onClick={() => deleteAudioFile(audiopath, depotId)} disabled={generatingAudio}>
+                        Delete Audio
+                      </Button> </>}
+
+                    </>
 
 
 
@@ -216,7 +275,9 @@ const SimulationSettingsPanelRoot = React.forwardRef<
 
                   </>
 
-                )}
+                ) : <Button variant={"brand-primary"} size="medium" className="w-full" onClick={() => genAudio(simulations[selectedSimulationIndex]?.texts?.text?.text, depotId)} disabled={generatingAudio}>
+                  Generate Audio
+                </Button>}
 
               </div>
             }
@@ -269,7 +330,7 @@ const SimulationSettingsPanelRoot = React.forwardRef<
           /> */}
         </>}
 
-     <ControlAccordion
+      <ControlAccordion
         title="Copy Simulations"
         controls={
           <div className="w-full items-center justify-center gap-1 grid grid-cols-2">

@@ -95,6 +95,7 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
           onSuccess: () => {
             console.log("Stop updated successfully:", data);
             toast.success("Stop updated successfully");
+            reset();
             onSuccess();
           },
           onError: (error) => {
@@ -108,6 +109,7 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
         onSuccess: (successResponse) => {
           console.log("Stop created successfully:", successResponse);
           toast.success("Stop created successfully");
+          reset();
           onSuccess(successResponse);
         },
         onError: (error) => {

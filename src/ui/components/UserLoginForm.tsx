@@ -158,12 +158,9 @@ const UserLoginFormRoot = React.forwardRef<
           </div>
         </div>
       </div>
-      <div className="flex w-[380px] flex-none flex-col items-center justify-center gap-6 self-stretch ">
+      <div className="flex w-[380px] flex-none flex-col items-center justify-center gap-6 self-stretch p-12">
         <div className="flex w-full  flex-col items-start gap-8">
-          <img
-            className="h-6 flex-none object-cover"
-            src="https://res.cloudinary.com/subframe/image/upload/v1711417507/shared/y2rsnhq3mex4auk54aye.png"
-          />
+          
           <span className="text-heading-2 font-heading-2 text-default-font">
             Sign In
           </span>

@@ -6,14 +6,15 @@
  */
 
 import React from "react";
-import { FeatherChevronsDownUp } from "@subframe/core";
+import { FeatherChevronsDownUp, FeatherX } from "@subframe/core";
 import { FeatherChevronsUpDown } from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { IconButton } from "./IconButton";
+import useToggleStore from "@/store/useToggleStore";
 
 interface PanelHeaderRootProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
-  title?: React.ReactNode;
+  title?: string;
   className?: string;
 }
 
@@ -22,6 +23,8 @@ const PanelHeaderRoot = React.forwardRef<HTMLDivElement, PanelHeaderRootProps>(
     { title, className, ...otherProps }: PanelHeaderRootProps,
     ref
   ) {
+
+    const {toggleSimulationSettingsPanel, toggleRouteSettingsPanel, toggleTextSettingsPanel} = useToggleStore()
     return (
       <div
         className={SubframeUtils.twClassNames(
@@ -41,16 +44,19 @@ const PanelHeaderRoot = React.forwardRef<HTMLDivElement, PanelHeaderRootProps>(
             className="h-7 w-7 flex-none"
             disabled={false}
             variant="neutral-secondary"
-            icon={<FeatherChevronsUpDown />}
+            icon={<FeatherX/>}
             loading={false}
+            onClick={() => {
+              if(title.includes("Simulation")){
+                toggleSimulationSettingsPanel();
+              } else if(title.includes("Text")){
+                toggleTextSettingsPanel();
+              } else if(title.includes("Route")){
+                toggleRouteSettingsPanel();
+              }
+            }}
           />
-          <IconButton
-            className="h-7 w-7 flex-none"
-            disabled={false}
-            variant="neutral-secondary"
-            icon={<FeatherChevronsDownUp />}
-            loading={false}
-          />
+         
         </div>
       </div>
     );

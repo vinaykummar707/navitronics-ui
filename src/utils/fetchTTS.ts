@@ -86,18 +86,6 @@ export async function uploadAudio(file: File, audio:any,category:string, stopInf
 
     // Metadata
     const size = file.size;
-
-//   // Insert into DB
-//   const { error: dbError } = await supabase.from("audio_files").insert([
-//     {
-//       file_name: file.name,
-//       file_url: fileUrl,
-//       duration,
-//       size,
-//     },
-//   ]);
-//   if (dbError) throw dbError;
-
     return { fileUrl, size };
 }
 
@@ -128,6 +116,21 @@ export async function uploadAudioEnchanced(file: File, stopId: string, lang: str
     return { fileUrl, size: file.size };
 }
 
+export async function uploadAudioSlogan(file: File, stopId: string, lang: string): Promise<{ fileUrl: string; size: number }> {
+    const filePath = `${stopId}/${Date.now()}-${file.name}`;
+
+    // Upload the file to Supabase
+    const { error: uploadError, data: uploadData } = await supabase.storage.from("stops").upload(filePath, file);
+    if (uploadError) throw new Error(`Error uploading file: ${uploadError.message}`);
+
+    // Get public URL for the uploaded file
+    const { data: urlData, error: urlError } = await supabase.storage.from("stops").getPublicUrl(filePath);
+    if (urlError) throw new Error(`Error getting public URL: ${urlError.message}`);
+    const fileUrl = urlData.publicUrl;
+
+    return { fileUrl, size: file.size };
+}
+
 // Add a new function to orchestrate the audio generation, upload, and DB record creation
 export async function handleStopAudioGeneration(stopName: string, stopId: string, lang: string = 'en-IN', speaker: string = 'abhilash') {
     try {
@@ -140,7 +143,25 @@ export async function handleStopAudioGeneration(stopName: string, stopId: string
         const { fileUrl, size } = await uploadAudioEnchanced(audioFile, stopId, lang);
 
         console.log(`Audio generated and uploaded: ${fileUrl}`);
-        return { fileUrl, size };
+        return { fileUrl, size, fileName: audioFile.name };
+    } catch (error) {
+        console.error("Failed to generate and upload audio:", error);
+        throw error;
+    }
+}
+
+export async function handleSloganAudioGeneration(stopName: string, stopId: string, lang: string = 'en-IN', speaker: string = 'abhilash') {
+    try {
+        // Generate TTS audio
+        const base64Audio = await fetchTTS(stopName, lang, speaker);
+        const audioBlob = base64ToBlob(base64Audio, "audio/wav");
+        const audioFile = new File([audioBlob], `tts-${Date.now()}.wav`, { type: "audio/wav" });
+
+        // Upload the audio file and get the URL
+        const { fileUrl, size } = await uploadAudioSlogan(audioFile, stopId, lang);
+
+        console.log(`Audio generated and uploaded: ${fileUrl}`);
+        return { fileUrl, size, fileName: audioFile.name };
     } catch (error) {
         console.error("Failed to generate and upload audio:", error);
         throw error;

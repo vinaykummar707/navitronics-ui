@@ -55,6 +55,7 @@ import { CheckboxGroup } from "./CheckboxGroup";
 import { Checkbox } from "./Checkbox";
 import { toast } from "react-toastify";
 import { IStopWithAudio, stopCrud } from "@/types/IStop";
+import { supabase } from "@/supabaseClient";
 
 interface SimulationsPlayerPanelRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -99,7 +100,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
   });
 
   useEffect(() => {
-    if(!simulations || simulations.length === 0) {
+    if (!simulations || simulations.length === 0) {
       setSelectedSimulationIndex(-1);
     } else if (selectedSimulationIndex === -1) {
       setSelectedSimulationIndex(0);
@@ -111,7 +112,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
 
   const { selectedOrganization } = useOrganizationStore();
 
- const { data: stopsData, refetch: refetchStops } = stopCrud.useList({
+  const { data: stopsData, refetch: refetchStops } = stopCrud.useList({
     filters: { depot_id: depotId || "", deleted: false, organization_id: selectedOrganization.id },
     orderBy: { column: "created_at", ascending: false },
     custom(query) {
@@ -125,16 +126,16 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
     )
           ` // Verify this line. It should correctly reflect your schema relationships.
         )
-        
+
     },
     skip: !depotId,
   });
 
 
-   const stops = stopsData?.data as IStopWithAudio[];
+  const stops = stopsData?.data as IStopWithAudio[];
 
   // function to return combined text from passed string array
-   const generateCombinations = (texts: (string | undefined)[]): string => {
+  const generateCombinations = (texts: (string | undefined)[]): string => {
     return texts.filter(Boolean).join(" - ");
   };
 
@@ -148,15 +149,20 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
     const isSplitRoute = watch("is_split_route");
     switch (format) {
       case "single":
-        newSimulation = getDefaultSingleSimulation(
-          generateCombinations([
-            isSplitRoute ? getValues("route_number_1")+"/"+getValues("route_number_2") : getValues("route_number"),
-            getValues("source"),
-            getValues("destination"),
-            getValues("via"),
-          ]),
-          type,
-        );
+        newSimulation = type === 'route' ?
+          getDefaultSingleSimulation(
+            generateCombinations([
+              isSplitRoute ? getValues("route_number_1") + "/" + getValues("route_number_2") : getValues("route_number"),
+              getValues("source"),
+              getValues("destination"),
+              getValues("via"),
+            ]),
+            type,
+          ) : getDefaultSingleSimulation(
+            generateCombinations([defaultText || "Single Text Simulation"
+            ]),
+            type,
+          );
         break;
       case "two":
         newSimulation = getDefaultTwoSimulation(
@@ -439,11 +445,37 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
             size="medium"
             icon={<FeatherTrash />}
             loading={false}
-            onClick={() => {
-              if(confirm("Are you sure you want to delete all simulations?")) {
-                 setValue(selectedTab, []);
+            onClick={async () => {
+              if (confirm("Are you sure you want to delete all simulations?")) {
+
+                if(selectedTab !== "stops"){
+
+                simulations.forEach(async (simulation, index) => {
+                  console.log("Deleting simulation at index:", simulation);
+                  if (simulation.audioFileUrl) {
+                    const audioFileUrl = simulation.audioFileUrl;
+                    console.log("Audio file URL to delete:", audioFileUrl);
+                    // Extract the file path relative to the 'stops' bucket
+                    const pathMatch = audioFileUrl.match(/\/stops\/(.+)$/);
+                    const filePath = pathMatch ? pathMatch[1] : null;
+                    console.log("Deleting file from Supabase Storage at path:", filePath);
+                    if (filePath) {
+                      const { error } = await supabase.storage.from("stops").remove([filePath]);
+                      // remove index from simulations.
+                      console.log("Deleting simulation at index:", index);
+                      simulations.splice(index, 1);
+                       setValue(selectedTab, simulations);
+                      if (error) {
+                        console.error("Error deleting file from Supabase Storage:", error);
+                      }
+                    }
+                  } 
+                });
+              } else {
+                setValue(selectedTab, []);
                 setSelectedSimulationIndex(-1);
-                
+              }
+             
               }
             }}
           >

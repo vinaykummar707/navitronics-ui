@@ -83,12 +83,12 @@ const handleRemoveSimulation = async (index: number) => {
   }
   console.log(audioFileUrl);
   if (audioFileUrl) {
-    // Extract the file path relative to the 'audios' bucket
-    const pathMatch = audioFileUrl.match(/\/audios\/(.+)$/);
+    // Extract the file path relative to the 'stops' bucket
+    const pathMatch = audioFileUrl.match(/\/stops\/(.+)$/);
     const filePath = pathMatch ? pathMatch[1] : null;
     console.log("Deleting file from Supabase Storage at path:", filePath);
     if (filePath) {
-      const { error } = await supabase.storage.from("audios").remove([filePath]);
+      const { error } = await supabase.storage.from("stops").remove([filePath]);
       if (error) {
         console.error("Error deleting file from Supabase Storage:", error);
       }

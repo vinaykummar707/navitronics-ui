@@ -7,7 +7,7 @@
  */
 
 import React from "react";
-import { FeatherAirplay } from "@subframe/core";
+import { FeatherAirplay, FeatherEye } from "@subframe/core";
 import { FeatherCheck } from "@subframe/core";
 import { FeatherChevronDown } from "@subframe/core";
 import { FeatherRoute } from "@subframe/core";
@@ -57,8 +57,9 @@ const PanelToggleDropdownRoot = React.forwardRef<
           <Button
             variant="neutral-secondary"
             iconRight={<FeatherChevronDown />}
+            icon={<FeatherEye />}
           >
-            Toggle Panels
+            View / Hide Panels
           </Button>
         </SubframeCore.DropdownMenu.Trigger>
         <SubframeCore.DropdownMenu.Portal>

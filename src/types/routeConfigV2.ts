@@ -98,8 +98,10 @@ export interface Simulation {
   latitude?: number;
   longitude?: number;
   audioFileUrl?: string | null;
+  audioFileName?: string | null;
   stopType?: typeof stopStates[number];
   stopTypeAudioFileUrl?: string | null;
+  stopTypeAudioFileName?: string | null;
 }
 
 export interface StopRouteConfig extends Simulation {

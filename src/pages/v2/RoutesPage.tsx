@@ -23,6 +23,10 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { RegionSelect } from "@/components/RegionSelect";
 import { EmptyState } from "@/components/EmptyState";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
+import { AVAILABLE_LANGUAGES } from "@/constants/defaultRouteValues";
+
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -79,7 +83,7 @@ function useRoutesPageData() {
     const isSelectedDepotValid = depots?.some(
       (depot) => depot.id === selectedDepot?.id,
     );
-    const noSelectedDepotFound = !selectedDepot && depots.length > 0;
+    const noSelectedDepotFound = !selectedDepot && depots?.length > 0;
 
     if (!depots) return;
 
@@ -297,6 +301,30 @@ export default function RoutesPage() {
     return JSON.parse(json[fieldKey] as string);
   };
 
+  type FileItem = {
+  name: string;
+  url: string;
+};
+
+   const downloadZip = async (
+  files: FileItem[],
+  zipName: string
+) => {
+  const zip = new JSZip();
+
+  await Promise.all(
+    files.map(async (file) => {
+      const response = await fetch(file.url);
+      const blob = await response.blob();
+      zip.file(file.name, blob);
+    })
+  );
+
+  const content = await zip.generateAsync({ type: "blob" });
+
+  saveAs(content, `${zipName}.zip`);
+};
+
   // function to parse each selected route's data and trigger download of a json file for all selected routes in one json file name `routes_export_${currentDate}.json`
   const handleExportSelectedRoutes = () => {
     if (selectedRouteObjects.length === 0) {
@@ -331,7 +359,62 @@ export default function RoutesPage() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+
+    // loop throught all internal field items and create array
+
+    let internalAudioFiles: FileItem[] = [];
+    routesToExport.forEach((route) => {
+      if (!route.internal) return;
+      const internalItems = route.internal as any[];
+      if (!internalItems || internalItems.length === 0) return;
+      internalItems.forEach((item) => {
+        if (item.audioFileUrl) {
+          internalAudioFiles.push({
+            name: item.audioFileName,
+            url: item.audioFileUrl,
+          });
+        }
+      });
+    });
+
+    
+
+    let stopAudioFiles: FileItem[] = [];
+    routesToExport.forEach((route) => {
+      const stops = route.stops as any[];
+      stops.forEach((stop) => {
+        if (stop.audioFileUrl) {
+          stopAudioFiles.push({
+            name: stop.audioFileName,
+            url: stop.audioFileUrl,
+          });
+        }
+      });
+    });
+
+    let stopTypesAudioFiles: FileItem[] = [];
+
+    AVAILABLE_LANGUAGES.forEach((lang) => {
+      const temp: FileItem[] = [];
+      ['currentFileName', 'nextFileName', 'comingFileName'].forEach((key) => {
+        if (lang[key]) {
+          temp.push({
+            name: lang[key],
+            url: lang[key.replace('FileName', '')],
+          });
+        }
+      });
+      stopTypesAudioFiles = stopTypesAudioFiles.concat(temp);
+    });
+
+    const allAudioFiles = [...internalAudioFiles, ...stopTypesAudioFiles, ...stopAudioFiles];
+    console.log("Audio files to download:", allAudioFiles);
+    if (allAudioFiles.length > 0) {
+      downloadZip(allAudioFiles, `routes_audio_${currentDate}`);
+    }
   };
+
+
 
   return (
     <div className="flex h-full overflow-hidden w-full flex-col items-start gap-4 ">
