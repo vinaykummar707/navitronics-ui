@@ -243,10 +243,9 @@ export default function StopsPage() {
     stop_audio_id?: string,
   ) {
     await deleteAudioFile(fileUrl, stopId);
-    if (stop_audio_id) {
-      await deleteStopAudio(stop_audio_id);
-      await deleteStop(stopId);
-    }
+    await deleteStopAudio(stop_audio_id);
+    await deleteStop(stopId);
+    refetchStops();
   }
 
   const [generatingAudio, setGeneratingAudio] = React.useState<boolean>(false);

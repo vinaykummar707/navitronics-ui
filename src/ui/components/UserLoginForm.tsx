@@ -141,7 +141,7 @@ const UserLoginFormRoot = React.forwardRef<
       ref={ref}
       {...otherProps}
     >
-      <div className="flex grow justify-center shrink-0 bg-[url('https://images.pexels.com/photos/9980493/pexels-photo-9980493.jpeg')] bg-no-repeat bg-cover bg-center basis-0 flex-col items-center gap-12 self-stretch bg-brand-50 ">
+      <div className="flex grow justify-center shrink-0 bg-[url('https://images.pexels.com/photos/9980493/pexels-photo-9980493.jpeg')] bg-no-repeat bg-cover bg-center basis-0 flex-col items-center gap-12 self-stretch bg-brand-50 p-12">
         <div className="flex  max-w-[288px] grow shrink-0 basis-0 flex-col items-center  gap-2">
           <Avatar
             size="x-large"
