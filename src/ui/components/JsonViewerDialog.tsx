@@ -57,7 +57,7 @@ const JsonViewerDialogRoot = React.forwardRef<
       ref={ref}
       {...otherProps}
     >
-      <Button variant="neutral-secondary"  icon={<FeatherCurlyBraces />} onClick={() => setIsOpen(true)}>
+      <Button variant="neutral-primary"  icon={<FeatherCurlyBraces />} onClick={() => setIsOpen(true)}>
         {buttonLabel}
       </Button>
       <Dialog  open={isOpen}  onOpenChange={setIsOpen}>
@@ -70,11 +70,11 @@ const JsonViewerDialogRoot = React.forwardRef<
                 </span>
               ) : null}
               <div className="flex items-center gap-2">
-                <Button icon={<FeatherCopy />} variant="neutral-secondary"  onClick={handleCopy}>
+                <Button icon={<FeatherCopy />} variant="neutral-primary"  onClick={handleCopy}>
                  
                   Copy JSON
                 </Button>
-                <IconButton onClick={() => setIsOpen(false)}  variant="neutral-secondary" icon={<FeatherX />} />
+                <IconButton onClick={() => setIsOpen(false)}  variant="neutral-primary" icon={<FeatherX />} />
               </div>
             </div>
             <div className="flex w-full no-scrollbar grow shrink-0 basis-0 items-start justify-start overflow-auto rounded-md border border-solid border-neutral-border bg-default-background p-2">

@@ -43,7 +43,7 @@ const PanelHeaderRoot = React.forwardRef<HTMLDivElement, PanelHeaderRootProps>(
           <IconButton
             className="h-7 w-7 flex-none"
             disabled={false}
-            variant="neutral-secondary"
+            variant="neutral-primary"
             icon={<FeatherX/>}
             loading={false}
             onClick={() => {

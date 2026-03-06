@@ -47,6 +47,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
           </Button>
           <RBAC features={[]} roles={roles}>
             <Button
+            variant="brand-primary"
               className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
               icon={<FeatherPlus />}
               onClick={onAdd}

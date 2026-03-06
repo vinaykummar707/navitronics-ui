@@ -163,7 +163,7 @@ const handleRemoveSimulation = async (index: number) => {
     >
       <div
         className={SubframeUtils.twClassNames(
-          "flex w-full flex-col items-start rounded-md border border-solid border-neutral-border bg-neutral-50",
+          "flex w-full flex-col items-start rounded-md border border-solid border-neutral-border bg-default-background hover:bg-neutral-50",
           { "border border-solid border-brand-800": isSelected },
         )}
       >
@@ -214,7 +214,7 @@ const handleRemoveSimulation = async (index: number) => {
                   <Button
                     className="h-9 grow shrink-0 basis-0"
                     disabled={false}
-                    variant="neutral-secondary"
+                    variant="neutral-primary"
                     size="medium"
                     icon={<FeatherPlay />}
                     loading={false}
@@ -224,7 +224,7 @@ const handleRemoveSimulation = async (index: number) => {
                   <Button
                     className="h-9 grow shrink-0 basis-0"
                     disabled={false}
-                    variant="neutral-secondary"
+                    variant="neutral-primary"
                     size="medium"
                     icon={<FeatherCopy />}
                     iconRight={null}
@@ -236,7 +236,7 @@ const handleRemoveSimulation = async (index: number) => {
                   <Button
                     className="h-9 grow shrink-0 basis-0"
                     disabled={false}
-                    variant="neutral-secondary"
+                    variant="neutral-primary"
                     size="medium"
                     icon={<FeatherMoveUp />}
                     iconRight={null}
@@ -248,7 +248,7 @@ const handleRemoveSimulation = async (index: number) => {
                   <Button
                     className="h-9 grow shrink-0 basis-0"
                     disabled={false}
-                    variant="neutral-secondary"
+                    variant="neutral-primary"
                     size="medium"
                     icon={<FeatherMoveDown />}
                     iconRight={null}
@@ -260,7 +260,7 @@ const handleRemoveSimulation = async (index: number) => {
                   <Button
                     className="h-9 grow shrink-0 basis-0"
                     disabled={false}
-                    variant="neutral-secondary"
+                    variant="neutral-primary"
                     size="medium"
                     icon={<FeatherTrash />}
                     iconRight={null}

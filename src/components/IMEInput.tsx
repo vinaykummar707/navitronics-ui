@@ -318,10 +318,11 @@ const IMEInput: React.FC<IMEInputProps> = ({ langCode, value, onChange }) => {
         placeholder="Type in English..."
         className="border w-full p-2  rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       /> */}
-      <TextField className="h-9 grow shrink-0 basis-0" label="" helpText="">
+      <TextField variant="filled" className="h-9 grow shrink-0 basis-0" label="" helpText="">
         <TextField.Input
           type="text"
-          value={value}         
+          value={value}    
+               
           onKeyDown={handleKeyDown}
           onClick={(e) => setCursorIndex(e.currentTarget.selectionStart || 0)}
           onChange={handleChange}

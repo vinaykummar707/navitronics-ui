@@ -322,7 +322,7 @@ const TextPropertiesControlsRoot = React.forwardRef<
         <div className="flex grow shrink-0 basis-0 items-center justify-end gap-1 self-stretch">
           <IconButton
             className="h-9 w-9 flex-none"
-            variant="neutral-secondary"
+            variant="neutral-primary"
             size="medium"
             icon={<FeatherMinus />}
             onClick={handleDecrement}
@@ -336,7 +336,7 @@ const TextPropertiesControlsRoot = React.forwardRef<
 
           <IconButton
             className="h-9 w-9 flex-none"
-            variant="neutral-secondary"
+            variant="neutral-primary"
             size="medium"
             icon={<FeatherPlus />}
             onClick={handleIncrement}

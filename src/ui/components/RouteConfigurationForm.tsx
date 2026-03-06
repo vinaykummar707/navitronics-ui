@@ -39,6 +39,7 @@ const RouteConfigurationFormRoot = React.forwardRef<
       <TextField
         className="h-auto w-full flex-none"
         label="Route Number"
+        variant="filled"
         helpText=""
       >
         <TextField.Input
@@ -46,12 +47,13 @@ const RouteConfigurationFormRoot = React.forwardRef<
           {...register("route_number")}
         />
       </TextField>
-      <TextField className="h-auto w-full flex-none" label="Source" helpText="">
+      <TextField className="h-auto w-full flex-none" label="Source" variant="filled" helpText="">
         <TextField.Input placeholder="Enter source" {...register("source")} />
       </TextField>
       <TextField
         className="h-auto w-full flex-none"
         label="Destination"
+        variant="filled"
         helpText=""
       >
         <TextField.Input
@@ -59,12 +61,13 @@ const RouteConfigurationFormRoot = React.forwardRef<
           {...register("destination")}
         />
       </TextField>
-      <TextField className="h-auto w-full flex-none" label="Via" helpText="">
+      <TextField className="h-auto w-full flex-none" label="Via" variant="filled" helpText="">
         <TextField.Input placeholder="Enter via" {...register("via")} />
       </TextField>
       {/* <TextField
         className="h-auto w-full flex-none"
         label="Separation"
+        variant="filled"
         helpText=""
       >
         <TextField.Input placeholder="Enter separation" {...register("separation")} />
@@ -80,6 +83,7 @@ const RouteConfigurationFormRoot = React.forwardRef<
           <TextField
             className="h-auto w-full flex-none"
             label="Route Number 1"
+            variant="filled"
             helpText=""
           >
             <TextField.Input
@@ -90,6 +94,7 @@ const RouteConfigurationFormRoot = React.forwardRef<
           <TextField
             className="h-auto w-full flex-none"
             label="Route Number 2"
+            variant="filled"
             helpText=""
           >
             <TextField.Input

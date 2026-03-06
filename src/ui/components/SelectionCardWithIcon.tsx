@@ -35,7 +35,7 @@ const SelectionCardWithIconRoot = React.forwardRef<
       className={SubframeUtils.twClassNames(
         "group/64c7b5d9 flex h-9 cursor-pointer items-center justify-center gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-4 py-4 hover:border hover:border-solid hover:border-neutral-200 hover:bg-neutral-100",
         {
-          "border border-solid border-brand-400 bg-brand-50 hover:bg-brand-50":
+          "border border-solid border-brand-400 bg-brand-500 hover:border hover:border-solid hover:border-brand-400 hover:bg-brand-600":
             selected,
         },
         className
@@ -47,7 +47,7 @@ const SelectionCardWithIconRoot = React.forwardRef<
         <SubframeCore.IconWrapper
           className={SubframeUtils.twClassNames(
             "text-heading-3 font-heading-3 text-default-font",
-            { "text-brand-700": selected }
+            { "text-brand-50": selected }
           )}
         >
           {icon}
@@ -57,7 +57,7 @@ const SelectionCardWithIconRoot = React.forwardRef<
         <span
           className={SubframeUtils.twClassNames(
             "text-caption font-caption text-default-font",
-            { "text-brand-700": selected }
+            { "text-brand-50": selected }
           )}
         >
           {label}

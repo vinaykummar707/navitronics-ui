@@ -59,7 +59,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
           <>
             <div className="space-y-2">
               <img
-                className="h-8 rounded-full flex-none object-cover"
+                className="h-24 rounded-full flex-none object-cover"
                 src="https://navitronix.in/assets/navitronix.jpeg"
               />
             </div>
@@ -121,8 +121,8 @@ const DefaultPageLayoutRoot = React.forwardRef<
         </RBAC>
       </SidebarWithSections>
       {children ? (
-        <div className="flex grow shrink-0 basis-0 flex-col items-start gap-4 self-stretch overflow-y-auto bg-default-background px-8 py-8">
-          <IconButton className="shrink-0" variant="neutral-secondary" onClick={toggleSidebar} icon={<FeatherPanelLeft />} />
+        <div className="flex grow shrink-0 basis-0 flex-col items-start gap-4 self-stretch overflow-y-auto bg-neutral-100 px-8 py-8">
+          <IconButton className="shrink-0" variant="neutral-primary" onClick={toggleSidebar} icon={<FeatherPanelLeft />} />
           {children}
         </div>
       ) : null}

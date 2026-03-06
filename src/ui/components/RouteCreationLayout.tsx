@@ -36,7 +36,7 @@ const RouteCreationLayoutRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex h-full w-full flex-col items-start bg-neutral-50",
+        "flex h-full w-full flex-col items-start bg-default-background",
         className
       )}
       ref={ref}

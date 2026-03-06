@@ -55,7 +55,7 @@ const PanelToggleDropdownRoot = React.forwardRef<
       <SubframeCore.DropdownMenu.Root>
         <SubframeCore.DropdownMenu.Trigger asChild={true}>
           <Button
-            variant="neutral-secondary"
+            variant="neutral-primary"
             iconRight={<FeatherChevronDown />}
             icon={<FeatherEye />}
           >

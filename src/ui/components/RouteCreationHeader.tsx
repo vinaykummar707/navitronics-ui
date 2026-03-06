@@ -94,7 +94,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
     >
       <div className="flex w-64 flex-none items-center justify-between">
         <Button
-          variant="neutral-secondary"
+          variant="neutral-primary"
           icon={<FeatherChevronLeft />}
           onClick={() => navigate(-1)}
         >
@@ -122,7 +122,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
         <Button
           type="submit"
           onClick={handleSubmit(onSubmit)}
-          variant="brand-secondary-2"
+          variant="brand-primary"
           icon={<FeatherCloud />}
           disabled={isCreatingRoute || isUpdatingRoute}
         >

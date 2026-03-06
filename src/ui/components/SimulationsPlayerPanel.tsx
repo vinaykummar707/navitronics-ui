@@ -264,7 +264,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
       {...otherProps}
     >
       <TabsPanel />
-      <div className="flex  overflow-scroll no-scrollbar h-full w-full  flex-col items-start gap-4 bg-default-background px-4 py-4">
+      <div className="flex  overflow-scroll no-scrollbar h-full w-full  flex-col items-start gap-4 bg-neutral-200 px-4 py-4">
         <div className="flex flex-wrap gap-1">
           {selectedTab === "stops" && (
             <>
@@ -441,7 +441,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
           )}
           <Button
             disabled={false}
-            variant="destructive-secondary"
+            variant="destructive-primary"
             size="medium"
             icon={<FeatherTrash />}
             loading={false}

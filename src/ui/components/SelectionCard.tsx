@@ -41,7 +41,7 @@ const SelectionCardRoot = React.forwardRef<
         "group/cc47cbb4 flex h-9 w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-2 py-2 hover:border hover:border-solid hover:border-neutral-200 hover:bg-neutral-100",
         {
           "flex-col flex-nowrap gap-2": variant === "icon-text-vertical",
-          "border border-solid border-brand-400 bg-brand-50 hover:border hover:border-solid hover:border-brand-400 hover:bg-brand-50":
+          "border border-solid border-brand-400 bg-brand-500 hover:border hover:border-solid hover:border-brand-400 hover:bg-brand-600":
             selected,
         },
         className
@@ -53,7 +53,7 @@ const SelectionCardRoot = React.forwardRef<
         <SubframeCore.IconWrapper
           className={SubframeUtils.twClassNames(
             "text-caption font-caption text-default-font",
-            { hidden: variant === "text-only", "text-brand-700": selected }
+            { hidden: variant === "text-only", "text-brand-50": selected }
           )}
         >
           {icon}

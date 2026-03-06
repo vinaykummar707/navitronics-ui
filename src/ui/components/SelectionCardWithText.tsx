@@ -33,7 +33,7 @@ const SelectionCardWithTextRoot = React.forwardRef<
       className={SubframeUtils.twClassNames(
         "group/ddf3d814 flex h-9 w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-2 py-2 hover:border hover:border-solid hover:border-neutral-200 hover:bg-neutral-100",
         {
-          "border border-solid border-brand-400 bg-brand-50 hover:border hover:border-solid hover:border-brand-400 hover:bg-brand-50 active:border active:border-solid active:border-neutral-border":
+          "border border-solid border-brand-400 bg-brand-500 hover:border hover:border-solid hover:border-brand-400 hover:bg-brand-600 active:border active:border-solid active:border-neutral-border":
             selected,
         },
         className
@@ -44,14 +44,14 @@ const SelectionCardWithTextRoot = React.forwardRef<
       {selected ? (
         <FeatherCheck
           className={SubframeUtils.twClassNames(
-            "hidden text-caption-bold font-caption-bold text-brand-700",
+            "hidden text-caption-bold font-caption-bold text-brand-50",
             { "inline-flex": selected }
           )}
         />
       ) : (
         <FeatherPlus
           className={SubframeUtils.twClassNames(
-            "hidden text-caption-bold font-caption-bold text-brand-700",
+            "hidden text-caption-bold font-caption-bold text-brand-50",
             { "inline-flex": selected }
           )}
         />
@@ -60,7 +60,7 @@ const SelectionCardWithTextRoot = React.forwardRef<
         <span
           className={SubframeUtils.twClassNames(
             "text-caption font-caption text-default-font",
-            { "text-caption-bold font-caption-bold text-brand-700": selected }
+            { "text-caption-bold font-caption-bold text-brand-50": selected }
           )}
         >
           {title}
