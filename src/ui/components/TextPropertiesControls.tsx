@@ -181,6 +181,7 @@ const TextPropertiesControlsRoot = React.forwardRef<
     (state) => state.selectedSimulationIndex,
   );
   const pathBase = `${selectedTab}.${selectedSimulationIndex}.texts.${textProperty}`;
+  const selectedSimulationPath = `${selectedTab}.${selectedSimulationIndex}`;
 
   const isSelected = (field: string, value: string | number) =>
     watch(`${pathBase}.${field}`) === value;
@@ -192,7 +193,8 @@ const TextPropertiesControlsRoot = React.forwardRef<
     );
     const currentHeight = getValues(`${pathBase}.fontHeight`) as number;
     // we need to increment until currentBitmapHeight is less than or equal to 32
-    if (currentBitmapHeight < 32) {
+    const targetFontHeight = (getValues(`${selectedSimulationPath}.height`) as number) === 16 ? 16 : 32;
+    if (currentBitmapHeight < targetFontHeight) {
       setValue(`${pathBase}.fontHeight`, currentHeight + 1);
     }
   };
@@ -210,7 +212,7 @@ const TextPropertiesControlsRoot = React.forwardRef<
 
   const getDefaultFontHeightForLanguage = useFontHeightForLanguage();
 
- 
+
 
 
 
@@ -241,7 +243,7 @@ const TextPropertiesControlsRoot = React.forwardRef<
         </Select>
       </ControlItem>
       <ControlItem label="Text">
-        
+
         <Controller
           key={`${pathBase}.text`}
           name={`${pathBase}.text`}
