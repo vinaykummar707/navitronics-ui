@@ -24,7 +24,7 @@ const Content = React.forwardRef<HTMLDivElement, ContentProps>(function Content(
     <SubframeCore.Select.Content asChild={true} {...otherProps}>
       <div
         className={SubframeUtils.twClassNames(
-          "flex w-full flex-col items-start overflow-hidden rounded-md border border-solid border-neutral-border bg-black px-1 py-1 shadow-lg",
+          "flex w-full flex-col items-start overflow-hidden rounded-md border border-solid border-neutral-border  px-1 py-1 shadow-lg",
           className
         )}
         ref={ref}
