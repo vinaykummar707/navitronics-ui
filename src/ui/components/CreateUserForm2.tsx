@@ -27,9 +27,11 @@ import { Switch } from "./Switch";
 import useAuthStore from "@/store/authStore";
 import {
   ILoggedUser,
+  IRole,
   IUser,
   IUserCreate,
   loggedUserCrud,
+  roleCrud,
   userCrud,
 } from "@/types/IUser";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
@@ -59,11 +61,9 @@ const CreateUserForm2Root = React.forwardRef<
   const isEditMode = !!initialData;
 
   // API hooks
-  const { data: rolesData } = useRoles();
-  const roles = useMemo(() => {
-      // For non-master users, filter out master role
-      return rolesData?.roles.filter((role) => role.name !== "master") || [];
-  }, [rolesData]);
+  const { useList: useRoleList } = roleCrud;
+  const { data: rolesData } = useRoleList();
+  const roles = rolesData ? rolesData?.data.filter(role => role.name !== "master") as IRole[] : [];
 
   // Setup form
   const {

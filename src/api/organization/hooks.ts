@@ -23,5 +23,5 @@ export function useUpdateOrganization() {
 
 
 export function useRoles() {
-  return useQuery<{ roles: { id: string; name: string }[] }>(gql(GET_ROLES));
+  return useQuery(gql(GET_ROLES));
 }

@@ -42,3 +42,11 @@ export type IUserGet = Pick<IUser, 'id'>;
 // Create the hooks for 'users' table
 export const userCrud = createCrudHooks<IUser, IUserCreate, IUserUpdate>('users')
 export const loggedUserCrud = createCrudHooks<ILoggedUser, ILoggedUserCreate, ILoggedUserUpdate>('users')
+
+export interface IRole  {
+    id: string;
+    name: string;
+}
+
+export const roleCrud = createCrudHooks<IRole, Omit<IRole, 'id'>, Omit<IRole, 'id'>>('roles')
+
