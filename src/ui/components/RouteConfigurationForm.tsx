@@ -36,17 +36,18 @@ const RouteConfigurationFormRoot = React.forwardRef<
       ref={ref}
       {...otherProps}
     >
-      <TextField
-        className="h-auto w-full flex-none"
-        label="Route Number"
-        variant="filled"
-        helpText=""
-      >
+      {!watch("is_split_route") && (
+        <TextField
+          className="h-auto w-full flex-none"
+          label="Route Number"
+          variant="filled"
+          helpText=""
+        >
         <TextField.Input
           placeholder="Enter route number"
           {...register("route_number")}
         />
-      </TextField>
+      </TextField> )}
       <TextField className="h-auto w-full flex-none" label="Source" variant="filled" helpText="">
         <TextField.Input placeholder="Enter source" {...register("source")} />
       </TextField>

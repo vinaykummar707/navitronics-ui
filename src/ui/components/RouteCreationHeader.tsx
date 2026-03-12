@@ -5,7 +5,7 @@
  * RouteCreationHeader — https://app.subframe.com/11b10bc240cf/library?component=RouteCreationHeader_2c1f8c72-5508-4e9b-9575-25f7e76705fb
  */
 // @subframe/sync-disable
-import React from "react";
+import React, { useState } from "react";
 import { FeatherChevronLeft, FeatherEyeOff } from "@subframe/core";
 import { FeatherCloud } from "@subframe/core";
 import { FeatherDownload } from "@subframe/core";
@@ -22,6 +22,8 @@ import { JsonViewerDialog } from "./JsonViewerDialog";
 import RBAC from "@/components/RBAC";
 import { IRoute, routeCrud } from "@/types/IRoute";
 import { toast } from "react-toastify";
+import { Dialog } from "./Dialog";
+
 
 interface RouteCreationHeaderRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -36,6 +38,8 @@ const RouteCreationHeaderRoot = React.forwardRef<
   ref,
 ) {
   const navigate = useNavigate();
+  const [hasBeenSaved, setHasBeenSaved] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const {
     isSimulationSettingsPanelOpen,
@@ -59,6 +63,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
           onSuccess: () => {
             console.log("Route updated successfully:", data);
             toast.success("Route updated successfully");
+            setHasBeenSaved(true);
             navigate(-1); // Navigate back after successful update
           },
           onError: (error) => {
@@ -72,6 +77,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
         onSuccess: () => {
           console.log("Route created successfully:", data);
           toast.success("Route created successfully");
+          setHasBeenSaved(true);
           navigate(-1); // Navigate back after successful creation
         },
         onError: (error) => {
@@ -79,8 +85,25 @@ const RouteCreationHeaderRoot = React.forwardRef<
           toast.error("Error creating route");
         },
       });
-
     }
+  };
+
+  const handleBackClick = () => {
+    if (!hasBeenSaved) {
+      setShowConfirmDialog(true);
+    } else {
+      navigate(-1);
+    }
+  };
+
+  const handleConfirmGoBack = () => {
+    setShowConfirmDialog(false);
+    navigate(-1);
+  };
+
+  const handleConfirmSaveAndExit = () => {
+    setShowConfirmDialog(false);
+    handleSubmit(onSubmit)();
   };
 
   return (
@@ -96,7 +119,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
         <Button
           variant="neutral-primary"
           icon={<FeatherChevronLeft />}
-          onClick={() => navigate(-1)}
+          onClick={handleBackClick}
         >
           Back
         </Button>
@@ -126,9 +149,40 @@ const RouteCreationHeaderRoot = React.forwardRef<
           icon={<FeatherCloud />}
           disabled={isCreatingRoute || isUpdatingRoute}
         >
-          {mode === "create" ? isCreatingRoute ? "Saving Route..." : "Save Route" : isUpdatingRoute ? "Updating Route..." : "Update Route"}
+          {mode === "create"
+            ? isCreatingRoute
+              ? "Saving Route..."
+              : "Save Route"
+            : isUpdatingRoute
+              ? "Updating Route..."
+              : "Update Route"}
         </Button>
       </div>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <Dialog.Content className="flex p-4 max-w-[300px] font-sans gap-4 flex-col">
+          <h1 className="text-lg font-sans">Unsaved Changes</h1>
+          <p>
+            You have unsaved changes. Are you sure you want to go back without
+            saving?
+          </p>
+          <div className="flex flex-col gap-2 w-full">
+            <Button
+              variant="neutral-secondary" className="w-full"
+              onClick={() => setShowConfirmDialog(false)}
+            >
+              Keep Editing
+          </Button>
+          <Button variant="neutral-secondary" className="w-full" onClick={handleConfirmGoBack}>
+            Go Back Without Saving
+          </Button>
+          <Button variant="brand-primary" className="w-full" onClick={handleConfirmSaveAndExit}>
+            Save and Exit
+            </Button>
+          </div>
+        </Dialog.Content>
+      </Dialog>
     </div>
   );
 });

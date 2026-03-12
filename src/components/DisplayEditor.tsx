@@ -13,6 +13,7 @@ import { useFontFileByLanguage } from "@/utils/getFontFileByLanguage";
 
 interface DisplayEditorProps {
   listIndex: number;
+  stopScroll?: boolean;
 }
 
 /**
@@ -45,12 +46,12 @@ const LEDWrapper = ({
   );
 };
 
-export default function DisplayEditor({ listIndex }: DisplayEditorProps) {
+export default function DisplayEditor({ listIndex, stopScroll }: DisplayEditorProps) {
   const language = 'en';
   const { selectedTab } = useTabsStore();
   const { watch, setValue } = useFormContext<DisplayConfigPostRequest>();
   const getFontFileByLanguage = useFontFileByLanguage();
-  const [isScrollStopped, setIsScrollStopped] = useState(false);
+  const [isScrollStopped, setIsScrollStopped] = useState(stopScroll);
 
   const basePath = `${selectedTab}[${listIndex}]`;
   const screenConfig:Simulation = watch(basePath);
@@ -105,6 +106,7 @@ export default function DisplayEditor({ listIndex }: DisplayEditorProps) {
                 textConfig={screenConfig.texts?.[key]}
                 isRouteNumber={true}
                 fontFamily={getFontFileByLanguage(language, key, screenConfig.texts?.[key]?.fontHeight)}
+                stopScroll={stopScroll}
               />
             ))}
           </div>
@@ -117,6 +119,7 @@ export default function DisplayEditor({ listIndex }: DisplayEditorProps) {
             textConfig={screenConfig.texts?.sideText}
             isRouteNumber={true}
             fontFamily={getFontFileByLanguage(language, "sideText", screenConfig.texts?.sideText?.fontHeight)}
+            stopScroll={stopScroll}
           />
         )}
 
@@ -128,6 +131,7 @@ export default function DisplayEditor({ listIndex }: DisplayEditorProps) {
             cols={ensureMin(availableWidth, 96)}
             textConfig={screenConfig.texts?.text}
             fontFamily={getFontFileByLanguage(language, "text", screenConfig.texts?.text?.fontHeight)}
+            stopScroll={stopScroll}
           />
         ) : (
           <div className="flex flex-col">
@@ -140,6 +144,7 @@ export default function DisplayEditor({ listIndex }: DisplayEditorProps) {
                 cols={ensureMin(availableWidth, 96)}
                 textConfig={screenConfig.texts?.[key]}
                 fontFamily={getFontFileByLanguage(language, key, screenConfig.texts?.[key]?.fontHeight)}
+                stopScroll={stopScroll}
               />
             ))}
           </div>
@@ -157,7 +162,8 @@ export default function DisplayEditor({ listIndex }: DisplayEditorProps) {
             rows={screenConfig.height || 16}
             cols={ensureNumber(screenConfig.width, 96)}
             textConfig={screenConfig.texts?.text}
-            fontFamily={getFontFileByLanguage(language, "text", screenConfig.texts?.text?.fontHeight)}
+          fontFamily={getFontFileByLanguage(language, "text", screenConfig.texts?.text?.fontHeight)}
+          stopScroll={stopScroll}
           />
         ) : (
           renderMultiLayout()

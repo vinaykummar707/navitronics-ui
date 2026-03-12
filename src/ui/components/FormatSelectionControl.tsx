@@ -1,7 +1,7 @@
 import React from "react";
 import { FeatherBaseline, FeatherColumns, FeatherRectangleHorizontal, FeatherRows3 } from "@subframe/core";
 import * as SubframeUtils from "../utils";
-import { DisplayConfigPostRequest, SIMULATION_FORMATS } from "@/types/routeConfigV2";
+import { DisplayConfigPostRequest, SIMULATION_FORMATS, SIMULATION_TYPES } from "@/types/routeConfigV2";
 import { useFormContext } from "react-hook-form";
 import { getDefaultSingleSimulation, getDefaultThreeSimulation, getDefaultTwoSimulation } from "@/constants/defaultRouteValues";
 import useSimulationStore from "@/store/useSimulationStore";
@@ -127,7 +127,16 @@ const FormatSelectionControlRoot = React.forwardRef<
       title="Format"
       controls={
         <div className="w-full flex-col items-center justify-center gap-1 grid grid-cols-2">
-          {simulationFormats.map((format) => (
+          { (selectedSimulation.type === SIMULATION_TYPES[1] || selectedSimulation.type === SIMULATION_TYPES[2]) && simulationFormats.filter(f => f.type === 'single').map((format) => (
+            <SelectionCardWithIcon
+              key={format.type}
+              onClick={null}
+              icon={<format.Icon />}
+              label={format.label}
+              selected={selectedSimulation?.format === format.type}
+            />
+          ))}
+          { selectedSimulation.type === SIMULATION_TYPES[0] && simulationFormats.map((format) => (
             <SelectionCardWithIcon
               key={format.type}
               onClick={() => handleFormatChange(format.type)}

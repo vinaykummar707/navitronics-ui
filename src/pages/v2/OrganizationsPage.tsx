@@ -73,6 +73,7 @@ function OrganizationsPage() {
             <OrganizationCard
               title={org.name}
               subtitle={org.email ? org.email : "No email provided"}
+              timestamp={`Created on ${new Date(org.created_at).toLocaleDateString()}`}
               key={org.id}
               isSuspended={!org.active}
               logo2={org.logo || undefined}

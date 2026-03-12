@@ -18,6 +18,7 @@ interface OrganizationCardRootProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   title?: string;
   subtitle?: string;
+  timestamp?: string;
   isSuspended?: boolean;
   logo2?: string;
   actions?: React.ReactNode;
@@ -32,6 +33,7 @@ const OrganizationCardRoot = React.forwardRef<
   {
     title,
     subtitle,
+    timestamp,
     isSuspended = false,
     logo2,
     actions,
@@ -70,6 +72,11 @@ const OrganizationCardRoot = React.forwardRef<
           {subtitle ? (
             <span className="text-caption font-caption text-subtext-color">
               {subtitle}
+            </span>
+          ) : null}
+          {timestamp ? (
+            <span className="text-caption font-caption text-subtext-color">
+              {timestamp}
             </span>
           ) : null}
         </div>

@@ -152,6 +152,8 @@ const handleRemoveSimulation = async (index: number) => {
     }
   };
 
+  const [pauseSimulation, setPauseSimulation] = React.useState(false);
+
   return (
     <div
       className={SubframeUtils.twClassNames(
@@ -208,7 +210,7 @@ const handleRemoveSimulation = async (index: number) => {
           <div className="flex w-full  flex-col items-start gap-4 px-4 pb-4">
             <RadioCardGroup className="h-auto w-full flex-none">
               <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2">
-                <DisplayEditor listIndex={listIndex} />
+                <DisplayEditor stopScroll={pauseSimulation} listIndex={listIndex} />
 
                 <div className="flex w-full items-start gap-1">
                   <Button
@@ -218,8 +220,9 @@ const handleRemoveSimulation = async (index: number) => {
                     size="medium"
                     icon={<FeatherPlay />}
                     loading={false}
+                    onClick={() => setPauseSimulation((prev) => !prev)}
                   >
-                    Play
+                    {pauseSimulation ? "Play" : "Pause"}
                   </Button>
                   <Button
                     className="h-9 grow shrink-0 basis-0"

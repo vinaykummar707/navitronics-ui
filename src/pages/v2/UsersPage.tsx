@@ -127,7 +127,17 @@ export default function UsersPage() {
           if (!open) setEditData(null);
         }}
       >
-        <Drawer.Content>
+        <Drawer.Content
+          onPointerDownOutside={(event) => {
+              event.preventDefault();
+              
+          }}
+          onInteractOutside={(event) => {
+            
+              event.preventDefault();
+              
+          }}
+        >
           <CreateUserForm2
             onCancel={() => setOpen(false)}
             initialData={editData}

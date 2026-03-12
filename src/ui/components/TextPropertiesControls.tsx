@@ -261,8 +261,8 @@ const TextPropertiesControlsRoot = React.forwardRef<
         />
       </ControlItem>
       <ControlItem label="Text Scroll Direction">
-        <div className="flex grow shrink-0 basis-0 items-center justify-center gap-1">
-          <SelectionCard
+        <div className="flex grow shrink-0 basis-0 items-center justify-center gap-1 gap-1 grid grid-cols-1">
+          {/* <SelectionCard
             icon={<FeatherChevronsLeft />}
             text="Label"
             onClick={() => handleSelection("scrollType", "Right To Left")}
@@ -277,6 +277,22 @@ const TextPropertiesControlsRoot = React.forwardRef<
           <SelectionCard
             icon={<FeatherChevronsRight />}
             text="Label"
+            onClick={() => handleSelection("scrollType", "Left To Right")}
+            selected={isSelected("scrollType", "Left To Right")}
+          /> */}
+          <SelectionCardWithText
+            title="Right To Left"
+            onClick={() => handleSelection("scrollType", "Right To Left")}
+            
+            selected={isSelected("scrollType", "Right To Left")}
+          />
+          <SelectionCardWithText
+            title="Fixed"
+            onClick={() => handleSelection("scrollType", "Fixed")}
+            selected={isSelected("scrollType", "Fixed")}
+          />
+          <SelectionCardWithText
+            title="Left To Right"
             onClick={() => handleSelection("scrollType", "Left To Right")}
             selected={isSelected("scrollType", "Left To Right")}
           />

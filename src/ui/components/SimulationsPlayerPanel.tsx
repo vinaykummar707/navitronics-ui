@@ -414,7 +414,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
                         handleAddSimulation(
                           "single",
                           "slogan",
-                          "This is a Slogan Simulation",
+                          "THIS IS A SLOGAN SIMULATION",
                         )
                       }
                       icon={<SubframeCore.FeatherSpeech />}
@@ -427,7 +427,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
                         handleAddSimulation(
                           "single",
                           "special message",
-                          "This is a Special Message Simulation",
+                          "THIS IS A SPECIAL MESSAGE SIMULATION",
                         )
                       }
                       icon={<SubframeCore.FeatherMic />}
@@ -448,7 +448,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
             onClick={async () => {
               if (confirm("Are you sure you want to delete all simulations?")) {
 
-                if(selectedTab !== "stops"){
+                if(selectedTab === "stops"){
 
                 simulations.forEach(async (simulation, index) => {
                   console.log("Deleting simulation at index:", simulation);
