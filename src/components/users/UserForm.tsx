@@ -1,9 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { roleService } from '../../services/roleService';
 import { areaService } from '../../services/areaService';
 import { depotService } from '../../services/depotService';
 import { User, CreateUserDto } from '../../types/user';
+import { Button, Input, VStack, HStack, createListCollection } from '@chakra-ui/react';
+import { Field } from '@/components/ui/field';
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectValueText,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
 
 interface UserFormProps {
   initialData?: User;
@@ -25,7 +34,6 @@ export const UserForm = ({ initialData, onSubmit, onCancel, selectedOrganization
 
   const [selectedAreaId, setSelectedAreaId] = useState<string>(initialData?.areaId || '');
 
-  // Fetch roles, areas, and depots
   const { data: roles } = useQuery({
     queryKey: ['roles', selectedOrganizationId],
     queryFn: () => roleService.getAll(selectedOrganizationId),
@@ -44,12 +52,44 @@ export const UserForm = ({ initialData, onSubmit, onCancel, selectedOrganization
     enabled: !!selectedAreaId,
   });
 
-  // Reset depot when area changes
   useEffect(() => {
     if (selectedAreaId !== formData.areaId) {
-      setFormData(prev => ({ ...prev, depotId: '' }));
+      setFormData((prev) => ({ ...prev, depotId: '' }));
     }
   }, [selectedAreaId]);
+
+  const roleCollection = useMemo(() => {
+    return createListCollection({
+      items: roles
+        ? roles.map((role) => ({
+            label: role.roleName,
+            value: role.id,
+          }))
+        : [],
+    });
+  }, [roles]);
+
+  const areaCollection = useMemo(() => {
+    return createListCollection({
+      items: areas
+        ? areas.map((area) => ({
+            label: area.areaName,
+            value: area.areaId,
+          }))
+        : [],
+    });
+  }, [areas]);
+
+  const depotCollection = useMemo(() => {
+    return createListCollection({
+      items: depots
+        ? depots.map((depot: any) => ({
+            label: depot.depotName || depot.name || '',
+            value: String(depot.depotId || depot.id || ''),
+          }))
+        : [],
+    });
+  }, [depots]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,132 +97,128 @@ export const UserForm = ({ initialData, onSubmit, onCancel, selectedOrganization
   };
 
   const findRoleNamebyId = (roleId: string) => {
-    const role = roles?.find(role => role.id === roleId);
+    const role = roles?.find((r) => r.id === roleId);
     return role?.roleName || '';
   };
 
+  const currentRoleName = findRoleNamebyId(formData.roleId);
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 w-[400px]">
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-stone-700">
-          Name
-        </label>
-        <input
-          type="text"
-          id="name"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-        className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
-          required
-        />
-      </div>
-
-      <div>
-        <label htmlFor="userName" className="block text-sm font-medium text-stone-700">
-          Username
-        </label>
-        <input
-          type="text"
-          id="userName"
-          value={formData.userName}
-          onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
-        className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
-          required
-        />
-      </div>
-
-      {!initialData && (
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-stone-700">
-            Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
-            required={!initialData}
+    <form onSubmit={handleSubmit}>
+      <VStack gap="4" align="stretch">
+        <Field label="Name" required>
+          <Input
+            type="text"
+            id="name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder="John Doe"
+            required
           />
-        </div>
-      )}
+        </Field>
 
-      <div>
-        <label htmlFor="roleId" className="block text-sm font-medium text-stone-700">
-          Role
-        </label>
-        <select
-          id="roleId"
-          value={formData.roleId}
-          onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
-        className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
-        >
-          <option value="">Select Role</option>
-          {roles?.map((role) => (
-            <option key={role.roleId} value={role.id}>
-              {role.roleName}
-            </option>
-          ))}
-        </select>
-      </div>
+        <Field label="Username" required>
+          <Input
+            type="text"
+            id="userName"
+            value={formData.userName}
+            onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
+            placeholder="johndoe"
+            required
+          />
+        </Field>
 
-     {(findRoleNamebyId(formData.roleId) === 'area_admin' || findRoleNamebyId(formData.roleId) === 'depot_admin') &&  <div>
-        <label htmlFor="areaId" className="block text-sm font-medium text-stone-700">
-          Area
-        </label>
-        <select
-          id="areaId"
-          value={formData.areaId}
-          onChange={(e) => {
-            setSelectedAreaId(e.target.value);
-            setFormData({ ...formData, areaId: e.target.value });
-          }}
-        className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
-        >
-          <option value="">Select Area</option>
-          {areas?.map((area) => (
-            <option key={area.areaId} value={area.areaId}>
-              {area.areaName}
-            </option>
-          ))}
-        </select>
-      </div>}
+        {!initialData && (
+          <Field label="Password" required>
+            <Input
+              type="password"
+              id="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              placeholder="••••••••"
+              required={!initialData}
+            />
+          </Field>
+        )}
 
-     {findRoleNamebyId(formData.roleId) === 'depot_admin' &&  <div>
-        <label htmlFor="depotId" className="block text-sm font-medium text-stone-700">
-          Depot
-        </label>
-        <select
-          id="depotId"
-          value={formData.depotId}
-          onChange={(e) => setFormData({ ...formData, depotId: e.target.value })}
-        className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
-          disabled={!formData.areaId}
-        >
-          <option value="">Select Depot</option>
-          {depots?.map((depot) => (
-            <option key={depot.depotId} value={depot.depotId}>
-              {depot.depotName}
-            </option>
-          ))}
-        </select>
-      </div>}
+        <Field label="Role" required>
+          <SelectRoot
+            collection={roleCollection}
+            size="sm"
+            value={formData.roleId ? [formData.roleId] : []}
+            onValueChange={(e) => setFormData({ ...formData, roleId: e.value[0] || '' })}
+          >
+            <SelectTrigger bg="white">
+              <SelectValueText placeholder="Select Role" />
+            </SelectTrigger>
+            <SelectContent>
+              {roleCollection.items.map((item) => (
+                <SelectItem item={item} key={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </SelectRoot>
+        </Field>
 
-      <div className="flex justify-end space-x-3 pt-4">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-stone-700 bg-white border border-stone-300 rounded-md hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          {initialData ? 'Update' : 'Create'}
-        </button>
-      </div>
+        {(currentRoleName === 'area_admin' || currentRoleName === 'depot_admin') && (
+          <Field label="Area" required>
+            <SelectRoot
+              collection={areaCollection}
+              size="sm"
+              value={formData.areaId ? [formData.areaId] : []}
+              onValueChange={(e) => {
+                const val = e.value[0] || '';
+                setSelectedAreaId(val);
+                setFormData({ ...formData, areaId: val });
+              }}
+            >
+              <SelectTrigger bg="white">
+                <SelectValueText placeholder="Select Area" />
+              </SelectTrigger>
+              <SelectContent>
+                {areaCollection.items.map((item) => (
+                  <SelectItem item={item} key={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </SelectRoot>
+          </Field>
+        )}
+
+        {currentRoleName === 'depot_admin' && (
+          <Field label="Depot" required>
+            <SelectRoot
+              collection={depotCollection}
+              size="sm"
+              disabled={!formData.areaId}
+              value={formData.depotId ? [formData.depotId] : []}
+              onValueChange={(e) => setFormData({ ...formData, depotId: e.value[0] || '' })}
+            >
+              <SelectTrigger bg="white">
+                <SelectValueText placeholder="Select Depot" />
+              </SelectTrigger>
+              <SelectContent>
+                {depotCollection.items.map((item) => (
+                  <SelectItem item={item} key={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </SelectRoot>
+          </Field>
+        )}
+
+        <HStack justify="flex-end" gap="3" pt="2">
+          <Button variant="outline" size="sm" onClick={onCancel} type="button">
+            Cancel
+          </Button>
+          <Button colorPalette="blue" size="sm" type="submit">
+            {initialData ? 'Update User' : 'Create User'}
+          </Button>
+        </HStack>
+      </VStack>
     </form>
   );
 };

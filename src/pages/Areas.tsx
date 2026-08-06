@@ -3,10 +3,30 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { areaService } from '../services/areaService';
 import { Area, UpdateAreaDto } from '../types/area';
 import { AreaForm } from '../components/areas/AreaForm';
-import { Dialog } from '@headlessui/react';
 import { useOrganizationStore } from '../store/useOrganizationStore';
 import { Icon } from '@iconify-icon/react';
-import { Container } from '@chakra-ui/react';
+import {
+  Container,
+  Flex,
+  Heading,
+  Button,
+  Table,
+  Badge,
+  IconButton,
+  Box,
+  Skeleton,
+  Stack,
+  HStack,
+  Text,
+} from '@chakra-ui/react';
+import {
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogCloseTrigger,
+} from '@/components/ui/dialog';
 import useAuthStore from '@/store/authStore';
 import RBAC from '../components/RBAC';
 import { ROLES } from '../constants/roles';
@@ -26,8 +46,9 @@ const Areas = () => {
     enabled: !!selectedOrganization,
   });
 
-  const filteredAreas = user.area && user.userRole === 'area_admin' ? areas?.filter(area => area.areaId === user.area.areaId) : areas;
-
+  const filteredAreas = user.area && user.userRole === 'area_admin'
+    ? areas?.filter((area) => area.areaId === user.area.areaId)
+    : areas;
 
   const createMutation = useMutation({
     mutationFn: areaService.create,
@@ -36,9 +57,9 @@ const Areas = () => {
       setIsCreateModalOpen(false);
       toast.success('Area created successfully');
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Failed to create area');
-    }
+    },
   });
 
   const updateMutation = useMutation({
@@ -49,9 +70,9 @@ const Areas = () => {
       setEditingArea(null);
       toast.success('Area updated successfully');
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Failed to update area');
-    }
+    },
   });
 
   const deleteMutation = useMutation({
@@ -60,127 +81,137 @@ const Areas = () => {
       queryClient.invalidateQueries({ queryKey: ['areas', selectedOrganization?.organizationId] });
       toast.success('Area deleted successfully');
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Failed to delete area');
-    }
+    },
   });
 
   if (!selectedOrganization) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="text-center text-stone-500">Please select an organization first</div>
-      </div>
+      <Box p="8" textAlign="center">
+        <Text color="gray.500" fontSize="md">
+          Please select an organization first from the sidebar.
+        </Text>
+      </Box>
     );
   }
 
   return (
-    <Container overflow={'scroll'} fluid py={4}>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          {/* <p className="text-stone-600">
-            Organization: {selectedOrganization.organizationName}
-          </p> */}
-        </div>
+    <Container overflow="auto" fluid py="4">
+      {/* Header Bar */}
+      <Flex justify="space-between" align="center" mb="6">
+        <Heading size="md" color="gray.900" fontWeight="bold">
+          Areas
+        </Heading>
         <RBAC roles={[ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]}>
-          <button
+          <Button
+            colorPalette="blue"
+            size="sm"
             onClick={() => setIsCreateModalOpen(true)}
-            className="bg-indigo-600 text-white px-3 py-1.5 text-sm rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           >
+            <Icon icon="solar:add-circle-bold" />
             Create Area
-          </button>
+          </Button>
         </RBAC>
-      </div>
+      </Flex>
 
+      {/* Content Area */}
       {isLoading ? (
-        <div className="flex items-center justify-center h-48">
-          <div className="text-lg">Loading...</div>
-        </div>
+        <Stack gap="3" py="4">
+          <Skeleton height="36px" borderRadius="lg" />
+          <Skeleton height="48px" borderRadius="lg" />
+          <Skeleton height="48px" borderRadius="lg" />
+          <Skeleton height="48px" borderRadius="lg" />
+        </Stack>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-stone-200">
-            <thead className="bg-stone-50">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                  Area Name
-                </th>
-                {/* <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                  Created By
-                </th> */}
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                  Created At
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-stone-200">
+        <Box
+          bg="white"
+          p="0"
+          rounded="xl"
+          borderWidth="1px"
+          borderColor="gray.200"
+          shadow="xs"
+          overflow="hidden"
+        >
+          <Table.Root variant="outline" size="sm" interactive>
+            <Table.Header bg="gray.50">
+              <Table.Row>
+                <Table.ColumnHeader>Area Name</Table.ColumnHeader>
+                <Table.ColumnHeader>Created At</Table.ColumnHeader>
+                <Table.ColumnHeader>Status</Table.ColumnHeader>
+                <Table.ColumnHeader textAlign="right">Actions</Table.ColumnHeader>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
               {filteredAreas && filteredAreas.length > 0 ? (
                 filteredAreas.map((area) => (
-                  <tr key={area.areaId} className="hover:bg-stone-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-stone-900">{area.areaName}</div>
-                    </td>
-                    {/* <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-stone-500">{area.createdBy}</div>
-                    </td> */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-stone-500">
-                        {new Date(area.createdAt).toLocaleDateString()}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        area.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
+                  <Table.Row key={area.areaId}>
+                    <Table.Cell fontWeight="semibold" color="gray.900">
+                      {area.areaName}
+                    </Table.Cell>
+                    <Table.Cell color="gray.500" fontSize="xs">
+                      {new Date(area.createdAt).toLocaleDateString()}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Badge
+                        colorPalette={area.active ? 'green' : 'red'}
+                        variant="subtle"
+                        size="sm"
+                      >
                         {area.active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => setEditingArea(area)}
-                        className="text-indigo-600 hover:text-indigo-900 mr-4"
-                      >
-                        <Icon icon="solar:pen-bold" className="inline-block" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (confirm('Are you sure you want to delete this area?')) {
-                            deleteMutation.mutate(area.areaId);
-                          }
-                        }}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <Icon icon="solar:trash-bin-trash-bold" className="inline-block" />
-                      </button>
-                    </td>
-                  </tr>
+                      </Badge>
+                    </Table.Cell>
+                    <Table.Cell textAlign="right">
+                      <HStack justify="flex-end" gap="1">
+                        <IconButton
+                          aria-label="Edit Area"
+                          size="xs"
+                          variant="ghost"
+                          colorPalette="blue"
+                          onClick={() => setEditingArea(area)}
+                        >
+                          <Icon icon="solar:pen-bold" />
+                        </IconButton>
+                        <IconButton
+                          aria-label="Delete Area"
+                          size="xs"
+                          variant="ghost"
+                          colorPalette="red"
+                          onClick={() => {
+                            if (confirm('Are you sure you want to delete this area?')) {
+                              deleteMutation.mutate(area.areaId);
+                            }
+                          }}
+                        >
+                          <Icon icon="solar:trash-bin-trash-bold" />
+                        </IconButton>
+                      </HStack>
+                    </Table.Cell>
+                  </Table.Row>
                 ))
               ) : (
-                <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-stone-500">
-                    No areas found
-                  </td>
-                </tr>
+                <Table.Row>
+                  <Table.Cell colSpan={4} textAlign="center" color="gray.500" py="8">
+                    <Text fontSize="sm">No areas found</Text>
+                  </Table.Cell>
+                </Table.Row>
               )}
-            </tbody>
-          </table>
-        </div>
+            </Table.Body>
+          </Table.Root>
+        </Box>
       )}
 
       {/* Create Modal */}
-      <Dialog
+      <DialogRoot
         open={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        className="relative z-50"
+        onOpenChange={(e) => setIsCreateModalOpen(e.open)}
+        placement="center"
       >
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="mx-auto max-w-md rounded bg-white p-6">
-            <Dialog.Title className="text-lg font-medium mb-4">Create Area</Dialog.Title>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Area</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
             <AreaForm
               onSubmit={(data) =>
                 createMutation.mutate({
@@ -190,20 +221,24 @@ const Areas = () => {
               }
               onCancel={() => setIsCreateModalOpen(false)}
             />
-          </Dialog.Panel>
-        </div>
-      </Dialog>
+          </DialogBody>
+          <DialogCloseTrigger />
+        </DialogContent>
+      </DialogRoot>
 
       {/* Edit Modal */}
-      <Dialog
+      <DialogRoot
         open={!!editingArea}
-        onClose={() => setEditingArea(null)}
-        className="relative z-50"
+        onOpenChange={(e) => {
+          if (!e.open) setEditingArea(null);
+        }}
+        placement="center"
       >
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="mx-auto max-w-md rounded bg-white p-6">
-            <Dialog.Title className="text-lg font-medium mb-4">Edit Area</Dialog.Title>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Area</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
             {editingArea && (
               <AreaForm
                 initialData={editingArea}
@@ -212,8 +247,8 @@ const Areas = () => {
                     data: {
                       ...data,
                       organizationId: selectedOrganization.organizationId,
-                      active:editingArea.active,
-                      deleted:editingArea.deleted
+                      active: editingArea.active,
+                      deleted: editingArea.deleted,
                     },
                     areaId: editingArea.areaId!,
                   })
@@ -221,9 +256,10 @@ const Areas = () => {
                 onCancel={() => setEditingArea(null)}
               />
             )}
-          </Dialog.Panel>
-        </div>
-      </Dialog>
+          </DialogBody>
+          <DialogCloseTrigger />
+        </DialogContent>
+      </DialogRoot>
     </Container>
   );
 };

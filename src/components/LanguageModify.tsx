@@ -1,252 +1,214 @@
 import axiosInstance from '@/config/axios';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import DisplaySettings from './DisplaySettings';
-import { Button } from '@chakra-ui/react';
 import { toast } from 'react-toastify';
-import LEDMatrix from './CanvasText';
-
-const API_URL = 'http://localhost:8080/navitranix/api/languages';
+import {
+  Container,
+  Flex,
+  Heading,
+  Button,
+  Table,
+  IconButton,
+  Box,
+  Skeleton,
+  Stack,
+  HStack,
+  Text,
+  Badge,
+  Input,
+  VStack,
+} from '@chakra-ui/react';
+import { Icon } from '@iconify-icon/react';
 
 const LanguageManagement = () => {
-	const [languages, setLanguages] = useState([]);
-	const [selectedLanguage, setSelectedLanguage] = useState(null);
-	const [formData, setFormData] = useState({
-		code: '',
-		name: '',
-		fontFile: '',
-		fontFamily: '',
-		fontHeight: 0,
-		fontSize: 0,
-		x_offset: 0,
-		y_offset: 0,
-		spacing: 0,
-	});
-	const [isEditing, setIsEditing] = useState(false);
-	const [isLoading, setIsLoading] = useState(true);
-	const [error, setError] = useState(null);
-	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [isDisplaySettingsOpen, setIsDisplaySettingsOpen] = useState(false);
+  const [languages, setLanguages] = useState<any[]>([]);
+  const [selectedLanguage, setSelectedLanguage] = useState<any | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
-	// Fetch languages on component mount
-	useEffect(() => {
-		fetchLanguages();
-	}, []);
+  useEffect(() => {
+    fetchLanguages();
+  }, []);
 
-	// API service functions
-	const fetchLanguages = async () => {
-		setIsLoading(true);
-		try {
-			const response = await axiosInstance.get(`/languages/all`);
-			// if (!response.ok) throw new Error('Failed to fetch languages');
-			const data = await response.data;
-			setLanguages(data);
-			setError(null);
-			toast.success('Languages fetched successfully!');
-		} catch (err) {
-			toast.error('Failed to fetch languages!');
-			setError(err.message);
-		} finally {
-			setIsLoading(false);
-		}
-	};
+  const fetchLanguages = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axiosInstance.get(`/languages/all`);
+      setLanguages(response.data);
+      toast.success('Languages fetched successfully!');
+    } catch (err: any) {
+      toast.error('Failed to fetch languages!');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-	const deleteLanguage = async (code) => {
-		try {
-			const response = await axiosInstance.delete(`/languages/${code}`);
+  const deleteLanguage = async (code: string) => {
+    try {
+      await axiosInstance.delete(`/languages/${code}`);
+      await fetchLanguages();
+      if (selectedLanguage?.code === code) {
+        setSelectedLanguage(null);
+        setIsEditing(false);
+      }
+      toast.success('Language deleted successfully!');
+    } catch (err: any) {
+      toast.error('Failed to delete language!');
+    }
+  };
 
-			await fetchLanguages();
-			setSelectedLanguage(null);
-			toast.success('Language deleted successfully!');
-		} catch (err) {
-			toast.error('Failed to delete language!');
-			setError(err.message);
-		}
-	};
+  const handleEdit = (language: any) => {
+    setIsEditing(true);
+    setSelectedLanguage(language);
+  };
 
-	// Form handlers
-	const handleInputChange = (e) => {
-		const { name, value } = e.target;
-		const parsedValue = [
-			'fontHeight',
-			'x_offset',
-			'y_offset',
-			'spacing',
-		].includes(name)
-			? parseFloat(value)
-			: value;
-		setFormData({ ...formData, [name]: parsedValue });
-	};
+  const handleDelete = (code: string) => {
+    if (window.confirm(`Are you sure you want to delete language code "${code}"?`)) {
+      deleteLanguage(code);
+    }
+  };
 
-	// const handleSubmit = (e) => {
-	// 	e.preventDefault();
-	// 	if (isEditing) {
-	// 		updateLanguage(formData.code, formData);
-	// 	} else {
-	// 		createLanguage(formData);
-	// 	}
-	// };
+  const filteredLanguages = useMemo(() => {
+    if (!searchQuery.trim()) return languages;
+    const q = searchQuery.toLowerCase();
+    return languages.filter(
+      (lang) =>
+        lang.code.toLowerCase().includes(q) ||
+        lang.name.toLowerCase().includes(q)
+    );
+  }, [languages, searchQuery]);
 
-	const handleEdit = (language) => {
-		console.log(language);
-		setIsEditing(true);
-		setSelectedLanguage(language);
-		setIsDisplaySettingsOpen(true);
-	};
+  return (
+    <Container overflow="auto" fluid py="4">
+      <VStack gap="6" align="stretch">
+        {/* Top Card: Configured Languages Directory */}
+        <Box bg="white" p="5" rounded="xl" borderWidth="1px" borderColor="gray.200" shadow="xs">
+          <Flex justify="space-between" align="center" mb="4" flexWrap="wrap" gap="3">
+            <HStack gap="3">
+              <Heading size="md" color="gray.900" fontWeight="bold">
+                Configured Languages
+              </Heading>
+              <Badge colorPalette="blue" variant="subtle" size="sm">
+                {languages.length} Total
+              </Badge>
+            </HStack>
 
-	const handleDelete = (code) => {
-		if (window.confirm('Are you sure you want to delete this language?')) {
-			deleteLanguage(code);
-		}
-	};
+            <HStack gap="3">
+              <Input
+                size="sm"
+                placeholder="Search language..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                w="240px"
+                bg="white"
+              />
+              <Button
+                size="sm"
+                colorPalette="blue"
+                onClick={() => {
+                  setIsEditing(false);
+                  setSelectedLanguage(null);
+                }}
+              >
+                <Icon icon="solar:add-circle-bold" />
+                Add New Language
+              </Button>
+            </HStack>
+          </Flex>
 
-	const resetForm = () => {
-		setFormData({
-			code: '',
-			name: '',
-			fontFile: '',
-			fontFamily: '',
-			fontHeight: 0,
-			x_offset: 0,
-			y_offset: 0,
-			spacing: 0,
-			fontSize: 0,
-		});
-		setSelectedLanguage(null);
-		setIsEditing(false);
-	};
+          {/* Languages Table */}
+          {isLoading ? (
+            <Stack gap="3" py="2">
+              <Skeleton height="36px" borderRadius="lg" />
+              <Skeleton height="48px" borderRadius="lg" />
+            </Stack>
+          ) : (
+            <Box overflowX="auto" borderWidth="1px" borderColor="gray.200" rounded="lg">
+              <Table.Root variant="outline" size="sm" interactive>
+                <Table.Header bg="gray.50">
+                  <Table.Row>
+                    <Table.ColumnHeader>Language Code</Table.ColumnHeader>
+                    <Table.ColumnHeader>Language Name</Table.ColumnHeader>
+                    <Table.ColumnHeader>Status</Table.ColumnHeader>
+                    <Table.ColumnHeader textAlign="right">Actions</Table.ColumnHeader>
+                  </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                  {filteredLanguages && filteredLanguages.length > 0 ? (
+                    filteredLanguages.map((language) => {
+                      const isSelected = selectedLanguage?.code === language.code;
 
-	const onOperationComplete = () => {
-		fetchLanguages();
-	};
+                      return (
+                        <Table.Row
+                          key={language.code}
+                          bg={isSelected ? "blue.50/70" : undefined}
+                          _hover={{ bg: isSelected ? "blue.50" : "gray.50" }}
+                        >
+                          <Table.Cell fontWeight="bold" color="blue.700">
+                            {language.code}
+                          </Table.Cell>
+                          <Table.Cell color="gray.900" fontWeight="medium">
+                            {language.name}
+                          </Table.Cell>
+                          <Table.Cell>
+                            {isSelected ? (
+                              <Badge colorPalette="blue" variant="solid" size="sm">
+                                Active Edit
+                              </Badge>
+                            ) : (
+                              <Badge colorPalette="green" variant="subtle" size="sm">
+                                Configured
+                              </Badge>
+                            )}
+                          </Table.Cell>
+                          <Table.Cell textAlign="right">
+                            <HStack justify="flex-end" gap="2">
+                              <Button
+                                size="xs"
+                                variant={isSelected ? "solid" : "outline"}
+                                colorPalette="blue"
+                                onClick={() => handleEdit(language)}
+                              >
+                                <Icon icon="solar:pen-bold" />
+                                {isSelected ? "Editing" : "Edit Config"}
+                              </Button>
+                              <IconButton
+                                aria-label="Delete Language"
+                                size="xs"
+                                variant="ghost"
+                                colorPalette="red"
+                                onClick={() => handleDelete(language.code)}
+                              >
+                                <Icon icon="solar:trash-bin-trash-bold" />
+                              </IconButton>
+                            </HStack>
+                          </Table.Cell>
+                        </Table.Row>
+                      );
+                    })
+                  ) : (
+                    <Table.Row>
+                      <Table.Cell colSpan={4} textAlign="center" color="gray.500" py="6">
+                        <Text fontSize="sm">No languages configured yet</Text>
+                      </Table.Cell>
+                    </Table.Row>
+                  )}
+                </Table.Body>
+              </Table.Root>
+            </Box>
+          )}
+        </Box>
 
-	// if (isLoading) {
-	// 	return <div className="flex justify-center p-8">Loading languages...</div>;
-	// }
-
-	const defaultPattern = [
-		"###......###....########......###....................######......###########.......######......#########...........###........#########....",
-		"###......###....##########....###..................#########.....###########.....#########.....###########........#####.......##########...",
-		"###......###....###########...###..................##########....###########....###########....############.......#####.......###########..",
-		"###......###....###.....###...###.................###.....####...###............###.....####...###......###.......#####.......###.....####.",
-		"###......###....###.....###...###.................###......###...###...........####......###...###......###......###.###......###......###.",
-		"###......###....###.....###...###.................####...........###...........###.............###......###......###.###......###......####",
-		"###......###....###.....###...###..................#######.......###########...###.............###########......####.####.....###.......###",
-		"###......###....###########...###...................########.....###########...###.............##########.......###...###.....###.......###",
-		"###......###....##########....###....................########....###########...###.............############.....###...###.....###.......###",
-		"###......###....#########.....###..........######........#####...###...........###.............###......###....###.....###....###.......###",
-		"###......###....###...........###..........######..##......###...###...........###.......##....###......####...###########....###......####",
-		"###......###....###...........###..........######.###......###...###...........####......###...###......####..#############...###......###.",
-		"####.....###....###...........###.................####....####...###............###.....####...###......####..###.......###...###.....####.",
-		".###########....###...........###########..........###########...############...###########....############...###.......###...###########..",
-		".##########.....###...........###########..........##########....############....#########.....###########...####.......####..##########...",
-		"...######.......###...........###########............######......############......######......##########....###.........###..########.....",
-	];
-
-
-	return (
-		<div className=" gap-4 w-full flex p-4 h-full overflow-hidden">
-			{/* {error && (
-				<div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-					Error: {error}
-				</div>
-			)} */}
-
-			
-
-			<DisplaySettings
-				isEdit={isEditing}
-				initialData={selectedLanguage}
-				onOperationComplete={onOperationComplete}
-			/>
-
-			<div className="flex-1 flex flex-col   gap-4">
-				{/* Languages List */}
-				<div className="">
-					<div className="bg-white overflow-y-auto rounded-lg shadow overflow-hidden">
-						<div className="flex justify-between items-center p-4 border-b">
-			
-							<h2 className="text-xl font-semibold">Languages</h2>
-							{/* <div className="flex gap-4">
-								<Button
-									className="bg-blue-500 text-sm text-white hover:bg-blue-600 p-4"
-									onClick={() => {
-										setIsEditing(false);
-										setIsDisplaySettingsOpen(true);
-									}}
-								>
-									Add Language
-								</Button>
-							</div> */}
-						</div>
-
-						<div className="overflow-x-auto">
-							<table className="w-full">
-								<thead className="bg-gray-50">
-									<tr>
-										<th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
-											Code
-										</th>
-										<th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
-											Name
-										</th>
-										{/* <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
-											Font File
-										</th> */}
-										{/* <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
-											Font Family
-										</th> */}
-
-										<th className="px-4 py-2 text-left text-sm font-medium text-gray-500">
-											Actions
-										</th>
-									</tr>
-								</thead>
-								<tbody className="divide-y divide-gray-200">
-									{languages && languages.length > 0 ? (
-										languages.map((language) => (
-											<tr key={language.code} className="hover:bg-gray-50">
-												<td className="px-4 py-3 text-sm">{language.code}</td>
-												<td className="px-4 py-3 text-sm">{language.name}</td>
-												{/* <td className="px-4 py-3 text-sm">
-													{language.fontFile}
-												</td> */}
-												{/* <td className="px-4 py-3 text-sm">
-													{language.fontFamily}
-												</td> */}
-												<td className="px-4 py-3 text-sm whitespace-nowrap">
-													<button
-														onClick={() => handleEdit(language)}
-														className="bg-blue-500 text-white hover:bg-blue-600 px-2 py-1 rounded mr-2"
-													>
-														Edit
-													</button>
-													<button
-														onClick={() => handleDelete(language.code)}
-														className="bg-red-500 text-white hover:bg-red-600 px-2 py-1 rounded"
-													>
-														Delete
-													</button>
-												</td>
-											</tr>
-										))
-									) : (
-										<tr>
-											<td
-												colSpan="4"
-												className="px-4 py-3 text-center text-gray-500"
-											>
-												No languages found
-											</td>
-										</tr>
-									)}
-								</tbody>
-							</table>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	);
+        {/* Main Display Settings Form below */}
+        <DisplaySettings
+          isEdit={isEditing}
+          initialData={selectedLanguage}
+          onOperationComplete={fetchLanguages}
+        />
+      </VStack>
+    </Container>
+  );
 };
 
 export default LanguageManagement;

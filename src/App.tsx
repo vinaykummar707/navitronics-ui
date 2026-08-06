@@ -62,6 +62,7 @@ function App() {
 
           {/* Protected Routes */}
           <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>}>
+            <Route index element={<Navigate to="routes" replace />} />
             {canAccess('organizations') && <Route path="organizations" element={<Organizations />} />}
             {canAccess('areas') && <Route path="areas" element={<Areas />} />}
             {canAccess('depots') && <Route path="depots" element={<Depots />} />}

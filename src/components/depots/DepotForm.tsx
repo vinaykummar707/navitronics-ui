@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Depot, CreateDepotDto } from '../../types/depot';
+import { Button, Input, VStack, HStack } from '@chakra-ui/react';
+import { Field } from '@/components/ui/field';
 
 interface DepotFormProps {
   initialData?: Depot;
@@ -16,47 +18,40 @@ export const DepotForm = ({ initialData, selectedAreaId, selectedOrganizationId,
     organizationId: selectedOrganizationId,
     active: initialData?.active,
     deleted: initialData?.deleted
-    
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    onSubmit({
+      ...formData,
+      areaId: selectedAreaId,
+      organizationId: selectedOrganizationId,
+    });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="depotName" className="block text-sm font-medium text-stone-700">
-          Depot Name *
-        </label>
-        <input
-          type="text"
-          id="depotName"
-          value={formData.depotName}
-          onChange={(e) => setFormData({ ...formData, depotName: e.target.value })}
-         className="border border-neutral-300 text-neutral-900 text-sm p-2 rounded-lg w-full mt-2"
-          required
-        />
-      </div>
+    <form onSubmit={handleSubmit}>
+      <VStack gap="4" align="stretch">
+        <Field label="Depot Name" required>
+          <Input
+            type="text"
+            id="depotName"
+            value={formData.depotName}
+            onChange={(e) => setFormData({ ...formData, depotName: e.target.value })}
+            placeholder="e.g. Hosur Central Depot"
+            required
+          />
+        </Field>
 
-     
-
-      <div className="flex justify-end space-x-3">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="inline-flex justify-center rounded-md border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 shadow-sm hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-        >
-          {initialData ? 'Update' : 'Create'}
-        </button>
-      </div>
+        <HStack justify="flex-end" gap="3" pt="2">
+          <Button variant="outline" size="sm" onClick={onCancel} type="button">
+            Cancel
+          </Button>
+          <Button colorPalette="blue" size="sm" type="submit">
+            {initialData ? 'Update Depot' : 'Create Depot'}
+          </Button>
+        </HStack>
+      </VStack>
     </form>
   );
 };

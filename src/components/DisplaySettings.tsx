@@ -1,29 +1,30 @@
-import { useForm } from "react-hook-form";
-import SideWithTwoTextsBoard from "./SideWithTwoHalfsBoard";
+import { useForm, Controller } from "react-hook-form";
 import {
-  DialogContent,
-  DialogRoot,
-  DialogTrigger,
-  DialogHeader,
-  DialogBody,
-} from "./ui/dialog";
-import { Button, ButtonGroup } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+  Button,
+  Box,
+  Flex,
+  Heading,
+  Grid,
+  VStack,
+  HStack,
+  Input,
+  Text,
+  Badge,
+  Tabs,
+  createListCollection,
+} from "@chakra-ui/react";
+import { Field } from "@/components/ui/field";
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectValueText,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { useEffect } from "react";
 import axiosInstance from "@/config/axios";
 import { toast } from "react-toastify";
-
-interface TextSettings {
-  fontHeight: string;
-  fontFamily: string;
-  x_offset: string;
-  y_offset: string;
-  spacing: string;
-  scrollSpeed: string;
-  scrollType: string;
-  fontSize: string;
-  position: string;
-  fontWeight: string;
-}
+import { Icon } from "@iconify-icon/react";
 
 interface TextSettings2 {
   fontHeight: string;
@@ -141,151 +142,233 @@ const initialState: DisplaySettingsState = {
   },
 };
 
+const LANGUAGE_OPTIONS = createListCollection({
+  items: [
+    { label: "English (en)", value: "en" },
+    { label: "Hindi (hi)", value: "hi" },
+    { label: "Bengali (bn)", value: "bn" },
+    { label: "Telugu (te)", value: "te" },
+    { label: "Tamil (ta)", value: "ta" },
+    { label: "Marathi (mr)", value: "mr" },
+    { label: "Gujarati (gu)", value: "gu" },
+    { label: "Kannada (kn)", value: "kn" },
+    { label: "Malayalam (ml)", value: "ml" },
+    { label: "Punjabi (pa)", value: "pa" },
+    { label: "Odia (or)", value: "or" },
+    { label: "Assamese (as)", value: "as" },
+    { label: "Sanskrit (sa)", value: "sa" },
+    { label: "Kashmiri (ks)", value: "ks" },
+    { label: "Nepali (ne)", value: "ne" },
+    { label: "Sindhi (sd)", value: "sd" },
+    { label: "Bodo (bo)", value: "bo" },
+    { label: "Dogri (doi)", value: "doi" },
+    { label: "Manipuri (mni)", value: "mni" },
+    { label: "Konkani (kok)", value: "kok" },
+    { label: "Maithili (mai)", value: "mai" },
+    { label: "Santali (sat)", value: "sat" },
+    { label: "Mizo (lus)", value: "lus" },
+    { label: "Wancho (njz)", value: "njz" },
+    { label: "Khasi (kha)", value: "kha" },
+  ],
+});
+
+const FONT_WEIGHT_OPTIONS = createListCollection({
+  items: [
+    { label: "Regular", value: "normal" },
+    { label: "Bold", value: "bold" },
+  ],
+});
+
+const SCROLL_TYPE_OPTIONS = createListCollection({
+  items: [
+    { label: "Fixed", value: "Fixed" },
+    { label: "Left To Right", value: "Left To Right" },
+    { label: "Right To Left", value: "Right To Left" },
+    { label: "Flicker", value: "Flicker" },
+  ],
+});
+
+const POSITION_OPTIONS = createListCollection({
+  items: [
+    { label: "Left", value: "Left" },
+    { label: "Center", value: "Center" },
+    { label: "Right", value: "Right" },
+  ],
+});
+
 interface TextSettingsFormProps {
-  settings: TextSettings | TextSettings2;
   title: string;
+  iconName: string;
   configKey: string;
   register: any;
+  control: any;
 }
 
-const FONT_SIZES = [2, 4, 6, 8, 10, 12, 14, 16] as const;
-
 const TextSettingsForm = ({
-  settings,
   title,
+  iconName,
   configKey,
   register,
+  control,
 }: TextSettingsFormProps) => {
   return (
-    <div className="flex bg-white flex-col gap-4 p-4 border rounded-lg">
-      <h3 className="text-lg font-semibold">{title}</h3>
-      <div className="grid grid-cols-3 gap-4">
-        <div className="flex flex-col gap-2">
-          <label className="text-sm text-neutral-500">Font Family 16</label>
-          <input
+    <Box bg="white" p="5" rounded="xl" borderWidth="1px" borderColor="gray.200" shadow="xs">
+      <HStack gap="2" mb="4" align="center">
+        <Icon icon={iconName} style={{ fontSize: '20px', color: '#2563eb' }} />
+        <Heading size="sm" color="gray.900" fontWeight="bold">
+          {title}
+        </Heading>
+      </HStack>
+
+      <Grid templateColumns="repeat(3, 1fr)" gap="4">
+        <Field label="Font Family (Height 16)">
+          <Input
             type="text"
+            size="sm"
             {...register(`${configKey}.fontFamily16`)}
-            className="border rounded-lg p-2"
+            placeholder="e.g. gautami.ttf"
+            bg="white"
           />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-sm text-neutral-500">Font Family 8 </label>
-          <input
+        </Field>
+
+        <Field label="Font Family (Height 8)">
+          <Input
             type="text"
+            size="sm"
             {...register(`${configKey}.fontFamily8`)}
-            className="border rounded-lg p-2"
+            placeholder="e.g. mangal.ttf"
+            bg="white"
           />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-sm text-neutral-500">Font Height</label>
-          <input
+        </Field>
+
+        <Field label="Font Height (px)">
+          <Input
             type="number"
+            size="sm"
             {...register(`${configKey}.fontHeight`)}
-            className="border rounded-lg p-2"
+            placeholder="16"
+            bg="white"
           />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-sm text-neutral-500">Width Aspect</label>
-          <input
+        </Field>
+
+        <Field label="Width Aspect">
+          <Input
             type="number"
+            size="sm"
             {...register(`${configKey}.fontSize`)}
-            className="border rounded-lg p-2"
+            placeholder="1"
+            bg="white"
           />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-sm text-neutral-500">Font Weight</label>
-          <select
-            {...register(`${configKey}.fontWeight`)}
-            className="border rounded-lg p-2"
-          >
-            <option value="">Select Font Weight</option>
-            <option value="normal">Regular</option>
-            <option value="bold">Bold</option>
-          </select>
-        </div>
-        {/* <div className="flex flex-col gap-2">
-					<label className="text-sm text-neutral-500">X Offset</label>
-					<input
-						type="number"
-						{...register(`${configKey}.x_offset`)}
-						className="border rounded-lg p-2"
-					/>
-				</div> */}
-        {/* <div className="flex flex-col gap-2">
-					<label className="text-sm text-neutral-500">Y Offset</label>
-					<input
-						type="number"
-						{...register(`${configKey}.y_offset`)}
-						className="border rounded-lg p-2"
-					/>
-				</div> */}
-        <div className="flex flex-col gap-2">
-          <label className="text-sm text-neutral-500">Thresshold</label>
-          <input
+        </Field>
+
+        <Controller
+          control={control}
+          name={`${configKey}.fontWeight` as any}
+          render={({ field }) => (
+            <Field label="Font Weight">
+              <SelectRoot
+                collection={FONT_WEIGHT_OPTIONS}
+                size="sm"
+                value={field.value ? [field.value] : []}
+                onValueChange={(e) => field.onChange(e.value[0] || "")}
+              >
+                <SelectTrigger bg="white">
+                  <SelectValueText placeholder="Select Weight" />
+                </SelectTrigger>
+                <SelectContent>
+                  {FONT_WEIGHT_OPTIONS.items.map((item) => (
+                    <SelectItem item={item} key={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </SelectRoot>
+            </Field>
+          )}
+        />
+
+        <Field label="Threshold">
+          <Input
             type="number"
+            size="sm"
             {...register(`${configKey}.spacing`)}
-            className="border rounded-lg p-2"
+            placeholder="0"
+            bg="white"
           />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-sm text-neutral-500">Speed</label>
-          <input
+        </Field>
+
+        <Field label="Scroll Speed">
+          <Input
             type="number"
-            {...register(`${configKey}.scrollSpeed`)}
+            size="sm"
             min={1}
             max={10}
-            className="border rounded-lg p-2"
+            {...register(`${configKey}.scrollSpeed`)}
+            placeholder="5"
+            bg="white"
           />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-sm text-neutral-500">Scroll Type</label>
-          <select
-            {...register(`${configKey}.scrollType`)}
-            className="border rounded-lg p-2"
-          >
-            <option value="">Select Scroll Type</option>
-            <option value="Fixed">Fixed</option>
-            <option value="Left To Right">Left To Right</option>
-            <option value="Right To Left">Right To Left</option>
-            <option value="Flicker">Flicker</option>
-          </select>
-        </div>
-        {/* <div className="flex flex-col gap-2">
-					<label className="text-sm text-neutral-500">Font Size</label>
-					
-					<select
-						{...register(`${configKey}.fontSize`)}
-						className="border rounded-lg p-2"
-					>
-						<option value="">Select Font Size</option>
-						{FONT_SIZES.map((size) => (
-							<option key={size} value={size}>
-								{size}
-							</option>
-						))}
-					</select>
-				</div> */}
-        <div className="flex flex-col gap-2">
-          <label className="text-sm text-neutral-500">Position</label>
-          <select
-            {...register(`${configKey}.position`)}
-            className="border rounded-lg p-2"
-          >
-            <option value="">Select Position</option>
-            <option value="Left">Left</option>
-            <option value="Center">Center</option>
-            <option value="Right">Right</option>
-          </select>
-        </div>
-      </div>
-    </div>
+        </Field>
+
+        <Controller
+          control={control}
+          name={`${configKey}.scrollType` as any}
+          render={({ field }) => (
+            <Field label="Scroll Type">
+              <SelectRoot
+                collection={SCROLL_TYPE_OPTIONS}
+                size="sm"
+                value={field.value ? [field.value] : []}
+                onValueChange={(e) => field.onChange(e.value[0] || "")}
+              >
+                <SelectTrigger bg="white">
+                  <SelectValueText placeholder="Select Scroll Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SCROLL_TYPE_OPTIONS.items.map((item) => (
+                    <SelectItem item={item} key={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </SelectRoot>
+            </Field>
+          )}
+        />
+
+        <Controller
+          control={control}
+          name={`${configKey}.position` as any}
+          render={({ field }) => (
+            <Field label="Position Alignment">
+              <SelectRoot
+                collection={POSITION_OPTIONS}
+                size="sm"
+                value={field.value ? [field.value] : []}
+                onValueChange={(e) => field.onChange(e.value[0] || "")}
+              >
+                <SelectTrigger bg="white">
+                  <SelectValueText placeholder="Select Alignment" />
+                </SelectTrigger>
+                <SelectContent>
+                  {POSITION_OPTIONS.items.map((item) => (
+                    <SelectItem item={item} key={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </SelectRoot>
+            </Field>
+          )}
+        />
+      </Grid>
+    </Box>
   );
 };
 
 interface DisplaySettingsProps {
   isEdit?: boolean;
-  initialData?: DisplaySettingsState;
-  onOperationComplete: any;
+  initialData?: DisplaySettingsState | null;
+  onOperationComplete: () => void;
 }
 
 const DisplaySettings = ({
@@ -293,22 +376,16 @@ const DisplaySettings = ({
   initialData,
   onOperationComplete,
 }: DisplaySettingsProps) => {
-  const { register, watch, reset, setValue, handleSubmit } =
+  const { register, control, reset, handleSubmit } =
     useForm<DisplaySettingsState>({
       defaultValues: initialState,
     });
 
-  const formValues = watch();
-  const selectedLanguage = watch("code");
-
-  // Log changes whenever form values update
-
   useEffect(() => {
-    console.log("Selected Language:", initialData);
     if (initialData && isEdit) {
       reset(initialData);
     }
-  }, [initialData]);
+  }, [initialData, isEdit, reset]);
 
   const onSubmit = async (data: DisplaySettingsState) => {
     try {
@@ -328,143 +405,173 @@ const DisplaySettings = ({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="flex-1 overflow-y-scroll"
-    >
-      <div>
-        <div className="flex flex-col gap-2">
-          <div className="flex justify-end gap-4 mt-6">
-            <button
-              type="button"
-              className="bg-gray-500 text-white px-4 py-2 rounded-lg"
-              onClick={() => {
-                console.log("Cancel clicked");
-                // onOperationComplete();
-                reset(initialState);
-              }}
-            >
-              Cancel
-            </button>
-            <Button
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg"
-              type="submit"
-            >
-              {isEdit ? "Update" : "Create"}
-            </Button>
-          </div>
-          <div className="flex bg-white flex-col gap-4 p-4 border rounded-lg">
-            <h3 className="text-lg font-semibold">Language Settings</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <label className="text-sm text-neutral-500">
-                  Language Code
-                </label>
-                <select {...register("code")} className="border rounded-lg p-2">
-                  <option value="">Select Language Code</option>
-                  <option value="en">English (en)</option>
-                  <option value="hi">Hindi (hi)</option>
-                  <option value="bn">Bengali (bn)</option>
-                  <option value="te">Telugu (te)</option>
-                  <option value="ta">Tamil (ta)</option>
-                  <option value="mr">Marathi (mr)</option>
-                  <option value="gu">Gujarati (gu)</option>
-                  <option value="kn">Kannada (kn)</option>
-                  <option value="ml">Malayalam (ml)</option>
-                  <option value="pa">Punjabi (pa)</option>
-                  <option value="or">Odia (or)</option>
-                  <option value="as">Assamese (as)</option>
-                  <option value="sa">Sanskrit (sa)</option>
-                  <option value="ks">Kashmiri (ks)</option>
-                  <option value="ne">Nepali (ne)</option>
-                  <option value="sd">Sindhi (sd)</option>
-                  <option value="bo">Bodo (bo)</option>
-                  <option value="doi">Dogri (doi)</option>
-                  <option value="brx">Bodo (brx)</option>
-                  <option value="mni">Manipuri (mni)</option>
-                  <option value="kok">Konkani (kok)</option>
-                  <option value="mai">Maithili (mai)</option>
-                  <option value="sat">Santali (sat)</option>
-                  <option value="lus">Mizo (lus)</option>
-                  <option value="njz">Wancho (njz)</option>
-                  <option value="kha">Khasi (kha)</option>
-                </select>
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm text-neutral-500">
-                  Language Name
-                </label>
-                <input
+    <Box flex="1" overflowY="auto" pr="2">
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <VStack gap="4" align="stretch">
+          {/* Header Action Bar */}
+          <Flex justify="space-between" align="center">
+            <Box>
+              <Heading size="md" color="gray.900" fontWeight="bold">
+                Font & Display Configuration
+              </Heading>
+              <Text color="gray.500" fontSize="xs">
+                Configure fonts, sizing, scroll behavior, and alignments per text region
+              </Text>
+            </Box>
+            <HStack gap="3">
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                onClick={() => reset(initialState)}
+              >
+                Reset Form
+              </Button>
+              <Button colorPalette="blue" size="sm" type="submit">
+                <Icon icon={isEdit ? "solar:pen-bold" : "solar:add-circle-bold"} />
+                {isEdit ? "Update Language Settings" : "Create Language Settings"}
+              </Button>
+            </HStack>
+          </Flex>
+
+          {/* Primary Language Settings Card */}
+          <Box bg="white" p="5" rounded="xl" borderWidth="1px" borderColor="gray.200" shadow="xs">
+            <HStack gap="2" mb="4" align="center">
+              <Icon icon="solar:global-bold" style={{ fontSize: '20px', color: '#2563eb' }} />
+              <Heading size="sm" color="gray.900" fontWeight="bold">
+                Language Identity
+              </Heading>
+              {isEdit && (
+                <Badge colorPalette="blue" variant="subtle" size="sm">
+                  Editing: {initialData?.code}
+                </Badge>
+              )}
+            </HStack>
+
+            <Grid templateColumns="repeat(2, 1fr)" gap="4">
+              <Controller
+                control={control}
+                name="code"
+                render={({ field }) => (
+                  <Field label="Language Code" required>
+                    <SelectRoot
+                      collection={LANGUAGE_OPTIONS}
+                      size="sm"
+                      disabled={isEdit}
+                      value={field.value ? [field.value] : []}
+                      onValueChange={(e) => field.onChange(e.value[0] || "")}
+                    >
+                      <SelectTrigger bg="white">
+                        <SelectValueText placeholder="Select Language Code" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {LANGUAGE_OPTIONS.items.map((item) => (
+                          <SelectItem item={item} key={item.value}>
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </SelectRoot>
+                  </Field>
+                )}
+              />
+
+              <Field label="Language Name" required>
+                <Input
                   type="text"
+                  size="sm"
                   {...register("name")}
-                  className="border rounded-lg p-2"
+                  placeholder="e.g. English"
+                  bg="white"
+                  required
                 />
-              </div>
-              {/* <div className="flex flex-col gap-2">
-								<label className="text-sm text-neutral-500">
-									Font File Name
-								</label>
-								<input
-									type="text"
-									{...register('fontFile')}
-									className="border rounded-lg p-2"
-								/>
-							</div>
-							<div className="flex flex-col gap-2">
-								<label className="text-sm text-neutral-500">Font Family</label>
-								<input
-									type="text"
-									{...register('fontFamily')}
-									className="border rounded-lg p-2"
-								/>
-							</div> */}
-            </div>
-          </div>
+              </Field>
+            </Grid>
+          </Box>
 
-          <TextSettingsForm
-            settings={formValues.config.sideText}
-            title="Route Number Text"
-            configKey="config.sideText"
-            register={register}
-          />
+          {/* Region Tabs */}
+          <Tabs.Root defaultValue="route-numbers" variant="line">
+            <Tabs.List bg="white" rounded="xl" p="1" borderWidth="1px" borderColor="gray.200">
+              <Tabs.Trigger value="route-numbers">
+                <HStack gap="2">
+                  <Icon icon="solar:tag-horizontal-bold" />
+                  Route Numbers
+                </HStack>
+              </Tabs.Trigger>
+              <Tabs.Trigger value="main-text">
+                <HStack gap="2">
+                  <Icon icon="solar:text-bold" />
+                  Main Text
+                </HStack>
+              </Tabs.Trigger>
+              <Tabs.Trigger value="split-text">
+                <HStack gap="2">
+                  <Icon icon="solar:text-square-bold" />
+                  Upper & Lower Split
+                </HStack>
+              </Tabs.Trigger>
+            </Tabs.List>
 
-          <TextSettingsForm
-            settings={formValues.config.routeNumber1}
-            title="Route Number 1"
-            configKey="config.routeNumber1"
-            register={register}
-          />
+            <Tabs.Content value="route-numbers">
+              <VStack gap="4" align="stretch" pt="2">
+                <TextSettingsForm
+                  title="Route Number Text (Side Text)"
+                  iconName="solar:tag-horizontal-bold"
+                  configKey="config.sideText"
+                  register={register}
+                  control={control}
+                />
+                <TextSettingsForm
+                  title="Route Number 1 (Primary)"
+                  iconName="solar:text-number-bold"
+                  configKey="config.routeNumber1"
+                  register={register}
+                  control={control}
+                />
+                <TextSettingsForm
+                  title="Route Number 2 (Secondary)"
+                  iconName="solar:text-number-bold"
+                  configKey="config.routeNumber2"
+                  register={register}
+                  control={control}
+                />
+              </VStack>
+            </Tabs.Content>
 
-          <TextSettingsForm
-            settings={formValues.config.routeNumber2}
-            title="Route Number 2"
-            configKey="config.routeNumber2"
-            register={register}
-          />
+            <Tabs.Content value="main-text">
+              <VStack gap="4" align="stretch" pt="2">
+                <TextSettingsForm
+                  title="Main Destination Text"
+                  iconName="solar:text-bold"
+                  configKey="config.text"
+                  register={register}
+                  control={control}
+                />
+              </VStack>
+            </Tabs.Content>
 
-          <TextSettingsForm
-            settings={formValues.config.text}
-            title="Main Text"
-            configKey="config.text"
-            register={register}
-          />
-
-          <TextSettingsForm
-            settings={formValues.config.upperHalfText}
-            title="Upper Half Text"
-            configKey="config.upperHalfText"
-            register={register}
-          />
-
-          <TextSettingsForm
-            settings={formValues.config.lowerHalfText}
-            title="Lower Half Text"
-            configKey="config.lowerHalfText"
-            register={register}
-          />
-        </div>
-      </div>
-    </form>
+            <Tabs.Content value="split-text">
+              <VStack gap="4" align="stretch" pt="2">
+                <TextSettingsForm
+                  title="Upper Half Text"
+                  iconName="solar:text-bold"
+                  configKey="config.upperHalfText"
+                  register={register}
+                  control={control}
+                />
+                <TextSettingsForm
+                  title="Lower Half Text"
+                  iconName="solar:text-bold"
+                  configKey="config.lowerHalfText"
+                  register={register}
+                  control={control}
+                />
+              </VStack>
+            </Tabs.Content>
+          </Tabs.Root>
+        </VStack>
+      </form>
+    </Box>
   );
 };
 

@@ -2,51 +2,68 @@ import { useQuery } from '@tanstack/react-query';
 import { organizationService } from '../../services/organizationService';
 import { useOrganizationStore } from '../../store/useOrganizationStore';
 import useAuthStore from '@/store/authStore';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import { createListCollection } from '@chakra-ui/react';
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectValueText,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
 
 export const OrganizationSelector = () => {
   const { selectedOrganization, setSelectedOrganization } = useOrganizationStore();
-  const user = useAuthStore((state) => state.user); // Get user details
+  const user = useAuthStore((state) => state.user);
   const { data: organizations } = useQuery({
     queryKey: ['organizations'],
     queryFn: organizationService.getAll,
   });
 
-  // Filter organizations based on user's assigned organization
-  const filteredOrganizations = user?.organization ? organizations?.filter(org => org.organizationId === user.organization.organizationId) : organizations;
+  const filteredOrganizations = user?.organization
+    ? organizations?.filter((org) => org.organizationId === user.organization.organizationId)
+    : organizations;
 
   useEffect(() => {
     if (organizations && organizations.length > 0 && !selectedOrganization) {
-      setSelectedOrganization(organizations[0]); // Set the first organization as selected
+      setSelectedOrganization(organizations[0]);
     }
   }, [organizations, selectedOrganization, setSelectedOrganization]);
 
+  const displayOrgs = user?.userRole === 'master' ? organizations : filteredOrganizations;
+
+  const collection = useMemo(() => {
+    return createListCollection({
+      items: displayOrgs
+        ? displayOrgs.map((org) => ({
+            label: org.organizationName,
+            value: org.organizationId,
+          }))
+        : [],
+    });
+  }, [displayOrgs]);
+
   return (
-    <div className="flex flex-col gap-1">
-      {/* <label className='text-xs text-neutral-500'>
-        Select Organization
-      </label> */}
-      <select
-        value={selectedOrganization?.organizationId || ''}
-        onChange={(e) => {
-          const selected = organizations?.find(
-            (org) => org.organizationId === e.target.value
-          );
-          setSelectedOrganization(selected || null);
-        }}
-        className=" border text-sm border-neutral-300 text-neutral-900 p-2 rounded-lg"
-      >
-        <option value="">Select Organization</option>
-        {user.userRole === 'master' ? organizations?.map((org) => (
-          <option key={org.organizationId} value={org.organizationId}>
-            {org.organizationName}
-          </option>
-        )) : filteredOrganizations?.map((org) => (
-          <option key={org.organizationId} value={org.organizationId}>
-            {org.organizationName}
-          </option>
+    <SelectRoot
+      collection={collection}
+      size="sm"
+      value={selectedOrganization?.organizationId ? [selectedOrganization.organizationId] : []}
+      onValueChange={(e) => {
+        const val = e.value[0];
+        const selected = organizations?.find((org) => org.organizationId === val);
+        setSelectedOrganization(selected || null);
+      }}
+    >
+      <SelectTrigger bg="white">
+        <SelectValueText placeholder="Select Organization" />
+      </SelectTrigger>
+      <SelectContent>
+        {collection.items.map((item) => (
+          <SelectItem item={item} key={item.value}>
+            {item.label}
+          </SelectItem>
         ))}
-      </select>
-    </div>
+      </SelectContent>
+    </SelectRoot>
   );
 };

@@ -3,10 +3,30 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { organizationService } from "../services/organizationService";
 import { Organization, CreateOrganizationDto } from "../types/organization";
 import { OrganizationForm } from "../components/organizations/OrganizationForm";
-import { Dialog } from "@headlessui/react";
 import { useOrganizationStore } from "../store/useOrganizationStore";
 import { Icon } from "@iconify-icon/react";
-import { Container } from "@chakra-ui/react";
+import {
+  Container,
+  Flex,
+  Heading,
+  Button,
+  Table,
+  Badge,
+  IconButton,
+  Box,
+  Skeleton,
+  Stack,
+  HStack,
+  Text,
+} from "@chakra-ui/react";
+import {
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogCloseTrigger,
+} from "@/components/ui/dialog";
 import useAuthStore from "@/store/authStore";
 import { toast } from "react-toastify";
 
@@ -33,9 +53,9 @@ const Organizations = () => {
       setIsCreateModalOpen(false);
       toast.success("Organization created successfully");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error(error);
-      toast.error(error.response?.data?.message);
+      toast.error(error.response?.data?.message || "Failed to create organization");
     },
   });
 
@@ -47,7 +67,7 @@ const Organizations = () => {
       setEditingOrganization(null);
       toast.success("Organization updated successfully");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error(error);
       toast.error(
         error.response?.data?.message || "Failed to update organization"
@@ -64,303 +84,180 @@ const Organizations = () => {
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
       toast.success("Organization deleted successfully");
     },
-    onError: (error) => {
+    onError: () => {
       toast.error("Failed to delete organization");
     },
   });
 
-  return (
-    <Container overflow={"scroll"} fluid py={4}>
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-lg font-semibold"></h1>
-        {user.userRole === "master" && (
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-indigo-600 text-sm text-white flex items-center px-3 text-sm py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-          >
-            Create Organization
-          </button>
-        )}
-      </div>
+  const displayedOrganizations = organizations
+    ? organizations
+        .filter((org) =>
+          user.userRole === "master"
+            ? true
+            : user.organization?.organizationId === org.organizationId
+        )
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+    : [];
 
+  return (
+    <Container overflow="auto" fluid py="4">
+      {/* Header Bar */}
+      <Flex justify="space-between" align="center" mb="4">
+        <Heading size="md" color="slate.900" fontWeight="bold">
+          Organizations
+        </Heading>
+        {user.userRole === "master" && (
+          <Button
+            colorPalette="blue"
+            size="sm"
+            onClick={() => setIsCreateModalOpen(true)}
+          >
+            <Icon icon="solar:add-circle-bold" />
+            Create Organization
+          </Button>
+        )}
+      </Flex>
+
+      {/* Content Area */}
       {isLoading ? (
-        <div className="flex items-center justify-center h-48">
-          <div className="text-lg">Loading...</div>
-        </div>
+        <Stack gap="3" py="4">
+          <Skeleton height="36px" borderRadius="lg" />
+          <Skeleton height="48px" borderRadius="lg" />
+          <Skeleton height="48px" borderRadius="lg" />
+          <Skeleton height="48px" borderRadius="lg" />
+        </Stack>
       ) : (
-        <div className="bg-white p-4 rounded-lg border shadow-sm overflow-hidden">
-          <table className="min-w-full text-sm divide-y divide-stone-200">
-            <thead className="">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-stone-400 uppercase tracking-wider"
-                >
-                  Organization
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-stone-400 uppercase tracking-wider"
-                >
-                  Contact
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-stone-400 uppercase tracking-wider"
-                >
-                  Email
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-stone-400 uppercase tracking-wider"
-                >
-                  Phone
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-stone-400 uppercase tracking-wider"
-                >
-                  Status
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-stone-400 uppercase tracking-wider"
-                >
-                  Created At
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-right text-xs font-medium text-stone-400 uppercase tracking-wider"
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white text-sm divide-y divide-stone-100">
-              {organizations && organizations.length > 0 ? (
-                organizations
-                  .sort(
-                    (a, b) =>
-                      new Date(b.createdAt).getTime() -
-                      new Date(a.createdAt).getTime()
-                  )
-                  .map((org) =>
-                    user.userRole === "master" ? (
-                      <tr key={org.organizationId} className="">
-                        <td className="px-6 py-4 gap-3 whitespace-nowrap flex items-center">
-                          {/* <div className="size-7 bg-red-500 text-sm text-white flex items-center justify-center flex-shrink-0  rounded-full">
-                      {org.organizationName.charAt(0).toUpperCase()}
-                      </div> */}
-                          <div className="text-sm font-medium text-stone-900">
-                            {org.organizationName}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-stone-500">
-                            {org.contactPerson}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-stone-500">
-                            {org.emailId}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-stone-500">
-                            {org.phoneNumber}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-lg ${
-                              org.active
-                                ? "bg-green-100 text-green-700"
-                                : "bg-red-50 text-red-700"
-                            }`}
+        <Box
+          bg="white"
+          p="0"
+          rounded="xl"
+          borderWidth="1px"
+          borderColor="gray.200"
+          shadow="xs"
+          overflow="hidden"
+        >
+          <Table.Root variant="outline" size="sm" interactive>
+            <Table.Header bg="slate.50">
+              <Table.Row>
+                <Table.ColumnHeader>Organization</Table.ColumnHeader>
+                <Table.ColumnHeader>Contact</Table.ColumnHeader>
+                <Table.ColumnHeader>Email</Table.ColumnHeader>
+                <Table.ColumnHeader>Phone</Table.ColumnHeader>
+                <Table.ColumnHeader>Status</Table.ColumnHeader>
+                <Table.ColumnHeader>Created At</Table.ColumnHeader>
+                <Table.ColumnHeader textAlign="right">Actions</Table.ColumnHeader>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {displayedOrganizations.length > 0 ? (
+                displayedOrganizations.map((org) => (
+                  <Table.Row key={org.organizationId}>
+                    <Table.Cell fontWeight="semibold" color="slate.900">
+                      {org.organizationName}
+                    </Table.Cell>
+                    <Table.Cell color="slate.600">{org.contactPerson}</Table.Cell>
+                    <Table.Cell color="slate.600">{org.emailId}</Table.Cell>
+                    <Table.Cell color="slate.600">{org.phoneNumber}</Table.Cell>
+                    <Table.Cell>
+                      <Badge
+                        colorPalette={org.active ? "green" : "red"}
+                        variant="subtle"
+                        size="sm"
+                      >
+                        {org.active ? "Active" : "Inactive"}
+                      </Badge>
+                    </Table.Cell>
+                    <Table.Cell color="slate.500" fontSize="xs">
+                      {new Date(org.createdAt).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </Table.Cell>
+                    <Table.Cell textAlign="right">
+                      {org.organizationName !== "NAVITRONIX" && user.userRole === "master" && (
+                        <HStack justify="flex-end" gap="1">
+                          <IconButton
+                            aria-label="Edit Organization"
+                            size="xs"
+                            variant="ghost"
+                            colorPalette="blue"
+                            onClick={() => setEditingOrganization(org)}
                           >
-                            {org.active ? "Active" : "Inactive"}
-                          </span>
-							  </td>
-							  <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-stone-500">
-                              {new Date(org.createdAt).toLocaleDateString(
-                                "en-US",
-                                {
-                                  year: "numeric",
-                                  month: "2-digit",
-                                  day: "2-digit",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  second: "2-digit",
-                                }
-                              )}
-                            </div>
-                          </td>
-                        {org.organizationName !== "NAVITRONIX" && (
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button
-                              onClick={() => setEditingOrganization(org)}
-                              className="text-indigo-600 hover:text-indigo-900 mr-4"
-                            >
-                              <Icon
-                                icon="solar:pen-bold"
-                                className="inline-block"
-                              />
-                            </button>
-                            <button
-                              onClick={() => {
-                                if (
-                                  confirm(
-                                    "Are you sure you want to delete this organization?"
-                                  )
-                                ) {
-                                  deleteMutation.mutate(org.organizationId);
-                                }
-                              }}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              <Icon
-                                icon="solar:trash-bin-trash-bold"
-                                className="inline-block"
-                              />
-                            </button>
-                          </td>
-                        )}
-                      </tr>
-                    ) : (
-                      user.organization.organizationId ===
-                        org.organizationId && (
-                        <tr key={org.organizationId} className="">
-                          <td className="px-6 py-4 gap-3 whitespace-nowrap flex items-center">
-                            {/* <div className="size-7 bg-red-500 text-sm text-white flex items-center justify-center flex-shrink-0  rounded-full">
-                      {org.organizationName.charAt(0).toUpperCase()}
-                      </div> */}
-                            <div className="text-sm font-medium text-stone-900">
-                              {org.organizationName}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-stone-500">
-                              {org.contactPerson}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-stone-500">
-                              {org.emailId}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-stone-500">
-                              {org.phoneNumber}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span
-                              className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-lg ${
-                                org.active
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-red-50 text-red-700"
-                              }`}
-                            >
-                              {org.active ? "Active" : "Inactive"}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-stone-500">
-                              {new Date(org.createdAt).toLocaleDateString(
-                                "en-US",
-                                {
-                                  year: "numeric",
-                                  month: "2-digit",
-                                  day: "2-digit",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  second: "2-digit",
-                                }
-                              )}
-                            </div>
-                          </td>
-                          {org.organizationName !== "NAVITRONIX" && (
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              <button
-                                onClick={() => setEditingOrganization(org)}
-                                className="text-indigo-600 hover:text-indigo-900 mr-4"
-                              >
-                                <Icon
-                                  icon="solar:pen-bold"
-                                  className="inline-block"
-                                />
-                              </button>
-                              <button
-                                onClick={() => {
-                                  if (
-                                    confirm(
-                                      "Are you sure you want to delete this organization?"
-                                    )
-                                  ) {
-                                    deleteMutation.mutate(org.organizationId);
-                                  }
-                                }}
-                                className="text-red-600 hover:text-red-900"
-                              >
-                                <Icon
-                                  icon="solar:trash-bin-trash-bold"
-                                  className="inline-block"
-                                />
-                              </button>
-                            </td>
-                          )}
-                        </tr>
-                      )
-                    )
-                  )
+                            <Icon icon="solar:pen-bold" />
+                          </IconButton>
+                          <IconButton
+                            aria-label="Delete Organization"
+                            size="xs"
+                            variant="ghost"
+                            colorPalette="red"
+                            onClick={() => {
+                              if (
+                                confirm(
+                                  "Are you sure you want to delete this organization?"
+                                )
+                              ) {
+                                deleteMutation.mutate(org.organizationId);
+                              }
+                            }}
+                          >
+                            <Icon icon="solar:trash-bin-trash-bold" />
+                          </IconButton>
+                        </HStack>
+                      )}
+                    </Table.Cell>
+                  </Table.Row>
+                ))
               ) : (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-6 py-4 text-center text-stone-500"
-                  >
-                    No organizations found
-                  </td>
-                </tr>
+                <Table.Row>
+                  <Table.Cell colSpan={7} textAlign="center" color="slate.500" py="8">
+                    <Text fontSize="sm">No organizations found</Text>
+                  </Table.Cell>
+                </Table.Row>
               )}
-            </tbody>
-          </table>
-        </div>
+            </Table.Body>
+          </Table.Root>
+        </Box>
       )}
 
       {/* Create Modal */}
-      <Dialog
+      <DialogRoot
         open={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        className="relative z-50"
+        onOpenChange={(e) => setIsCreateModalOpen(e.open)}
+        placement="center"
       >
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="mx-auto max-w-md rounded w-[400px] bg-white p-6">
-            <Dialog.Title className="text-lg font-medium mb-4">
-              Create Organization
-            </Dialog.Title>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Organization</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
             <OrganizationForm
               onSubmit={(data) => createMutation.mutate(data)}
               onCancel={() => setIsCreateModalOpen(false)}
             />
-          </Dialog.Panel>
-        </div>
-      </Dialog>
+          </DialogBody>
+          <DialogCloseTrigger />
+        </DialogContent>
+      </DialogRoot>
 
       {/* Edit Modal */}
-      <Dialog
+      <DialogRoot
         open={!!editingOrganization}
-        onClose={() => setEditingOrganization(null)}
-        className="relative z-50"
+        onOpenChange={(e) => {
+          if (!e.open) setEditingOrganization(null);
+        }}
+        placement="center"
       >
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="mx-auto max-w-md rounded bg-white p-6">
-            <Dialog.Title className="text-lg font-medium mb-4">
-              Edit Organization
-            </Dialog.Title>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Organization</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
             {editingOrganization && (
               <OrganizationForm
                 initialData={editingOrganization}
@@ -377,9 +274,10 @@ const Organizations = () => {
                 onCancel={() => setEditingOrganization(null)}
               />
             )}
-          </Dialog.Panel>
-        </div>
-      </Dialog>
+          </DialogBody>
+          <DialogCloseTrigger />
+        </DialogContent>
+      </DialogRoot>
     </Container>
   );
 };

@@ -3,10 +3,30 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { roleService } from '../services/roleService';
 import { Role } from '../types/role';
 import { RoleForm } from '../components/roles/RoleForm';
-import { Dialog } from '@headlessui/react';
 import { useOrganizationStore } from '../store/useOrganizationStore';
 import { Icon } from '@iconify-icon/react';
-import { Container } from '@chakra-ui/react';
+import {
+  Container,
+  Flex,
+  Heading,
+  Button,
+  Table,
+  Badge,
+  IconButton,
+  Box,
+  Skeleton,
+  Stack,
+  HStack,
+  Text,
+} from '@chakra-ui/react';
+import {
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogCloseTrigger,
+} from '@/components/ui/dialog';
 import { toast } from 'react-toastify';
 
 const Roles = () => {
@@ -29,9 +49,9 @@ const Roles = () => {
       setIsCreateModalOpen(false);
       toast.success('Role created successfully');
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Failed to create role');
-    }
+    },
   });
 
   const updateMutation = useMutation({
@@ -41,9 +61,9 @@ const Roles = () => {
       setEditingRole(null);
       toast.success('Role updated successfully');
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Failed to update role');
-    }
+    },
   });
 
   const deleteMutation = useMutation({
@@ -52,170 +72,166 @@ const Roles = () => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
       toast.success('Role deleted successfully');
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Failed to delete role');
-    }
+    },
   });
 
   if (!selectedOrganization) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="text-center text-stone-500">Please select an organization first</div>
-      </div>
+      <Box p="8" textAlign="center">
+        <Text color="gray.500" fontSize="md">
+          Please select an organization first from the sidebar.
+        </Text>
+      </Box>
     );
   }
 
   return (
-		<Container overflow={'scroll'} fluid className="py-4">
-			<div className="flex justify-between items-center mb-6">
-				<div>
-					<h1 className="text-lg font-=">Roles</h1>
-				</div>
-				<button
-					onClick={() => setIsCreateModalOpen(true)}
-					className="bg-indigo-600 text-white text-sm px-3 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-				>
-					Create Role
-				</button>
-			</div>
+    <Container overflow="auto" fluid py="4">
+      {/* Header Bar */}
+      <Flex justify="space-between" align="center" mb="6">
+        <Heading size="md" color="gray.900" fontWeight="bold">
+          Roles
+        </Heading>
+        <Button
+          colorPalette="blue"
+          size="sm"
+          onClick={() => setIsCreateModalOpen(true)}
+        >
+          <Icon icon="solar:add-circle-bold" />
+          Create Role
+        </Button>
+      </Flex>
 
-			{isLoading ? (
-				<div className="flex items-center justify-center h-48">
-					<div className="text-lg">Loading...</div>
-				</div>
-			) : (
-				<div className="bg-white rounded-lg shadow overflow-hidden">
-					<table className="min-w-full divide-y divide-stone-200">
-						<thead className="bg-stone-50">
-							<tr>
-								<th
-									scope="col"
-									className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
-								>
-									Role Name
-								</th>
+      {/* Content Area */}
+      {isLoading ? (
+        <Stack gap="3" py="4">
+          <Skeleton height="36px" borderRadius="lg" />
+          <Skeleton height="48px" borderRadius="lg" />
+          <Skeleton height="48px" borderRadius="lg" />
+          <Skeleton height="48px" borderRadius="lg" />
+        </Stack>
+      ) : (
+        <Box
+          bg="white"
+          p="0"
+          rounded="xl"
+          borderWidth="1px"
+          borderColor="gray.200"
+          shadow="xs"
+          overflow="hidden"
+        >
+          <Table.Root variant="outline" size="sm" interactive>
+            <Table.Header bg="gray.50">
+              <Table.Row>
+                <Table.ColumnHeader>Role Name</Table.ColumnHeader>
+                <Table.ColumnHeader>Status</Table.ColumnHeader>
+                <Table.ColumnHeader textAlign="right">Actions</Table.ColumnHeader>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {roles && roles.length > 0 ? (
+                roles.map((role) => (
+                  <Table.Row key={role.roleId}>
+                    <Table.Cell fontWeight="semibold" color="gray.900">
+                      {role.roleName}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Badge
+                        colorPalette={role.active ? 'green' : 'red'}
+                        variant="subtle"
+                        size="sm"
+                      >
+                        {role.active ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </Table.Cell>
+                    <Table.Cell textAlign="right">
+                      <HStack justify="flex-end" gap="1">
+                        <IconButton
+                          aria-label="Edit Role"
+                          size="xs"
+                          variant="ghost"
+                          colorPalette="blue"
+                          onClick={() => setEditingRole(role)}
+                        >
+                          <Icon icon="solar:pen-bold" />
+                        </IconButton>
+                        <IconButton
+                          aria-label="Delete Role"
+                          size="xs"
+                          variant="ghost"
+                          colorPalette="red"
+                          onClick={() => {
+                            if (confirm('Are you sure you want to delete this role?')) {
+                              deleteMutation.mutate(role.id);
+                            }
+                          }}
+                        >
+                          <Icon icon="solar:trash-bin-trash-bold" />
+                        </IconButton>
+                      </HStack>
+                    </Table.Cell>
+                  </Table.Row>
+                ))
+              ) : (
+                <Table.Row>
+                  <Table.Cell colSpan={3} textAlign="center" color="gray.500" py="8">
+                    <Text fontSize="sm">No roles found</Text>
+                  </Table.Cell>
+                </Table.Row>
+              )}
+            </Table.Body>
+          </Table.Root>
+        </Box>
+      )}
 
-								<th
-									scope="col"
-									className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
-								>
-									Status
-								</th>
-								<th
-									scope="col"
-									className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider"
-								>
-									Actions
-								</th>
-							</tr>
-						</thead>
-						<tbody className="bg-white divide-y divide-stone-200">
-							{roles && roles.length > 0 ? (
-								roles.map((role) => (
-									<tr key={role.roleId} className="hover:bg-stone-50">
-										<td className="px-6 py-4 whitespace-nowrap">
-											<div className="text-sm font-medium text-stone-900">
-												{role.roleName}
-											</div>
-										</td>
+      {/* Create Modal */}
+      <DialogRoot
+        open={isCreateModalOpen}
+        onOpenChange={(e) => setIsCreateModalOpen(e.open)}
+        placement="center"
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Role</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <RoleForm
+              onSubmit={(data) => createMutation.mutate(data)}
+              onCancel={() => setIsCreateModalOpen(false)}
+            />
+          </DialogBody>
+          <DialogCloseTrigger />
+        </DialogContent>
+      </DialogRoot>
 
-										<td className="px-6 py-4 whitespace-nowrap">
-											<span
-												className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-													role.active
-														? 'bg-green-100 text-green-800'
-														: 'bg-red-100 text-red-800'
-												}`}
-											>
-												{role.active ? 'Active' : 'Inactive'}
-											</span>
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-											<button
-												onClick={() => setEditingRole(role)}
-												className="text-indigo-600 hover:text-indigo-900 mr-4"
-											>
-												<Icon icon="solar:pen-bold" className="inline-block" />
-											</button>
-											<button
-												onClick={() => {
-													if (
-														confirm(
-															'Are you sure you want to delete this role?'
-														)
-													) {
-														deleteMutation.mutate(role.id);
-													}
-												}}
-												className="text-red-600 hover:text-red-900"
-											>
-												<Icon
-													icon="solar:trash-bin-trash-bold"
-													className="inline-block"
-												/>
-											</button>
-										</td>
-									</tr>
-								))
-							) : (
-								<tr>
-									<td
-										colSpan={6}
-										className="px-6 py-4 text-center text-stone-500"
-									>
-										No roles found
-									</td>
-								</tr>
-							)}
-						</tbody>
-					</table>
-				</div>
-			)}
-
-			{/* Create Modal */}
-			<Dialog
-				open={isCreateModalOpen}
-				onClose={() => setIsCreateModalOpen(false)}
-				className="relative z-50"
-			>
-				<div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-				<div className="fixed inset-0 flex items-center justify-center p-4">
-					<Dialog.Panel className="mx-auto max-w-md rounded bg-white p-6">
-						<Dialog.Title className="text-lg font-medium mb-4">
-							Create Role
-						</Dialog.Title>
-						<RoleForm
-							onSubmit={(data) => createMutation.mutate(data)}
-							onCancel={() => setIsCreateModalOpen(false)}
-						/>
-					</Dialog.Panel>
-				</div>
-			</Dialog>
-
-			{/* Edit Modal */}
-			<Dialog
-				open={!!editingRole}
-				onClose={() => setEditingRole(null)}
-				className="relative z-50"
-			>
-				<div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-				<div className="fixed inset-0 flex items-center justify-center p-4">
-					<Dialog.Panel className="mx-auto max-w-md rounded bg-white p-6">
-						<Dialog.Title className="text-lg font-medium mb-4">
-							Edit Role
-						</Dialog.Title>
-						{editingRole && (
-							<RoleForm
-								initialData={editingRole}
-								onSubmit={(data) => updateMutation.mutate(data)}
-								onCancel={() => setEditingRole(null)}
-							/>
-						)}
-					</Dialog.Panel>
-				</div>
-			</Dialog>
-		</Container>
-	);
+      {/* Edit Modal */}
+      <DialogRoot
+        open={!!editingRole}
+        onOpenChange={(e) => {
+          if (!e.open) setEditingRole(null);
+        }}
+        placement="center"
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Role</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            {editingRole && (
+              <RoleForm
+                initialData={editingRole}
+                onSubmit={(data) => updateMutation.mutate(data)}
+                onCancel={() => setEditingRole(null)}
+              />
+            )}
+          </DialogBody>
+          <DialogCloseTrigger />
+        </DialogContent>
+      </DialogRoot>
+    </Container>
+  );
 };
 
 export default Roles;

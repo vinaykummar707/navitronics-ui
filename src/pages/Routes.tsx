@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { routeService } from "../services/routeService";
 import { areaService } from "../services/areaService";
@@ -6,8 +6,27 @@ import { depotService } from "../services/depotService";
 import { useOrganizationStore } from "../store/useOrganizationStore";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "@iconify-icon/react";
-import { Container, Group } from "@chakra-ui/react";
-import { AreaSelector } from "@/components/common/AreaSelector";
+import {
+  Container,
+  Flex,
+  Box,
+  Heading,
+  Button,
+  IconButton,
+  Skeleton,
+  Stack,
+  HStack,
+  Text,
+  createListCollection,
+} from "@chakra-ui/react";
+import { Field } from "@/components/ui/field";
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectValueText,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import useAuthStore from "@/store/authStore";
 import SimulationDialog from "@/components/SimulationDialog";
 import RBAC from "../components/RBAC";
@@ -25,34 +44,18 @@ const Routes = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
-  const gridRef = useRef<GridApi | null>(null); // Reference to AG Grid
-  const [selectedRows, setSelectedRows] = useState<any[]>([]); // State to hold selected rows
+  const gridRef = useRef<any>(null);
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
 
-  // Update the useEffect for organization change
+  // Update when organization changes
   useEffect(() => {
     if (selectedOrganization?.organizationId) {
-      // Clear selections when organization changes
       setSelectedAreaId("");
       setSelectedDepotId("");
-      //   localStorage.removeItem('selectedAreaId');
-      //   localStorage.removeItem('selectedDepotId');
+      localStorage.removeItem("selectedAreaId");
+      localStorage.removeItem("selectedDepotId");
     }
   }, [selectedOrganization?.organizationId]);
-
-  // Update select handlers
-  const handleAreaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newAreaId = e.target.value;
-    setSelectedAreaId(newAreaId);
-    setSelectedDepotId(""); // Reset depot when area changes
-    localStorage.setItem("selectedAreaId", newAreaId);
-    localStorage.removeItem("selectedDepotId"); // Clear saved depot when area changes
-  };
-
-  const handleDepotChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newDepotId = e.target.value;
-    setSelectedDepotId(newDepotId);
-    localStorage.setItem("selectedDepotId", newDepotId);
-  };
 
   // Queries
   const { data: areas } = useQuery({
@@ -63,9 +66,10 @@ const Routes = () => {
         : Promise.resolve([]),
     enabled: !!selectedOrganization,
   });
+
   const filteredAreas =
     user.area &&
-      (user.userRole === "area_admin" || user.userRole === "depot_admin")
+    (user.userRole === "area_admin" || user.userRole === "depot_admin")
       ? areas?.filter((area) => area.areaId === user.area.areaId)
       : areas;
 
@@ -75,9 +79,14 @@ const Routes = () => {
     enabled: !!selectedAreaId,
   });
 
-  // Update area selection effect
+  const filteredDepots =
+    user.depot && user.userRole === "depot_admin"
+      ? depots?.filter((depot) => depot.depotId === user.depot.depotId)
+      : depots;
+
+  // Auto-select area on load
   useEffect(() => {
-    if (areas?.length > 0 && !selectedAreaId) {
+    if (areas && areas.length > 0 && !selectedAreaId) {
       const savedAreaId = localStorage.getItem("selectedAreaId");
       const areaToSelect =
         savedAreaId && areas.find((area) => area.areaId === savedAreaId)
@@ -87,11 +96,11 @@ const Routes = () => {
       setSelectedAreaId(areaToSelect);
       localStorage.setItem("selectedAreaId", areaToSelect);
     }
-  }, [areas]);
+  }, [areas, selectedAreaId]);
 
-  // Update depot selection effect
+  // Auto-select depot on load
   useEffect(() => {
-    if (depots?.length > 0 && !selectedDepotId) {
+    if (depots && depots.length > 0 && !selectedDepotId) {
       const savedDepotId = localStorage.getItem("selectedDepotId");
       const depotToSelect =
         savedDepotId && depots.find((depot) => depot.depotId === savedDepotId)
@@ -101,12 +110,29 @@ const Routes = () => {
       setSelectedDepotId(depotToSelect);
       localStorage.setItem("selectedDepotId", depotToSelect);
     }
-  }, [depots]);
+  }, [depots, selectedDepotId]);
 
-  const filteredDepots =
-    user.depot && user.userRole === "depot_admin"
-      ? depots?.filter((depot) => depot.depotId === user.depot.depotId)
-      : depots;
+  const areaCollection = useMemo(() => {
+    return createListCollection({
+      items: filteredAreas
+        ? filteredAreas.map((area) => ({
+            label: area.areaName,
+            value: area.areaId,
+          }))
+        : [],
+    });
+  }, [filteredAreas]);
+
+  const depotCollection = useMemo(() => {
+    return createListCollection({
+      items: filteredDepots
+        ? filteredDepots.map((depot) => ({
+            label: depot.depotName,
+            value: depot.depotId,
+          }))
+        : [],
+    });
+  }, [filteredDepots]);
 
   const { data: routes, isLoading } = useQuery({
     queryKey: ["routes", selectedDepotId],
@@ -118,19 +144,6 @@ const Routes = () => {
       ),
     enabled: !!selectedDepotId,
   });
-
-  // // Auto-select first area and depot
-  // useEffect(() => {
-  // 	if (areas && areas.length > 0 && !selectedAreaId) {
-  // 		setSelectedAreaId(areas[0].areaId);
-  // 	}
-  // }, [areas]);
-
-  // useEffect(() => {
-  // 	if (depots && depots.length > 0 && !selectedDepotId) {
-  // 		setSelectedDepotId(depots[0].depotId);
-  // 	}
-  // }, [depots]);
 
   const deleteMutation = useMutation({
     mutationFn: routeService.delete,
@@ -144,6 +157,7 @@ const Routes = () => {
       toast.error("Failed to delete route.");
     },
   });
+
   const duplicateMutation = useMutation({
     mutationFn: routeService.duplicate,
     onSuccess: () => {
@@ -153,7 +167,7 @@ const Routes = () => {
     onError: (error) => {
       console.error("Duplication failed:", error);
       toast.error("Failed to duplicate route.");
-    }
+    },
   });
 
   const multipleDeleteMutation = useMutation({
@@ -169,32 +183,25 @@ const Routes = () => {
     },
   });
 
-  const onSelectAllRoutes = () => {
-    const allRouteIds = routes?.map((route) => route.id) || [];
-    setSelectedRows(allRouteIds); // Set all route IDs as selected
-    console.log("All selected IDs:", allRouteIds); // Log all selected IDs
-  };
-
   const getAllWithConfigMutation = useMutation({
     mutationFn: async ({
       areaId,
       depotId,
-      selectedIds, // Add selectedIds as part of the parameters
+      selectedIds,
     }: {
       areaId: string;
       depotId: string;
-      selectedIds: string[]; // Expecting an array of selected IDs
-    }) => await routeService.getAllWithConfig(depotId, areaId, selectedIds), // Pass selectedIds to the service call
+      selectedIds: string[];
+    }) => await routeService.getAllWithConfig(depotId, areaId, selectedIds),
     onSuccess: (response) => {
-      // Create a download link for the response (which is a Blob for file download)
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const a = document.createElement("a");
       a.href = url;
-      a.download = "Routes.zip"; // Set the desired filename for the downloaded file
+      a.download = "Routes.zip";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      window.URL.revokeObjectURL(url); // Clean up after download
+      window.URL.revokeObjectURL(url);
     },
   });
 
@@ -209,7 +216,6 @@ const Routes = () => {
         destination,
         separation,
         via,
-
         routeNumberUpperHalf,
         routeNumberLowerHalf,
       } = data[0];
@@ -230,20 +236,16 @@ const Routes = () => {
 
   if (!selectedOrganization) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="text-center text-stone-500">
-          Please select an organization first
-        </div>
-      </div>
+      <Box p="8" textAlign="center">
+        <Text color="gray.500" fontSize="md">
+          Please select an organization first from the sidebar.
+        </Text>
+      </Box>
     );
   }
 
-  const filteredRoutes = routes?.filter((route) => !route.deleted);
-
-  // Custom cell renderer for actions column
   const ActionCellRenderer = (params: any) => {
-    const route = params.data.route; // Extracting route data
-    console.log(params.data);
+    const routeItem = params.data?.route || {};
 
     return (
       <RBAC
@@ -254,65 +256,64 @@ const Routes = () => {
           ROLES.MASTER,
         ]}
       >
-        {/* Edit Button */}
-        <button
-
-          onClick={() =>
-            window.open(
-              `http://31.97.228.29:9091/route-create/${selectedAreaId}/${selectedDepotId}/${params.data.id}`,
-              "_self" // Open in a new tab
-            )
-          }
-          className="text-indigo-600 hover:text-indigo-900 mr-4"
-        >
-          <Icon icon="solar:pen-bold" className="inline-block" />
-        </button>
-        <button
-          onClick={() => {
-            if (
-              confirm(
-                `Are you sure you want to duplicate route ${route.routeNumber}?`
+        <HStack gap="1" display="inline-flex">
+          <IconButton
+            aria-label="Edit Route"
+            size="xs"
+            variant="ghost"
+            colorPalette="blue"
+            onClick={() =>
+              window.open(
+                `http://31.97.228.29:9091/route-create/${selectedAreaId}/${selectedDepotId}/${params.data.id}`,
+                "_self"
               )
-            ) {
-              duplicateMutation.mutate(params.data.id);
             }
-          }}
-          className="text-yellow-600 hover:text-yellow-800 mr-4"
-        >
-          <Icon icon="solar:copy-bold" className="inline-block" />
-        </button>
-
-
-        {/* Delete Button */}
-        <button
-          onClick={() => {
-            if (
-              confirm(
-                `Are you sure you want to delete route ${route.routeNumber}?`
-              )
-            ) {
-              deleteMutation.mutate(params.data.id);
-            }
-          }}
-          className="text-red-600 hover:text-red-900"
-        >
-          <Icon icon="solar:trash-bin-trash-bold" className="inline-block" />
-        </button>
+          >
+            <Icon icon="solar:pen-bold" />
+          </IconButton>
+          <IconButton
+            aria-label="Duplicate Route"
+            size="xs"
+            variant="ghost"
+            colorPalette="amber"
+            onClick={() => {
+              if (
+                confirm(
+                  `Are you sure you want to duplicate route ${routeItem.routeNumber}?`
+                )
+              ) {
+                duplicateMutation.mutate(params.data.id);
+              }
+            }}
+          >
+            <Icon icon="solar:copy-bold" />
+          </IconButton>
+          <IconButton
+            aria-label="Delete Route"
+            size="xs"
+            variant="ghost"
+            colorPalette="red"
+            onClick={() => {
+              if (
+                confirm(
+                  `Are you sure you want to delete route ${routeItem.routeNumber}?`
+                )
+              ) {
+                deleteMutation.mutate(params.data.id);
+              }
+            }}
+          >
+            <Icon icon="solar:trash-bin-trash-bold" />
+          </IconButton>
+        </HStack>
       </RBAC>
     );
   };
 
-  // Event handler for selection change
   const onSelectionChanged = () => {
-    const selectedNodes = gridRef.current?.api.getSelectedNodes(); // Get selected nodes
-    const selectedIds = selectedNodes?.map((node) => node.data.id); // Extract only the IDs from the selected nodes
-    setSelectedRows(selectedIds); // Store only the selected IDs
-    console.log("Selected IDs:", selectedIds); // Log the selected IDs
-  };
-
-  const onRouteNumberSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const searchValue = e.target.value.toLowerCase();
-    gridRef.current.setQuickFilter(searchValue); // Use AG Grid's quick filter for searching
+    const selectedNodes = gridRef.current?.api.getSelectedNodes();
+    const selectedIds = selectedNodes?.map((node: any) => node.data.id);
+    setSelectedRows(selectedIds || []);
   };
 
   const columnDefs = [
@@ -326,25 +327,25 @@ const Routes = () => {
       field: "rowNumber",
       width: 70,
       sortable: true,
-      comparator: (a, b) => a - b,
-      valueGetter: (params) => params.node.rowIndex + 1,
+      comparator: (a: any, b: any) => a - b,
+      valueGetter: (params: any) => params.node.rowIndex + 1,
     },
     {
       headerName: "Route No",
       field: "route.routeNumber",
       filter: true,
-      valueGetter: (params) =>
-        params.data.route.splitRoute
-          ? `${params.data.route.routeNumber1} / ${params.data.route.routeNumber2}`
-          : params.data.route.routeNumber,
-      editable: false, // Since it's dynamically generated
+      valueGetter: (params: any) =>
+        params.data?.route?.splitRoute
+          ? `${params.data?.route?.routeNumber1} / ${params.data?.route?.routeNumber2}`
+          : params.data?.route?.routeNumber,
+      editable: false,
     },
     {
       headerName: "Source - Destination",
       field: "route.combinedRoute",
       filter: true,
-      valueGetter: (params) =>
-        `${params.data.route.source} ${params.data.route.separation} ${params.data.route.destination}`,
+      valueGetter: (params: any) =>
+        `${params.data?.route?.source || ""} ${params.data?.route?.separation || ""} ${params.data?.route?.destination || ""}`,
       editable: false,
       flex: 1,
     },
@@ -352,82 +353,93 @@ const Routes = () => {
     {
       headerName: "Actions",
       field: "actions",
-      cellRenderer: ActionCellRenderer, // Use custom renderer
+      cellRenderer: ActionCellRenderer,
       width: 150,
-      pinned: "right", // Keep actions column fixed on right
+      pinned: "right",
     },
     {
       headerName: "Created At",
       field: "createdAt",
-      valueGetter: (params) => {
-        const raw = params.data.createdAt;
-        // Ensure correct parsing (assuming it's UTC)
-        return new Date(raw + "Z"); // Add 'Z' if server time is UTC
+      valueGetter: (params: any) => {
+        const raw = params.data?.createdAt;
+        return raw ? new Date(raw + "Z") : new Date();
       },
-      comparator: (a, b) => {
-        return new Date(a).getTime() - new Date(b).getTime(); // FIFO: older comes first
+      comparator: (a: any, b: any) => {
+        return new Date(a).getTime() - new Date(b).getTime();
       },
-      valueFormatter: (params) =>
+      valueFormatter: (params: any) =>
         new Date(params.value).toLocaleString("en-IN", {
           dateStyle: "short",
           timeStyle: "medium",
         }),
       sortable: true,
-      sort: "desc", // Optional: default sort FIFO (oldest first)
+      sort: "desc",
       width: 200,
     },
   ];
 
   return (
-    <Container overflow={"scroll"} fluid className="py-4">
-      <div className="flex justify-between items-center mb-2">
-        <div className="flex gap-2 ">
-          <div className="mb-4 flex flex-col items-start justify-start">
-            <label
-              htmlFor="area"
-              className="block text-sm font-medium text-stone-700"
-            >
-              Select Area
-            </label>
-            <select
-              id="area"
-              value={selectedAreaId}
-              onChange={handleAreaChange}
-              className="border text-sm border-neutral-300 text-neutral-900 p-2 rounded-lg "
-            >
-              <option value="">Select Area</option>
-              {filteredAreas?.map((area) => (
-                <option key={area.areaId} value={area.areaId}>
-                  {area.areaName}
-                </option>
-              ))}
-            </select>
-          </div>
+    <Container overflow="auto" fluid py="4">
+      {/* Top Header & Selector Toolbar */}
+      <Flex justify="space-between" align="flex-end" mb="4" flexWrap="wrap" gap="4">
+        <HStack gap="4" flexWrap="wrap">
+          <Box minW="200px">
+            <Field label="Select Area">
+              <SelectRoot
+                collection={areaCollection}
+                size="sm"
+                value={selectedAreaId ? [selectedAreaId] : []}
+                onValueChange={(e) => {
+                  const newAreaId = e.value[0] || "";
+                  setSelectedAreaId(newAreaId);
+                  setSelectedDepotId("");
+                  localStorage.setItem("selectedAreaId", newAreaId);
+                  localStorage.removeItem("selectedDepotId");
+                }}
+              >
+                <SelectTrigger bg="white">
+                  <SelectValueText placeholder="Select Area" />
+                </SelectTrigger>
+                <SelectContent>
+                  {areaCollection.items.map((item) => (
+                    <SelectItem item={item} key={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </SelectRoot>
+            </Field>
+          </Box>
 
-          <div>
-            <label
-              htmlFor="depot"
-              className="block text-sm font-medium text-stone-700"
-            >
-              Select Depot
-            </label>
-            <select
-              id="depot"
-              value={selectedDepotId}
-              onChange={handleDepotChange}
-              className="border text-sm border-neutral-300 text-neutral-900 p-2 rounded-lg "
-            >
-              <option value="">Select Depot</option>
-              {filteredDepots?.map((depot) => (
-                <option key={depot.depotId} value={depot.depotId}>
-                  {depot.depotName}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+          <Box minW="200px">
+            <Field label="Select Depot">
+              <SelectRoot
+                collection={depotCollection}
+                size="sm"
+                disabled={!selectedAreaId}
+                value={selectedDepotId ? [selectedDepotId] : []}
+                onValueChange={(e) => {
+                  const newDepotId = e.value[0] || "";
+                  setSelectedDepotId(newDepotId);
+                  localStorage.setItem("selectedDepotId", newDepotId);
+                }}
+              >
+                <SelectTrigger bg="white">
+                  <SelectValueText placeholder="Select Depot" />
+                </SelectTrigger>
+                <SelectContent>
+                  {depotCollection.items.map((item) => (
+                    <SelectItem item={item} key={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </SelectRoot>
+            </Field>
+          </Box>
+        </HStack>
 
-        <Group>
+        <HStack gap="2">
           <RBAC
             roles={[
               ROLES.ORGANIZATION_ADMIN,
@@ -436,37 +448,42 @@ const Routes = () => {
               ROLES.MASTER,
             ]}
           >
-            <button
+            <Button
+              colorPalette="blue"
+              size="sm"
+              disabled={!selectedDepotId}
               onClick={() =>
                 window.open(
                   `http://31.97.228.29:9091/route-create/${selectedAreaId}/${selectedDepotId}`,
-                  "_self" // Open in a new tab
+                  "_self"
                 )
               }
-              disabled={!selectedDepotId}
-              className={`bg-indigo-600 text-white text-sm px-3 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${!selectedDepotId ? "opacity-50 cursor-not-allowed" : ""
-                }`}
             >
+              <Icon icon="solar:add-circle-bold" />
               Create Route
-            </button>
+            </Button>
           </RBAC>
-         {selectedRows.length > 0 && <button
-            onClick={() =>
-              getAllWithConfigMutation.mutate({
-                areaId: selectedAreaId,
-                depotId: selectedDepotId,
-                selectedIds: selectedRows,
-              })
-            }
-            disabled={!selectedDepotId}
-            className={`bg-green-600 text-white text-sm px-3 py-2 rounded-md hover:bg-green-700  ${!selectedDepotId ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-          >
-            {getAllWithConfigMutation.isPending
-              ? "Exporting..."
-              : "Export Selected Routes"}
-          </button>}
-          {selectedRows.length && (
+
+          {selectedRows.length > 0 && (
+            <Button
+              colorPalette="green"
+              size="sm"
+              disabled={!selectedDepotId}
+              onClick={() =>
+                getAllWithConfigMutation.mutate({
+                  areaId: selectedAreaId,
+                  depotId: selectedDepotId,
+                  selectedIds: selectedRows,
+                })
+              }
+            >
+              {getAllWithConfigMutation.isPending
+                ? "Exporting..."
+                : "Export Selected Routes"}
+            </Button>
+          )}
+
+          {selectedRows.length > 0 && (
             <RBAC
               roles={[
                 ROLES.ORGANIZATION_ADMIN,
@@ -475,7 +492,10 @@ const Routes = () => {
                 ROLES.MASTER,
               ]}
             >
-              <button
+              <Button
+                colorPalette="red"
+                size="sm"
+                disabled={!selectedDepotId || selectedRows.length === 0}
                 onClick={() => {
                   if (selectedRows.length > 0) {
                     if (
@@ -485,246 +505,67 @@ const Routes = () => {
                     ) {
                       multipleDeleteMutation.mutate(selectedRows);
                     }
-                  } else {
-                    alert("Please select at least one route to delete");
                   }
                 }}
-                disabled={!selectedDepotId || selectedRows.length === 0}
-                className={`bg-red-600 text-white text-sm px-3 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${!selectedDepotId || selectedRows.length === 0
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
-                  }`}
               >
                 {multipleDeleteMutation.isPending
                   ? "Deleting..."
                   : "Delete Selected Routes"}
-              </button>
+              </Button>
             </RBAC>
           )}
+        </HStack>
+      </Flex>
 
-          {/* {selectedRows.length > 0 && (
-            <RBAC
-              roles={[
-                ROLES.ORGANIZATION_ADMIN,
-                ROLES.AREA_ADMIN,
-                ROLES.DEPOT_ADMIN,
-                ROLES.MASTER,
-            ]}
-          >
-            <button
-              onClick={() => {
-                if (gridRef.current) {
-                  if (
-                    confirm(
-                      `Are you sure you want to delete ${selectedRows.length} routes?`
-                    )
-                  ) {
-                    const routeIds = routes.map((route) => parseInt(route.id));
-                    console.log("Route IDs to delete:", routeIds);
-                    multipleDeleteMutation.mutate(routeIds);
-                  }
-                }
-              }}
-              className="bg-red-600 text-white text-sm px-3 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-            >
-              Delete All Routes
-            </button>
-          </RBAC>)} */}
-        </Group>
-      </div>
-
-      {/* Area and Depot Selection */}
-
-      {/* Routes Display */}
+      {/* Routes Heading */}
       {routes && (
-        <h1 className="text-lg pb-4 font-bold">
-          Showing Total {routes.length} Routes{" "}
-        </h1>
+        <Heading size="sm" color="gray.900" fontWeight="bold" mb="4">
+          Showing Total {routes.length} Routes
+        </Heading>
       )}
 
+      {/* Routes Display */}
       {selectedDepotId ? (
         isLoading ? (
-          <div className="flex items-center justify-center h-48">
-            <div className="text-lg">Loading...</div>
-          </div>
+          <Stack gap="3" py="4">
+            <Skeleton height="36px" borderRadius="lg" />
+            <Skeleton height="350px" borderRadius="lg" />
+          </Stack>
         ) : (
-          <div
+          <Box
             className="ag-theme-alpine"
-            style={{ height: 400, width: "100%" }}
+            h="500px"
+            w="full"
+            rounded="xl"
+            overflow="hidden"
+            borderWidth="1px"
+            borderColor="gray.200"
+            shadow="xs"
           >
             <AgGridReact
               ref={gridRef}
               rowData={routes}
               columnDefs={columnDefs}
               rowSelection="multiple"
-              onSelectionChanged={onSelectionChanged} // Bind selection change event
+              onSelectionChanged={onSelectionChanged}
             />
-          </div>
-          // <div className="bg-white rounded-lg  shadow overflow-hidden">
-          // 	<table className="min-w-full divide-y divide-stone-200">
-          // 		<thead className="bg-stone-50">
-          // 			<tr>
-          // 				<th
-          // 					scope="col"
-          // 					className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
-          // 				>
-          // 					Route Number
-          // 				</th>
-          // 				<th
-          // 					scope="col"
-          // 					className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
-          // 				>
-          // 					Source
-          // 				</th>
-          // 				<th
-          // 					scope="col"
-          // 					className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
-          // 				>
-          // 					Destination
-          // 				</th>
-          // 				<th
-          // 					scope="col"
-          // 					className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
-          // 				>
-          // 					Via
-          // 				</th>
-          // 				<th
-          // 					scope="col"
-          // 					className="px-3 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
-          // 				>
-          // 					Status
-          // 				</th>
-          // 				<th
-          // 					scope="col"
-          // 					className="px-3 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider"
-          // 				>
-          // 					Actions
-          // 				</th>
-          // 			</tr>
-          // 		</thead>
-          // 		<tbody className="bg-white divide-y divide-stone-200">
-          // 			{filteredRoutes && filteredRoutes.length > 0 ? (
-          // 				filteredRoutes.map((route) => (
-          // 					<tr key={route?.id} className="hover:bg-stone-50">
-          // 						<td className="px-3 py-4  ">
-          // 							<div className="text-sm font-medium text-stone-900">
-          // 								{route.route.routeNumber}
-          // 							</div>
-          // 						</td>
-          // 						<td className="px-3 py-4 max-w-[300px] w-[300px] ">
-          // 							<div className="text-sm text-stone-500">
-          // 								{route.route.source}
-          // 							</div>
-          // 						</td>
-          // 						<td className="px-3 py-4  ">
-          // 							<div className="text-sm text-stone-500">
-          // 								{route.route.destination}
-          // 							</div>
-          // 						</td>
-          // 						<td className="px-3 py-4 max-w-[300px] w-[300px] ">
-          // 							<div className="text-sm text-stone-500">
-          // 								{route.route.via}
-          // 							</div>
-          // 						</td>
-          // 						<td className="px-3 py-4  ">
-          // 							<span
-          // 								className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-          // 									route.active
-          // 										? 'bg-green-100 text-green-800'
-          // 										: 'bg-red-100 text-red-800'
-          // 								}`}
-          // 							>
-          // 								{route.active ? 'Active' : 'Inactive'}
-          // 							</span>
-          // 						</td>
-          // 						<td className="px-3 py-4   text-right text-sm font-medium">
-          // 							<button
-          // 								onClick={() => {
-          // 									getRouteDetaildWithIdMutation.mutate(route.id);
-          // 								}}
-          // 								className="text-indigo-600 hover:text-indigo-900 mr-4"
-          // 							>
-          // 								<Icon
-          // 									icon="solar:eye-bold"
-          // 									className="inline-block"
-          // 								/>
-          // 							</button>
-          // 							<RBAC
-          // 								roles={[
-          // 									ROLES.ORGANIZATION_ADMIN,
-          // 									ROLES.AREA_ADMIN,
-          // 									ROLES.DEPOT_ADMIN,
-          // 									ROLES.MASTER,
-          // 								]}
-          // 							>
-          // 								<button
-          // 									onClick={() =>
-          // 										navigate('/home/create-route', {
-          // 											state: {
-          // 												areaId: selectedAreaId,
-          // 												depotId: selectedDepotId,
-          // 												isEdit: true,
-          // 												gotRouteData: route,
-          // 											},
-          // 										})
-          // 									}
-          // 									className="text-indigo-600 hover:text-indigo-900 mr-4"
-          // 								>
-          // 									<Icon
-          // 										icon="solar:pen-bold"
-          // 										className="inline-block"
-          // 									/>
-          // 								</button>
-          // 								<button
-          // 									onClick={() => {
-          // 										if (
-          // 											confirm(
-          // 												'Are you sure you want to delete this route?'
-          // 											)
-          // 										) {
-          // 											deleteMutation.mutate(route.id);
-          // 										}
-          // 									}}
-          // 									className="text-red-600 hover:text-red-900"
-          // 								>
-          // 									<Icon
-          // 										icon="solar:trash-bin-trash-bold"
-          // 										className="inline-block"
-          // 									/>
-          // 								</button>
-          // 							</RBAC>
-          // 						</td>
-          // 					</tr>
-          // 				))
-          // 			) : (
-          // 				<tr>
-          // 					<td
-          // 						colSpan={6}
-          // 						className="px-3 py-4 text-center text-stone-500"
-          // 					>
-          // 						No routes found for this depot
-          // 					</td>
-          // 				</tr>
-          // 			)}
-          // 		</tbody>
-          // 	</table>
-
-          // 	{showSimulation && (
-          // 		<SimulationDialog
-          // 			route={route}
-          // 			showSimulation={showSimulation}
-          // 			displayConfig={finalObj['displayConfig']}
-          // 			closeSimulation={() => setShowSimulation(false)}
-          // 			saveToDatabase={null}
-          // 			showSaveButton={false}
-          // 		/>
-          // 	)}
-          // </div>
+          </Box>
         )
       ) : (
-        <div className="text-center text-stone-500">
-          Please select a depot to view routes
-        </div>
+        <Box p="8" textAlign="center" bg="white" rounded="xl" borderWidth="1px" borderColor="gray.200">
+          <Text color="gray.500" fontSize="sm">
+            Please select a depot to view routes
+          </Text>
+        </Box>
+      )}
+
+      {showSimulation && (
+        <SimulationDialog
+          isOpen={showSimulation}
+          onClose={() => setShowSimulation(false)}
+          route={route}
+          finalObj={finalObj}
+        />
       )}
     </Container>
   );
