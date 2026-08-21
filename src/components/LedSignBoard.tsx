@@ -95,13 +95,13 @@ const LEDBitmapSimulator = ({
 
   const addPaddingPropertiesInUrl = () => {
     if (!isRouteNumber) {
-      return `http://3.109.2.66:5288/api/bitmap?text=${
+      return `http://13.233.103.63:5288/api/bitmap?text=${
         text.text ? text.text : " "
       }&height=${text.fontHeight}&weight=${
         text.fontWeight === "Bold" ? "Bold" : "Regular"
       }&family=${fontFamily}`;
     }
-    return `http://3.109.2.66:5288/api/bitmap?text=${
+    return `http://13.233.103.63:5288/api/bitmap?text=${
       text.text ? text.text : " "
     }&height=${text.fontHeight}&weight=${
       text.fontWeight === "Bold" ? "Bold" : "Regular"
