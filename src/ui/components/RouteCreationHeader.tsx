@@ -45,6 +45,9 @@ const RouteCreationHeaderRoot = React.forwardRef<
     isSimulationSettingsPanelOpen,
     isTextSettingsPanelOpen,
     isRouteSettingsPanelOpen,
+    toggleRouteSettingsPanel,
+    toggleSimulationSettingsPanel,
+    toggleTextSettingsPanel,
   } = useToggleStore();
 
   const { handleSubmit, getValues } = useFormContext<IRoute>();
@@ -129,12 +132,31 @@ const RouteCreationHeaderRoot = React.forwardRef<
           Route Creation
         </span>
       </div>
-      <div className="flex w-64 flex-none items-center justify-end gap-1">
-        <PanelToggleDropdown
-          showRoutePanel={isRouteSettingsPanelOpen}
-          showSimulationPanel={isSimulationSettingsPanelOpen}
-          showTextSettingsPanel={isTextSettingsPanelOpen}
-        />
+      <div className="flex items-center justify-end gap-2 flex-wrap">
+          <Button
+            variant={isRouteSettingsPanelOpen ? "brand-primary" : "neutral-primary"}
+            icon={isRouteSettingsPanelOpen ? <FeatherEye /> : <FeatherEyeOff />}
+            onClick={toggleRouteSettingsPanel}
+            title={isRouteSettingsPanelOpen ? "Hide Route Panel" : "Show Route Panel"}
+          >
+            Route
+          </Button>
+          <Button
+            variant={isSimulationSettingsPanelOpen ? "brand-primary" : "neutral-primary"}
+            icon={isSimulationSettingsPanelOpen ? <FeatherEye /> : <FeatherEyeOff />}
+            onClick={toggleSimulationSettingsPanel}
+            title={isSimulationSettingsPanelOpen ? "Hide Simulation Panel" : "Show Simulation Panel"}
+          >
+            Simulation
+          </Button>
+          <Button
+            variant={isTextSettingsPanelOpen ? "brand-primary" : "neutral-primary"}
+            icon={isTextSettingsPanelOpen ? <FeatherEye /> : <FeatherEyeOff />}
+            onClick={toggleTextSettingsPanel}
+            title={isTextSettingsPanelOpen ? "Hide Text Settings Panel" : "Show Text Settings Panel"}
+          >
+            Text Settings
+          </Button>
         <RBAC roles={["master"]} features={[]}>
           <JsonViewerDialog
             dialogTitle="Route Configuration"

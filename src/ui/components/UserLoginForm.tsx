@@ -9,7 +9,7 @@
  */
 
 import React, { useEffect, useState } from "react";
-import { FeatherKeyRound } from "@subframe/core";
+import { FeatherEye, FeatherEyeOff, FeatherKeyRound } from "@subframe/core";
 import { FeatherUser } from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { Avatar } from "./Avatar";
@@ -44,6 +44,7 @@ const UserLoginFormRoot = React.forwardRef<
 
   const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [userId, setUserId] = useState(""); // State to hold user ID after login
 
   const { useList } = loggedUserCrud;
@@ -128,8 +129,6 @@ const UserLoginFormRoot = React.forwardRef<
     setSelectedOrganization,
   ]);
 
-  // Remaining render part remains the same...
-
   const [showResetDialog, setShowResetDialog] = useState(false);
 
   return (
@@ -141,30 +140,35 @@ const UserLoginFormRoot = React.forwardRef<
       ref={ref}
       {...otherProps}
     >
-      <div className="flex grow justify-center shrink-0 bg-[url('https://images.pexels.com/photos/9980493/pexels-photo-9980493.jpeg')] bg-no-repeat bg-cover bg-center basis-0 flex-col items-center gap-12 self-stretch bg-brand-50 p-12">
-        <div className="flex  max-w-[288px] grow shrink-0 basis-0 flex-col items-center  gap-2">
+      <div className="flex grow justify-center shrink-0 bg-[url('https://images.pexels.com/photos/9980493/pexels-photo-9980493.jpeg')] bg-no-repeat bg-cover bg-center basis-0 flex-col items-center gap-12 self-stretch bg-brand-50 p-12 mobile:hidden">
+        <div className="flex max-w-[320px] grow shrink-0 basis-0 flex-col items-center justify-center gap-4">
           <Avatar
             size="x-large"
             image="https://navitronix.in/assets/navitronix.jpeg"
           >
             HW
           </Avatar>
-          <div className="flex w-full flex-col items-center gap-6">
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <span className=" text-heading text-white-default font-heading text-center">
-                Navitronix
-              </span>
-            </div>
+          <div className="flex w-full flex-col items-center gap-2">
+            <span className="text-heading text-white-default font-heading text-center tracking-wide">
+              Navitronix
+            </span>
+            <span className="text-body text-white font-body text-center opacity-90">
+              Intelligent Passenger Information & Transit Management System
+            </span>
           </div>
         </div>
       </div>
-      <div className="flex w-[380px] flex-none flex-col items-center justify-center gap-6 self-stretch p-12">
-        <div className="flex w-full  flex-col items-start gap-8">
-          
-          <span className="text-heading-2 font-heading-2 text-default-font">
-            Sign In
-          </span>
-          <div className="flex w-full flex-col items-start justify-center gap-2">
+      <div className="flex w-[480px] max-w-full flex-none flex-col items-center justify-center gap-8 self-stretch p-8 md:p-14 bg-default-background">
+        <div className="flex w-full flex-col items-start gap-8">
+          <div className="flex flex-col items-start gap-2 w-full">
+            <span className="text-heading-1 font-heading-1 text-default-font">
+              Sign In
+            </span>
+            <span className="text-body font-body text-subtext-color">
+              Welcome back! Please enter your credentials to access your account.
+            </span>
+          </div>
+          <form onSubmit={handleSubmit} className="flex w-full flex-col items-start justify-center gap-4">
             <TextField
               className="h-auto w-full flex-none"
               label="Email or Username"
@@ -184,30 +188,39 @@ const UserLoginFormRoot = React.forwardRef<
               label="Password"
               helpText=""
               icon={<FeatherKeyRound />}
+              iconRight={
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className="flex items-center justify-center p-0.5 text-subtext-color hover:text-default-font transition-colors cursor-pointer"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <FeatherEyeOff className="w-4 h-4" />
+                  ) : (
+                    <FeatherEye className="w-4 h-4" />
+                  )}
+                </button>
+              }
             >
               <TextField.Input
                 placeholder="Enter your password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
               />
             </TextField>
             <Button
-              className="h-10 mt-3 w-full flex-none"
+              className="h-11 mt-2 w-full flex-none text-body-bold font-body-bold"
               size="large"
-              onClick={handleSubmit}
+              type="submit"
               disabled={usersLoading}
             >
-              {usersLoading ? "Fetching User Details..." : "Submit"}
+              {usersLoading ? "Fetching User Details..." : "Login"}
             </Button>
-          </div>
-          {/* <div className="flex flex-wrap items-center justify-center gap-1">
-            <span className="text-body font-body text-subtext-color text-center">
-              Use this link to reset your password
-            </span>
-            <LinkButton onClick={() => setShowResetDialog(true)} variant="brand">Reset Password</LinkButton>
-          </div> */}
+          </form>
         </div>
       </div>
       <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>

@@ -78,7 +78,11 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
             </Table.Cell>
             <Table.Cell>
               <Badge className="capitalize" variant="error" icon={<FeatherShieldCheck />}>
-                {user.role?.name.split("_").join(" ") || "—"}
+                {user.role?.name === "master"
+                  ? "Super Admin"
+                  : user.role?.name
+                  ? user.role.name.split("_").join(" ")
+                  : "—"}
               </Badge>
             </Table.Cell>
             <Table.Cell>

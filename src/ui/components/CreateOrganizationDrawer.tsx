@@ -34,10 +34,10 @@ import { toast } from "react-toastify";
 // ----------------------------------------------------------------------
 
 const organizationSchema = z.object({
-  name: z.string().min(1, "Organization name is required"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().min(5, "Phone number is required"),
-  logo: z.string().optional(),
+  name: z.string().trim().min(1, "Organization name is required"),
+  email: z.string().trim().min(1, "Email is required").email("Invalid email format"),
+  phone: z.string().optional().or(z.literal("")),
+  logo: z.string().optional().or(z.literal("")),
   PIS: z.boolean().optional(),
   PAS: z.boolean().optional(),
   ITMS: z.boolean().optional(),
@@ -73,7 +73,8 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
     formState: { errors },
     watch,
     setValue,
-  } = useForm<IOrganization>({
+  } = useForm<OrganizationFormValues>({
+    resolver: zodResolver(organizationSchema),
     defaultValues: {
       name: "",
       email: "",
@@ -90,15 +91,14 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
   useEffect(() => {
     if (initialData) {
       reset({
-        id: initialData.id,
-        name: initialData.name,
-        email: initialData.email,
-        phone: initialData.phone,
-        logo: initialData.logo,
+        name: initialData.name || "",
+        email: initialData.email || "",
+        phone: initialData.phone || "",
+        logo: initialData.logo || "",
         PIS: initialData.PIS ?? false,
         PAS: initialData.PAS ?? false,
         ITMS: initialData.ITMS ?? false,
-        active: initialData.active,
+        active: initialData.active ?? true,
       });
     } else {
       reset({
@@ -117,52 +117,57 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
   // -- Submit Handler --
   const onSubmit = async (data: OrganizationFormValues) => {
     if (isEditMode && initialData) {
-      updateOrganization({
-        id: initialData.id,
-        payload: {
+      updateOrganization(
+        {
           id: initialData.id,
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-          logo: data.logo,
-          PIS: data.PIS,
-          PAS: data.PAS,
-          ITMS: data.ITMS,
-          active: data.active,
+          payload: {
+            id: initialData.id,
+            name: data.name.trim(),
+            email: data.email?.trim() || null,
+            phone: data.phone?.trim() || null,
+            logo: data.logo?.trim() || null,
+            PIS: Boolean(data.PIS),
+            PAS: Boolean(data.PAS),
+            ITMS: Boolean(data.ITMS),
+            active: Boolean(data.active),
+          },
         },
-      }, {
-        onSuccess: () => {
-          toast.success("Organization updated successfully");
-          reset();
-          if (onSuccess) onSuccess();
+        {
+          onSuccess: () => {
+            toast.success("Organization updated successfully");
+            reset();
+            if (onSuccess) onSuccess();
+          },
+          onError: (error) => {
+            toast.error(`Failed to update organization: ${error.message}`);
+            console.error("Update Error:", error);
+          },
         },
-        onError: (error) => {
-          toast.error(`Failed to update organization: ${error.message}`);
-          console.error("Update Error:", error);
-        }
-      });
- 
+      );
     } else {
-      createOrganization({
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        logo: data.logo,
-        PIS: data.PIS,
-        PAS: data.PAS,
-        ITMS: data.ITMS,
-        active: data.active,
-      }, {
-        onSuccess: () => {
-          toast.success("Organization created successfully");
-          reset();
-          if (onSuccess) onSuccess();
+      createOrganization(
+        {
+          name: data.name.trim(),
+          email: data.email?.trim() || null,
+          phone: data.phone?.trim() || null,
+          logo: data.logo?.trim() || null,
+          PIS: Boolean(data.PIS),
+          PAS: Boolean(data.PAS),
+          ITMS: Boolean(data.ITMS),
+          active: Boolean(data.active),
         },
-        onError: (error) => {
-          toast.error("Failed to create organization");
-          console.error("Creation Error:", error);
-        }
-      });
+        {
+          onSuccess: () => {
+            toast.success("Organization created successfully");
+            reset();
+            if (onSuccess) onSuccess();
+          },
+          onError: (error) => {
+            toast.error("Failed to create organization");
+            console.error("Creation Error:", error);
+          },
+        },
+      );
     }
   };
 
@@ -183,8 +188,8 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
         </span>
         <span className="text-caption font-caption text-subtext-color">
           {isEditMode
-            ? "Update the details of the existing organization"
-            : "Fill in the details below to create a new organization"}
+            ? "Update the details and module access of the existing organization"
+            : "Fill in the details below to create a new organization with module permissions"}
         </span>
       </div>
 
@@ -193,15 +198,14 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
         {/* Organization Name */}
         <TextField
           className="h-auto w-full flex-none"
-          label="Organization Name"
+          label="Organization Name *"
           helpText={
-            errors.name?.message || "Enter the name of your organization"
+            errors.name?.message || "Enter organization name (min 1 character, e.g. QA)"
           }
           error={!!errors.name}
-          // Pass error state style if supported by your TextField
         >
           <TextField.Input
-            placeholder="Acme Corporation"
+            placeholder="e.g. QA or Acme Corp"
             {...register("name")}
           />
         </TextField>
@@ -209,8 +213,8 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
         {/* Email ID */}
         <TextField
           className="h-auto w-full flex-none"
-          label="Email ID"
-          helpText={errors.email?.message || "Primary email address"}
+          label="Email ID *"
+          helpText={errors.email?.message || "Primary work email address"}
           icon={<FeatherMail />}
           error={!!errors.email}
         >
@@ -224,21 +228,21 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
         <TextField
           className="h-auto w-full flex-none"
           label="Phone Number"
-          helpText={errors.phone?.message || "Contact phone number"}
+          helpText={errors.phone?.message || "Contact phone number (optional)"}
           icon={<FeatherPhone />}
           error={!!errors.phone}
         >
           <TextField.Input
-            placeholder="+1 (555) 000-0000"
+            placeholder="+91 98765 43210"
             {...register("phone")}
           />
         </TextField>
 
-        {/* Contact Person */}
+        {/* Logo URL */}
         <TextField
           className="h-auto w-full flex-none"
           label="Logo URL"
-          helpText={errors.logo?.message || "URL of the organization's logo"}
+          helpText={errors.logo?.message || "URL of the organization's logo (optional)"}
           icon={<FeatherImage />}
           error={!!errors.logo}
         >
@@ -248,7 +252,10 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
           />
         </TextField>
 
-        <div className="flex w-full flex-col items-start gap-2">
+        <div className="flex w-full flex-col items-start gap-3 border-t border-b border-neutral-border py-3">
+          <span className="text-caption-bold font-caption-bold text-default-font">
+            Enabled Modules for Organization
+          </span>
           <FeatureToggle
             label="PIS"
             description="Passenger Information System"
@@ -261,7 +268,7 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
           />
           <FeatureToggle
             label="PAS"
-            description="Passenger Information System"
+            description="Public Address System"
             toggle={
               <Switch
                 checked={watch("PAS")}
@@ -271,7 +278,7 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
           />
           <FeatureToggle
             label="ITMS"
-            description="Passenger Information System"
+            description="Intelligent Transit Management System"
             toggle={
               <Switch
                 checked={watch("ITMS")}

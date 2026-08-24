@@ -1,49 +1,38 @@
 "use client";
-/*
- * Documentation:
- * Button — https://app.subframe.com/11b10bc240cf/library?component=Button_3b777358-b86b-40af-9327-891efc6826fe
- * CreateUserForm 2 — https://app.subframe.com/11b10bc240cf/library?component=CreateUserForm+2_a2cdf25d-c984-41d1-b955-47a15392c8b2
- * Select — https://app.subframe.com/11b10bc240cf/library?component=Select_bb88f90b-8c43-4b73-9c2f-3558ce7838f3
- * Text Field — https://app.subframe.com/11b10bc240cf/library?component=Text+Field_be48ca43-f8e7-4c0e-8870-d219ea11abfe
- */
-// @subframe/sync-disable
-import React, { useMemo } from "react";
-import { FeatherCheck, FeatherKey, FeatherUser } from "@subframe/core";
+import React, { useMemo, useState } from "react";
+import {
+  FeatherCheck,
+  FeatherEye,
+  FeatherEyeOff,
+  FeatherKey,
+  FeatherUser,
+} from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { Button } from "./Button";
 import { Select } from "./Select";
 import { TextField } from "./TextField";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
-import { useRegions } from "@/api/region/hooks";
-import { useDepots } from "@/api/depot/hooks";
-import { useRoles } from "@/api/organization/hooks";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { supabase } from "@/supabaseClient";
-import { useMutation } from "@apollo/client/react";
-import { CREATE_USER } from "@/api/users/queries";
-import { UserDetails } from "@/api/users/types";
 import { FeatureToggle } from "./FeatureToggle";
 import { Switch } from "./Switch";
-import useAuthStore from "@/store/authStore";
 import {
   ILoggedUser,
   IRole,
-  IUser,
-  IUserCreate,
   loggedUserCrud,
   roleCrud,
-  userCrud,
 } from "@/types/IUser";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { depotCrud } from "@/types/IDepot";
 import { regionCrud } from "@/types/IRegion";
+import { organizationCrud } from "@/types/organization";
 import { toast } from "react-toastify";
 
 interface CreateUserForm2RootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
-  onUserCreated?: () => void; // callback after user created
-  initialData?: ILoggedUser | null; // <-- Add initialData for edit
-  onCancel?: () => void; // callback for cancel
+  onUserCreated?: () => void;
+  initialData?: ILoggedUser | null;
+  onCancel?: () => void;
 }
 
 const CreateUserForm2Root = React.forwardRef<
@@ -53,17 +42,32 @@ const CreateUserForm2Root = React.forwardRef<
   { className, onUserCreated, initialData, onCancel, ...otherProps },
   ref,
 ) {
-  // Stores
   const { selectedOrganization } = useOrganizationStore();
-  const user = useLoggedUserStore((state) => state.user); // Get user details
+  const loggedInUser = useLoggedUserStore((state) => state.user);
+  const isSuperAdmin = loggedInUser?.role?.name === "master";
 
-  // Add editMode flag
   const isEditMode = !!initialData;
+  const [showPassword, setShowPassword] = useState(false);
 
-  // API hooks
+  // Fetch organizations
+  const { useList: useOrgList } = organizationCrud;
+  const { data: orgsData } = useOrgList({
+    filters: { deleted: false },
+  });
+  const organizations = orgsData?.data || [];
+
+  // Fetch roles
   const { useList: useRoleList } = roleCrud;
   const { data: rolesData } = useRoleList();
-  const roles = rolesData ? rolesData?.data.filter(role => role.name !== "master") as IRole[] : [];
+  const roles = rolesData
+    ? (rolesData?.data.filter((role) => role.name !== "master") as IRole[])
+    : [];
+
+  const defaultOrgId =
+    initialData?.organization?.id ||
+    initialData?.organization_id ||
+    selectedOrganization?.id ||
+    (organizations.length > 0 ? organizations[0].id : "");
 
   // Setup form
   const {
@@ -75,31 +79,33 @@ const CreateUserForm2Root = React.forwardRef<
     formState: { isSubmitting },
   } = useForm<ILoggedUser>({
     defaultValues: {
-      role_id: initialData?.role?.id || null,
-      region_id: initialData?.region?.id || null,
-      depot_id: initialData?.depot?.id || null,
+      role_id: initialData?.role?.id || initialData?.role_id || "",
+      region_id: initialData?.region?.id || initialData?.region_id || null,
+      depot_id: initialData?.depot?.id || initialData?.depot_id || null,
       email: initialData?.email || "",
       password: initialData?.password || "",
-      organization_id: initialData?.organization?.id || null,
+      organization_id: defaultOrgId,
       user_id: initialData?.user_id || "",
       active: initialData?.active ?? true,
+      PIS: initialData?.PIS ?? selectedOrganization?.PIS ?? true,
+      PAS: initialData?.PAS ?? selectedOrganization?.PAS ?? true,
+      ITMS: initialData?.ITMS ?? selectedOrganization?.ITMS ?? false,
     },
   });
 
-  // Watch fields for role-based logic
   const selectedRoleId = useWatch({ control, name: "role_id" });
+  const selectedOrgId = useWatch({ control, name: "organization_id" });
   const selectedRegionId = useWatch({ control, name: "region_id" });
-  const selectedDepotId = useWatch({ control, name: "depot_id" });
 
-  // Get current selected role
   const selectedRole = roles.find((role) => role.id === selectedRoleId);
+
   const { useList: useDepotList } = depotCrud;
   const { useList: useRegionList } = regionCrud;
 
   // Depots hook based on organization & region
   const { data: depotsData } = useDepotList({
     filters: {
-      organization_id: selectedOrganization?.id || "",
+      organization_id: selectedOrgId || "",
       region_id: selectedRegionId || null,
     },
   });
@@ -108,19 +114,17 @@ const CreateUserForm2Root = React.forwardRef<
   // Regions hook based on organization
   const { data: regionsData } = useRegionList({
     filters: {
-      organization_id: selectedOrganization?.id || "",
+      organization_id: selectedOrgId || "",
     },
   });
   const regions = regionsData?.data || [];
 
   const { useCreate, useUpdate } = loggedUserCrud;
+  const { mutate: createUser } = useCreate();
+  const { mutate: updateUser } = useUpdate();
 
-  const { mutate: createUser, isPending: creating } = useCreate();
-  const { mutate: updateUser, isPending: updating } = useUpdate();
-
-  // in useEffect watch to selected role if role changes reset region and depot
+  // Reset region and depot if role doesn't require them
   React.useEffect(() => {
-    // If role is changed to one that doesn't need region/depot, reset them
     if (
       selectedRole?.name !== "region_admin" &&
       selectedRole?.name !== "depot_admin"
@@ -128,15 +132,16 @@ const CreateUserForm2Root = React.forwardRef<
       setValue("region_id", null);
       setValue("depot_id", null);
     } else if (selectedRole?.name === "region_admin") {
-      // If role is region_admin, reset depot
       setValue("depot_id", null);
     }
   }, [selectedRole?.name, selectedRoleId, setValue]);
 
   // Handle form submit
   const onSubmit = async (data: ILoggedUser) => {
+    const targetOrgId = data.organization_id || selectedOrganization?.id || null;
+
     if (isEditMode && initialData) {
-      // ------------- UPDATE user ---------------
+      // Update existing user
       await updateUser(
         {
           id: initialData.id,
@@ -145,16 +150,17 @@ const CreateUserForm2Root = React.forwardRef<
             role_id: data.role_id,
             region_id: data.region_id || null,
             depot_id: data.depot_id || null,
-            organization_id: data.organization
-              ? data.organization_id
-              : initialData.organization?.id || null,
+            organization_id: targetOrgId,
             active: data.active,
+            PIS: data.PIS,
+            PAS: data.PAS,
+            ITMS: data.ITMS,
           },
         },
         {
           onSuccess: () => {
             toast.success("User updated successfully");
-            reset(); // Reset form after successful update
+            reset();
             if (onUserCreated) onUserCreated();
           },
           onError: (error) => {
@@ -164,34 +170,82 @@ const CreateUserForm2Root = React.forwardRef<
         },
       );
     } else {
-      // ------------- CREATE user ---------------
-      // ...existing create logic...
+      // Create user: Check if email already existed (including soft deleted)
+      const { data: existingUser } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", data.email)
+        .maybeSingle();
+
+      if (existingUser) {
+        if (existingUser.deleted) {
+          // Reactivate soft-deleted user
+          const { error: updateErr } = await supabase
+            .from("users")
+            .update({
+              deleted: false,
+              active: data.active,
+              role_id: data.role_id,
+              region_id: data.region_id || null,
+              depot_id: data.depot_id || null,
+              organization_id: targetOrgId,
+              password: data.password,
+              PIS: data.PIS,
+              PAS: data.PAS,
+              ITMS: data.ITMS,
+            })
+            .eq("id", existingUser.id);
+
+          if (updateErr) {
+            toast.error(`Failed to reactivate user: ${updateErr.message}`);
+            return;
+          }
+          toast.success("User account reactivated successfully");
+          reset();
+          if (onUserCreated) onUserCreated();
+          return;
+        } else {
+          toast.error("A user with this email already exists.");
+          return;
+        }
+      }
+
+      // New signup in Supabase Auth
       const { data: signUpData, error: signUpError } =
         await supabase.auth.signUp({
           email: data.email,
           password: data.password,
         });
+
       if (signUpError) {
         toast.error(`Signup failed: ${signUpError.message}`);
         return;
       }
+
       const userId = signUpData?.user?.id;
-      if (!userId) throw new Error("No userId returned from Supabase");
+      if (!userId) {
+        toast.error("No user ID returned from authentication provider");
+        return;
+      }
+
       createUser(
         {
           email: data.email,
           role_id: data.role_id,
           region_id: data.region_id || null,
           depot_id: data.depot_id || null,
-          organization_id: selectedOrganization?.id || null,
+          organization_id: targetOrgId,
           user_id: userId,
           active: data.active,
-          password: data.password, // Store password if needed for your backend, but be cautious about security
+          password: data.password,
+          PIS: data.PIS,
+          PAS: data.PAS,
+          ITMS: data.ITMS,
         },
         {
           onSuccess: () => {
             toast.success("User created successfully");
-            reset(); // Reset form after successful creation
+            reset();
             if (onUserCreated) onUserCreated();
           },
           onError: (error) => {
@@ -206,7 +260,7 @@ const CreateUserForm2Root = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex h-full w-full flex-col items-start gap-4 bg-default-background px-6 py-6",
+        "flex h-full w-full flex-col items-start gap-4 bg-default-background px-6 py-6 overflow-y-auto no-scrollbar",
         className,
       )}
       ref={ref}
@@ -218,28 +272,59 @@ const CreateUserForm2Root = React.forwardRef<
         </span>
         <span className="text-caption font-caption text-subtext-color">
           Fill in the details below to{" "}
-          {isEditMode ? "edit the user" : "create a new user"}
+          {isEditMode ? "edit user and module permissions" : "create a new user with configured access"}
         </span>
       </div>
+
       <form
         className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-4"
         onSubmit={handleSubmit(onSubmit)}
       >
+        {isSuperAdmin && (
+          <Controller
+            control={control}
+            name="organization_id"
+            render={({ field }) => (
+              <Select
+                className="h-auto w-full flex-none"
+                label="Organization *"
+                placeholder="Select Organization"
+                {...field}
+                value={field.value || ""}
+                onValueChange={(val) => {
+                  field.onChange(val);
+                  setValue("region_id", null);
+                  setValue("depot_id", null);
+                }}
+              >
+                {organizations.map((org) => (
+                  <Select.Item key={org.id} value={org.id}>
+                    {org.name}
+                  </Select.Item>
+                ))}
+              </Select>
+            )}
+          />
+        )}
+
         <Controller
           control={control}
           name="role_id"
-          render={({ field }) => (
+          rules={{ required: "Role is required" }}
+          render={({ field, fieldState }) => (
             <Select
               className="h-auto w-full flex-none"
-              label="Select Role"
-              placeholder="Select"
+              label="Select Role *"
+              placeholder="Select Role"
+              error={!!fieldState.error}
+              helpText={fieldState.error?.message}
               {...field}
               value={field.value || ""}
               onValueChange={field.onChange}
             >
               {roles.map((role) => (
                 <Select.Item key={role.id} value={role.id}>
-                  {role.name}
+                  {role.name.split("_").join(" ")}
                 </Select.Item>
               ))}
             </Select>
@@ -251,16 +336,19 @@ const CreateUserForm2Root = React.forwardRef<
           <Controller
             control={control}
             name="region_id"
-            render={({ field }) => (
+            rules={{ required: "Region is required" }}
+            render={({ field, fieldState }) => (
               <Select
                 className="h-auto w-full flex-none"
-                label="Select Region"
-                placeholder="Select"
+                label="Select Region *"
+                placeholder="Select Region"
+                error={!!fieldState.error}
+                helpText={fieldState.error?.message}
                 {...field}
-                value={field.value || "null"}
+                value={field.value || ""}
                 onValueChange={(val) => {
                   field.onChange(val);
-                  setValue("depot_id", null); // Reset depot when region changes
+                  setValue("depot_id", null);
                 }}
               >
                 {regions.map((region) => (
@@ -277,13 +365,16 @@ const CreateUserForm2Root = React.forwardRef<
           <Controller
             control={control}
             name="depot_id"
-            render={({ field }) => (
+            rules={{ required: "Depot is required" }}
+            render={({ field, fieldState }) => (
               <Select
                 className="h-auto w-full flex-none"
-                label="Select Depot"
-                placeholder="Select"
+                label="Select Depot *"
+                placeholder="Select Depot"
+                error={!!fieldState.error}
+                helpText={fieldState.error?.message}
                 {...field}
-                value={field.value || null}
+                value={field.value || ""}
                 onValueChange={field.onChange}
               >
                 {depots.map((depot) => (
@@ -308,12 +399,12 @@ const CreateUserForm2Root = React.forwardRef<
               render={({ field, fieldState }) => (
                 <TextField
                   className="h-auto w-full flex-none"
-                  label="Email"
+                  label="Email *"
                   helpText={fieldState.error?.message || ""}
                   icon={<FeatherUser />}
-                  required
+                  error={!!fieldState.error}
                 >
-                  <TextField.Input {...field} placeholder="Ex: Kevin123" />
+                  <TextField.Input {...field} placeholder="user@company.com" />
                 </TextField>
               )}
             />
@@ -321,27 +412,85 @@ const CreateUserForm2Root = React.forwardRef<
               control={control}
               name="password"
               rules={{
-                required: "Password required",
+                required: "Password is required",
                 minLength: { value: 6, message: "At least 6 characters" },
               }}
               render={({ field, fieldState }) => (
                 <TextField
                   className="h-auto w-full flex-none"
-                  label="Password"
+                  label="Password *"
                   helpText={fieldState.error?.message || "Minimum 6 characters"}
                   icon={<FeatherKey />}
-                  required
+                  error={!!fieldState.error}
+                  iconRight={
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      className="flex items-center justify-center p-0.5 text-subtext-color hover:text-default-font transition-colors cursor-pointer"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      title={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <FeatherEyeOff className="w-4 h-4" />
+                      ) : (
+                        <FeatherEye className="w-4 h-4" />
+                      )}
+                    </button>
+                  }
                 >
-                  <TextField.Input type="password" {...field} placeholder="" />
+                  <TextField.Input
+                    type={showPassword ? "text" : "password"}
+                    {...field}
+                    placeholder="Enter password"
+                  />
                 </TextField>
               )}
-            />{" "}
+            />
           </>
         )}
 
+        {/* Module Access Configuration */}
+        <div className="flex flex-col gap-3 w-full border-t border-b border-neutral-border py-3">
+          <span className="text-caption-bold font-caption-bold text-default-font">
+            Module-Level Access
+          </span>
+          <div className="flex flex-col gap-2 w-full">
+            <FeatureToggle
+              label="PIS (Passenger Information System)"
+              description="Access to Routes, Regions, and Depots"
+              toggle={
+                <Switch
+                  checked={Boolean(watch("PIS"))}
+                  onCheckedChange={(checked) => setValue("PIS", checked)}
+                />
+              }
+            />
+            <FeatureToggle
+              label="PAS (Public Address System)"
+              description="Access to Routes, Stops & Stop Creation"
+              toggle={
+                <Switch
+                  checked={Boolean(watch("PAS"))}
+                  onCheckedChange={(checked) => setValue("PAS", checked)}
+                />
+              }
+            />
+            <FeatureToggle
+              label="ITMS (Intelligent Transit Management)"
+              description="Full access to Routes, Stops & Live Streaming"
+              toggle={
+                <Switch
+                  checked={Boolean(watch("ITMS"))}
+                  onCheckedChange={(checked) => setValue("ITMS", checked)}
+                />
+              }
+            />
+          </div>
+        </div>
+
         <FeatureToggle
-          label="Active"
-          description="Toggle to activate or deactivate the user"
+          label="Active Account"
+          description="Toggle to activate or deactivate this user account"
           toggle={
             <Switch
               checked={watch("active")}
@@ -350,7 +499,7 @@ const CreateUserForm2Root = React.forwardRef<
           }
         />
 
-        <div className="flex w-full flex-col items-start gap-2">
+        <div className="flex w-full flex-col items-start gap-2 pt-2">
           <Button
             className="h-9 w-full flex-none"
             icon={<FeatherCheck />}
@@ -365,7 +514,7 @@ const CreateUserForm2Root = React.forwardRef<
             type="button"
             onClick={() => {
               if (onCancel) onCancel();
-              else reset(); // fallback to just resetting form if no onCancel provided
+              else reset();
             }}
           >
             Cancel

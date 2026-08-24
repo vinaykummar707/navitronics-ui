@@ -14,6 +14,9 @@ interface ControlAccordionRootProps
   title?: React.ReactNode;
   controls?: React.ReactNode;
   icon?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  defaultOpen?: boolean;
   className?: string;
 }
 
@@ -25,6 +28,9 @@ const ControlAccordionRoot = React.forwardRef<
     title,
     controls,
     icon,
+    open,
+    onOpenChange,
+    defaultOpen = false,
     className,
     ...otherProps
   }: ControlAccordionRootProps,
@@ -40,6 +46,9 @@ const ControlAccordionRoot = React.forwardRef<
       {...otherProps}
     >
       <Accordion
+        open={open}
+        onOpenChange={onOpenChange}
+        defaultOpen={defaultOpen}
         trigger={
           <div className="flex w-full items-center gap-2">
             <div className="flex grow shrink-0 basis-0 items-center gap-2">
@@ -55,7 +64,6 @@ const ControlAccordionRoot = React.forwardRef<
             <Accordion.Chevron />
           </div>
         }
-        defaultOpen={true}
       >
         {controls ? (
           <div className="flex w-full grow shrink-0 basis-0 flex-col items-start px-2 pt-3">

@@ -90,25 +90,44 @@ const SimulationSettingsPanelRoot = React.forwardRef<
 
 
   // generate audio on demand and play it on demand as well - we can use the generateAudio function from utils/fetchTTS and then create a URL for the generated audio file and play it using an HTMLAudioElement
+  // generate audio on demand and play it on demand as well
   const generateAndPlayAudio = async () => {
     setGeneratingAudio(true);
     setFinalAudio(null);
-    console.log(simulations[selectedSimulationIndex])
-    const { text, upperHalfText, lowerHalfText, sideText } = simulations[selectedSimulationIndex]?.texts || {};
+    const { text, upperHalfText, lowerHalfText, sideText } =
+      simulations[selectedSimulationIndex]?.texts || {};
     try {
-      const textToConvert = text.text || upperHalfText?.text || lowerHalfText?.text || sideText?.text || "No text available";
-      const audioFile = await generateAudio(textToConvert, `${text.language}-IN`, "arya");
+      const targetLang =
+        text?.language ||
+        upperHalfText?.language ||
+        lowerHalfText?.language ||
+        "en";
+      const textToConvert =
+        text?.text ||
+        upperHalfText?.text ||
+        lowerHalfText?.text ||
+        sideText?.text ||
+        "";
+
+      if (!textToConvert.trim()) {
+        toast.warning("No text available to generate audio.");
+        setGeneratingAudio(false);
+        return;
+      }
+
+      toast.info("Generating audio preview...");
+      const audioFile = await generateAudio(textToConvert, targetLang, "meera");
       const audioUrl = URL.createObjectURL(audioFile);
       const audio = new Audio(audioUrl);
       setAudioFile(audioFile);
       setFinalAudio(audio);
-      setGeneratingAudio(false);
-    } catch (error) {
+      toast.success("Audio preview generated successfully!");
+    } catch (error: any) {
       console.error("Error generating audio:", error);
+      toast.error(`Error generating audio: ${error.message || "Failed"}`);
+    } finally {
       setGeneratingAudio(false);
-      return;
     }
-
   };
 
   // function to play audioFileUrl and stopAudioFileUrl one after other with gap
@@ -330,25 +349,32 @@ const SimulationSettingsPanelRoot = React.forwardRef<
           /> */}
         </>}
 
-      <ControlAccordion
-        title="Copy Simulations"
-        controls={
-          <div className="w-full items-center justify-center gap-1 grid grid-cols-2">
-            {selectedTab !== "front" && <SelectionCardWithText title="Front" onClick={() => copySimulations("front")} />}
-            {selectedTab !== "side" && <SelectionCardWithText title="Side" onClick={() => copySimulations("side")} />}
-            {selectedTab !== "rear" && <SelectionCardWithText title="Rear" onClick={() => copySimulations("rear")} />}
-            {selectedTab !== "internal" && <SelectionCardWithText title="Internal" onClick={() => copySimulations("internal")} />}
-          </div>
-        }
-        icon={
-          <IconWithBackground
-            variant="warning"
-            size="small"
-            icon={<FeatherCopy />}
-            square={false}
-          />
-        }
-      />
+      <div className="w-full  border-solid border-neutral-border ">
+        <ControlAccordion
+          title="Copy Simulations"
+          controls={
+            <div className="w-full flex flex-col gap-2">
+              <span className="text-caption font-caption text-subtext-color">
+                Copy all simulations from <strong className="text-default-font uppercase">{selectedTab}</strong> to:
+              </span>
+              <div className="w-full items-center justify-center gap-2 grid grid-cols-1">
+                {selectedTab !== "front" && <SelectionCardWithText title="Front Screen" onClick={() => copySimulations("front")} />}
+                {selectedTab !== "side" && <SelectionCardWithText title="Side Screen" onClick={() => copySimulations("side")} />}
+                {selectedTab !== "rear" && <SelectionCardWithText title="Rear Screen" onClick={() => copySimulations("rear")} />}
+                {selectedTab !== "internal" && <SelectionCardWithText title="Internal Screen" onClick={() => copySimulations("internal")} />}
+              </div>
+            </div>
+          }
+          icon={
+            <IconWithBackground
+              variant="brand"
+              size="small"
+              icon={<FeatherCopy />}
+              square={false}
+            />
+          }
+        />
+      </div>
       {!simulations[selectedSimulationIndex] && (
         <div className="flex h-full w-full p-6 items-center justify-center">
           <p className="text-xs text-center font-heading-3  text-subtext-color">

@@ -27,8 +27,6 @@ import { ROLES } from "./constants/roles";
 import useAuthStore from "./store/authStore";
 import RoutesPage from "./pages/v2/RoutesPage";
 import StopsPage from "./pages/v2/StopsPage";
-import CCTVPage from "./pages/v2/CCTVPage";
-import { features } from "node:process";
 import RouteCreatePage from "./pages/v2/CreateRoutePage";
 import UtilityPage from "./pages/v2/UtilityPage";
 import FontConfigurationPage from "./pages/v2/FontConfigurationPage";
@@ -56,7 +54,7 @@ function App() {
     {
       path: "regions",
       roles: [ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER],
-      features: ["PIS"],
+      features: ["PIS", "PAS", "ITMS"],
       element: <AreasPage />,
     },
     {
@@ -66,7 +64,7 @@ function App() {
         ROLES.ORGANIZATION_ADMIN,
         ROLES.MASTER,
       ],
-      features: ["PIS"],
+      features: ["PIS", "PAS", "ITMS"],
       element: <DepotsPage />,
     },
     {
@@ -87,14 +85,12 @@ function App() {
       features: [],
       element: <LanguageModify />,
     },
-    { path: "routes", element: <RoutesPage />, features: ["PIS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
-    { path: "stops", element: <StopsPage />, features: ["PAS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
-    { path: "cctv", element: <CCTVPage />, features: ["PAS", "ITMS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
+    { path: "routes", element: <RoutesPage />, features: ["PIS", "PAS", "ITMS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
+    { path: "stops", element: <StopsPage />, features: ["PAS", "ITMS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
     { path: "create-route", element: <DisplayConfigForm /> },
-    // { path: "routes/create/:areaId/:depotId", features: ['PIS'], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER], element: <RouteCreatePage /> },
     { path: "settings", element: <Settings /> },
     { path: "utility", element: <UtilityPage /> },
-    { path: "font-configuration", element: <FontConfigurationPage /> },
+    { path: "font-configuration", roles: [ROLES.MASTER], features: [], element: <FontConfigurationPage /> },
   ] as const;
 
   // write a function that return route path based on role to navigate to after login

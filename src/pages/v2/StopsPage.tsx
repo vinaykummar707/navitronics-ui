@@ -253,11 +253,14 @@ export default function StopsPage() {
   const genAudio = async (text: string, stopId: string) => {
     try {
       setGeneratingAudio(true);
+      toast.info(`Generating audio for "${text}"...`);
       const { fileUrl, size } = await handleStopAudioGeneration(text, stopId);
       console.log("Generated audio URL:", fileUrl, "Size:", size);
+      toast.success(`Audio generated successfully for "${text}"`);
       refetchStops(); // Refresh the stops data to reflect the new audio
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error generating audio:", err);
+      toast.error(`Audio generation failed: ${err.message || "Unknown error"}`);
     } finally {
       setGeneratingAudio(false);
     }
@@ -271,7 +274,7 @@ export default function StopsPage() {
           Stops
         </span>
         <span className="text-body font-body text-subtext-color">
-          Manage Stops for your Depot
+          Manage Stops and Public Address Audio for your Depot
         </span>
       </div>
 
@@ -303,7 +306,7 @@ export default function StopsPage() {
 
             {/* Depot Select */}
             {hasDepots && (
-              <RBAC features={[]} roles={["master", "organization_admin"]}>
+              <RBAC features={[]} roles={["master", "organization_admin", "region_admin"]}>
                 <Select
                   className="h-auto flex-none"
                   variant="outline"
@@ -334,12 +337,13 @@ export default function StopsPage() {
             </Button>
 
             <RBAC
-              features={[]}
+              features={["PAS", "ITMS"]}
               roles={[
                 "region_admin",
                 "organization_admin",
                 "master",
                 "depot_admin",
+                "user",
               ]}
             >
               <Button

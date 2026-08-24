@@ -26,6 +26,9 @@ import { EmptyState } from "@/components/EmptyState";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { AVAILABLE_LANGUAGES } from "@/constants/defaultRouteValues";
+import axios from "axios";
+import { convertV2ToV1 } from "@/utils/routeConfigMapper";
+import { ExportFormatDialog } from "@/components/ExportFormatDialog";
 
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -325,14 +328,23 @@ export default function RoutesPage() {
   saveAs(content, `${zipName}.zip`);
 };
 
-  // function to parse each selected route's data and trigger download of a json file for all selected routes in one json file name `routes_export_${currentDate}.json`
+  const [isExportDialogOpen, setIsExportDialogOpen] = React.useState(false);
+
   const handleExportSelectedRoutes = () => {
     if (selectedRouteObjects.length === 0) {
       toast.warning("No routes selected for export");
       return;
     }
-    // parse only fields front,side,rear,internal and stops for each selected route and create a new array of objects with only those fields and the id and route_number fields
-    const routesToExport = selectedRouteObjects.map((route) => ({
+    setIsExportDialogOpen(true);
+  };
+
+  const executeExport = async (format: "v1" | "v2") => {
+    if (selectedRouteObjects.length === 0) {
+      toast.warning("No routes selected for export");
+      return;
+    }
+
+    const rawRoutesToExport = selectedRouteObjects.map((route) => ({
       ...route,
       front: parseFieldValue(route.front as string | null, "front", route),
       side: parseFieldValue(route.side as string | null, "side", route),
@@ -345,72 +357,56 @@ export default function RoutesPage() {
       stops: parseFieldValue(route.stops as string | null, "stops", route),
     }));
 
-    console.log("Routes to Export:", routesToExport);
-    // create a json file with routesToExport and trigger download
     const currentDate = new Date().toISOString().split("T")[0];
-    const fileName = `routes_export_${currentDate}.json`;
-    const fileContent = JSON.stringify(routesToExport, null, 2);
-    const blob = new Blob([fileContent], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
 
-    // loop throught all internal field items and create array
+    if (format === "v1") {
+      const v1RoutesPayload = rawRoutesToExport.map((route) => convertV2ToV1(route));
+      toast.info("Requesting V1 export package...");
 
-    let internalAudioFiles: FileItem[] = [];
-    routesToExport.forEach((route) => {
-      if (!route.internal) return;
-      const internalItems = route.internal as any[];
-      if (!internalItems || internalItems.length === 0) return;
-      internalItems.forEach((item) => {
-        if (item.audioFileUrl) {
-          internalAudioFiles.push({
-            name: item.audioFileName,
-            url: item.audioFileUrl,
-          });
-        }
-      });
-    });
+      try {
+        const areaId = selectedOrganization?.id || "";
+        const depotId = selectedDepot?.id || "";
+        const exportUrl = `http://localhost:8080/navitranix/api/routes/export?areaId=${areaId}&depotId=${depotId}`;
 
-    
+        const response = await axios.post(exportUrl, v1RoutesPayload, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          responseType: "blob",
+        });
 
-    let stopAudioFiles: FileItem[] = [];
-    routesToExport.forEach((route) => {
-      const stops = route.stops as any[];
-      stops.forEach((stop) => {
-        if (stop.audioFileUrl) {
-          stopAudioFiles.push({
-            name: stop.audioFileName,
-            url: stop.audioFileUrl,
-          });
-        }
-      });
-    });
+        // Trigger zip file download from binary response data
+        const blob = new Blob([response.data], { type: "application/zip" });
+        saveAs(blob, `routes_export_v1_${currentDate}.zip`);
+        toast.success(`Exported ${selectedRouteObjects.length} route(s) in V1 format`);
+      } catch (error: any) {
+        console.error("V1 Export API Error:", error);
+        toast.error(`V1 Export failed: ${error?.response?.data?.message || error.message || "Server error"}`);
+      }
+    } else {
+      // V2 Format API Export
+      toast.info("Requesting V2 export package...");
 
-    let stopTypesAudioFiles: FileItem[] = [];
+      try {
+        const areaId = selectedOrganization?.id || "";
+        const depotId = selectedDepot?.id || "";
+        const exportUrl = `http://localhost:8080/navitranix/api/routes/export-v2?areaId=${areaId}&depotId=${depotId}`;
 
-    AVAILABLE_LANGUAGES.forEach((lang) => {
-      const temp: FileItem[] = [];
-      ['currentFileName', 'nextFileName', 'comingFileName'].forEach((key) => {
-        if (lang[key]) {
-          temp.push({
-            name: lang[key],
-            url: lang[key.replace('FileName', '')],
-          });
-        }
-      });
-      stopTypesAudioFiles = stopTypesAudioFiles.concat(temp);
-    });
+        const response = await axios.post(exportUrl, rawRoutesToExport, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          responseType: "blob",
+        });
 
-    const allAudioFiles = [...internalAudioFiles, ...stopTypesAudioFiles, ...stopAudioFiles];
-    console.log("Audio files to download:", allAudioFiles);
-    if (allAudioFiles.length > 0) {
-      downloadZip(allAudioFiles, `routes_audio_${currentDate}`);
+        // Trigger zip file download from binary response data
+        const blob = new Blob([response.data], { type: "application/zip" });
+        saveAs(blob, `routes_export_v2_${currentDate}.zip`);
+        toast.success(`Exported ${selectedRouteObjects.length} route(s) in V2 format`);
+      } catch (error: any) {
+        console.error("V2 Export API Error:", error);
+        toast.error(`V2 Export failed: ${error?.response?.data?.message || error.message || "Server error"}`);
+      }
     }
   };
 
@@ -561,6 +557,13 @@ export default function RoutesPage() {
       ) : (
         <EmptyState title="Routes" hasDepots={!!hasDepots} />
       )}
+
+      <ExportFormatDialog
+        open={isExportDialogOpen}
+        onOpenChange={setIsExportDialogOpen}
+        selectedCount={selectedRouteIds.length}
+        onConfirmExport={executeExport}
+      />
     </div>
   );
 }

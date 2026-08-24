@@ -16,6 +16,9 @@ export interface IUser {
     active: boolean;
     deleted: boolean;
     role_id: string;
+    PIS?: boolean | null;
+    PAS?: boolean | null;
+    ITMS?: boolean | null;
 }
 
 export interface ILoggedUser extends IUser {

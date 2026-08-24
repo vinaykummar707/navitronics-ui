@@ -11,11 +11,24 @@ interface RBACProps {
 }
 
 const RBACPage: React.FC<RBACProps> = ({ roles, features, children }) => {
-  const userRole = useLoggedUserStore(state => state.user?.role.name); // Assuming role has a name property
-  const hasAccess = userRole ? roles.includes(userRole) : false;
+  const user = useLoggedUserStore(state => state.user);
+  const userRole = user?.role?.name;
+  const hasAccess = userRole ? (roles.length === 0 || roles.includes(userRole)) : false;
+
   const hasFeatureAccess = useLoggedUserStore(state => {
-    const userOrganization = state.user?.organization;
-    return features ? features.every(f => userOrganization[f]) : userRole === 'master' ? true : false; // If no features specified, allow access for master role
+    if (!state.user) return false;
+    if (state.user.role?.name === 'master') return true;
+    if (!features || features.length === 0) return true;
+
+    const userObj = state.user as any;
+    const userOrg = state.user.organization as any;
+
+    return features.some((f) => {
+      if (userObj && userObj[f] !== undefined && userObj[f] !== null) {
+        return Boolean(userObj[f]);
+      }
+      return userOrg ? Boolean(userOrg[f]) : false;
+    });
   });
 
 

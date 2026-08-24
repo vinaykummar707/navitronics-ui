@@ -72,7 +72,9 @@ const LoggedUserRoot = React.forwardRef<HTMLDivElement, LoggedUserRootProps>(
               {user?.email || "User Name"}
             </span>
             <span className="text-[11px] capitalize font-caption text-subtext-color">
-             {user?.role.name.split("_").join(" ") || "User Role"}
+              {user?.role?.name === "master"
+                ? "Super Admin"
+                : user?.role?.name?.split("_").join(" ") || "User Role"}
             </span>
           </div>
         </div>

@@ -34,41 +34,78 @@ const TextSettingsPanelRoot = React.forwardRef<
   { className, ...otherProps }: TextSettingsPanelRootProps,
   ref,
 ) {
-    const methods = useFormContext<DisplayConfigPostRequest>();
-  
-    const {watch} = methods;
-    const selectedTab = useTabsStore((state) => state.selectedTab);
-  const selectedSimulationIndex = useSimulationStore((state) => state.selectedSimulationIndex);
-    const simulations = watch(selectedTab);
+  const methods = useFormContext<DisplayConfigPostRequest>();
+
+  const { watch } = methods;
+  const selectedTab = useTabsStore((state) => state.selectedTab);
+  const selectedSimulationIndex = useSimulationStore(
+    (state) => state.selectedSimulationIndex,
+  );
+  const simulations = watch(selectedTab);
+  const [activeSection, setActiveSection] = React.useState<string | null>(null);
+
   const renderControls = () => {
     if (!simulations[selectedSimulationIndex])
       return (
         <div className="flex h-full w-full p-6 items-center justify-center">
-          <p className="text-xs text-center font-heading-3  text-subtext-color">
+          <p className="text-xs text-center font-heading-3 text-subtext-color">
             Select a simulation or add simulation to edit its text settings.
           </p>
         </div>
       );
 
     const { format } = simulations[selectedSimulationIndex];
-    const isSplitRoute = watch('is_split_route')
+    const isSplitRoute = watch("is_split_route");
     return (
       <>
-        {(format === "two" || format === "three") && !isSplitRoute && <RouteNumberControl />}
-        {(format === "three" || format === "two") && isSplitRoute && <>
-        
-        <RouteNumberControl1/>
-        <RouteNumberControl2/>
-        
-        </>}
-        {(format === "single" || format === "two") && <MainTextControl />}
-        {format === "three" && (
+        {(format === "two" || format === "three") && !isSplitRoute && (
+          <RouteNumberControl
+            open={activeSection === "routeNumber"}
+            onOpenChange={(isOpen) =>
+              setActiveSection(isOpen ? "routeNumber" : null)
+            }
+          />
+        )}
+        {(format === "three" || format === "two") && isSplitRoute && (
           <>
-            <UpperHalfTextControl />
-            <LowerHalfTextControl />
+            <RouteNumberControl1
+              open={activeSection === "routeNumber1"}
+              onOpenChange={(isOpen) =>
+                setActiveSection(isOpen ? "routeNumber1" : null)
+              }
+            />
+            <RouteNumberControl2
+              open={activeSection === "routeNumber2"}
+              onOpenChange={(isOpen) =>
+                setActiveSection(isOpen ? "routeNumber2" : null)
+              }
+            />
           </>
         )}
-
+        {(format === "single" || format === "two") && (
+          <MainTextControl
+            open={activeSection === "mainText"}
+            onOpenChange={(isOpen) =>
+              setActiveSection(isOpen ? "mainText" : null)
+            }
+          />
+        )}
+        {format === "three" && (
+          <>
+            <UpperHalfTextControl
+              open={activeSection === "upperHalf"}
+              onOpenChange={(isOpen) =>
+                setActiveSection(isOpen ? "upperHalf" : null)
+              }
+            />
+            <LowerHalfTextControl
+              open={activeSection === "lowerHalf"}
+              onOpenChange={(isOpen) =>
+                setActiveSection(isOpen ? "lowerHalf" : null)
+              }
+            />
+          </>
+        )}
       </>
     );
   };

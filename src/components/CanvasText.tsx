@@ -84,7 +84,7 @@ const LEDMatrix: React.FC<LEDMatrixProps> = ({
       let staticStartX = 0; // Renamed to clearly differentiate from scrolling offset
 
       // Calculate vertical centering offset
-      const startY = Math.floor((rows - patternHeight) / 2) * totalDotSize;
+      const startY = Math.max(0, Math.floor((rows - patternHeight) / 2) * totalDotSize);
 
       // When no marquee, apply alignment for patterns smaller than canvas
       if (marqueeDirection === "none" && patternPixelWidth < canvasWidth) {

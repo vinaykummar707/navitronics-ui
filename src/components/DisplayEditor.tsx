@@ -47,15 +47,13 @@ const LEDWrapper = ({
 };
 
 export default function DisplayEditor({ listIndex, stopScroll }: DisplayEditorProps) {
-  const language = 'en';
   const { selectedTab } = useTabsStore();
   const { watch, setValue } = useFormContext<DisplayConfigPostRequest>();
   const getFontFileByLanguage = useFontFileByLanguage();
   const [isScrollStopped, setIsScrollStopped] = useState(stopScroll);
 
   const basePath = `${selectedTab}[${listIndex}]`;
-  const screenConfig:Simulation = watch(basePath);
-  const routeData = watch("is_split_route");
+  const screenConfig: Simulation = watch(basePath);
 
   if (!screenConfig) return null;
 
@@ -66,11 +64,12 @@ export default function DisplayEditor({ listIndex, stopScroll }: DisplayEditorPr
     setValue,
   };
 
-// ... existing code ...
-
-
-
-// ... rest of code ...
+  const getFontFor = (key: string) => {
+    const textObj = screenConfig.texts?.[key];
+    const textLang = textObj?.language || "en";
+    const textFontHeight = textObj?.fontHeight;
+    return getFontFileByLanguage(textLang, key, textFontHeight);
+  };
 
   // Layout Logic for Multi-screen formats
   const renderMultiLayout = () => {
@@ -105,7 +104,7 @@ export default function DisplayEditor({ listIndex, stopScroll }: DisplayEditorPr
                 cols={leftCols + 1}
                 textConfig={screenConfig.texts?.[key]}
                 isRouteNumber={true}
-                fontFamily={getFontFileByLanguage(language, key, screenConfig.texts?.[key]?.fontHeight)}
+                fontFamily={getFontFor(key)}
                 stopScroll={stopScroll}
               />
             ))}
@@ -118,7 +117,7 @@ export default function DisplayEditor({ listIndex, stopScroll }: DisplayEditorPr
             cols={leftCols + 1}
             textConfig={screenConfig.texts?.sideText}
             isRouteNumber={true}
-            fontFamily={getFontFileByLanguage(language, "sideText", screenConfig.texts?.sideText?.fontHeight)}
+            fontFamily={getFontFor("sideText")}
             stopScroll={stopScroll}
           />
         )}
@@ -130,7 +129,7 @@ export default function DisplayEditor({ listIndex, stopScroll }: DisplayEditorPr
             rows={screenConfig.height || 16}
             cols={ensureMin(availableWidth, 96)}
             textConfig={screenConfig.texts?.text}
-            fontFamily={getFontFileByLanguage(language, "text", screenConfig.texts?.text?.fontHeight)}
+            fontFamily={getFontFor("text")}
             stopScroll={stopScroll}
           />
         ) : (
@@ -143,7 +142,7 @@ export default function DisplayEditor({ listIndex, stopScroll }: DisplayEditorPr
                 rows={(screenConfig.height || 16) / 2}
                 cols={ensureMin(availableWidth, 96)}
                 textConfig={screenConfig.texts?.[key]}
-                fontFamily={getFontFileByLanguage(language, key, screenConfig.texts?.[key]?.fontHeight)}
+                fontFamily={getFontFor(key)}
                 stopScroll={stopScroll}
               />
             ))}
@@ -154,20 +153,20 @@ export default function DisplayEditor({ listIndex, stopScroll }: DisplayEditorPr
   };
 
   return (
-    <div className="flex flex-col  items-start gap-4">
-        {screenConfig.format === "single" ? (
-          <LEDWrapper
-            {...commonProps}
-            fieldKey="text"
-            rows={screenConfig.height || 16}
-            cols={ensureNumber(screenConfig.width, 96)}
-            textConfig={screenConfig.texts?.text}
-          fontFamily={getFontFileByLanguage(language, "text", screenConfig.texts?.text?.fontHeight)}
+    <div className="flex flex-col items-start gap-4">
+      {screenConfig.format === "single" ? (
+        <LEDWrapper
+          {...commonProps}
+          fieldKey="text"
+          rows={screenConfig.height || 16}
+          cols={ensureNumber(screenConfig.width, 96)}
+          textConfig={screenConfig.texts?.text}
+          fontFamily={getFontFor("text")}
           stopScroll={stopScroll}
-          />
-        ) : (
-          renderMultiLayout()
-        )}
-      </div>
+        />
+      ) : (
+        renderMultiLayout()
+      )}
+    </div>
   );
 }

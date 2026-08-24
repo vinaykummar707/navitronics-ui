@@ -26,10 +26,21 @@ const HeightControlRoot = React.forwardRef<
   const { setValue, watch } = useFormContext<DisplayConfigPostRequest>();
   const selectedTab = useTabsStore(state => state.selectedTab);
   const selectedSimulationIndex = useSimulationStore(state => state.selectedSimulationIndex);
-  const selectedSimulation:Simulation = watch(`${selectedTab}[${selectedSimulationIndex}]`);
-
-  const changeHeight = (heightValue) => {
+  const selectedSimulation = watch(`${selectedTab}[${selectedSimulationIndex}]`);
+  const changeHeight = (heightValue: number) => {
     setValue(`${selectedTab}[${selectedSimulationIndex}].height`, heightValue);
+    if (heightValue === 16) {
+      const currentTexts = selectedSimulation?.texts || {};
+      Object.keys(currentTexts).forEach((key) => {
+        const textConfig = currentTexts[key];
+        if (textConfig && (textConfig.fontHeight > 16 || !textConfig.fontHeight)) {
+          setValue(
+            `${selectedTab}[${selectedSimulationIndex}].texts.${key}.fontHeight`,
+            16,
+          );
+        }
+      });
+    }
   };
   
   return (
@@ -42,7 +53,7 @@ const HeightControlRoot = React.forwardRef<
             <SelectionCardWithText
               key={option.title}
               onClick={() => changeHeight(option.height)}
-              selected={selectedSimulation.height === option.height}
+              selected={selectedSimulation?.height === option.height}
               title={option.title}
             />
           ))}

@@ -119,9 +119,9 @@ const LEDBitmapSimulator = ({
         const url = addPaddingPropertiesInUrl();
         const response = await axios.get(url);
         const lines = response.data.trim().split("\n");
-        
+
         // if (lines.length <= 16) {
-          setBitmapText(response.data);
+        setBitmapText(response.data);
         // }
       } catch (error) {
         setBitmapText("");

@@ -1,6 +1,4 @@
-import React from 'react';
-import useAuthStore from '../store/authStore';
-import { FeatherShieldQuestion } from '@subframe/core';
+import useLoggedUserStore from '@/store/useLoggedUserStore';
 
 interface RBACProps {
   features: string[];
@@ -8,12 +6,25 @@ interface RBACProps {
 }
 
 const FeatureRBAC: React.FC<RBACProps> = ({ features, children }) => {
-  const userOrganization = useAuthStore(state => state.user.organization);
-  const hasAccess = userOrganization ? features.every(f => userOrganization[f]) : false;
+  const user = useLoggedUserStore(state => state.user);
 
-  
+  const hasAccess = (() => {
+    if (!user) return false;
+    if (user.role?.name === 'master') return true;
+    if (!features || features.length === 0) return true;
 
-return hasAccess ? <>{children}</> : null;
+    const userObj = user as any;
+    const userOrg = user.organization as any;
+
+    return features.some((f) => {
+      if (userObj && userObj[f] !== undefined && userObj[f] !== null) {
+        return Boolean(userObj[f]);
+      }
+      return userOrg ? Boolean(userOrg[f]) : false;
+    });
+  })();
+
+  return hasAccess ? <>{children}</> : null;
 };
 
 export default FeatureRBAC;
