@@ -73,28 +73,28 @@ const SimulationPlayerCardRoot = React.forwardRef<
   const simulations = watch(selectedTab);
   const audioFileUrl = watch(`${selectedTab}[${selectedSimulationIndex}].audioFileUrl`);
 
-const handleRemoveSimulation = async (index: number) => {
-  const updatedSimulations = [...simulations];
-  updatedSimulations.splice(index, 1);
-  setValue(selectedTab, updatedSimulations);
-  // If the removed simulation is the currently selected one, reset the selection
-  if (index === selectedSimulationIndex) {
-    setSelectedSimulationIndex(-1);
-  }
-  console.log(audioFileUrl);
-  if (audioFileUrl) {
-    // Extract the file path relative to the 'stops' bucket
-    const pathMatch = audioFileUrl.match(/\/stops\/(.+)$/);
-    const filePath = pathMatch ? pathMatch[1] : null;
-    console.log("Deleting file from Supabase Storage at path:", filePath);
-    if (filePath) {
-      const { error } = await supabase.storage.from("stops").remove([filePath]);
-      if (error) {
-        console.error("Error deleting file from Supabase Storage:", error);
+  const handleRemoveSimulation = async (index: number) => {
+    const updatedSimulations = [...simulations];
+    updatedSimulations.splice(index, 1);
+    setValue(selectedTab, updatedSimulations);
+    // If the removed simulation is the currently selected one, reset the selection
+    if (index === selectedSimulationIndex) {
+      setSelectedSimulationIndex(-1);
+    }
+    console.log(audioFileUrl);
+    if (audioFileUrl) {
+      // Extract the file path relative to the 'stops' bucket
+      const pathMatch = audioFileUrl.match(/\/stops\/(.+)$/);
+      const filePath = pathMatch ? pathMatch[1] : null;
+      console.log("Deleting file from Supabase Storage at path:", filePath);
+      if (filePath) {
+        const { error } = await supabase.storage.from("stops").remove([filePath]);
+        if (error) {
+          console.error("Error deleting file from Supabase Storage:", error);
+        }
       }
     }
-  }
-};
+  };
 
   // duplicate simulation
   const handleDuplicateSimulation = (index: number) => {
@@ -157,7 +157,7 @@ const handleRemoveSimulation = async (index: number) => {
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "group/ef3c3c00 flex  flex-col items-start gap-4",
+        "flex w-full flex-col items-start gap-4",
         className,
       )}
       ref={ref}
@@ -165,7 +165,7 @@ const handleRemoveSimulation = async (index: number) => {
     >
       <div
         className={SubframeUtils.twClassNames(
-          "flex w-full flex-col items-start rounded-md border border-solid border-neutral-border bg-default-background hover:bg-neutral-50",
+          "flex  flex-col items-start rounded-md border border-solid border-neutral-border bg-default-background hover:bg-neutral-50",
           { "border border-solid border-brand-800": isSelected },
         )}
       >

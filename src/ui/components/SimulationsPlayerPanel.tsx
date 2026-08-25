@@ -18,10 +18,17 @@ import { FeatherTrash } from "@subframe/core";
 import * as SubframeCore from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { Button } from "./Button";
+import { IconButton } from "./IconButton";
 import { DropdownMenu } from "./DropdownMenu";
 import { SimulationPlayerCard } from "./SimulationPlayerCard";
 import { StopDetailsCard } from "./StopDetailsCard";
 import { TabsPanel } from "./TabsPanel";
+import {
+  FeatherMinus,
+
+  FeatherMaximize2,
+  FeatherRotateCcw,
+} from "@subframe/core";
 import {
   useFieldArray,
   useForm,
@@ -93,6 +100,31 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
   const [selectedStopTypes, setSelectedStopTypes] = React.useState<string[]>(
     [],
   );
+
+  const [zoom, setZoom] = React.useState<number>(80);
+  const canvasRef = React.useRef<HTMLDivElement>(null);
+
+  const handleZoomIn = () => setZoom((prev) => Math.min(175, prev + 10));
+  const handleZoomOut = () => setZoom((prev) => Math.max(40, prev - 10));
+  const handleResetZoom = () => setZoom(100);
+
+  const handleFitToWidth = () => {
+    if (!canvasRef.current) return;
+    const containerWidth = canvasRef.current.clientWidth - 48;
+    const targetScale = Math.min(100, Math.max(40, Math.floor((containerWidth / 860) * 100)));
+    setZoom(targetScale);
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        handleZoomIn();
+      } else {
+        handleZoomOut();
+      }
+    }
+  };
 
   const { fields, append } = useFieldArray({
     control: methods.control,
@@ -264,232 +296,339 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
       {...otherProps}
     >
       <TabsPanel />
-      <div className="flex  overflow-scroll no-scrollbar h-full w-full  flex-col items-start gap-4 bg-neutral-200 px-4 py-4">
-        <div className="flex flex-wrap gap-1">
-          {selectedTab === "stops" && (
-            <>
-              <Select
-                value={selectedLanguage}
-                onValueChange={(value) => setSelectedLanguage(value)}
-              >
-                {AVAILABLE_LANGUAGES.map((lang) => (
-                  <Select.Item key={lang.code} value={lang.code}>
-                    {lang.label}
-                  </Select.Item>
-                ))}
-              </Select>
-              <Select
-                value={selectedUpDown}
-                onValueChange={(value: "up" | "down") =>
-                  setSelectedUpDown(value)
-                }
-              >
-                <Select.Item value="up">Up Route Lat Lngs</Select.Item>
-                <Select.Item value="down">Down Route Lat Lngs</Select.Item>
-              </Select>
-              <div className="flex flex-col items-start gap-2 rounded-md border border-solid border-neutral-border bg-neutral-50 px-4 py-2">
-                <CheckboxGroup
-                  className=""
-                  label=""
-                  helpText=""
-                  error={false}
-                  horizontal={true}
-                >
-                  <Checkbox
-                    label="current"
-                    checked={selectedStopTypes.includes("current")}
-                    onCheckedChange={(checked: boolean) => {
-                      if (checked) {
-                        setSelectedStopTypes([...selectedStopTypes, "current"]);
-                      } else {
-                        setSelectedStopTypes(
-                          selectedStopTypes.filter(
-                            (type) => type !== "current",
-                          ),
-                        );
-                      }
-                    }}
-                  />
-                  <Checkbox
-                    label="next"
-                    checked={selectedStopTypes.includes("next")}
-                    onCheckedChange={(checked: boolean) => {
-                      if (checked) {
-                        setSelectedStopTypes([...selectedStopTypes, "next"]);
-                      } else {
-                        setSelectedStopTypes(
-                          selectedStopTypes.filter((type) => type !== "next"),
-                        );
-                      }
-                    }}
-                  />
-                  <Checkbox
-                    label="Arriving"
-                    checked={selectedStopTypes.includes("coming")}
-                    onCheckedChange={(checked: boolean) => {
-                      if (checked) {
-                        setSelectedStopTypes([...selectedStopTypes, "coming"]);
-                      } else {
-                        setSelectedStopTypes(
-                          selectedStopTypes.filter((type) => type !== "coming"),
-                        );
-                      }
-                    }}
-                  />
-                </CheckboxGroup>
-              </div>
-
-              {stops && stops.length > 0 && (
+      <div className="flex h-full w-full flex-col items-start gap-3 bg-neutral-100/70 p-3 flex-1 min-h-0 overflow-hidden">
+        {/* Action & Zoom Controls Header */}
+        <div className="flex w-full flex-wrap items-center justify-between gap-2 flex-none bg-default-background p-2.5 rounded-xl border border-solid border-neutral-border shadow-2xs">
+          <div className="flex flex-wrap items-center gap-2">
+            {selectedTab === "stops" && (
+              <>
                 <Select
-                  className="truncate text-xs"
-                  placeholder="Select Stop"
-                  onValueChange={(value) => {
-                    const stop = stops.find((s) => s.id === value);
-                    setSelectedStop(stop || null);
-                  }}
-                  value={selectedStop?.id || ""}
+                  value={selectedLanguage}
+                  onValueChange={(value) => setSelectedLanguage(value)}
                 >
-                  {stops?.map((stop) => (
-                    <Select.Item key={stop.id} value={stop.id}>
-                      {stop.name}
+                  {AVAILABLE_LANGUAGES.map((lang) => (
+                    <Select.Item key={lang.code} value={lang.code}>
+                      {lang.label}
                     </Select.Item>
                   ))}
                 </Select>
-              )}
-              <Button
-                disabled={false}
-                size="medium"
-                iconRight={<SubframeCore.FeatherSparkle />}
-                loading={false}
-                onClick={generateStopSimulations}
-              >
-                Generate Stop Simulations
-              </Button>
-            </>
-          )}
-
-          {selectedTab !== "stops" && (
-            <SubframeCore.DropdownMenu.Root>
-              <SubframeCore.DropdownMenu.Trigger asChild={true}>
-                <div className="flex items-start justify-end gap-1">
-                  <Button
-                    disabled={false}
-                    variant=""
-                    size="medium"
-                    iconRight={<FeatherChevronDown />}
-                    loading={false}
-                  >
-                    Add Simulation
-                  </Button>
-                </div>
-              </SubframeCore.DropdownMenu.Trigger>
-              <SubframeCore.DropdownMenu.Portal>
-                <SubframeCore.DropdownMenu.Content
-                  side="bottom"
-                  align="end"
-                  sideOffset={4}
-                  asChild={true}
+                <Select
+                  value={selectedUpDown}
+                  onValueChange={(value: "up" | "down") =>
+                    setSelectedUpDown(value)
+                  }
                 >
-                  <DropdownMenu>
-                    <DropdownMenu.DropdownItem
-                      icon={<SubframeCore.FeatherRectangleHorizontal />}
-                      onClick={() => handleAddSimulation("single")}
-                    >
-                      Single Text Route Simulation
-                    </DropdownMenu.DropdownItem>
-                    <DropdownMenu.DropdownItem
-                      icon={<SubframeCore.FeatherColumns2 />}
-                      onClick={() => handleAddSimulation("two")}
-                    >
-                      Two Text Route Simulation
-                    </DropdownMenu.DropdownItem>
-                    <DropdownMenu.DropdownItem
-                      icon={<SubframeCore.FeatherRows3 />}
-                      onClick={() => handleAddSimulation("three")}
-                    >
-                      Three Text Route Simulation
-                    </DropdownMenu.DropdownItem>
-                    <DropdownMenu.DropdownItem
-                      onClick={() =>
-                        handleAddSimulation(
-                          "single",
-                          "slogan",
-                          "THIS IS A SLOGAN SIMULATION",
-                        )
-                      }
-                      icon={<SubframeCore.FeatherSpeech />}
-                    >
-                      Slogan Simulation
-                    </DropdownMenu.DropdownItem>
+                  <Select.Item value="up">Up Route Lat Lngs</Select.Item>
+                  <Select.Item value="down">Down Route Lat Lngs</Select.Item>
+                </Select>
+                <div className="flex flex-col items-start gap-2 rounded-md border border-solid border-neutral-border bg-neutral-50 px-3 py-1.5">
+                  <CheckboxGroup
+                    className=""
+                    label=""
+                    helpText=""
+                    error={false}
+                    horizontal={true}
+                  >
+                    <Checkbox
+                      label="current"
+                      checked={selectedStopTypes.includes("current")}
+                      onCheckedChange={(checked: boolean) => {
+                        if (checked) {
+                          setSelectedStopTypes([...selectedStopTypes, "current"]);
+                        } else {
+                          setSelectedStopTypes(
+                            selectedStopTypes.filter(
+                              (type) => type !== "current",
+                            ),
+                          );
+                        }
+                      }}
+                    />
+                    <Checkbox
+                      label="next"
+                      checked={selectedStopTypes.includes("next")}
+                      onCheckedChange={(checked: boolean) => {
+                        if (checked) {
+                          setSelectedStopTypes([...selectedStopTypes, "next"]);
+                        } else {
+                          setSelectedStopTypes(
+                            selectedStopTypes.filter((type) => type !== "next"),
+                          );
+                        }
+                      }}
+                    />
+                    <Checkbox
+                      label="Arriving"
+                      checked={selectedStopTypes.includes("coming")}
+                      onCheckedChange={(checked: boolean) => {
+                        if (checked) {
+                          setSelectedStopTypes([...selectedStopTypes, "coming"]);
+                        } else {
+                          setSelectedStopTypes(
+                            selectedStopTypes.filter((type) => type !== "coming"),
+                          );
+                        }
+                      }}
+                    />
+                  </CheckboxGroup>
+                </div>
 
-                    <DropdownMenu.DropdownItem
-                      onClick={() =>
-                        handleAddSimulation(
-                          "single",
-                          "special message",
-                          "THIS IS A SPECIAL MESSAGE SIMULATION",
-                        )
-                      }
-                      icon={<SubframeCore.FeatherMic />}
+                {stops && stops.length > 0 && (
+                  <Select
+                    className="truncate text-xs"
+                    placeholder="Select Stop"
+                    onValueChange={(value) => {
+                      const stop = stops.find((s) => s.id === value);
+                      setSelectedStop(stop || null);
+                    }}
+                    value={selectedStop?.id || ""}
+                  >
+                    {stops?.map((stop) => (
+                      <Select.Item key={stop.id} value={stop.id}>
+                        {stop.name}
+                      </Select.Item>
+                    ))}
+                  </Select>
+                )}
+                <Button
+                  disabled={false}
+                  size="medium"
+                  iconRight={<SubframeCore.FeatherSparkle />}
+                  loading={false}
+                  onClick={generateStopSimulations}
+                >
+                  Generate Stop Simulations
+                </Button>
+              </>
+            )}
+
+            {selectedTab !== "stops" && (
+              <SubframeCore.DropdownMenu.Root>
+                <SubframeCore.DropdownMenu.Trigger asChild={true}>
+                  <div className="flex items-start justify-end gap-1">
+                    <Button
+                      disabled={false}
+                      variant="brand-primary"
+                      size="medium"
+                      iconRight={<FeatherChevronDown />}
+                      loading={false}
                     >
-                      Special Message Simulation
-                    </DropdownMenu.DropdownItem>
-                  </DropdownMenu>
-                </SubframeCore.DropdownMenu.Content>
-              </SubframeCore.DropdownMenu.Portal>
-            </SubframeCore.DropdownMenu.Root>
-          )}
-          <Button
-            disabled={false}
-            variant="destructive-primary"
-            size="medium"
-            icon={<FeatherTrash />}
-            loading={false}
-            onClick={async () => {
-              if (confirm("Are you sure you want to delete all simulations?")) {
+                      Add Simulation
+                    </Button>
+                  </div>
+                </SubframeCore.DropdownMenu.Trigger>
+                <SubframeCore.DropdownMenu.Portal>
+                  <SubframeCore.DropdownMenu.Content
+                    side="bottom"
+                    align="start"
+                    sideOffset={4}
+                    asChild={true}
+                  >
+                    <DropdownMenu>
+                      <DropdownMenu.DropdownItem
+                        icon={<SubframeCore.FeatherRectangleHorizontal />}
+                        onClick={() => handleAddSimulation("single")}
+                      >
+                        Single Text Route Simulation
+                      </DropdownMenu.DropdownItem>
+                      <DropdownMenu.DropdownItem
+                        icon={<SubframeCore.FeatherColumns2 />}
+                        onClick={() => handleAddSimulation("two")}
+                      >
+                        Two Text Route Simulation
+                      </DropdownMenu.DropdownItem>
+                      <DropdownMenu.DropdownItem
+                        icon={<SubframeCore.FeatherRows3 />}
+                        onClick={() => handleAddSimulation("three")}
+                      >
+                        Three Text Route Simulation
+                      </DropdownMenu.DropdownItem>
+                      <DropdownMenu.DropdownItem
+                        onClick={() =>
+                          handleAddSimulation(
+                            "single",
+                            "slogan",
+                            "THIS IS A SLOGAN SIMULATION",
+                          )
+                        }
+                        icon={<SubframeCore.FeatherSpeech />}
+                      >
+                        Slogan Simulation
+                      </DropdownMenu.DropdownItem>
 
-                if(selectedTab === "stops"){
+                      <DropdownMenu.DropdownItem
+                        onClick={() =>
+                          handleAddSimulation(
+                            "single",
+                            "special message",
+                            "THIS IS A SPECIAL MESSAGE SIMULATION",
+                          )
+                        }
+                        icon={<SubframeCore.FeatherMic />}
+                      >
+                        Special Message Simulation
+                      </DropdownMenu.DropdownItem>
+                    </DropdownMenu>
+                  </SubframeCore.DropdownMenu.Content>
+                </SubframeCore.DropdownMenu.Portal>
+              </SubframeCore.DropdownMenu.Root>
+            )}
 
-                simulations.forEach(async (simulation, index) => {
-                  console.log("Deleting simulation at index:", simulation);
-                  if (simulation.audioFileUrl) {
-                    const audioFileUrl = simulation.audioFileUrl;
-                    console.log("Audio file URL to delete:", audioFileUrl);
-                    // Extract the file path relative to the 'stops' bucket
-                    const pathMatch = audioFileUrl.match(/\/stops\/(.+)$/);
-                    const filePath = pathMatch ? pathMatch[1] : null;
-                    console.log("Deleting file from Supabase Storage at path:", filePath);
-                    if (filePath) {
-                      const { error } = await supabase.storage.from("stops").remove([filePath]);
-                      // remove index from simulations.
-                      console.log("Deleting simulation at index:", index);
-                      simulations.splice(index, 1);
-                       setValue(selectedTab, simulations);
-                      if (error) {
-                        console.error("Error deleting file from Supabase Storage:", error);
+            <Button
+              disabled={false}
+              variant="destructive-secondary"
+              size="medium"
+              icon={<FeatherTrash />}
+              loading={false}
+              onClick={async () => {
+                if (confirm("Are you sure you want to delete all simulations?")) {
+                  if (selectedTab === "stops") {
+                    simulations.forEach(async (simulation, index) => {
+                      console.log("Deleting simulation at index:", simulation);
+                      if (simulation.audioFileUrl) {
+                        const audioFileUrl = simulation.audioFileUrl;
+                        console.log("Audio file URL to delete:", audioFileUrl);
+                        const pathMatch = audioFileUrl.match(/\/stops\/(.+)$/);
+                        const filePath = pathMatch ? pathMatch[1] : null;
+                        if (filePath) {
+                          const { error } = await supabase.storage
+                            .from("stops")
+                            .remove([filePath]);
+                          simulations.splice(index, 1);
+                          setValue(selectedTab, simulations);
+                          if (error) {
+                            console.error(
+                              "Error deleting file from Supabase Storage:",
+                              error,
+                            );
+                          }
+                        }
                       }
-                    }
-                  } 
-                });
-              } else {
-                setValue(selectedTab, []);
-                setSelectedSimulationIndex(-1);
-              }
-             
-              }
-            }}
-          >
-            Delete All
-          </Button>
-        </div>
-        <div className="flex  w-full flex-col items-start gap-2">
-          {simulations.map((simulation, index) => (
-            <SimulationPlayerCard
-              key={index}
-              isSelected={index === selectedSimulationIndex}
-              listIndex={index}
+                    });
+                  } else {
+                    setValue(selectedTab, []);
+                    setSelectedSimulationIndex(-1);
+                  }
+                }
+              }}
+            >
+              Delete All
+            </Button>
+          </div>
+
+          {/* Canvas Zoom Toolbar */}
+          <div className="flex items-center gap-1 rounded-lg border border-neutral-border bg-neutral-50 p-1 shadow-2xs">
+            <IconButton
+              variant="neutral-secondary"
+              size="small"
+              icon={<FeatherMinus />}
+              title="Zoom Out (Ctrl + Scroll Down)"
+              onClick={handleZoomOut}
+              disabled={zoom <= 40}
             />
-          ))}
+            <button
+              type="button"
+              onClick={handleResetZoom}
+              title="Click to reset zoom to 100%"
+              className="px-2 py-0.5 text-xs font-mono font-bold text-default-font hover:text-brand-primary min-w-[48px] text-center cursor-pointer"
+            >
+              {zoom}%
+            </button>
+            <IconButton
+              variant="neutral-secondary"
+              size="small"
+              icon={<FeatherPlus />}
+              title="Zoom In (Ctrl + Scroll Up)"
+              onClick={handleZoomIn}
+              disabled={zoom >= 175}
+            />
+            <div className="h-4 w-[1px] bg-neutral-300 mx-0.5" />
+            <Button
+              variant="neutral-secondary"
+              size="small"
+              icon={<FeatherMaximize2 className="h-3.5 w-3.5" />}
+              onClick={handleFitToWidth}
+              title="Fit simulations to canvas width"
+            >
+              Fit Screen
+            </Button>
+          </div>
+        </div>
+
+        {/* Zoomable Canvas Container */}
+        <div
+          ref={canvasRef}
+          onWheel={handleWheel}
+          className="relative flex-1 min-h-0 w-full overflow-auto p-4 scrollbar-thin bg-neutral-100/60 rounded-xl border border-solid border-neutral-border shadow-inner"
+          style={{
+            backgroundImage: "radial-gradient(#d4d4d8 1.2px, transparent 1.2px)",
+            backgroundSize: "20px 20px",
+          }}
+        >
+          {/* Scaled Canvas Content */}
+          <div
+            style={{
+              transform: `scale(${zoom / 100})`,
+              transformOrigin: "top center",
+              transition: "transform 0.15s ease-out",
+              width: zoom < 100 ? `${100 * (100 / zoom)}%` : "100%",
+            }}
+            className="flex w-full flex-col items-start gap-4 transition-all pb-16"
+          >
+            {simulations.map((simulation, index) => (
+              <div key={index} className="  shadow-sm rounded-xl overflow-hidden">
+                <SimulationPlayerCard
+                  isSelected={index === selectedSimulationIndex}
+                  listIndex={index}
+                />
+              </div>
+            ))}
+
+            {simulations.length === 0 && (
+              <div className="py-24 text-center text-subtext-color flex flex-col items-center justify-center">
+                <p className="text-base font-semibold text-neutral-700">No Simulations Added</p>
+                <p className="text-xs mt-1 text-subtext-color">
+                  Click "Add Simulation" above to create an LED screen simulation.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Floating Canvas Zoom Controls Widget */}
+          <div className="sticky bottom-2 ml-auto w-fit z-20 flex items-center gap-1 rounded-full border border-neutral-border bg-default-background/95 p-1 shadow-lg backdrop-blur-sm">
+            <IconButton
+              variant="neutral-secondary"
+              size="small"
+              icon={<FeatherMinus />}
+              title="Zoom Out"
+              onClick={handleZoomOut}
+              disabled={zoom <= 40}
+            />
+            <button
+              type="button"
+              onClick={handleResetZoom}
+              className="px-2 py-0.5 text-xs font-mono font-bold text-default-font hover:text-brand-primary cursor-pointer"
+              title="Reset to 100%"
+            >
+              {zoom}%
+            </button>
+            <IconButton
+              variant="neutral-secondary"
+              size="small"
+              icon={<FeatherPlus />}
+              title="Zoom In"
+              onClick={handleZoomIn}
+              disabled={zoom >= 175}
+            />
+            <Button
+              variant="neutral-secondary"
+              size="small"
+              onClick={handleFitToWidth}
+              className="rounded-full text-xs h-7 px-2.5"
+            >
+              Fit
+            </Button>
+          </div>
         </div>
       </div>
     </div>

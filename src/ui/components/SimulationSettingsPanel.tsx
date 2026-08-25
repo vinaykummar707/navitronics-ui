@@ -13,7 +13,7 @@
  */
 
 import React, { useEffect } from "react";
-import { FeatherCopy, FeatherMapPin, FeatherMusic } from "@subframe/core";
+import { FeatherCopy, FeatherMapPin, FeatherMusic, FeatherRoute } from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { ControlAccordion } from "./ControlAccordion";
 import { FormatSelectionControl } from "./FormatSelectionControl";
@@ -23,6 +23,7 @@ import { PanelHeader } from "./PanelHeader";
 import { SelectionCardWithText } from "./SelectionCardWithText";
 import { SimulationTypeControl } from "./SimulationTypeControl";
 import { WidthControl } from "./WidthControl";
+import { RouteConfigurationForm } from "./RouteConfigurationForm";
 import useSimulationStore from "@/store/useSimulationStore";
 import { useFormContext, useWatch } from "react-hook-form";
 import { DisplayConfigPostRequest } from "@/types/routeConfigV2";
@@ -242,21 +243,38 @@ const SimulationSettingsPanelRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex h-full w-64 flex-col items-start overflow-y-auto no-scrollbar",
+        "flex h-full w-72 flex-col items-start overflow-y-auto no-scrollbar",
         className,
       )}
       ref={ref}
       {...otherProps}
     >
       <PanelHeader title="Simulation Settings" />
+
+      {/* Route Information Accordion */}
+      <div className="w-full  border-solid border-neutral-border">
+        <ControlAccordion
+          title="Route Information"
+          controls={
+            <RouteConfigurationForm className="h-auto w-full flex-none" />
+          }
+          icon={
+            <IconWithBackground
+              variant="error"
+              size="small"
+              icon={<FeatherRoute />}
+              square={false}
+            />
+          }
+        />
+      </div>
+
       {simulations[selectedSimulationIndex] && (
         <>
           <SimulationTypeControl />
           <FormatSelectionControl />
           <HeightControl />
           <WidthControl />
-
-
         </>
       )}
 

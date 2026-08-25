@@ -31,8 +31,7 @@ const RouteCreationLayoutRoot = React.forwardRef<
   { className, mode, ...otherProps }: RouteCreationLayoutRootProps,
   ref
 ) {
-
-  const {isSimulationSettingsPanelOpen,isTextSettingsPanelOpen,isRouteSettingsPanelOpen} = useToggleStore();
+  const { isSimulationSettingsPanelOpen, isTextSettingsPanelOpen } = useToggleStore();
   return (
     <div
       className={SubframeUtils.twClassNames(
@@ -44,10 +43,13 @@ const RouteCreationLayoutRoot = React.forwardRef<
     >
       <RouteCreationHeader mode={mode} />
       <div className="flex w-full grow shrink-0 basis-0 items-start overflow-hidden">
-        {isRouteSettingsPanelOpen && <RouteSettingsPanel className="h-auto w-72 flex-none self-stretch" />}
-        <SimulationsPlayerPanel />
-        {isSimulationSettingsPanelOpen && <SimulationSettingsPanel  className="h-auto w-72 flex-none self-stretch" />}
-        {isTextSettingsPanelOpen && <TextSettingsPanel   className="h-auto w-72 flex-none self-stretch"/>}
+        <SimulationsPlayerPanel className="flex-1 min-w-0 h-full self-stretch" />
+        {isSimulationSettingsPanelOpen && (
+          <SimulationSettingsPanel className="h-auto w-72 flex-none self-stretch" />
+        )}
+        {isTextSettingsPanelOpen && (
+          <TextSettingsPanel className="h-auto w-72 flex-none self-stretch" />
+        )}
       </div>
     </div>
   );

@@ -112,7 +112,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex h-16 w-full items-center justify-between border-b border-solid border-neutral-border px-3 py-2",
+        "flex h-12 w-full items-center justify-between border-b border-solid border-neutral-border px-3 py-2",
         className,
       )}
       ref={ref}
@@ -133,30 +133,22 @@ const RouteCreationHeaderRoot = React.forwardRef<
         </span>
       </div>
       <div className="flex items-center justify-end gap-2 flex-wrap">
-          <Button
-            variant={isRouteSettingsPanelOpen ? "brand-primary" : "neutral-primary"}
-            icon={isRouteSettingsPanelOpen ? <FeatherEye /> : <FeatherEyeOff />}
-            onClick={toggleRouteSettingsPanel}
-            title={isRouteSettingsPanelOpen ? "Hide Route Panel" : "Show Route Panel"}
-          >
-            Route
-          </Button>
-          <Button
-            variant={isSimulationSettingsPanelOpen ? "brand-primary" : "neutral-primary"}
-            icon={isSimulationSettingsPanelOpen ? <FeatherEye /> : <FeatherEyeOff />}
-            onClick={toggleSimulationSettingsPanel}
-            title={isSimulationSettingsPanelOpen ? "Hide Simulation Panel" : "Show Simulation Panel"}
-          >
-            Simulation
-          </Button>
-          <Button
-            variant={isTextSettingsPanelOpen ? "brand-primary" : "neutral-primary"}
-            icon={isTextSettingsPanelOpen ? <FeatherEye /> : <FeatherEyeOff />}
-            onClick={toggleTextSettingsPanel}
-            title={isTextSettingsPanelOpen ? "Hide Text Settings Panel" : "Show Text Settings Panel"}
-          >
-            Text Settings
-          </Button>
+        <Button
+          variant={isSimulationSettingsPanelOpen ? "brand-primary" : "neutral-primary"}
+          icon={isSimulationSettingsPanelOpen ? <FeatherEye /> : <FeatherEyeOff />}
+          onClick={toggleSimulationSettingsPanel}
+          title={isSimulationSettingsPanelOpen ? "Hide Simulation Settings" : "Show Simulation Settings"}
+        >
+          Simulation Settings
+        </Button>
+        <Button
+          variant={isTextSettingsPanelOpen ? "brand-primary" : "neutral-primary"}
+          icon={isTextSettingsPanelOpen ? <FeatherEye /> : <FeatherEyeOff />}
+          onClick={toggleTextSettingsPanel}
+          title={isTextSettingsPanelOpen ? "Hide Text Settings" : "Show Text Settings"}
+        >
+          Text Settings
+        </Button>
         <RBAC roles={["master"]} features={[]}>
           <JsonViewerDialog
             dialogTitle="Route Configuration"
