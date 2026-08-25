@@ -519,7 +519,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
           {/* Canvas Zoom Toolbar */}
           <div className="flex items-center gap-1 rounded-lg border border-neutral-border bg-neutral-50 p-1 shadow-2xs">
             <IconButton
-              variant="neutral-secondary"
+              variant="neutral-primary"
               size="small"
               icon={<FeatherMinus />}
               title="Zoom Out (Ctrl + Scroll Down)"
@@ -535,7 +535,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
               {zoom}%
             </button>
             <IconButton
-              variant="neutral-secondary"
+              variant="neutral-primary"
               size="small"
               icon={<FeatherPlus />}
               title="Zoom In (Ctrl + Scroll Up)"
@@ -544,7 +544,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
             />
             <div className="h-4 w-[1px] bg-neutral-300 mx-0.5" />
             <Button
-              variant="neutral-secondary"
+              variant="neutral-primary"
               size="small"
               icon={<FeatherMaximize2 className="h-3.5 w-3.5" />}
               onClick={handleFitToWidth}
@@ -597,7 +597,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
           {/* Floating Canvas Zoom Controls Widget */}
           <div className="sticky bottom-2 ml-auto w-fit z-20 flex items-center gap-1 rounded-full border border-neutral-border bg-default-background/95 p-1 shadow-lg backdrop-blur-sm">
             <IconButton
-              variant="neutral-secondary"
+              variant="neutral-primary"
               size="small"
               icon={<FeatherMinus />}
               title="Zoom Out"
@@ -613,7 +613,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
               {zoom}%
             </button>
             <IconButton
-              variant="neutral-secondary"
+              variant="neutral-primary"
               size="small"
               icon={<FeatherPlus />}
               title="Zoom In"
@@ -621,7 +621,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
               disabled={zoom >= 175}
             />
             <Button
-              variant="neutral-secondary"
+              variant="neutral-primary"
               size="small"
               onClick={handleFitToWidth}
               className="rounded-full text-xs h-7 px-2.5"
