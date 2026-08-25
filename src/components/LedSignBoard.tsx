@@ -7,6 +7,9 @@ import LedCanvas from "./FullScreenBoard";
 import LEDMatrix from "./CanvasText";
 import axios from "axios";
 
+import { buildBitmapApiUrl } from "@/services/bitmapService";
+import { BitmapApiParams } from "@/types/bitmapApi";
+
 const LEDBitmapSimulator = ({
   text,
   rows,
@@ -93,21 +96,29 @@ const LEDBitmapSimulator = ({
     return matrix;
   };
 
-  const addPaddingPropertiesInUrl = () => {
-    if (!isRouteNumber) {
-      return `http://13.233.103.63:5288/api/bitmap?text=${
-        text.text ? text.text : " "
-      }&height=${text.fontHeight}&weight=${
-        text.fontWeight === "Bold" ? "Bold" : "Regular"
-      }&family=${fontFamily}`;
+  const getApiUrl = () => {
+    const params: BitmapApiParams = {
+      text: text?.text !== undefined && text?.text !== null ? text.text : " ",
+      icon: text?.icon || undefined,
+      iconPosition: text?.iconPosition || (text?.icon ? "start" : undefined),
+      iconWordIndex: text?.iconWordIndex || undefined,
+      iconSpacing: text?.iconSpacing !== undefined ? text.iconSpacing : undefined,
+      iconWidthScale: text?.iconWidthScale !== undefined ? text.iconWidthScale : undefined,
+      height: text?.fontHeight || rows,
+      weight: text?.fontWeight === "Bold" ? "Bold" : "Regular",
+      family: fontFamily,
+      vAlign: text?.vAlign || undefined,
+      threshold: text?.threshold || undefined,
+      spaceWidth: text?.spaceWidth || undefined,
+    };
+
+    if (isRouteNumber) {
+      params.padding = true;
+      params.pleft = text?.position === "Left" ? 1 : 2;
+      params.pright = text?.position === "Right" ? 1 : 2;
     }
-    return `http://13.233.103.63:5288/api/bitmap?text=${
-      text.text ? text.text : " "
-    }&height=${text.fontHeight}&weight=${
-      text.fontWeight === "Bold" ? "Bold" : "Regular"
-    }&family=${fontFamily}&padding=true&pleft=${
-      text.position === "Left" ? 1 : 2
-    }&pright=${text.position === "Right" ? 1 : 2}`;
+
+    return buildBitmapApiUrl(params);
   };
 
   useEffect(() => {
@@ -115,14 +126,9 @@ const LEDBitmapSimulator = ({
 
     const fetchBitmap = async () => {
       try {
-        // Use the function to get the URL with padding properties if needed
-        const url = addPaddingPropertiesInUrl();
+        const url = getApiUrl();
         const response = await axios.get(url);
-        const lines = response.data.trim().split("\n");
-
-        // if (lines.length <= 16) {
         setBitmapText(response.data);
-        // }
       } catch (error) {
         setBitmapText("");
       }
@@ -155,6 +161,11 @@ const LEDBitmapSimulator = ({
   }, [
     text,
     text.text,
+    text.icon,
+    text.iconPosition,
+    text.iconSpacing,
+    text.iconWidthScale,
+    text.iconWordIndex,
     text.scrollType,
     text.position,
     text.scrollSpeed,
@@ -165,6 +176,7 @@ const LEDBitmapSimulator = ({
     text.x_offset,
     text.y_offset,
     text.spacing,
+    fontFamily,
     stopScroll,
   ]);
 

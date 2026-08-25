@@ -73,6 +73,19 @@ export interface TextConfig {
   fontWeight: FontWeight;
   fontHeight?: number;
   language: string;
+  icon?: string;
+  iconPosition?: "start" | "end" | "center";
+  iconWordIndex?: number;
+  iconSpacing?: number;
+  iconWidthScale?: number;
+  vAlign?: "Center" | "Top" | "Bottom";
+  padding?: boolean;
+  pleft?: number;
+  pright?: number;
+  threshold?: number;
+  autoFit?: boolean;
+  fontSize?: number;
+  spaceWidth?: number;
 }
 
 // Text keys defining different text fields on simulation layouts.

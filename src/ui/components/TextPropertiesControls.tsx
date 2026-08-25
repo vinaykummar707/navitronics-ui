@@ -9,7 +9,7 @@
  * TextPropertiesControls — https://app.subframe.com/11b10bc240cf/library?component=TextPropertiesControls_4706f298-d7c0-434c-a1d3-858aec786daf
  */
 
-import React from "react";
+import React, { useState } from "react";
 import {
   FeatherAlignCenter,
   FeatherAlignHCenter,
@@ -19,6 +19,7 @@ import {
   FeatherChevronsRight,
   FeatherMinus,
   FeatherPlus,
+  FeatherX,
 } from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { DisplayConfigPostRequest } from "@/types/routeConfigV2";
@@ -35,6 +36,8 @@ import { AVAILABLE_LANGUAGES } from "@/constants/defaultRouteValues";
 import { getBitmapHeight } from "@/utils/measurements";
 import IMEInput from "@/components/IMEInput";
 import { useFontHeightForLanguage } from "@/utils/getFontFileByLanguage";
+import { Button } from "./Button";
+import { MaterialSymbolPicker } from "./MaterialSymbolPicker";
 
 interface TextPropertiesControlsRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -51,6 +54,7 @@ const TextPropertiesControlsRoot = React.forwardRef<
   const selectedSimulationIndex = useSimulationStore(
     (state) => state.selectedSimulationIndex,
   );
+  const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const pathBase = `${selectedTab}.${selectedSimulationIndex}.texts.${textProperty}`;
   const selectedSimulationPath = `${selectedTab}.${selectedSimulationIndex}`;
 
@@ -78,6 +82,13 @@ const TextPropertiesControlsRoot = React.forwardRef<
       setValue(`${pathBase}.fontHeight`, currentHeight - 1);
     }
   };
+
+  const currentText = watch(`${pathBase}.text`) || "";
+  const wordsList = currentText.trim().split(/\s+/).filter(Boolean);
+  const wordsCount = wordsList.length;
+  const maxWordIndex = Math.max(1, wordsCount > 1 ? wordsCount - 1 : 1);
+  const rawWordIndex = Number(watch(`${pathBase}.iconWordIndex`)) || 1;
+  const currentWordIndex = Math.min(Math.max(1, rawWordIndex), maxWordIndex);
 
   const getDefaultFontHeightForLanguage = useFontHeightForLanguage();
 
@@ -116,6 +127,209 @@ const TextPropertiesControlsRoot = React.forwardRef<
           render={({ field }) => <IMEInput langCode={watch(`${pathBase}.language`) || "en"} {...field} />}
         />
       </ControlItem>
+
+      <ControlItem label="Symbol / Icon">
+        {watch(`${pathBase}.icon`) ? (
+          <div className="flex w-full flex-col gap-2 p-2.5 rounded-md border border-solid border-neutral-border bg-default-background shadow-2xs">
+            <div className="flex items-center justify-between w-full gap-2">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-primary border border-brand-200 flex-shrink-0">
+                  <span className="material-symbols-outlined text-2xl">
+                    {watch(`${pathBase}.icon`)}
+                  </span>
+                </div>
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span
+                    className="text-body-bold font-body-bold text-default-font text-sm truncate"
+                    title={watch(`${pathBase}.icon`)}
+                  >
+                    {watch(`${pathBase}.icon`)}
+                  </span>
+                  <span className="text-caption font-caption text-subtext-color text-[11px] truncate">
+                    Material Symbol
+                  </span>
+                </div>
+              </div>
+
+              <IconButton
+                variant="neutral-secondary"
+                size="small"
+                icon={<FeatherX />}
+                title="Remove Icon"
+                onClick={() => setValue(`${pathBase}.icon`, "")}
+              />
+            </div>
+
+            <Button
+              className="w-full justify-center"
+              variant="neutral-secondary"
+              size="small"
+              onClick={() => setIsIconPickerOpen(true)}
+            >
+              Change Icon
+            </Button>
+          </div>
+        ) : (
+          <Button
+            className="w-full justify-center h-10 border-dashed"
+            variant="neutral-secondary"
+            size="medium"
+            onClick={() => setIsIconPickerOpen(true)}
+          >
+            + Choose Icon
+          </Button>
+        )}
+      </ControlItem>
+
+      <MaterialSymbolPicker
+        open={isIconPickerOpen}
+        onOpenChange={setIsIconPickerOpen}
+        selectedIcon={watch(`${pathBase}.icon`) || ""}
+        onSelectIcon={(iconName) => setValue(`${pathBase}.icon`, iconName)}
+      />
+
+      {watch(`${pathBase}.icon`) && (
+        <>
+          <ControlItem label="Icon Placement">
+            <div className="flex grow shrink-0 basis-0 items-center justify-center gap-1 w-full">
+              <SelectionCardWithText
+                title="Start"
+                onClick={() => {
+                  setValue(`${pathBase}.iconWordIndex`, undefined);
+                  handleSelection("iconPosition", "start");
+                }}
+                selected={
+                  watch(`${pathBase}.iconPosition`) === "start" ||
+                  !watch(`${pathBase}.iconPosition`)
+                }
+              />
+              <SelectionCardWithText
+                title="Center"
+                onClick={() => {
+                  const defaultIndex = Math.max(1, Math.floor(wordsCount / 2));
+                  setValue(`${pathBase}.iconWordIndex`, defaultIndex);
+                  handleSelection("iconPosition", "center");
+                }}
+                selected={watch(`${pathBase}.iconPosition`) === "center"}
+              />
+              <SelectionCardWithText
+                title="End"
+                onClick={() => {
+                  setValue(`${pathBase}.iconWordIndex`, undefined);
+                  handleSelection("iconPosition", "end");
+                }}
+                selected={watch(`${pathBase}.iconPosition`) === "end"}
+              />
+            </div>
+          </ControlItem>
+
+          {watch(`${pathBase}.iconPosition`) === "center" && (
+            <ControlItem label="Icon Word Index">
+              <div className="flex grow shrink-0 basis-0 items-center justify-end gap-1 self-stretch">
+                <IconButton
+                  className="h-9 w-9 flex-none"
+                  variant="neutral-primary"
+                  size="medium"
+                  icon={<FeatherMinus />}
+                  onClick={() => {
+                    if (currentWordIndex > 1) {
+                      setValue(`${pathBase}.iconWordIndex`, currentWordIndex - 1);
+                    }
+                  }}
+                  disabled={currentWordIndex <= 1}
+                />
+                <div className="flex h-9 grow shrink-0 basis-0 flex-col items-center justify-center gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-2">
+                  <span className="text-caption font-caption text-subtext-color truncate">
+                    {wordsCount > 1
+                      ? `${currentWordIndex} of ${wordsCount} (${wordsList[currentWordIndex - 1] || ""})`
+                      : ""}
+                  </span>
+                </div>
+                <IconButton
+                  className="h-9 w-9 flex-none"
+                  variant="neutral-primary"
+                  size="medium"
+                  icon={<FeatherPlus />}
+                  onClick={() => {
+                    if (currentWordIndex < maxWordIndex) {
+                      setValue(`${pathBase}.iconWordIndex`, currentWordIndex + 1);
+                    }
+                  }}
+                  disabled={currentWordIndex >= maxWordIndex}
+                />
+              </div>
+            </ControlItem>
+          )}
+
+          <ControlItem label="Icon Spacing">
+            <div className="flex grow shrink-0 basis-0 items-center justify-end gap-1 self-stretch">
+              <IconButton
+                className="h-9 w-9 flex-none"
+                variant="neutral-primary"
+                size="medium"
+                icon={<FeatherMinus />}
+                onClick={() => {
+                  const cur = watch(`${pathBase}.iconSpacing`) ?? 2;
+                  if (cur > 0) setValue(`${pathBase}.iconSpacing`, cur - 1);
+                }}
+              />
+              <div className="flex h-9 grow shrink-0 basis-0 flex-col items-center justify-center gap-2 rounded-md border border-solid border-neutral-border bg-default-background">
+                <span className="text-caption font-caption text-subtext-color">
+                  {watch(`${pathBase}.iconSpacing`) ?? 2} dots
+                </span>
+              </div>
+              <IconButton
+                className="h-9 w-9 flex-none"
+                variant="neutral-primary"
+                size="medium"
+                icon={<FeatherPlus />}
+                onClick={() => {
+                  const cur = watch(`${pathBase}.iconSpacing`) ?? 2;
+                  if (cur < 20) setValue(`${pathBase}.iconSpacing`, cur + 1);
+                }}
+              />
+            </div>
+          </ControlItem>
+
+          <ControlItem label="Icon Width Scale">
+            <div className="flex grow shrink-0 basis-0 items-center justify-end gap-1 self-stretch">
+              <IconButton
+                className="h-9 w-9 flex-none"
+                variant="neutral-primary"
+                size="medium"
+                icon={<FeatherMinus />}
+                onClick={() => {
+                  const cur = Number(watch(`${pathBase}.iconWidthScale`) ?? 1.0);
+                  if (cur > 0.5)
+                    setValue(
+                      `${pathBase}.iconWidthScale`,
+                      parseFloat((cur - 0.1).toFixed(1)),
+                    );
+                }}
+              />
+              <div className="flex h-9 grow shrink-0 basis-0 flex-col items-center justify-center gap-2 rounded-md border border-solid border-neutral-border bg-default-background">
+                <span className="text-caption font-caption text-subtext-color">
+                  {(Number(watch(`${pathBase}.iconWidthScale`) ?? 1.0)).toFixed(1)}x
+                </span>
+              </div>
+              <IconButton
+                className="h-9 w-9 flex-none"
+                variant="neutral-primary"
+                size="medium"
+                icon={<FeatherPlus />}
+                onClick={() => {
+                  const cur = Number(watch(`${pathBase}.iconWidthScale`) ?? 1.0);
+                  if (cur < 3.0)
+                    setValue(
+                      `${pathBase}.iconWidthScale`,
+                      parseFloat((cur + 0.1).toFixed(1)),
+                    );
+                }}
+              />
+            </div>
+          </ControlItem>
+        </>
+      )}
 
       <ControlItem label="Auto Text Generator">
         <AutoTextGenerator

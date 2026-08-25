@@ -154,7 +154,7 @@
 // export default IMEInput;
 
 import { TextField } from "@/ui/components/TextField";
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
 
 const fetchTransliteration = async (word: string, langCode: string) => {
   try {
@@ -180,26 +180,29 @@ const fetchTransliteration = async (word: string, langCode: string) => {
   }
 };
 
-interface IMEInputProps {
+interface IMEInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   langCode: string;
-  value: string;
-  onChange: (value: string) => void;
+  value?: string;
+  onChange?: (e: any) => void;
 }
 
-const IMEInput: React.FC<IMEInputProps> = ({ langCode, value, onChange }) => {
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [cursorIndex, setCursorIndex] = useState<number>(0);
-  const [selectedSuggestionIndex, setSelectedSuggestionIndex] =
-    useState<number>(-1);
-  const inputRef = useRef<HTMLInputElement>(null);
+const IMEInput = forwardRef<HTMLInputElement, IMEInputProps>(
+  ({ langCode, value = "", onChange, ...otherProps }, ref) => {
+    const [suggestions, setSuggestions] = useState<string[]>([]);
+    const [cursorIndex, setCursorIndex] = useState<number>(0);
+    const [selectedSuggestionIndex, setSelectedSuggestionIndex] =
+      useState<number>(-1);
+    const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    const selectionStart = e.target.selectionStart || 0;
+    useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
 
-    onChange(newValue);
-    setCursorIndex(selectionStart);
-    setSelectedSuggestionIndex(-1); // Reset selection on new input
+    const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+      const selectionStart = e.target.selectionStart || 0;
+
+      if (onChange) onChange(e);
+      setCursorIndex(selectionStart);
+      setSelectedSuggestionIndex(-1); // Reset selection on new input
 
     // Find the word at the cursor position
     const words = newValue.split(" ");
@@ -351,6 +354,6 @@ const IMEInput: React.FC<IMEInputProps> = ({ langCode, value, onChange }) => {
       )}
     </div>
   );
-};
+});
 
 export default IMEInput;

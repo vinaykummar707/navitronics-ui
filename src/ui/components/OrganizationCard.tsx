@@ -54,9 +54,9 @@ const OrganizationCardRoot = React.forwardRef<
     >
       <div className="flex w-full items-center justify-between">
         <div className="flex items-start justify-between">
-          {logo2 ? <Avatar size="large" variant="brand" image={logo2} square={false}>
+          {logo2 ? <Avatar size="x-large" variant="brand" image={logo2} square={false}>
             A
-          </Avatar> : <Avvvatars style="shape" value={subtitle} size={48} />}
+          </Avatar> : <Avvvatars style="shape" value={subtitle} size={56} />}
         </div>
         <Badge variant={isSuspended ? "error" : "success"} icon={null} iconRight={null}>
           {isSuspended ? "Suspended" : "Active"}

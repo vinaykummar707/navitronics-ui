@@ -42,6 +42,10 @@ export function getDefaultTextConfig(
     fontWeight: DEFAULT_FONT_WEIGHT,
     fontHeight: DEFAULT_FONT_HEIGHT,
     language: "en",
+    icon: "",
+    iconPosition: "start",
+    iconSpacing: 2,
+    iconWidthScale: 1.0,
   };
 }
 
