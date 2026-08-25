@@ -3,7 +3,7 @@ import { BitmapApiParams } from "@/types/bitmapApi";
 
 export const BITMAP_API_BASE_URL =
   (import.meta as any).env?.VITE_BITMAP_API_URL ||
-  "http://localhost:5288/api/bitmap";
+  "http://13.233.103.63:5288/api/bitmap";
 
 /**
  * Builds the complete URL with search params for the Bitmap API.
