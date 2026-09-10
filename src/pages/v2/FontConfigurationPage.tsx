@@ -8,36 +8,39 @@ import { FeatherPlus, FeatherRefreshCw } from "@subframe/core";
 import React from "react";
 import { toast } from "react-toastify";
 
+const QUERY_OPTIONS = { filters: { deleted: false } };
+
 export default function FontConfigurationPage() {
   const [showDrawer, setShowDrawer] = React.useState(false);
   const [editData, setEditData] = React.useState<ITextConfig>(null);
-  const { data, refetch: refetchFontSettings } = fontSettingsCrud.useList({
-    filters: { deleted: false },
-  });
+  const { data, refetch: refetchFontSettings } = fontSettingsCrud.useList(QUERY_OPTIONS);
   const { mutate: deleteFontSetting } = fontSettingsCrud.useDelete();
-  const fontSettings = data
-    ? (data.data as ITextConfig[]).map((item) => ({
-        ...item,
-        config:
-          typeof item.config === "string"
-            ? JSON.parse(item.config)
-            : item.config,
-      }))
-    : [];
 
-  const handleDelete = (id: string) => {
-    deleteFontSetting(id, {
-      onSuccess: () => {
-        toast.success("Font configuration deleted successfully");
-        refetchFontSettings();
-      },
-      onError: (error) => {
-        toast.error(`Failed to delete font configuration: ${error.message}`);
-      },
-    });
-  };
+  const fontSettings = React.useMemo(() => {
+    if (!data?.data) return [];
+    return (data.data as ITextConfig[]).map((item) => ({
+      ...item,
+      config:
+        typeof item.config === "string"
+          ? JSON.parse(item.config)
+          : item.config,
+    }));
+  }, [data]);
 
-  console.log("Font settings: ", fontSettings);
+  const handleDelete = React.useCallback(
+    (id: string) => {
+      deleteFontSetting(id, {
+        onSuccess: () => {
+          toast.success("Font configuration deleted successfully");
+          refetchFontSettings();
+        },
+        onError: (error) => {
+          toast.error(`Failed to delete font configuration: ${error.message}`);
+        },
+      });
+    },
+    [deleteFontSetting, refetchFontSettings]
+  );
 
   return (
     <RBACPage roles={["master"]} features={[]}>

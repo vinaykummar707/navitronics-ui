@@ -31,7 +31,7 @@ import useTabsStore from "@/store/useTabsStore";
 import { set } from "zod";
 import { Button } from "./Button";
 import { generateAudio, handleSloganAudioGeneration, handleStopAudioGeneration, uploadAudio } from "@/utils/fetchTTS";
-import { useStops } from "@/api/stop/hooks";
+import { stopCrud, IStopWithAudio } from "@/types/IStop";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { useParams } from "react-router-dom";
 import { Select } from "./Select";
@@ -67,14 +67,18 @@ const SimulationSettingsPanelRoot = React.forwardRef<
   // get depot id from params
   const { areaId, depotId } = useParams<{ areaId: string; depotId: string }>();
 
-  const { selectedOrganization } = useOrganizationStore()
+  const { selectedOrganization } = useOrganizationStore();
 
-  const { data: stops } = useStops({
-    variables: {
-      organization_id: selectedOrganization?.id || "",
+  const { data: stopsData } = stopCrud.useList({
+    filters: {
       depot_id: depotId || "",
+      deleted: false,
+      organization_id: selectedOrganization?.id || "",
     },
+    skip: !depotId,
   });
+
+  const stopsList = (stopsData?.data as IStopWithAudio[]) || [];
 
 
 
@@ -336,8 +340,8 @@ const SimulationSettingsPanelRoot = React.forwardRef<
                   Select the latitude and longitude for the up
                 </span>
 
-                {stops && stops.stops.length > 0 && <Select onValueChange={handleLatLngChange} className="truncate text-xs" placeholder="Up Latitude and Longitude">
-                  {stops.stops?.map((stop) => (
+                {stopsList.length > 0 && <Select onValueChange={handleLatLngChange} className="truncate text-xs" placeholder="Up Latitude and Longitude">
+                  {stopsList.map((stop) => (
                     <Select.Item key={stop.id} value={`${stop.up_latitude},${stop.up_longitude}`}>
                       {stop.name} - {`(${stop.up_latitude}, ${stop.up_longitude})`}
                     </Select.Item>
@@ -346,8 +350,8 @@ const SimulationSettingsPanelRoot = React.forwardRef<
                 <span className="text-caption font-caption text-subtext-color">
                   Select the latitude and longitude for the return
                 </span>
-                {stops && stops.stops.length > 0 && <Select onValueChange={handleLatLngChange} className="truncate text-xs" placeholder="Down Latitude and Longitude">
-                  {stops.stops?.map((stop) => (
+                {stopsList.length > 0 && <Select onValueChange={handleLatLngChange} className="truncate text-xs" placeholder="Down Latitude and Longitude">
+                  {stopsList.map((stop) => (
                     <Select.Item key={stop.id} value={`${stop.down_latitude},${stop.down_longitude}`}>
                       {stop.name} - {`(${stop.down_latitude}, ${stop.down_longitude})`}
                     </Select.Item>

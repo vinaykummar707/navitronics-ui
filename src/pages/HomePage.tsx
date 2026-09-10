@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useUserDetails } from "@/api/users/hooks";
 import Navbar from "@/components/Navbar";
@@ -55,7 +55,13 @@ const HomePage = () => {
 
     return (
         <DefaultPageLayout>
-            <Outlet />
+            <Suspense fallback={
+              <div className="flex h-full w-full items-center justify-center min-h-[300px]">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-300 border-t-neutral-800" />
+              </div>
+            }>
+                <Outlet />
+            </Suspense>
         </DefaultPageLayout>
     )
 };

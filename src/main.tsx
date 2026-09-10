@@ -12,19 +12,14 @@ import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import { ApolloProvider } from '@apollo/client/react'
 import client from './api/apolloClient.ts'
 import { LanguageConfigProvider } from './context/LanguageConfigContext.tsx'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
 
 // ✅ Register AG Grid community modules
 ModuleRegistry.registerModules([AllCommunityModule]);
-const clientq = new QueryClient();
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={clientq}>
     <ApolloProvider client={client}>
-        <App />
-
+      <App />
     </ApolloProvider>
-    </QueryClientProvider>
   </StrictMode>,
 )

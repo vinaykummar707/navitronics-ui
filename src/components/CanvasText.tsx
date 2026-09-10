@@ -245,11 +245,10 @@ const LEDMatrix: React.FC<LEDMatrixProps> = ({
           }
         }
         drawMatrix(currentScrollPositionRef.current);
+        animationFrameRef.current = requestAnimationFrame(animate);
       } else {
-        drawMatrix(currentScrollPositionRef.current); // Draw static position
+        drawMatrix(currentScrollPositionRef.current); // Draw static position once without scheduling rAF
       }
-
-      animationFrameRef.current = requestAnimationFrame(animate);
     };
 
     // Initialize scroll position when marquee direction changes or on mount

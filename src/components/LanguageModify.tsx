@@ -5,7 +5,7 @@ import { Button } from '@chakra-ui/react';
 import { toast } from 'react-toastify';
 import LEDMatrix from './CanvasText';
 
-const API_URL = 'http://localhost:8080/navitranix/api/languages';
+const API_URL = `${import.meta.env.VITE_CONTROLLER_API_URL || 'https://api.navitronix.in/navitranix/api'}/languages`;
 
 const LanguageManagement = () => {
 	const [languages, setLanguages] = useState([]);

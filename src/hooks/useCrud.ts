@@ -1,22 +1,23 @@
 import { supabase } from '@/supabaseClient'
 import { QueryOptions } from '@/types/query'
-import { useQuery, useMutation, useQueryClient, QueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
 export function createCrudHooks<
   TRow extends { id: string },
   TInsert,
   TUpdate
 >(table: string) {
-  const queryClient = new QueryClient()
-
   // ========================
   // LIST
   // ========================
-  const useList = (options?: QueryOptions<TRow>) =>
+  const useList = (options?: QueryOptions<TRow> & { count?: 'exact' | 'planned' | 'estimated' }) =>
     useQuery({
       queryKey: [table, options],
       queryFn: async () => {
-        let query = supabase.from(table).select('*', { count: 'exact' })
+        const countMode = options?.count || (options?.range ? 'exact' : undefined)
+        let query = countMode
+          ? supabase.from(table).select('*', { count: countMode as any })
+          : supabase.from(table).select('*')
 
         // Apply filters
         if (options?.filters) {
@@ -75,10 +76,10 @@ export function createCrudHooks<
           .from(table)
           .select('*')
           .eq('id', id)
-          .single()
+          .maybeSingle()
 
         if (error) throw error
-        return data as TRow
+        return data as TRow | null
       },
       enabled: !!id,
     })
@@ -86,8 +87,9 @@ export function createCrudHooks<
   // ========================
   // CREATE
   // ========================
-  const useCreate = () =>
-    useMutation({
+  const useCreate = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
       mutationFn: async (payload: TInsert) => {
         const { data, error } = await supabase
           .from(table)
@@ -102,12 +104,14 @@ export function createCrudHooks<
         queryClient.invalidateQueries({ queryKey: [table] })
       },
     })
+  }
 
   // ========================
   // UPDATE
   // ========================
-  const useUpdate = () =>
-    useMutation({
+  const useUpdate = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
       mutationFn: async ({
         id,
         payload,
@@ -129,12 +133,14 @@ export function createCrudHooks<
         queryClient.invalidateQueries({ queryKey: [table] })
       },
     })
+  }
 
   // ========================
   // DELETE (Soft delete ready)
   // ========================
-  const useDelete = () =>
-    useMutation({
+  const useDelete = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
       mutationFn: async (id: string) => {
         const { error } = await supabase
           .from(table)
@@ -147,9 +153,11 @@ export function createCrudHooks<
         queryClient.invalidateQueries({ queryKey: [table] })
       },
     })
+  }
   
-  const useDeleteAll = () =>
-    useMutation({
+  const useDeleteAll = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
       mutationFn: async (ids: string[]) => {
         const { error } = await supabase
           .from(table)
@@ -162,6 +170,7 @@ export function createCrudHooks<
         queryClient.invalidateQueries({ queryKey: [table] })
       },
     })
+  }
     
 
   return {

@@ -153,7 +153,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
           <JsonViewerDialog
             dialogTitle="Route Configuration"
             buttonLabel="Show JSON"
-            jsonContent={JSON.stringify(getValues())}
+            getJsonData={() => getValues()}
           />
         </RBAC>
         <Button

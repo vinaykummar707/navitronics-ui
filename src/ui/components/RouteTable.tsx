@@ -27,6 +27,7 @@ interface RouteTableRootProps extends React.HTMLAttributes<HTMLDivElement> {
   onReturn?: (routeId: string, suffix: string) => void; // Callback for duplicate action
   selectedRouteIds?: string[]; // Array of selected route IDs for checkbox state
   onSelectedChange?: (routeId: string, selected: boolean) => void; // Callback for checkbox state change
+  onSelectAllChange?: (checked: boolean) => void; // Atomic callback for select all
 }
 
 const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
@@ -37,6 +38,7 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
       className,
       selectedRouteIds,
       onSelectedChange,
+      onSelectAllChange,
       onEdit,
       onDelete,
       onDuplicate,
@@ -45,10 +47,11 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
     }: RouteTableRootProps,
     ref,
   ) {
-    // log routes
-    React.useEffect(() => {
-      console.log("Routes in RouteTable:", routes);
-    }, [routes]);
+    const selectedSet = React.useMemo(
+      () => new Set(selectedRouteIds || []),
+      [selectedRouteIds]
+    );
+
     return (
       <div
         className={SubframeUtils.twClassNames(
@@ -65,11 +68,19 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
               <Table.HeaderCell >
                 <Checkbox
                   label=""
-                  checked={selectedRouteIds ? selectedRouteIds.length === routes?.length : false}
+                  checked={
+                    routes && routes.length > 0 && selectedRouteIds
+                      ? selectedRouteIds.length === routes.length
+                      : false
+                  }
                   onCheckedChange={(checked: boolean) => {
-                    routes?.forEach((route) => {
-                      onSelectedChange?.(route.id, checked);
-                    });
+                    if (onSelectAllChange) {
+                      onSelectAllChange(checked);
+                    } else {
+                      routes?.forEach((route) => {
+                        onSelectedChange?.(route.id, checked);
+                      });
+                    }
                   }}
                 />
               </Table.HeaderCell>
@@ -85,12 +96,12 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
             </Table.HeaderRow>
           }
         >
-          {routes.map((route: IRoute) => (
+          {routes?.map((route: IRoute) => (
             <Table.Row key={route.id}>
               <Table.Cell>
                 <Checkbox
                   label=""
-                  checked={!!selectedRouteIds?.includes(route.id)}
+                  checked={selectedSet.has(route.id)}
                   onCheckedChange={(checked: boolean) => {
                     onSelectedChange?.(route.id, checked);
                   }}

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// const baseURL =  'https://api.navitronix.in/navitranix/api';
- const baseURL =  'https://api.navitronix.in/navitranix/api';
+const baseURL =
+  import.meta.env.VITE_CONTROLLER_API_URL || 'https://api.navitronix.in/navitranix/api';
 
 const axiosInstance = axios.create({
 	baseURL,

@@ -20,6 +20,7 @@ interface JsonViewerDialogRootProps extends React.HTMLAttributes<HTMLDivElement>
   buttonLabel?: React.ReactNode;
   dialogTitle?: React.ReactNode;
   jsonContent?: string;
+  getJsonData?: () => any;
   className?: string;
 }
 
@@ -31,22 +32,37 @@ const JsonViewerDialogRoot = React.forwardRef<
     buttonLabel,
     dialogTitle,
     jsonContent,
+    getJsonData,
     className,
     ...otherProps
   }: JsonViewerDialogRootProps,
   ref,
 ) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [resolvedData, setResolvedData] = React.useState<any>(null);
 
+  const handleOpenDialog = () => {
+    if (getJsonData) {
+      setResolvedData(getJsonData());
+    } else if (jsonContent) {
+      try {
+        setResolvedData(JSON.parse(jsonContent));
+      } catch {
+        setResolvedData({ raw: jsonContent });
+      }
+    }
+    setIsOpen(true);
+  };
 
-  // handle to copt JSON content to clipboard
+  // handle copy JSON content to clipboard
   const handleCopy = () => {
-    if (jsonContent) {
+    if (resolvedData) {
+      const textToCopy = typeof resolvedData === "string" ? resolvedData : JSON.stringify(resolvedData, null, 2);
+      navigator.clipboard.writeText(textToCopy);
+    } else if (jsonContent) {
       navigator.clipboard.writeText(jsonContent);
     }
-  }
-
-
+  };
 
   return (
     <div
@@ -57,12 +73,12 @@ const JsonViewerDialogRoot = React.forwardRef<
       ref={ref}
       {...otherProps}
     >
-      <Button variant="neutral-primary"  icon={<FeatherCurlyBraces />} onClick={() => setIsOpen(true)}>
+      <Button variant="neutral-primary" icon={<FeatherCurlyBraces />} onClick={handleOpenDialog}>
         {buttonLabel}
       </Button>
-      <Dialog  open={isOpen}  onOpenChange={setIsOpen}>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <Dialog.Content className="h-256 w-144 flex-none ">
-          <div className="flex w-full  grow shrink-0 basis-0 flex-col items-start gap-4 p-3">
+          <div className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-4 p-3">
             <div className="flex w-full items-center justify-between">
               {dialogTitle ? (
                 <span className="text-heading-3 font-heading-3 text-default-font">
@@ -70,30 +86,26 @@ const JsonViewerDialogRoot = React.forwardRef<
                 </span>
               ) : null}
               <div className="flex items-center gap-2">
-                <Button icon={<FeatherCopy />} variant="neutral-primary"  onClick={handleCopy}>
-                 
+                <Button icon={<FeatherCopy />} variant="neutral-primary" onClick={handleCopy}>
                   Copy JSON
                 </Button>
-                <IconButton onClick={() => setIsOpen(false)}  variant="neutral-primary" icon={<FeatherX />} />
+                <IconButton onClick={() => setIsOpen(false)} variant="neutral-primary" icon={<FeatherX />} />
               </div>
             </div>
             <div className="flex w-full no-scrollbar grow shrink-0 basis-0 items-start justify-start overflow-auto rounded-md border border-solid border-neutral-border bg-default-background p-2">
-              {jsonContent ? (
+              {isOpen && resolvedData ? (
                 <ReactJson
-
-                  src={JSON.parse(jsonContent)}
+                  src={resolvedData}
                   name={null}
                   theme="apathy"
                   collapsed={false}
                   enableClipboard={false}
                   displayDataTypes={false}
-                displayObjectSize={false}
-                
+                  displayObjectSize={false}
                 />
               ) : null}
-              </div>
+            </div>
           </div>
-          
         </Dialog.Content>
       </Dialog>
     </div>

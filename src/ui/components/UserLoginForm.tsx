@@ -87,39 +87,34 @@ const UserLoginFormRoot = React.forwardRef<
     }
   };
 
-  // Fetch user data and handle login
+  // Handle post-login navigation when user details are retrieved
   useEffect(() => {
-    usersRefetch();
-    const processData = async () => {
-      const userData = loggedUserDetails?.data as ILoggedUser;
-      console.log("Fetched user details:", userData);
-      try {
-        if (userData) {
-          login(userData);
-          if (userData.organization?.active) {
-            if (userData.active && !userData.deleted) {
-              toast.success("Login successful!");
-              setSelectedOrganization(userData.organization);
-              navigate("/home");
-            } else {
-              throw new Error(
-                "Your account is not active or has been deleted. Please contact support.",
-              );
-            }
-          } else {
-            throw new Error(
-              "Your organization is not active. Please contact support.",
-            );
-          }
-        }
-      } catch (error) {
-        toast.error(error.message);
-        logout();
-        supabase.auth.signOut();
-      }
-    };
+    if (!userId || !loggedUserDetails?.data) return;
 
-    if (userId) processData(); // Only process data if userId is set
+    const userData = loggedUserDetails.data as ILoggedUser;
+    try {
+      login(userData);
+      if (userData.organization?.active) {
+        if (userData.active && !userData.deleted) {
+          toast.success("Login successful!");
+          setSelectedOrganization(userData.organization);
+          navigate("/home");
+        } else {
+          throw new Error(
+            "Your account is not active or has been deleted. Please contact support.",
+          );
+        }
+      } else {
+        throw new Error(
+          "Your organization is not active. Please contact support.",
+        );
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+      logout();
+      supabase.auth.signOut();
+      setUserId("");
+    }
   }, [
     userId,
     loggedUserDetails,

@@ -1173,7 +1173,7 @@ export const DisplayConfigForm: React.FC = () => {
                           stopScroll={stopScroll}
                           rows={16}
                           cols={getColumnsByBoard(
-                            activeTab,
+                            screenKey,
                             screenConfig.format
                           )}
                           text={displayConfig[language][screenKey].texts.text}
@@ -1331,7 +1331,7 @@ export const DisplayConfigForm: React.FC = () => {
                             rows={16}
                             cols={
                               getColumnsByBoard(
-                                activeTab,
+                                screenKey,
                                 screenConfig.format
                               ) -
                               (splitRoute
@@ -1509,7 +1509,7 @@ export const DisplayConfigForm: React.FC = () => {
                               rows={8}
                               cols={
                                 getColumnsByBoard(
-                                  activeTab,
+                                  screenKey,
                                   screenConfig.format
                                 ) -
                                 getBitmapColumns(
@@ -1545,7 +1545,7 @@ export const DisplayConfigForm: React.FC = () => {
                               rows={8}
                               cols={
                                 getColumnsByBoard(
-                                  activeTab,
+                                  screenKey,
                                   screenConfig.format
                                 ) -
                                 getBitmapColumns(

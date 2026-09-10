@@ -95,17 +95,6 @@ function useRoutesPageData() {
     }
   }, [depots, selectedDepot, setSelectedDepotInStore]);
 
-  // Refetch on dependency changes
-  useEffect(() => {
-    refetchRegions();
-  }, [selectedOrganization, refetchRegions]);
-  useEffect(() => {
-    refetchDepots();
-  }, [selectedRegion, refetchDepots]);
-  useEffect(() => {
-    refetchRoutes();
-  }, [selectedDepot, selectedRegion, refetchRoutes]);
-
   return {
     user,
     regions,
@@ -180,9 +169,28 @@ export default function RoutesPage() {
     }
 
     const { id, ...routeWithoutId } = originalRoute;
+
+    let reversedStops = originalRoute.stops;
+    if (originalRoute.stops) {
+      try {
+        const parsed =
+          typeof originalRoute.stops === "string"
+            ? JSON.parse(originalRoute.stops)
+            : originalRoute.stops;
+        if (Array.isArray(parsed)) {
+          reversedStops = JSON.stringify([...parsed].reverse());
+        }
+      } catch (err) {
+        console.error("Error reversing stops for return route:", err);
+      }
+    }
+
     createRoute(
       {
         ...routeWithoutId,
+        source: originalRoute.destination || originalRoute.source,
+        destination: originalRoute.source || originalRoute.destination,
+        stops: reversedStops,
         route_number: `${originalRoute.route_number}${routeNumberSuffix}`,
         created_at: new Date().toISOString(),
         return: true,
@@ -194,7 +202,9 @@ export default function RoutesPage() {
           refetchRoutes();
         },
         onError: (error) => {
-          toast.error(`Error eturn Route: ${error.message || "Unknown error"}`);
+          toast.error(
+            `Error creating return route: ${error.message || "Unknown error"}`,
+          );
         },
       },
     );
@@ -239,43 +249,34 @@ export default function RoutesPage() {
   const hasRoutes = routes && routes.length > 0;
 
   const [selectedRouteIds, setSelectedRouteIds] = React.useState<string[]>([]);
-  const [selectedRouteObjects, setSelectedRouteObjects] = React.useState<
-    IRoute[]
-  >([]);
+
+  const selectedRouteIdsSet = React.useMemo(
+    () => new Set(selectedRouteIds),
+    [selectedRouteIds]
+  );
+
+  const selectedRouteObjects = React.useMemo(() => {
+    if (!routes || selectedRouteIds.length === 0) return [];
+    return routes.filter((route) => selectedRouteIdsSet.has(route.id));
+  }, [routes, selectedRouteIdsSet]);
 
   const handleSelectedChange = (routeId: string, selected: boolean) => {
     setSelectedRouteIds((prev) => {
       if (selected) {
-        return [...prev, routeId];
+        return prev.includes(routeId) ? prev : [...prev, routeId];
       } else {
         return prev.filter((id) => id !== routeId);
       }
     });
-    setSelectedRouteObjects((prev) => {
-      if (selected) {
-        const routeToAdd = routes?.find((route) => route.id === routeId);
-        if (routeToAdd) {
-          return [...prev, routeToAdd];
-        }
-      } else {
-        return prev.filter((route) => route.id !== routeId);
-      }
-      return [];
-    });
   };
 
-  useEffect(() => {
-    if (routes) {
-      const validSelectedIds = selectedRouteIds.filter((id) =>
-        routes.some((route) => route.id === id),
-      );
-      if (validSelectedIds.length !== selectedRouteIds.length) {
-        setSelectedRouteIds(validSelectedIds);
-      }
+  const handleSelectAllChange = (selected: boolean) => {
+    if (selected && routes) {
+      setSelectedRouteIds(routes.map((r) => r.id));
+    } else {
+      setSelectedRouteIds([]);
     }
-    console.log("Selected Route IDs:", selectedRouteIds);
-    console.log("Selected Route Objects:", selectedRouteObjects);
-  }, [routes, selectedRouteIds, selectedRouteObjects]);
+  };
 
   const handleDeleteSelectedRoutes = () => {
     deleteSelectedRoutes(selectedRouteIds, {
@@ -363,10 +364,14 @@ export default function RoutesPage() {
       const v1RoutesPayload = rawRoutesToExport.map((route) => convertV2ToV1(route));
       toast.info("Requesting V1 export package...");
 
+      const apiBase =
+        import.meta.env.VITE_CONTROLLER_API_URL ||
+        "https://api.navitronix.in/navitranix/api";
+
       try {
         const areaId = selectedOrganization?.id || "";
         const depotId = selectedDepot?.id || "";
-        const exportUrl = `http://localhost:8080/navitranix/api/routes/export?areaId=${areaId}&depotId=${depotId}`;
+        const exportUrl = `${apiBase}/routes/export?areaId=${areaId}&depotId=${depotId}`;
 
         const response = await axios.post(exportUrl, v1RoutesPayload, {
           headers: {
@@ -387,10 +392,14 @@ export default function RoutesPage() {
       // V2 Format API Export
       toast.info("Requesting V2 export package...");
 
+      const apiBase =
+        import.meta.env.VITE_CONTROLLER_API_URL ||
+        "https://api.navitronix.in/navitranix/api";
+
       try {
         const areaId = selectedOrganization?.id || "";
         const depotId = selectedDepot?.id || "";
-        const exportUrl = `http://localhost:8080/navitranix/api/routes/export-v2?areaId=${areaId}&depotId=${depotId}`;
+        const exportUrl = `${apiBase}/routes/export-v2?areaId=${areaId}&depotId=${depotId}`;
 
         const response = await axios.post(exportUrl, rawRoutesToExport, {
           headers: {
@@ -553,6 +562,7 @@ export default function RoutesPage() {
           onReturn={handleReturn}
           selectedRouteIds={selectedRouteIds}
           onSelectedChange={handleSelectedChange}
+          onSelectAllChange={handleSelectAllChange}
         />
       ) : (
         <EmptyState title="Routes" hasDepots={!!hasDepots} />

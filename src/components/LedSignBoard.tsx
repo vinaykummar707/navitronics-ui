@@ -122,60 +122,69 @@ const LEDBitmapSimulator = ({
   };
 
   useEffect(() => {
-    setBitmapText("");
+    const controller = new AbortController();
 
     const fetchBitmap = async () => {
       try {
         const url = getApiUrl();
-        const response = await axios.get(url);
+        const response = await axios.get(url, { signal: controller.signal });
         setBitmapText(response.data);
-      } catch (error) {
+      } catch (error: any) {
+        if (axios.isCancel(error) || error?.name === "CanceledError" || error?.name === "AbortError") {
+          return; // Ignore intentional aborts
+        }
         setBitmapText("");
       }
     };
 
-    fetchBitmap();
+    const timer = setTimeout(() => {
+      fetchBitmap();
+    }, 300);
 
-    if (text.scrollType === "Left To Right") {
+    if (text?.scrollType === "Left To Right") {
       setIsScrolling(true);
       setScrollDirection("right");
     }
-    if (text.scrollType === "Right To Left") {
+    if (text?.scrollType === "Right To Left") {
       setIsScrolling(true);
       setScrollDirection("left");
     }
-    if (text.scrollType === "Fixed") {
+    if (text?.scrollType === "Fixed") {
       setIsScrolling(false);
       setScrollOffset(0);
     }
-    setScrollSpeed(text.scrollSpeed);
-    if (text.scrollType !== "Fixed") {
+    setScrollSpeed(text?.scrollSpeed);
+    if (text?.scrollType !== "Fixed") {
       setIsScrolling(stopScroll);
     }
 
-    if (text.fontSize <= 0) {
+    if (!text?.fontSize || text.fontSize <= 0) {
       setWidthAspect(0.8);
     } else {
       setWidthAspect(text.fontSize);
     }
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [
-    text,
-    text.text,
-    text.icon,
-    text.iconPosition,
-    text.iconSpacing,
-    text.iconWidthScale,
-    text.iconWordIndex,
-    text.scrollType,
-    text.position,
-    text.scrollSpeed,
-    text.fontSize,
-    text.fontWeight,
-    text.fontHeight,
-    text.fontfile,
-    text.x_offset,
-    text.y_offset,
-    text.spacing,
+    text?.text,
+    text?.icon,
+    text?.iconPosition,
+    text?.iconSpacing,
+    text?.iconWidthScale,
+    text?.iconWordIndex,
+    text?.scrollType,
+    text?.position,
+    text?.scrollSpeed,
+    text?.fontSize,
+    text?.fontWeight,
+    text?.fontHeight,
+    text?.fontfile,
+    text?.x_offset,
+    text?.y_offset,
+    text?.spacing,
     fontFamily,
     stopScroll,
   ]);

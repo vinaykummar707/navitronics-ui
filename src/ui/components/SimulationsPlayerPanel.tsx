@@ -240,26 +240,40 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
   // handle add simulation for stop route config when selected stop
 
   const generateStopSimulations = async () => {
-    if (selectedStop && selectedLanguage && selectedStopTypes.length > 0 && (selectedUpDown || selectedUpDown)) {
-      selectedStopTypes.forEach(async (stopType) => {
-        const text = `${stopType} stop is ${selectedStop.name.toLocaleLowerCase()}`;
-        const genText =
-          selectedLanguage === "en"
-            ? text.toUpperCase()
-            : await translateText(text, selectedLanguage + "-IN");
-        append(
-          getDefaultStopSingleSimulation(
-            genText,
-            "stop",
-            stopType,
-            selectedStop,
-            selectedLanguage,
-            selectedUpDown,
-          ),
+    if (
+      selectedStop &&
+      selectedLanguage &&
+      selectedStopTypes.length > 0 &&
+      selectedUpDown
+    ) {
+      try {
+        const newSimulations = await Promise.all(
+          selectedStopTypes.map(async (stopType) => {
+            const text = `${stopType} stop is ${selectedStop.name.toLocaleLowerCase()}`;
+            const genText =
+              selectedLanguage === "en"
+                ? text.toUpperCase()
+                : await translateText(text, selectedLanguage + "-IN");
+            return getDefaultStopSingleSimulation(
+              genText,
+              "stop",
+              stopType,
+              selectedStop,
+              selectedLanguage,
+              selectedUpDown,
+            );
+          }),
         );
-      });
+        append(newSimulations);
+      } catch (err: any) {
+        toast.error(
+          `Failed to generate stop simulations: ${err?.message || err}`,
+        );
+      }
     } else {
-      toast.error("Please select a stop, language, stop type and up/down route to generate simulations");
+      toast.error(
+        "Please select a stop, language, stop type and up/down route to generate simulations",
+      );
     }
   };
 
@@ -480,35 +494,10 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
               size="medium"
               icon={<FeatherTrash />}
               loading={false}
-              onClick={async () => {
+              onClick={() => {
                 if (confirm("Are you sure you want to delete all simulations?")) {
-                  if (selectedTab === "stops") {
-                    simulations.forEach(async (simulation, index) => {
-                      console.log("Deleting simulation at index:", simulation);
-                      if (simulation.audioFileUrl) {
-                        const audioFileUrl = simulation.audioFileUrl;
-                        console.log("Audio file URL to delete:", audioFileUrl);
-                        const pathMatch = audioFileUrl.match(/\/stops\/(.+)$/);
-                        const filePath = pathMatch ? pathMatch[1] : null;
-                        if (filePath) {
-                          const { error } = await supabase.storage
-                            .from("stops")
-                            .remove([filePath]);
-                          simulations.splice(index, 1);
-                          setValue(selectedTab, simulations);
-                          if (error) {
-                            console.error(
-                              "Error deleting file from Supabase Storage:",
-                              error,
-                            );
-                          }
-                        }
-                      }
-                    });
-                  } else {
-                    setValue(selectedTab, []);
-                    setSelectedSimulationIndex(-1);
-                  }
+                  setValue(selectedTab, []);
+                  setSelectedSimulationIndex(-1);
                 }
               }}
             >
@@ -576,7 +565,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
             className="flex w-full flex-col items-start gap-4 transition-all pb-16"
           >
             {simulations.map((simulation, index) => (
-              <div key={index} className="  shadow-sm rounded-xl overflow-hidden">
+              <div key={(simulation as any)?.id || `${selectedTab}_${index}`} className="  shadow-sm rounded-xl overflow-hidden">
                 <SimulationPlayerCard
                   isSelected={index === selectedSimulationIndex}
                   listIndex={index}

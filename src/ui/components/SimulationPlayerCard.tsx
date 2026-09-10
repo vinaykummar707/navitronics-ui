@@ -70,45 +70,31 @@ const SimulationPlayerCardRoot = React.forwardRef<
 
   const { areaId, depotId } = useParams<{ areaId: string; depotId: string }>();
 
-  const simulations = watch(selectedTab);
-  const audioFileUrl = watch(`${selectedTab}[${selectedSimulationIndex}].audioFileUrl`);
-
   const handleRemoveSimulation = async (index: number) => {
-    const updatedSimulations = [...simulations];
+    const currentSimulations = getValues(selectedTab) || [];
+    const updatedSimulations = [...currentSimulations];
     updatedSimulations.splice(index, 1);
     setValue(selectedTab, updatedSimulations);
-    // If the removed simulation is the currently selected one, reset the selection
     if (index === selectedSimulationIndex) {
       setSelectedSimulationIndex(-1);
-    }
-    console.log(audioFileUrl);
-    if (audioFileUrl) {
-      // Extract the file path relative to the 'stops' bucket
-      const pathMatch = audioFileUrl.match(/\/stops\/(.+)$/);
-      const filePath = pathMatch ? pathMatch[1] : null;
-      console.log("Deleting file from Supabase Storage at path:", filePath);
-      if (filePath) {
-        const { error } = await supabase.storage.from("stops").remove([filePath]);
-        if (error) {
-          console.error("Error deleting file from Supabase Storage:", error);
-        }
-      }
     }
   };
 
   // duplicate simulation
   const handleDuplicateSimulation = (index: number) => {
-    const simulationToDuplicate = simulations[index];
+    const currentSimulations = getValues(selectedTab) || [];
+    const simulationToDuplicate = currentSimulations[index];
+    if (!simulationToDuplicate) return;
     const newSimulation = { ...simulationToDuplicate };
-    const updatedSimulations = [...simulations, newSimulation];
+    const updatedSimulations = [...currentSimulations, newSimulation];
     setValue(selectedTab, updatedSimulations);
   };
-
 
   // move up simulation
   const handleMoveUpSimulation = (index: number) => {
     if (index === 0) return;
-    const updatedSimulations = [...simulations];
+    const currentSimulations = getValues(selectedTab) || [];
+    const updatedSimulations = [...currentSimulations];
     [updatedSimulations[index - 1], updatedSimulations[index]] = [
       updatedSimulations[index],
       updatedSimulations[index - 1],
@@ -123,8 +109,9 @@ const SimulationPlayerCardRoot = React.forwardRef<
 
   // move down simulation
   const handleMoveDownSimulation = (index: number) => {
-    if (index === simulations.length - 1) return;
-    const updatedSimulations = [...simulations];
+    const currentSimulations = getValues(selectedTab) || [];
+    if (index === currentSimulations.length - 1) return;
+    const updatedSimulations = [...currentSimulations];
     [updatedSimulations[index + 1], updatedSimulations[index]] = [
       updatedSimulations[index],
       updatedSimulations[index + 1],
@@ -282,4 +269,4 @@ const SimulationPlayerCardRoot = React.forwardRef<
   );
 });
 
-export const SimulationPlayerCard = SimulationPlayerCardRoot;
+export const SimulationPlayerCard = React.memo(SimulationPlayerCardRoot);
