@@ -1,5 +1,6 @@
 import { defaultDisplayConfigPostRequest } from "@/constants/defaultRouteValues";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
+import useSimulationStore from "@/store/useSimulationStore";
 import { supabase } from "@/supabaseClient";
 import { IRouteCreate } from "@/types/IRoute";
 import { DisplayConfigPostRequest } from "@/types/routeConfigV2";
@@ -64,6 +65,26 @@ const RouteCreatePage: React.FC = ({ initialData }) => {
       fetchRoute();
     }
   }, [routeId, methods]);
+
+  // [UX-01]: Warn user before closing/reloading tab if route form has unsaved edits
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (methods.formState.isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [methods.formState.isDirty]);
+
+  // [UX-03]: Reset global simulation store state when navigating away
+  useEffect(() => {
+    return () => {
+      useSimulationStore.getState().reset();
+    };
+  }, []);
 
   return (
     <FormProvider {...methods}>

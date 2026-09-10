@@ -1,6 +1,5 @@
 import { useEffect, Suspense } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { useUserDetails } from "@/api/users/hooks";
 import Navbar from "@/components/Navbar";
 import NavbarTwo from "@/components/Navbar copy";
 import useLoggedUserStore from "@/store/useLoggedUserStore";

@@ -50,12 +50,13 @@ const RouteCreationHeaderRoot = React.forwardRef<
     toggleTextSettingsPanel,
   } = useToggleStore();
 
-  const { handleSubmit, getValues } = useFormContext<IRoute>();
+  const { handleSubmit, getValues, formState } = useFormContext<IRoute>();
   const { useCreate, useUpdate } = routeCrud;
   const { mutate: createRoute, isPending: isCreatingRoute } = useCreate();
   const { mutate: updateRoute, isPending: isUpdatingRoute } = useUpdate();
 
   const onSubmit: SubmitHandler<IRoute> = async (data) => {
+    if (isCreatingRoute || isUpdatingRoute) return;
     if (mode === "edit") {
       updateRoute(
         {
@@ -92,7 +93,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
   };
 
   const handleBackClick = () => {
-    if (!hasBeenSaved) {
+    if (!hasBeenSaved && formState.isDirty) {
       setShowConfirmDialog(true);
     } else {
       navigate(-1);
@@ -105,6 +106,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
   };
 
   const handleConfirmSaveAndExit = () => {
+    if (isCreatingRoute || isUpdatingRoute) return;
     setShowConfirmDialog(false);
     handleSubmit(onSubmit)();
   };
@@ -162,6 +164,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
           variant="brand-primary"
           icon={<FeatherCloud />}
           disabled={isCreatingRoute || isUpdatingRoute}
+          loading={isCreatingRoute || isUpdatingRoute}
         >
           {mode === "create"
             ? isCreatingRoute

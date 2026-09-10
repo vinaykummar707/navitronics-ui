@@ -1,5 +1,4 @@
 import React from 'react';
-import useAuthStore from '../store/authStore';
 import useLoggedUserStore from '@/store/useLoggedUserStore';
 
 interface RBACProps {

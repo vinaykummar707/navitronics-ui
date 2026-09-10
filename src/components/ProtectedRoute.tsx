@@ -1,4 +1,3 @@
-import useAuthStore from "@/store/authStore";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { Navigate } from "react-router-dom";
 

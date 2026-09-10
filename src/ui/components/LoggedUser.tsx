@@ -17,7 +17,6 @@ import * as SubframeUtils from "../utils";
 import { Avatar } from "./Avatar";
 import { DropdownMenu } from "./DropdownMenu";
 import { IconButton } from "./IconButton";
-import useAuthStore from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
 import { ROLES } from "@/constants/roles";
 import useLoggedUserStore from "@/store/useLoggedUserStore";

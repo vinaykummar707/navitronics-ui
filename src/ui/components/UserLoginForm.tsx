@@ -19,8 +19,6 @@ import { TextField } from "./TextField";
 import { supabase } from "@/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useUserDetails } from "@/api/users/hooks";
-import { set } from "zod";
 import { ILoggedUser, loggedUserCrud, userCrud } from "@/types/IUser";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { useOrganizationStore } from "@/store/useOrganizationStore";

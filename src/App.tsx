@@ -26,7 +26,6 @@ const Roles = lazy(() => import("./pages/Roles"));
 const LanguageModify = lazy(() => import("./components/LanguageModify"));
 const RoutesPage = lazy(() => import("./pages/v2/RoutesPage"));
 const StopsPage = lazy(() => import("./pages/v2/StopsPage"));
-const DisplayConfigForm = lazy(() => import("./components/DisplayConfigForm"));
 const Settings = lazy(() => import("./pages/Settings"));
 const UtilityPage = lazy(() => import("./pages/v2/UtilityPage"));
 const FontConfigurationPage = lazy(() => import("./pages/v2/FontConfigurationPage"));
@@ -98,7 +97,6 @@ const protectedRoutes = [
   },
   { path: "routes", element: <RoutesPage />, features: ["PIS", "PAS", "ITMS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
   { path: "stops", element: <StopsPage />, features: ["PAS", "ITMS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
-  { path: "create-route", element: <DisplayConfigForm /> },
   { path: "settings", element: <Settings /> },
   { path: "utility", element: <UtilityPage /> },
   { path: "font-configuration", roles: [ROLES.MASTER], features: [], element: <FontConfigurationPage /> },

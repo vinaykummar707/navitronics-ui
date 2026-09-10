@@ -1,5 +1,4 @@
 import React from 'react';
-import useAuthStore from '../store/authStore';
 import { FeatherShieldQuestion } from '@subframe/core';
 import useLoggedUserStore from '@/store/useLoggedUserStore';
 

@@ -14,7 +14,6 @@ import {
 import React, { useEffect, useState } from "react";
 import { useRegions } from "@/api/region/hooks";
 import RBAC from "@/components/RBAC";
-import useAuthStore from "@/store/authStore";
 import { ROLES } from "@/constants/roles";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { useRegionStore } from "@/store/useRegionStore";

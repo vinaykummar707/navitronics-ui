@@ -155,6 +155,11 @@ const LEDMatrix: React.FC<LEDMatrixProps> = ({
 
           const y = rowIndex * totalDotSize + dotSize / 2 + startY;
 
+          // [UX-04]: Matrix boundary clamping - skip drawing dots outside vertical matrix height
+          if (y - dotSize / 2 < 0 || y + dotSize / 2 > canvas.height) {
+            return;
+          }
+
           // Only draw if the dot is within the visible canvas area
           // or is part of the wrapping pattern that will soon be visible.
           if (marqueeDirection === "none") {

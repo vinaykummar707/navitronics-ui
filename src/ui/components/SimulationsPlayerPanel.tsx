@@ -49,11 +49,8 @@ import {
   stopStates,
   getDefaultStopSingleSimulation,
 } from "@/constants/defaultRouteValues";
-import { get } from "node:http";
 import useTabsStore from "@/store/useTabsStore";
 import useSimulationStore from "@/store/useSimulationStore";
-import { set } from "zod";
-import { useStops } from "@/api/stop/hooks";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { Select } from "./Select";
 import { useParams } from "react-router-dom";
