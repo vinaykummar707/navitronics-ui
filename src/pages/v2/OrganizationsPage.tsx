@@ -13,7 +13,6 @@ import {
   FeatherRefreshCw,
 } from "@subframe/core";
 import { useQuery } from "@tanstack/react-query";
-import { organizationService } from "@/services/organizationService";
 import { OptionsDropdown } from "@/ui/components/OptionsDropdown";
 import { Drawer } from "@/ui/components/Drawer";
 import { CreateOrganizationDrawer, IconButton } from "@/ui";

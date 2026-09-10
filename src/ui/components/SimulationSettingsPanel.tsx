@@ -141,25 +141,40 @@ const SimulationSettingsPanelRoot = React.forwardRef<
 
     if ( simulations[selectedSimulationIndex]?.type === 'stop' && stopTypeAudioFileUrl) {
       audioElementRef.current.setAttribute("src", stopTypeAudioFileUrl);
-      audioElementRef.current!.play();
-      audioElementRef.current!.onended = () => {
-        audioElementRef.current.setAttribute("src", audiopath);
-        audioElementRef.current!.play();
-        audioElementRef.current!.onended = () => {
-          audioElementRef.current!.pause();
-          audioElementRef.current.setAttribute("src", '');
+      audioElementRef.current
+        .play()
+        .catch((err) => {
+          console.warn("Autoplay prevented:", err);
           setIsLooping(false);
-        }
-      }
+        });
+      audioElementRef.current.onended = () => {
+        audioElementRef.current.setAttribute("src", audiopath);
+        audioElementRef.current
+          .play()
+          .catch((err) => {
+            console.warn("Autoplay prevented:", err);
+            setIsLooping(false);
+          });
+        audioElementRef.current.onended = () => {
+          audioElementRef.current.pause();
+          audioElementRef.current.setAttribute("src", "");
+          setIsLooping(false);
+        };
+      };
     } else {
       console.warn("Audio URL not found for the selected simulation.");
       audioElementRef.current.setAttribute("src", audiopath);
-      audioElementRef.current!.play();
-      audioElementRef.current!.onended = () => {
-        audioElementRef.current!.pause();
-        audioElementRef.current.setAttribute("src", '');
+      audioElementRef.current
+        .play()
+        .catch((err) => {
+          console.warn("Autoplay prevented:", err);
+          setIsLooping(false);
+        });
+      audioElementRef.current.onended = () => {
+        audioElementRef.current.pause();
+        audioElementRef.current.setAttribute("src", "");
         setIsLooping(false);
-      }
+      };
     }
 
 

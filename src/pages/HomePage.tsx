@@ -1,7 +1,5 @@
 import { useEffect, Suspense } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import Navbar from "@/components/Navbar";
-import NavbarTwo from "@/components/Navbar copy";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { supabase } from "@/supabaseClient";
 import { ILoggedUser, loggedUserCrud } from "@/types/IUser";

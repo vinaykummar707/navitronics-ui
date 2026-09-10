@@ -19,7 +19,6 @@ import * as SubframeUtils from "../utils";
 import { Button } from "./Button";
 import { Switch } from "./Switch";
 import { TextField } from "./TextField";
-import { organizationService } from "@/services/organizationService";
 import { FeatureToggle } from "./FeatureToggle";
 import { IOrganization, organizationCrud } from "@/types/organization";
 import { toast } from "react-toastify";

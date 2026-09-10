@@ -13,7 +13,7 @@ import { Select } from "./Select";
 import { TextField } from "./TextField";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { useForm, Controller, useWatch } from "react-hook-form";
-import { supabase } from "@/supabaseClient";
+import { supabase, supabaseAuthHelper } from "@/supabaseClient";
 import { FeatureToggle } from "./FeatureToggle";
 import { Switch } from "./Switch";
 import {
@@ -209,9 +209,9 @@ const CreateUserForm2Root = React.forwardRef<
         }
       }
 
-      // New signup in Supabase Auth
+      // New signup in Supabase Auth using session-isolated client
       const { data: signUpData, error: signUpError } =
-        await supabase.auth.signUp({
+        await supabaseAuthHelper.auth.signUp({
           email: data.email,
           password: data.password,
         });

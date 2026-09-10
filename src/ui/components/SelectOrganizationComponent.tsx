@@ -9,7 +9,6 @@ import React, { useEffect } from "react";
 import * as SubframeUtils from "../utils";
 import { Select } from "./Select";
 import { useQuery } from "@tanstack/react-query";
-import { organizationService } from "../../services/organizationService";
 import { useOrganizationStore } from "../../store/useOrganizationStore";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { IOrganization, organizationCrud } from "@/types/organization";
