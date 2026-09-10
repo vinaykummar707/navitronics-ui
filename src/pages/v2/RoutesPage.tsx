@@ -48,6 +48,7 @@ function useRoutesPageData() {
       deleted: false,
     },
     orderBy: { column: "created_at", ascending: true },
+    skip: !selectedOrganization?.id,
   });
 
   const { data: depotData, refetch: refetchDepots } = depotCrud.useList({
@@ -66,7 +67,7 @@ function useRoutesPageData() {
     custom(query) {
       return query.select(`*, created_by_user:created_by (email)`);
     },
-    skip: !selectedDepot?.id,
+    skip: !selectedDepot?.id || !selectedOrganization?.id,
   });
 
   const regions = regionData?.data as IRegion[];
@@ -82,16 +83,19 @@ function useRoutesPageData() {
 
   // Auto-select / clear depot
   useEffect(() => {
-    const firstDepot = depots ? depots[0] : [];
-    const isSelectedDepotValid = depots?.some(
+    if (!depots || depots.length === 0) {
+      if (selectedDepot) {
+        setSelectedDepotInStore(null);
+      }
+      return;
+    }
+
+    const isSelectedDepotValid = depots.some(
       (depot) => depot.id === selectedDepot?.id,
     );
-    const noSelectedDepotFound = !selectedDepot && depots?.length > 0;
 
-    if (!depots) return;
-
-    if ((noSelectedDepotFound || !isSelectedDepotValid) && firstDepot) {
-      setSelectedDepotInStore(firstDepot);
+    if (!isSelectedDepotValid) {
+      setSelectedDepotInStore(depots[0]);
     }
   }, [depots, selectedDepot, setSelectedDepotInStore]);
 
@@ -295,14 +299,26 @@ export default function RoutesPage() {
 
   //function to parse a field value with key in a json
   const parseFieldValue = (
-    fieldValue: string | null,
+    fieldValue: any,
     fieldKey: string,
     json: IRoute,
   ) => {
-    if (fieldValue === null || fieldValue === undefined) {
+    const value = fieldValue !== undefined && fieldValue !== null ? fieldValue : json[fieldKey];
+    if (value === null || value === undefined) {
       return null;
     }
-    return JSON.parse(json[fieldKey] as string);
+    if (typeof value === "object") {
+      return value;
+    }
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch (err) {
+        console.warn(`Failed to parse ${fieldKey} as JSON:`, err);
+        return value;
+      }
+    }
+    return value;
   };
 
   type FileItem = {
@@ -461,7 +477,7 @@ export default function RoutesPage() {
 
             {/* Depot Select */}
             {hasDepots && (
-              <RBAC features={[]} roles={["master", "organization_admin"]}>
+              <RBAC features={[]} roles={["master", "organization_admin", "region_admin"]}>
                 <Select
                   className="h-auto flex-none"
                   variant="outline"

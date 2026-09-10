@@ -37,7 +37,7 @@ const LoggedUserRoot = React.forwardRef<HTMLDivElement, LoggedUserRootProps>(
     // write a function that returns assigned organization name, region name and depot name based on user object and role
     const use = (() => {
       if (!user) return "";
-      switch (user.role.name) {
+      switch (user?.role?.name) {
         case ROLES.MASTER:
           return "Navitronix";
         case ROLES.ORGANIZATION_ADMIN:

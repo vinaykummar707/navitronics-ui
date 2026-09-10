@@ -20,7 +20,6 @@ import { Badge } from "./Badge";
 import { DropdownMenu } from "./DropdownMenu";
 import { IconButton } from "./IconButton";
 import { Table } from "./Table";
-import { UserDetails } from "@/api/users/types";
 import { OptionsDropdown } from "./OptionsDropdown";
 import { ILoggedUser, IUser } from "@/types/IUser";
 import { toast } from "react-toastify";
@@ -54,7 +53,6 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
           header={
             <Table.HeaderRow>
               <Table.HeaderCell>Email</Table.HeaderCell>
-              <Table.HeaderCell>Password</Table.HeaderCell>
               <Table.HeaderCell>Role</Table.HeaderCell>
               <Table.HeaderCell>Region</Table.HeaderCell>
               <Table.HeaderCell>Organization</Table.HeaderCell>
@@ -65,15 +63,10 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
             </Table.HeaderRow>
           }
         >
-          {users.map((user: ILoggedUser) => <Table.Row key={user.user_id}>
+          {users.map((user: ILoggedUser) => <Table.Row key={user.id || user.user_id}>
             <Table.Cell>
               <span className="whitespace-nowrap text-body-bold flex gap-1.5 items-center font-body-bold text-default-font">
                 {user.email} <IconButton variant="neutral-tertiary" size="small" icon={<SubframeCore.FeatherCopy />} onClick={() => { navigator.clipboard.writeText(user.email);  toast.success(`Email copied to clipboard ${user.email}`)}} />
-              </span>
-            </Table.Cell>
-            <Table.Cell>
-              <span className="whitespace-nowrap text-body font-body flex gap-1.5 items-center text-subtext-color">
-                {user.password} <IconButton variant="neutral-tertiary" size="small" icon={<SubframeCore.FeatherCopy />} onClick={() => { navigator.clipboard.writeText(user.password); toast.success(`Password copied to clipboard`); }} />
               </span>
             </Table.Cell>
             <Table.Cell>
@@ -113,7 +106,7 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
             <Table.Cell>
               <div className="flex grow shrink-0 basis-0 items-center justify-end">
                 
-                <OptionsDropdown isDisabled={user.role.name === "master"} onDelete={() => onDeleteUser && onDeleteUser(user.id)} onEdit={() => onEditUser && onEditUser(user)} />
+                <OptionsDropdown isDisabled={user.role?.name === "master"} onDelete={() => onDeleteUser && onDeleteUser(user.id)} onEdit={() => onEditUser && onEditUser(user)} />
               </div>
             </Table.Cell>
           </Table.Row>)}

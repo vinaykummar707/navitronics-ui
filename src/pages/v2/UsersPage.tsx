@@ -1,4 +1,3 @@
-import { useUsersByOrganization } from "@/api/users/hooks";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { supabase } from "@/supabaseClient";
 import { ILoggedUser, userCrud } from "@/types/IUser";
@@ -24,6 +23,7 @@ export default function UsersPage() {
     refetch,
   } = useList({
     filters: { organization_id: selectedOrganization?.id, deleted: false },
+    skip: !selectedOrganization?.id,
     custom(query) {
       return query.select(
         ` *,
@@ -61,7 +61,7 @@ export default function UsersPage() {
           Users
         </span>
         <span className="text-body font-body text-subtext-color">
-          Overview of your store&#39;s performance and customer engagement
+          Manage user accounts, roles, and module access permissions
         </span>
       </div>
       <div className="flex w-full items-center justify-between mobile:flex-col mobile:items-start gap-4">

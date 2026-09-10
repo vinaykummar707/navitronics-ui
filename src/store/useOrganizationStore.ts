@@ -1,4 +1,3 @@
-import { Organization } from '@/api/organization/types';
 import { IOrganization } from '@/types/organization';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';

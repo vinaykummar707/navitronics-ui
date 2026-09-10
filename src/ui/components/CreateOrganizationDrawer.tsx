@@ -21,11 +21,6 @@ import { Switch } from "./Switch";
 import { TextField } from "./TextField";
 import { organizationService } from "@/services/organizationService";
 import { FeatureToggle } from "./FeatureToggle";
-import {
-  useCreateOrganization,
-  useUpdateOrganization,
-} from "@/api/organization/hooks";
-import { Organization } from "@/api/organization/types";
 import { IOrganization, organizationCrud } from "@/types/organization";
 import { toast } from "react-toastify";
 
@@ -62,15 +57,15 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
 ) {
   const isEditMode = !!initialData;
   const { useCreate, useUpdate } = organizationCrud;
-  const { mutate: createOrganization, isPending: loading } = useCreate();
-  const { mutate: updateOrganization } = useUpdate();
+  const { mutate: createOrganization, isPending: isCreating } = useCreate();
+  const { mutate: updateOrganization, isPending: isUpdating } = useUpdate();
 
   // -- Form Setup --
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     watch,
     setValue,
   } = useForm<OrganizationFormValues>({
@@ -305,10 +300,11 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
         <Button
           className="h-9 w-full flex-none"
           icon={isEditMode ? <FeatherSave /> : <FeatherPlus />}
-          disabled={loading}
+          disabled={isSubmitting || isCreating || isUpdating}
+          loading={isCreating || isUpdating}
           onClick={() => handleSubmit(onSubmit)()} // Trigger submit manually if button is not type="submit"
         >
-          {loading
+          {isCreating || isUpdating
             ? "Saving..."
             : isEditMode
               ? "Update Organization"
@@ -318,6 +314,7 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
         <Button
           className="h-9 w-full flex-none"
           variant="neutral-secondary"
+          disabled={isSubmitting || isCreating || isUpdating}
           onClick={(e) => {
             e.preventDefault();
             reset(); // Reset form to initial values

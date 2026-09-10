@@ -53,6 +53,7 @@ function useStopsPageData() {
       deleted: false,
     },
     orderBy: { column: "created_at", ascending: true },
+    skip: !selectedOrganization?.id,
   });
 
   const { data: depotData, refetch: refetchDepots } = depotCrud.useList({
@@ -65,7 +66,7 @@ function useStopsPageData() {
     filters: {
       depot_id: selectedDepot?.id || "",
       deleted: false,
-      organization_id: selectedOrganization.id,
+      organization_id: selectedOrganization?.id || "",
     },
     orderBy: { column: "created_at", ascending: false },
     custom(query) {
@@ -79,7 +80,7 @@ function useStopsPageData() {
           `, // Verify this line. It should correctly reflect your schema relationships.
       );
     },
-    skip: !selectedDepot?.id,
+    skip: !selectedDepot?.id || !selectedOrganization?.id,
   });
 
   const regions = regionData?.data as IRegion[];
@@ -186,7 +187,9 @@ export default function StopsPage() {
   const handlePlayAudio = (url: string) => {
     if (audioRef.current) {
       audioRef.current.src = url;
-      audioRef.current.play();
+      audioRef.current.play().catch((err) => {
+        console.warn("Audio playback was prevented or failed:", err);
+      });
     }
   };
 
@@ -199,7 +202,7 @@ export default function StopsPage() {
       },
       onError: (error) => {
         toast.error(
-          `Error deleting route: ${error.message || "Unknown error"}`,
+          `Error deleting stop: ${error.message || "Unknown error"}`,
         );
       },
     });
@@ -249,7 +252,7 @@ export default function StopsPage() {
     stopId: string,
     stop_audio_id?: string,
   ) {
-    await deleteAudioFile(fileUrl, stopId);
+    if (fileUrl) await deleteAudioFile(fileUrl, stopId);
     if (stop_audio_id) {
       await deleteStopAudio(stop_audio_id);
     }
@@ -261,17 +264,24 @@ export default function StopsPage() {
     stopId: string,
     stop_audio_id?: string,
   ) {
-    await deleteAudioFile(fileUrl, stopId);
-    await deleteStopAudio(stop_audio_id);
-    await deleteStop(stopId);
-    refetchStops();
+    if (fileUrl) await deleteAudioFile(fileUrl, stopId);
+    if (stop_audio_id) await deleteStopAudio(stop_audio_id);
+    deleteStop(stopId, {
+      onSuccess: () => {
+        toast.success("Stop deleted successfully");
+        refetchStops();
+      },
+      onError: (error) => {
+        toast.error(`Error deleting stop: ${error.message || "Unknown error"}`);
+      },
+    });
   }
 
-  const [generatingAudio, setGeneratingAudio] = React.useState<boolean>(false);
+  const [generatingStopId, setGeneratingStopId] = React.useState<string | null>(null);
 
   const genAudio = async (text: string, stopId: string) => {
     try {
-      setGeneratingAudio(true);
+      setGeneratingStopId(stopId);
       toast.info(`Generating audio for "${text}"...`);
       const { fileUrl, size } = await handleStopAudioGeneration(text, stopId);
       console.log("Generated audio URL:", fileUrl, "Size:", size);
@@ -281,7 +291,7 @@ export default function StopsPage() {
       console.error("Error generating audio:", err);
       toast.error(`Audio generation failed: ${err.message || "Unknown error"}`);
     } finally {
-      setGeneratingAudio(false);
+      setGeneratingStopId(null);
     }
   };
 
@@ -446,17 +456,17 @@ export default function StopsPage() {
                       <>
                         <Button
                           className="h-8 w-auto flex-none"
-                          disabled={generatingAudio}
+                          disabled={generatingStopId !== null}
                           variant="brand-primary"
                           size="medium"
                           icon={<FeatherMusic />}
                           iconRight={null}
-                          loading={false}
+                          loading={generatingStopId === stop.id}
                           onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
                             genAudio(stop.name, stop.id)
                           }
                         >
-                          {generatingAudio ? "Generating..." : "Generate Audio"}
+                          {generatingStopId === stop.id ? "Generating..." : "Generate Audio"}
                         </Button>
                       </>
                     }

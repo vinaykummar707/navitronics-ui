@@ -8,7 +8,7 @@ export interface IUser {
     id: string;
     user_id: string;
     email: string | null;
-    password: string | null;
+    password?: string | null;
     organization_id: string;
     region_id: string | null;
     depot_id: string | null;

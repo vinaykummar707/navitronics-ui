@@ -31,7 +31,6 @@ import { getSimulationCardText } from "@/utils/simulationUtils";
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import useTabsStore from "@/store/useTabsStore";
 import useSimulationStore from "@/store/useSimulationStore";
-import { get } from "node:http";
 import DisplayEditor from "@/components/DisplayEditor";
 import { supabase } from "@/supabaseClient";
 import { useParams } from "react-router-dom";
@@ -85,7 +84,10 @@ const SimulationPlayerCardRoot = React.forwardRef<
     const currentSimulations = getValues(selectedTab) || [];
     const simulationToDuplicate = currentSimulations[index];
     if (!simulationToDuplicate) return;
-    const newSimulation = { ...simulationToDuplicate };
+    const newSimulation =
+      typeof structuredClone === "function"
+        ? structuredClone(simulationToDuplicate)
+        : JSON.parse(JSON.stringify(simulationToDuplicate));
     const updatedSimulations = [...currentSimulations, newSimulation];
     setValue(selectedTab, updatedSimulations);
   };

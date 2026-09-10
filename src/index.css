@@ -43,3 +43,135 @@
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: 'liga';
 }
+
+:root {
+  /* Default Colors */
+  --color-brand-primary: var(--color-brand-600);
+  --color-default-font: var(--color-neutral-900);
+  --color-subtext-color: var(--color-neutral-500);
+  --color-neutral-border: var(--color-neutral-200);
+  --color-white: var(--color-neutral-0);
+  --color-default-background: var(--color-neutral-100);
+
+  /* Brand */
+  --color-brand-50: rgb(250 250 250);
+  --color-brand-100: rgb(245 245 245);
+  --color-brand-200: rgb(229 229 229);
+  --color-brand-300: rgb(212 212 212);
+  --color-brand-400: rgb(163 163 163);
+  --color-brand-500: rgb(115 115 115);
+  --color-brand-600: rgb(38 38 38);
+  --color-brand-700: rgb(64 64 64);
+  --color-brand-800: rgb(38 38 38);
+  --color-brand-900: rgb(23 23 23);
+
+  /* Neutral */
+  --color-neutral-0: rgb(255 255 255);
+  --color-neutral-50: rgb(250 250 250);
+  --color-neutral-100: rgb(244 244 245);
+  --color-neutral-200: rgb(228 228 231);
+  --color-neutral-300: rgb(212 212 216);
+  --color-neutral-400: rgb(161 161 170);
+  --color-neutral-500: rgb(113 113 122);
+  --color-neutral-600: rgb(82 82 91);
+  --color-neutral-700: rgb(63 63 70);
+  --color-neutral-800: rgb(39 39 42);
+  --color-neutral-900: rgb(24 24 27);
+  --color-neutral-950: rgb(9 9 11);
+
+  /* Error */
+  --color-error-50: rgb(254 242 242);
+  --color-error-100: rgb(254 226 226);
+  --color-error-200: rgb(254 202 202);
+  --color-error-300: rgb(252 165 165);
+  --color-error-400: rgb(248 113 113);
+  --color-error-500: rgb(239 68 68);
+  --color-error-600: rgb(220 38 38);
+  --color-error-700: rgb(185 28 28);
+  --color-error-800: rgb(153 27 27);
+  --color-error-900: rgb(127 29 29);
+
+  /* Warning */
+  --color-warning-50: rgb(255 251 235);
+  --color-warning-100: rgb(254 243 199);
+  --color-warning-200: rgb(253 230 138);
+  --color-warning-300: rgb(252 211 77);
+  --color-warning-400: rgb(251 191 36);
+  --color-warning-500: rgb(245 158 11);
+  --color-warning-600: rgb(217 119 6);
+  --color-warning-700: rgb(180 83 9);
+  --color-warning-800: rgb(146 64 14);
+  --color-warning-900: rgb(120 53 15);
+
+  /* Success */
+  --color-success-50: rgb(240 253 250);
+  --color-success-100: rgb(204 251 241);
+  --color-success-200: rgb(153 246 228);
+  --color-success-300: rgb(94 234 212);
+  --color-success-400: rgb(45 212 191);
+  --color-success-500: rgb(20 184 166);
+  --color-success-600: rgb(13 148 136);
+  --color-success-700: rgb(15 118 110);
+  --color-success-800: rgb(17 94 89);
+  --color-success-900: rgb(19 78 74);
+
+  /* Fonts */
+  --text-caption: 12px;
+  --text-caption--font-weight: 400;
+  --text-caption--letter-spacing: 0em;
+  --text-caption--line-height: 16px;
+  --text-caption-bold: 12px;
+  --text-caption-bold--font-weight: 500;
+  --text-caption-bold--letter-spacing: 0em;
+  --text-caption-bold--line-height: 16px;
+  --text-body: 14px;
+  --text-body--font-weight: 400;
+  --text-body--letter-spacing: 0em;
+  --text-body--line-height: 20px;
+  --text-body-bold: 14px;
+  --text-body-bold--font-weight: 500;
+  --text-body-bold--letter-spacing: 0em;
+  --text-body-bold--line-height: 20px;
+  --text-heading-3: 16px;
+  --text-heading-3--font-weight: 500;
+  --text-heading-3--letter-spacing: 0em;
+  --text-heading-3--line-height: 20px;
+  --text-heading-2: 20px;
+  --text-heading-2--font-weight: 500;
+  --text-heading-2--letter-spacing: 0em;
+  --text-heading-2--line-height: 24px;
+  --text-heading-1: 30px;
+  --text-heading-1--font-weight: 500;
+  --text-heading-1--letter-spacing: 0em;
+  --text-heading-1--line-height: 36px;
+  --text-monospace-body: 14px;
+  --text-monospace-body--font-weight: 400;
+  --text-monospace-body--letter-spacing: 0em;
+  --text-monospace-body--line-height: 20px;
+
+  /* Font families */
+  --font-caption: "Host Grotesk";
+  --font-caption-bold: "Host Grotesk";
+  --font-body: "Host Grotesk";
+  --font-body-bold: "Host Grotesk";
+  --font-heading-3: "Host Grotesk";
+  --font-heading-2: "Host Grotesk";
+  --font-heading-1: "Host Grotesk";
+  --font-monospace-body: monospace;
+
+  /* Border radiuses */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+
+  /* Box shadows */
+  --shadow-sm: 0px 1px 2px 0px rgb(0 0 0 / 0.05);
+  --shadow-default: 0px 1px 2px 0px rgb(0 0 0 / 0.05);
+  --shadow-md: 0px 4px 16px -2px rgb(0 0 0 / 0.08),
+    0px 2px 4px -1px rgb(0 0 0 / 0.08);
+  --shadow-lg: 0px 12px 32px -4px rgb(0 0 0 / 0.08),
+    0px 4px 8px -2px rgb(0 0 0 / 0.08);
+  --shadow-overlay: 0px 12px 32px -4px rgb(0 0 0 / 0.08),
+    0px 4px 8px -2px rgb(0 0 0 / 0.08);
+}

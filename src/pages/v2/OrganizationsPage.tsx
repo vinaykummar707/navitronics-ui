@@ -17,8 +17,6 @@ import { organizationService } from "@/services/organizationService";
 import { OptionsDropdown } from "@/ui/components/OptionsDropdown";
 import { Drawer } from "@/ui/components/Drawer";
 import { CreateOrganizationDrawer, IconButton } from "@/ui";
-import { useOrganizations } from "@/api/organization/hooks";
-import { Organization } from "@/api/organization/types";
 import { ButtonGroup } from "@/ui/components/ButtonGroup";
 import RBAC from "@/components/RBAC";
 import { supabase } from "@/supabaseClient";
@@ -67,40 +65,56 @@ function OrganizationsPage() {
         buttonLabel="Add Organization"
         roles={["master"]}
       />
-      <OrganizationList>
-        {organizations &&
-          organizations.map((org) => (
-            <OrganizationCard
-              title={org.name}
-              subtitle={org.email ? org.email : "No email provided"}
-              timestamp={`Created on ${new Date(org.created_at).toLocaleDateString()}`}
-              key={org.id}
-              isSuspended={!org.active}
-              logo2={org.logo || undefined}
-              actions={
-                <OptionsDropdown
-                  isDisabled={org.id === "6b679098-ef69-45f0-9fb1-b457dd882060"}
-                  onEdit={() => {
-                    setEditData(org);
-                    setOpen(true);
-                  }}
-                  onDelete={() => {
-                    if (
-                      confirm(
-                        "Are you sure you want to delete this organization? This action cannot be undone.",
-                      )
-                    ) {
-                      handleDelete(org.id);
+      {isLoading && (
+        <div className="flex w-full items-center justify-center p-8">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-300 border-t-neutral-800" />
+        </div>
+      )}
+      {isError && (
+        <div className="flex w-full items-center justify-center p-8 text-error-700">
+          Failed to load organizations. Please click refresh to try again.
+        </div>
+      )}
+      {!isLoading && !isError && (
+        <OrganizationList>
+          {organizations &&
+            organizations.map((org) => (
+              <OrganizationCard
+                title={org.name}
+                subtitle={org.email ? org.email : "No email provided"}
+                timestamp={`Created on ${new Date(org.created_at).toLocaleDateString()}`}
+                key={org.id}
+                isSuspended={!org.active}
+                logo2={org.logo || undefined}
+                actions={
+                  <OptionsDropdown
+                    isDisabled={
+                      org.name?.toLowerCase() === "navitronix" ||
+                      (org as any).is_default ||
+                      org.id === "6b679098-ef69-45f0-9fb1-b457dd882060"
                     }
-                  }}
-                />
-              }
-              features={
-                <ButtonGroup pas={org.PAS} pis={org.PIS} itms={org.ITMS} />
-              }
-            />
-          ))}
-      </OrganizationList>
+                    onEdit={() => {
+                      setEditData(org);
+                      setOpen(true);
+                    }}
+                    onDelete={() => {
+                      if (
+                        confirm(
+                          "Are you sure you want to delete this organization? This action cannot be undone.",
+                        )
+                      ) {
+                        handleDelete(org.id);
+                      }
+                    }}
+                  />
+                }
+                features={
+                  <ButtonGroup pas={org.PAS} pis={org.PIS} itms={org.ITMS} />
+                }
+              />
+            ))}
+        </OrganizationList>
+      )}
 
       <Drawer open={open} onOpenChange={setOpen}>
         <Drawer.Content>

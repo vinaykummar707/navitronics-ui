@@ -93,12 +93,31 @@ export function convertV2ToV1(v2Route: any): DisplayConfig {
         }
       }
 
-      languageDisplayConfig[lang][loc] = {
+      const screenConfig = {
         format: screen.format || "single",
         texts: cleanTexts,
         height: screen.height ?? 16,
         width: screen.width ?? 96,
       };
+
+      if (!languageDisplayConfig[lang][loc]) {
+        languageDisplayConfig[lang][loc] = {
+          ...screenConfig,
+          screens: [screenConfig],
+        };
+      } else {
+        if (!Array.isArray(languageDisplayConfig[lang][loc].screens)) {
+          languageDisplayConfig[lang][loc].screens = [
+            {
+              format: languageDisplayConfig[lang][loc].format,
+              texts: languageDisplayConfig[lang][loc].texts,
+              height: languageDisplayConfig[lang][loc].height,
+              width: languageDisplayConfig[lang][loc].width,
+            },
+          ];
+        }
+        languageDisplayConfig[lang][loc].screens.push(screenConfig);
+      }
     }
   }
 

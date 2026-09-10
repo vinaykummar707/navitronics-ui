@@ -131,17 +131,41 @@ function App() {
             <Route
               path="routes/create/:areaId/:depotId"
               element={
-                <LanguageConfigProvider>
-                  <RouteCreatePage />
-                </LanguageConfigProvider>
+                <ProtectedRoute>
+                  <RBACPage
+                    roles={[
+                      ROLES.MASTER,
+                      ROLES.ORGANIZATION_ADMIN,
+                      ROLES.REGION_ADMIN,
+                      ROLES.DEPOT_ADMIN,
+                    ]}
+                    features={["PIS", "PAS", "ITMS"]}
+                  >
+                    <LanguageConfigProvider>
+                      <RouteCreatePage />
+                    </LanguageConfigProvider>
+                  </RBACPage>
+                </ProtectedRoute>
               }
             />
             <Route
               path="routes/create/:areaId/:depotId/:routeId"
               element={
-                <LanguageConfigProvider>
-                  <RouteCreatePage />
-                </LanguageConfigProvider>
+                <ProtectedRoute>
+                  <RBACPage
+                    roles={[
+                      ROLES.MASTER,
+                      ROLES.ORGANIZATION_ADMIN,
+                      ROLES.REGION_ADMIN,
+                      ROLES.DEPOT_ADMIN,
+                    ]}
+                    features={["PIS", "PAS", "ITMS"]}
+                  >
+                    <LanguageConfigProvider>
+                      <RouteCreatePage />
+                    </LanguageConfigProvider>
+                  </RBACPage>
+                </ProtectedRoute>
               }
             />
             {/* Protected Routes */}
@@ -157,7 +181,7 @@ function App() {
                 index
                 element={
                   <Navigate
-                    to={getDefaultRouteForRole(user?.role?.name.toLowerCase() || "")}
+                    to={getDefaultRouteForRole(user?.role?.name?.toLowerCase() || "")}
                     replace
                   />
                 }
@@ -207,7 +231,7 @@ function App() {
           theme="dark"
         />
       </Router>
-      <ReactQueryDevtools initialIsOpen={false} />
+      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
     </QueryClientProvider>
   );
 }

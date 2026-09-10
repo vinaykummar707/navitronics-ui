@@ -7,7 +7,6 @@ import { FeatherCheck, FeatherUser } from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { Button } from "./Button";
 import { TextField } from "./TextField";
-import { useCreateDepot, useUpdateDepot } from "@/api/depot/hooks";
 import { Select } from "./Select";
 import { depotCrud, IDepot } from "@/types/IDepot";
 import { toast } from "react-toastify";
@@ -50,8 +49,8 @@ const CreateDepotFormRoot = React.forwardRef<
   const [apiError, setApiError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
       const { useCreate, useUpdate } = depotCrud;
-      const { mutate: createDepot, isPending: loading } = useCreate();
-      const { mutate: updateDepot } = useUpdate();
+      const { mutate: createDepot, isPending: isCreating } = useCreate();
+      const { mutate: updateDepot, isPending: isUpdating } = useUpdate();
 
   const isUpdate = !!initialData;
 
@@ -146,16 +145,23 @@ const CreateDepotFormRoot = React.forwardRef<
             className="h-9 w-full flex-none"
             icon={<FeatherCheck />}
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isCreating || isUpdating}
+            loading={isCreating || isUpdating}
           >
-            {isUpdate ? "Update" : "Submit"}
+            {isCreating || isUpdating
+              ? isUpdate
+                ? "Updating..."
+                : "Creating..."
+              : isUpdate
+              ? "Update"
+              : "Submit"}
           </Button>
           <Button
             className="h-9 w-full flex-none"
             variant="neutral-secondary"
             type="button"
             onClick={handleCancel}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isCreating || isUpdating}
           >
             Cancel
           </Button>

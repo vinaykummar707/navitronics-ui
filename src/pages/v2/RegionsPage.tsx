@@ -1,4 +1,3 @@
-import { useDeleteRegion, useRegions } from "@/api/region/hooks";
 import PageHeader from "@/components/PageHeader";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { useRegionStore } from "@/store/useRegionStore";
@@ -27,6 +26,7 @@ export default function AreasPage() {
       deleted: false,
     },
     orderBy: { column: "created_at", ascending: true },
+    skip: !selectedOrganization?.id,
   });
   const { mutate: deleteRegion } = useDelete();
   const [editData, setEditData] = React.useState<IRegion | null>(null);
@@ -39,10 +39,6 @@ export default function AreasPage() {
     setEditData(null);
     refetch();
   };
-
-  React.useEffect(() => {
-    refetch();
-  }, [selectedOrganization, refetch]);
 
   const handleDeleteRegion = (region: IRegion) => {
     deleteRegion(region.id, {
@@ -65,7 +61,7 @@ export default function AreasPage() {
       {regions.length > 0 && (
         <PageHeader
           title="Regions"
-          subtitle="Overview of your store's performance and customer engagement"
+          subtitle="Manage geographic regions and transit operational zones"
           count={regions.length}
           onRefetch={refetch}
           onAdd={() => {

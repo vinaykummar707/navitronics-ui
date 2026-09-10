@@ -11,7 +11,6 @@ import { Select } from "./Select";
 import { useQuery } from "@tanstack/react-query";
 import { organizationService } from "../../services/organizationService";
 import { useOrganizationStore } from "../../store/useOrganizationStore";
-import { useOrganizations } from "@/api/organization/hooks";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { IOrganization, organizationCrud } from "@/types/organization";
 

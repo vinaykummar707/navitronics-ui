@@ -24,8 +24,10 @@ const RouteConfigurationFormRoot = React.forwardRef<
   { className, ...otherProps }: RouteConfigurationFormRootProps,
   ref,
 ) {
-  const { register, watch, setValue } =
+  const { register, watch, setValue, formState: { errors } } =
     useFormContext<DisplayConfigPostRequest>();
+
+  const isSplitRoute = watch("is_split_route");
 
   return (
     <div
@@ -36,30 +38,43 @@ const RouteConfigurationFormRoot = React.forwardRef<
       ref={ref}
       {...otherProps}
     >
-      {!watch("is_split_route") && (
+      {!isSplitRoute && (
         <TextField
           className="h-auto w-full flex-none"
-          label="Route Number"
+          label="Route Number *"
           variant="filled"
-          helpText=""
+          error={!!errors.route_number}
+          helpText={(errors.route_number?.message as string) || ""}
         >
         <TextField.Input
           placeholder="Enter route number"
-          {...register("route_number")}
+          {...register("route_number", {
+            required: !isSplitRoute ? "Route number is required" : false,
+          })}
         />
       </TextField> )}
-      <TextField className="h-auto w-full flex-none" label="Source" variant="filled" helpText="">
-        <TextField.Input placeholder="Enter source" {...register("source")} />
+      <TextField
+        className="h-auto w-full flex-none"
+        label="Source *"
+        variant="filled"
+        error={!!errors.source}
+        helpText={(errors.source?.message as string) || ""}
+      >
+        <TextField.Input
+          placeholder="Enter source"
+          {...register("source", { required: "Source is required" })}
+        />
       </TextField>
       <TextField
         className="h-auto w-full flex-none"
-        label="Destination"
+        label="Destination *"
         variant="filled"
-        helpText=""
+        error={!!errors.destination}
+        helpText={(errors.destination?.message as string) || ""}
       >
         <TextField.Input
           placeholder="Enter destination"
-          {...register("destination")}
+          {...register("destination", { required: "Destination is required" })}
         />
       </TextField>
       <TextField className="h-auto w-full flex-none" label="Via" variant="filled" helpText="">
@@ -78,31 +93,36 @@ const RouteConfigurationFormRoot = React.forwardRef<
         onCheckedChange={(bool) => setValue("is_split_route", bool)}
         label="Is Split Route"
       />
-      {watch("is_split_route") && (
+      {isSplitRoute && (
         <>
-          {" "}
           <TextField
             className="h-auto w-full flex-none"
-            label="Route Number 1"
+            label="Route Number 1 *"
             variant="filled"
-            helpText=""
+            error={!!errors.route_number_1}
+            helpText={(errors.route_number_1?.message as string) || ""}
           >
             <TextField.Input
               placeholder="Enter route number 1"
-              {...register("route_number_1")}
+              {...register("route_number_1", {
+                required: isSplitRoute ? "Route number 1 is required" : false,
+              })}
             />
           </TextField>
           <TextField
             className="h-auto w-full flex-none"
-            label="Route Number 2"
+            label="Route Number 2 *"
             variant="filled"
-            helpText=""
+            error={!!errors.route_number_2}
+            helpText={(errors.route_number_2?.message as string) || ""}
           >
             <TextField.Input
               placeholder="Enter route number 2"
-              {...register("route_number_2")}
+              {...register("route_number_2", {
+                required: isSplitRoute ? "Route number 2 is required" : false,
+              })}
             />
-          </TextField>{" "}
+          </TextField>
         </>
       )}
     </div>

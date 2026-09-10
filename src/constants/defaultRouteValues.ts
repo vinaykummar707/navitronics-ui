@@ -1,4 +1,4 @@
-import { Stop } from "@/api/stop/types";
+import { IStopWithAudio } from "@/types/IStop";
 import { IRouteCreate } from "@/types/IRoute";
 import {
   SimulationFormat,
@@ -14,7 +14,6 @@ import {
   DisplayConfigPostRequest,
   DEFAULT_SIMULATION_HEIGHTS,
   DEFAULT_SIMULATION_WIDTHS,
-  SimulationType,
 } from "@/types/routeConfigV2";
 
 // ---- Fundamental defaults ----
@@ -85,7 +84,13 @@ export function getDefaultSingleSimulation(text?: string, type: SimulationType =
 
 
 // ---- Default Simulations per format ----
-export function getDefaultStopSingleSimulation(text?: string, type: SimulationType = DEFAULT_SIMULATION_TYPE, stopType?: typeof stopStates[number], stop?: Stop, language?: string, direction?: string): Simulation {
+export function getDefaultStopSingleSimulation(text?: string, type: SimulationType = DEFAULT_SIMULATION_TYPE, stopType?: typeof stopStates[number], stop?: IStopWithAudio, language?: string, direction?: string): Simulation {
+  const stopAudio = Array.isArray(stop?.stop_audios) ? stop?.stop_audios[0] : stop?.stop_audios;
+  const upLat = typeof stop?.up_latitude === "string" ? parseFloat(stop.up_latitude) : (stop?.up_latitude ?? 0);
+  const upLng = typeof stop?.up_longitude === "string" ? parseFloat(stop.up_longitude) : (stop?.up_longitude ?? 0);
+  const downLat = typeof stop?.down_latitude === "string" ? parseFloat(stop.down_latitude) : (stop?.down_latitude ?? 0);
+  const downLng = typeof stop?.down_longitude === "string" ? parseFloat(stop.down_longitude) : (stop?.down_longitude ?? 0);
+
   return {
     format: "single",
     texts: {
@@ -94,11 +99,11 @@ export function getDefaultStopSingleSimulation(text?: string, type: SimulationTy
     height: DEFAULT_SIMULATION_HEIGHT,
     width: DEFAULT_SIMULATION_WIDTH,
     type,
-    audioFileUrl: stop.stop_audios.url,
-    audioFileName: stop.stop_audios.file_name,
+    audioFileUrl: stopAudio?.url || null,
+    audioFileName: stopAudio?.file_name || null,
     stopType,
-    latitude: direction === "up" ? stop.up_latitude : stop.down_latitude,
-    longitude: direction === "up" ? stop.up_longitude : stop.down_longitude,
+    latitude: direction === "up" ? upLat : downLat,
+    longitude: direction === "up" ? upLng : downLng,
     stopTypeAudioFileUrl: AVAILABLE_LANGUAGES.find(lang => lang.code === language)?.[stopType] || null,
     stopTypeAudioFileName: AVAILABLE_LANGUAGES.find(lang => lang.code === language)?.[`${stopType}FileName`] || null,
   };

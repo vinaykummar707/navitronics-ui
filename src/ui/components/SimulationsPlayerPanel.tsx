@@ -54,7 +54,6 @@ import useSimulationStore from "@/store/useSimulationStore";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { Select } from "./Select";
 import { useParams } from "react-router-dom";
-import { Stop } from "@/api/stop/types";
 import { CheckboxGroup } from "./CheckboxGroup";
 import { Checkbox } from "./Checkbox";
 import { toast } from "react-toastify";
@@ -90,7 +89,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
   const simulations: Simulation[] = watch(selectedTab);
 
   const [selectedLanguage, setSelectedLanguage] = React.useState<string>("en");
-  const [selectedStop, setSelectedStop] = React.useState<Stop | null>(null);
+  const [selectedStop, setSelectedStop] = React.useState<IStopWithAudio | null>(null);
   const [selectedUpDown, setSelectedUpDown] = React.useState<"up" | "down">(
     "up",
   );
@@ -142,7 +141,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
   const { selectedOrganization } = useOrganizationStore();
 
   const { data: stopsData, refetch: refetchStops } = stopCrud.useList({
-    filters: { depot_id: depotId || "", deleted: false, organization_id: selectedOrganization.id },
+    filters: { depot_id: depotId || "", deleted: false, organization_id: selectedOrganization?.id || "" },
     orderBy: { column: "created_at", ascending: false },
     custom(query) {
       return query
@@ -157,7 +156,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
         )
 
     },
-    skip: !depotId,
+    skip: !depotId || !selectedOrganization?.id,
   });
 
 
@@ -279,11 +278,17 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
     text: string,
     targetLanguage: string,
   ): Promise<string> => {
+    const sarvamKey = import.meta.env.VITE_SARVAM_API_KEY || "";
+    if (!sarvamKey) {
+      toast.error("Sarvam AI API key is missing. Please configure VITE_SARVAM_API_KEY.");
+      return text;
+    }
+
     // Translation (POST /translate)
     const response = await fetch("https://api.sarvam.ai/translate", {
       method: "POST",
       headers: {
-        "api-subscription-key": "sk_ub6tmck1_GssLt4xToCdAjQGEgh3BJQKk",
+        "api-subscription-key": sarvamKey,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

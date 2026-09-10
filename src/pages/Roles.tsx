@@ -112,7 +112,7 @@ const Roles = () => {
 						<tbody className="bg-white divide-y divide-stone-200">
 							{roles && roles.length > 0 ? (
 								roles.map((role) => (
-									<tr key={role.roleId} className="hover:bg-stone-50">
+									<tr key={role.id} className="hover:bg-stone-50">
 										<td className="px-6 py-4 whitespace-nowrap">
 											<div className="text-sm font-medium text-stone-900">
 												{role.roleName}
@@ -207,7 +207,7 @@ const Roles = () => {
 						{editingRole && (
 							<RoleForm
 								initialData={editingRole}
-								onSubmit={(data) => updateMutation.mutate(data)}
+								onSubmit={(data) => updateMutation.mutate({ id: editingRole.id, data })}
 								onCancel={() => setEditingRole(null)}
 							/>
 						)}

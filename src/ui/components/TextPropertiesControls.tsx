@@ -55,6 +55,11 @@ const TextPropertiesControlsRoot = React.forwardRef<
     (state) => state.selectedSimulationIndex,
   );
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
+
+  if (selectedSimulationIndex < 0) {
+    return null;
+  }
+
   const pathBase = `${selectedTab}.${selectedSimulationIndex}.texts.${textProperty}`;
   const selectedSimulationPath = `${selectedTab}.${selectedSimulationIndex}`;
 

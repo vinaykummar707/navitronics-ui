@@ -117,7 +117,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
         </RBAC>
       </SidebarWithSections>
       {children ? (
-        <div className="flex grow shrink-0 basis-0 flex-col items-start gap-4 self-stretch overflow-y-auto bg-neutral-100 px-8 py-8">
+        <div className="flex grow shrink-0 basis-0 flex-col items-start gap-4 self-stretch overflow-y-auto bg-default-background px-8 py-8">
           <IconButton className="shrink-0" variant="neutral-primary" onClick={toggleSidebar} icon={<FeatherPanelLeft />} />
           {children}
         </div>

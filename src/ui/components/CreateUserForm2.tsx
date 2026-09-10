@@ -120,8 +120,8 @@ const CreateUserForm2Root = React.forwardRef<
   const regions = regionsData?.data || [];
 
   const { useCreate, useUpdate } = loggedUserCrud;
-  const { mutate: createUser } = useCreate();
-  const { mutate: updateUser } = useUpdate();
+  const { mutate: createUser, isPending: isCreating } = useCreate();
+  const { mutate: updateUser, isPending: isUpdating } = useUpdate();
 
   // Reset region and depot if role doesn't require them
   React.useEffect(() => {
@@ -189,7 +189,6 @@ const CreateUserForm2Root = React.forwardRef<
               region_id: data.region_id || null,
               depot_id: data.depot_id || null,
               organization_id: targetOrgId,
-              password: data.password,
               PIS: data.PIS,
               PAS: data.PAS,
               ITMS: data.ITMS,
@@ -237,7 +236,6 @@ const CreateUserForm2Root = React.forwardRef<
           organization_id: targetOrgId,
           user_id: userId,
           active: data.active,
-          password: data.password,
           PIS: data.PIS,
           PAS: data.PAS,
           ITMS: data.ITMS,
@@ -504,7 +502,7 @@ const CreateUserForm2Root = React.forwardRef<
             className="h-9 w-full flex-none"
             icon={<FeatherCheck />}
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isCreating || isUpdating}
           >
             {isEditMode ? "Update User" : "Create User"}
           </Button>

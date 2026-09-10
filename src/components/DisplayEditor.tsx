@@ -28,8 +28,8 @@ const LEDWrapper = ({
 
   const handleBitmapChange = useCallback((text: string) => {
     if (text !== currentBitmap) {
-      setValue(`${fieldPath}.bitmap`, text);
-      setValue(`${fieldPath}.fontWidth`, getBitmapColumns(text));
+      setValue(`${fieldPath}.bitmap`, text, { shouldDirty: false });
+      setValue(`${fieldPath}.fontWidth`, getBitmapColumns(text), { shouldDirty: false });
     }
   }, [currentBitmap, fieldPath, setValue]);
 

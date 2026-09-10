@@ -20,13 +20,20 @@ export function createCrudHooks<
           : supabase.from(table).select('*')
 
         // Apply filters
-        if (options?.filters) {
-          Object.entries(options.filters).forEach(([key, value]) => {
-            if (value !== undefined && value !== null) {
-              query = query.eq(key, value)
-            }
-          })
+        const filters = { ...(options?.filters || {}) } as Record<string, any>;
+        if (
+          !options?.includeDeleted &&
+          filters.deleted === undefined &&
+          ['routes', 'stops', 'depots', 'regions', 'organizations', 'users'].includes(table)
+        ) {
+          filters.deleted = false;
         }
+
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            query = query.eq(key, value)
+          }
+        })
 
         // Search
         if (options?.search) {

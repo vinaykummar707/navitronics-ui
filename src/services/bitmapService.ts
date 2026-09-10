@@ -1,9 +1,16 @@
 import axios from "axios";
 import { BitmapApiParams } from "@/types/bitmapApi";
 
-export const BITMAP_API_BASE_URL =
-  (import.meta as any).env?.VITE_BITMAP_API_URL ||
-  "http://13.233.103.63:5288/api/bitmap";
+const getInitialBitmapUrl = (): string => {
+  const envUrl = (import.meta as any).env?.VITE_BITMAP_API_URL;
+  if (envUrl) return envUrl;
+  if (typeof window !== "undefined" && window.location.protocol === "https:") {
+    return "https://13.233.103.63:5288/api/bitmap";
+  }
+  return "http://13.233.103.63:5288/api/bitmap";
+};
+
+export const BITMAP_API_BASE_URL = getInitialBitmapUrl();
 
 /**
  * Builds the complete URL with search params for the Bitmap API.

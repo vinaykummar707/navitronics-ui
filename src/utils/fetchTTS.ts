@@ -22,6 +22,11 @@ export async function fetchTTS(
   lang: string = "en-IN",
   speaker: string = "meera"
 ): Promise<string> {
+  const sarvamKey = import.meta.env.VITE_SARVAM_API_KEY || "";
+  if (!sarvamKey) {
+    throw new Error("Sarvam AI API key is missing. Please configure VITE_SARVAM_API_KEY in your environment.");
+  }
+
   const normalizedLang = normalizeSarvamLanguageCode(lang);
   const normalizedSpeaker = speaker || "meera";
 
@@ -30,7 +35,7 @@ export async function fetchTTS(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "api-subscription-key": "sk_ub6tmck1_GssLt4xToCdAjQGEgh3BJQKk",
+        "api-subscription-key": sarvamKey,
       },
       body: JSON.stringify({
         inputs: [text],

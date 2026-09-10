@@ -1,4 +1,3 @@
-import { useDeleteDepot, useDepots } from "@/api/depot/hooks";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { CreateDepotForm, Select } from "@/ui";
 import { Button } from "@/ui/components/Button";
@@ -12,7 +11,6 @@ import {
   FeatherRefreshCw,
 } from "@subframe/core";
 import React, { useEffect, useState } from "react";
-import { useRegions } from "@/api/region/hooks";
 import RBAC from "@/components/RBAC";
 import { ROLES } from "@/constants/roles";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
@@ -38,6 +36,7 @@ export default function DepotsPage() {
       deleted: false,
     },
     orderBy: { column: "created_at", ascending: true },
+    skip: !selectedOrganization?.id,
   });
 
   const regions = regionData?.data as IRegion[];
@@ -50,23 +49,26 @@ export default function DepotsPage() {
       organization_id: selectedOrganization?.id || "",
     },
     orderBy: { column: "created_at", ascending: true },
-    skip: !selectedRegion?.id,
+    skip: !selectedRegion?.id || !selectedOrganization?.id,
   });
 
   const depots = depotData?.data as IDepot[];
   const { mutate: deleteDepot } = useDelete();
 
   useEffect(() => {
-    const firstRegion = regions?  regions[0] : [];
-    const isSelectedRegionValid = regions?.some(
+    if (!regions || regions.length === 0) {
+      if (selectedRegion) {
+        setSelectedRegionInStore(null);
+      }
+      return;
+    }
+
+    const isSelectedRegionValid = regions.some(
       (region) => region.id === selectedRegion?.id,
     );
-    const noSelectedRegionFound = !selectedRegion && regions.length > 0;
 
-    if (!regions) return;
-
-    if ((noSelectedRegionFound || !isSelectedRegionValid) && firstRegion) {
-      setSelectedRegionInStore(firstRegion);
+    if (!isSelectedRegionValid) {
+      setSelectedRegionInStore(regions[0]);
     }
   }, [regions, selectedRegion, setSelectedRegionInStore, selectedOrganization]);
 
@@ -96,7 +98,7 @@ export default function DepotsPage() {
           Depots
         </span>
         <span className="text-body font-body text-subtext-color">
-          Overview of your store&#39;s performance and customer engagement
+          Manage transit depots and operational facilities for your regions
         </span>
       </div>
       <div className="flex w-full items-center justify-between mobile:flex-col mobile:items-start gap-4">

@@ -6,7 +6,6 @@ import { FeatherCheck, FeatherMapPin, FeatherPin } from "@subframe/core";
 import { Button } from "./Button";
 import { TextField } from "./TextField";
 import * as SubframeUtils from "../utils";
-import { useCreateStop, useUpdateStop } from "@/api/stop/hooks";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { IStop, IStopCreate, stopCrud } from "@/types/IStop";
 import { toast } from "react-toastify";
@@ -40,12 +39,12 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     reset,
   } = useForm<IStopCreate>({
     defaultValues: {
       depot_id: depotId,
-      organization_id: selectedOrganization.id,
+      organization_id: selectedOrganization?.id || "",
       down_latitude: "",
       down_longitude: "",
       name: "",
@@ -68,53 +67,43 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
   const mode = !!initialData;
 
   const onSubmit = async (data) => {
-    // console.log('Form data:', data);
-    // try {
-    //   let response;
-    //   if (initialData) {
-    //     // Update existing stop
-    //     response = await updateStop({ variables: { ...data, id: initialData.id } });
-    //     console.log('Stop updated:', response);
-    //   } else {
-    //     // Create new stop
-    //     response = await createStop({ variables: { ...data, depot_id: props.depotId, organization_id: selectedOrganization?.id } });
-    //     console.log('Stop created:', response);
-    //   }
-    //   props.onSuccess?.();
-    // } catch (err) {
-    //   console.error('Error submitting stop:', err);
-    // }
+    const payload = {
+      ...data,
+      organization_id: data.organization_id || selectedOrganization?.id || "",
+      depot_id: depotId,
+    };
+
     if (initialData) {
-      delete data.stop_audios;
+      delete payload.stop_audios;
       updateStop(
         {
-          id: data.id,
-          payload: data,
+          id: payload.id,
+          payload: payload,
         },
         {
           onSuccess: () => {
-            console.log("Stop updated successfully:", data);
+            console.log("Stop updated successfully:", payload);
             toast.success("Stop updated successfully");
             reset();
-            onSuccess();
+            onSuccess?.();
           },
           onError: (error) => {
             console.error("Error updating Stop:", error);
-            toast.error("Error updating Stop");
+            toast.error(`Error updating Stop: ${error.message || "Unknown error"}`);
           },
         },
       );
     } else {
-      createStop(data, {
+      createStop(payload, {
         onSuccess: (successResponse) => {
           console.log("Stop created successfully:", successResponse);
           toast.success("Stop created successfully");
           reset();
-          onSuccess(successResponse);
+          onSuccess?.(successResponse);
         },
         onError: (error) => {
           console.error("Error creating Stop:", error);
-          toast.error("Error creating Stop");
+          toast.error(`Error creating Stop: ${error.message || "Unknown error"}`);
         },
       });
     }
@@ -132,84 +121,112 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
     >
       <div className="flex w-full flex-col items-start gap-1">
         <span className="text-heading-3 font-heading-3 text-default-font">
-          Create Stop
+          {mode ? "Edit Stop" : "Create Stop"}
         </span>
         <span className="text-caption font-caption text-subtext-color">
-          Fill in the details below to create a new Stop
+          {mode
+            ? "Update the stop and coordinate details below"
+            : "Fill in the details below to create a new Stop"}
         </span>
       </div>
       <div className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-4">
         <TextField
           className="h-auto w-full flex-none"
           label="Stop Name"
-          error={errors?.name}
-          helpText={errors.name ? "Stop name is required" : "Name of the stop"}
+          error={!!errors?.name}
+          helpText={errors.name?.message || "Name of the stop"}
           icon={<FeatherMapPin />}
         >
           <TextField.Input
-            {...register("name", { required: true })}
+            {...register("name", { required: "Stop name is required" })}
             placeholder="Gachibowli"
           />
         </TextField>
         <TextField
           className="h-auto w-full flex-none"
           label="Up Latitude"
-          error={errors.up_latitude}
+          error={!!errors.up_latitude}
           helpText={
-            errors.up_latitude ? "Up Latitude is required" : "Upward Latitude"
+            errors.up_latitude?.message || "Upward Latitude (-90 to 90)"
           }
           icon={<FeatherPin />}
         >
           <TextField.Input
-            {...register("up_latitude", { required: true })}
+            {...register("up_latitude", {
+              required: "Up Latitude is required",
+              validate: (val) => {
+                const num = parseFloat(String(val));
+                if (isNaN(num)) return "Must be a valid number";
+                if (num < -90 || num > 90) return "Latitude must be between -90 and 90";
+                return true;
+              },
+            })}
             placeholder="17.3850"
           />
         </TextField>
         <TextField
           className="h-auto w-full flex-none"
           label="Up Longitude"
-          error={errors.up_longitude}
+          error={!!errors.up_longitude}
           helpText={
-            errors.up_longitude
-              ? "Up Longitude is required"
-              : "Upward Longitude"
+            errors.up_longitude?.message || "Upward Longitude (-180 to 180)"
           }
           icon={<FeatherPin />}
         >
           <TextField.Input
-            {...register("up_longitude", { required: true })}
+            {...register("up_longitude", {
+              required: "Up Longitude is required",
+              validate: (val) => {
+                const num = parseFloat(String(val));
+                if (isNaN(num)) return "Must be a valid number";
+                if (num < -180 || num > 180) return "Longitude must be between -180 and 180";
+                return true;
+              },
+            })}
             placeholder="78.4867"
           />
         </TextField>
         <TextField
           className="h-auto w-full flex-none"
           label="Down Latitude"
-          error={errors.down_latitude}
+          error={!!errors.down_latitude}
           helpText={
-            errors.down_latitude
-              ? "Down Latitude is required"
-              : "Return Latitude"
+            errors.down_latitude?.message || "Return Latitude (-90 to 90)"
           }
           icon={<FeatherPin />}
         >
           <TextField.Input
-            {...register("down_latitude", { required: true })}
+            {...register("down_latitude", {
+              required: "Down Latitude is required",
+              validate: (val) => {
+                const num = parseFloat(String(val));
+                if (isNaN(num)) return "Must be a valid number";
+                if (num < -90 || num > 90) return "Latitude must be between -90 and 90";
+                return true;
+              },
+            })}
             placeholder="17.3850"
           />
         </TextField>
         <TextField
           className="h-auto w-full flex-none"
           label="Down Longitude"
-          error={errors.down_longitude}
+          error={!!errors.down_longitude}
           helpText={
-            errors.down_longitude
-              ? "Down Longitude is required"
-              : "Return Longitude"
+            errors.down_longitude?.message || "Return Longitude (-180 to 180)"
           }
           icon={<FeatherPin />}
         >
           <TextField.Input
-            {...register("down_longitude", { required: true })}
+            {...register("down_longitude", {
+              required: "Down Longitude is required",
+              validate: (val) => {
+                const num = parseFloat(String(val));
+                if (isNaN(num)) return "Must be a valid number";
+                if (num < -180 || num > 180) return "Longitude must be between -180 and 180";
+                return true;
+              },
+            })}
             placeholder="78.4867"
           />
         </TextField>
@@ -219,13 +236,16 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
           className="h-9 w-full flex-none"
           icon={<FeatherCheck />}
           type="submit"
+          disabled={isCreatingStop || isUpdatingStop || isSubmitting}
+          loading={isCreatingStop || isUpdatingStop}
         >
-          {isCreatingStop || isUpdatingStop ? "Submitting..." : "Submit"}
+          {isCreatingStop || isUpdatingStop ? "Submitting..." : mode ? "Update Stop" : "Create Stop"}
         </Button>
         <Button
           onClick={() => props.onCancel?.()}
           className="h-9 w-full flex-none"
           variant="neutral-secondary"
+          type="button"
         >
           Cancel
         </Button>

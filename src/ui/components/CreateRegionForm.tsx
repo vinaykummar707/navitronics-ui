@@ -8,7 +8,6 @@ import { FeatherUser } from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { Button } from "./Button";
 import { TextField } from "./TextField";
-import { useCreateRegion, useUpdateRegion } from "@/api/region/hooks";
 import { IRegion, IRegionCreate, regionCrud } from "@/types/IRegion";
 import { toast } from "react-toastify";
 interface CreateRegionFormProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -46,8 +45,8 @@ const CreateRegionFormRoot = React.forwardRef<
 
     const isEditMode = !!initialData;
     const { useCreate, useUpdate } = regionCrud;
-    const { mutate: createRegion, isPending: loading } = useCreate();
-    const { mutate: updateRegion } = useUpdate();
+    const { mutate: createRegion, isPending: isCreating } = useCreate();
+    const { mutate: updateRegion, isPending: isUpdating } = useUpdate();
 
   const onSubmit = async (values: IRegionCreate) => {
     if (isEditMode && initialData) {
@@ -137,16 +136,23 @@ const CreateRegionFormRoot = React.forwardRef<
             className="h-9 w-full flex-none"
             icon={<FeatherCheck />}
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isCreating || isUpdating}
+            loading={isCreating || isUpdating}
           >
-            {isEditMode ? "Update" : "Submit"}
+            {isCreating || isUpdating
+              ? isEditMode
+                ? "Updating..."
+                : "Creating..."
+              : isEditMode
+              ? "Update"
+              : "Submit"}
           </Button>
           <Button
             className="h-9 w-full flex-none"
             variant="neutral-secondary"
             type="button"
             onClick={handleCancel}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isCreating || isUpdating}
           >
             Cancel
           </Button>

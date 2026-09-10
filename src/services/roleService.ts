@@ -15,8 +15,8 @@ export const roleService = {
     return response.data;
   },
 
-  update: async (data: UpdateRoleDto, roleId: string): Promise<Role> => {
-    const response = await axiosInstance.patch(`${BASE_PATH}/updateRole/${roleId}`, data);
+  update: async ({ id, data }: { id: string; data: UpdateRoleDto }): Promise<Role> => {
+    const response = await axiosInstance.patch(`${BASE_PATH}/updateRole/${id}`, data);
     return response.data;
   },
 
