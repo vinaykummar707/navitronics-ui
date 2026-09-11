@@ -40,12 +40,18 @@ export const AppOrgSwitcher: React.FC<AppOrgSwitcherProps> = ({
   // Default selection synchronization
   useEffect(() => {
     if (!orgs || orgs.length === 0) return;
-    const isSelectedOrgValid = orgs.some(
-      (org) => org.id === selectedOrganization?.id
-    );
+    const current = orgs.find((org) => org.id === selectedOrganization?.id);
 
-    if (selectedOrganization && !isSelectedOrgValid) {
+    if (selectedOrganization && !current) {
       setSelectedOrganization(orgs[0]);
+    } else if (
+      current &&
+      (current.name !== selectedOrganization?.name ||
+        current.logo !== selectedOrganization?.logo ||
+        current.email !== selectedOrganization?.email ||
+        JSON.stringify(current.features) !== JSON.stringify(selectedOrganization?.features))
+    ) {
+      setSelectedOrganization(current);
     }
 
     if (!selectedOrganization) {

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Flex,
@@ -17,19 +18,31 @@ import {
   Dialog,
   Portal,
   CloseButton,
+  Skeleton,
 } from "@chakra-ui/react";
-import { IOrganization, organizationCrud, getOrgInitials } from "@/types/organization";
+import {
+  IOrganization,
+  IOrganizationWithCounts,
+  organizationCrud,
+  getOrgInitials,
+} from "@/types/organization";
+import { regionCrud, IRegion } from "@/types/IRegion";
+import { depotCrud, IDepot } from "@/types/IDepot";
 import { toast } from "react-toastify";
 import PageHeader from "@/components/common/PageHeader";
 import DataTable, { ColumnDef } from "@/components/common/DataTable";
 import StatCard from "@/components/common/StatCard";
 import EmptyState from "@/components/common/EmptyState";
+import ErrorState from "@/components/common/ErrorState";
 import OrganizationCard from "@/components/organizations/OrganizationCard";
 import CreateOrganizationDrawer from "@/components/organizations/CreateOrganizationDrawer";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
+import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { ROLES } from "@/constants/roles";
 import {
   Building2,
+  MapPin,
+  ArrowRight,
   Plus,
   RotateCw,
   Search,
@@ -44,10 +57,14 @@ import {
   Volume2,
   AlertTriangle,
   RotateCcw,
+  X,
+  Cpu,
 } from "lucide-react";
 
 export default function OrganizationsPage() {
+  const navigate = useNavigate();
   const user = useLoggedUserStore((state) => state.user);
+  const { selectedOrganization, setSelectedOrganization } = useOrganizationStore();
   const isSuperAdmin =
     user?.role?.name === ROLES.MASTER ||
     user?.role?.name === "master" ||
@@ -78,11 +95,62 @@ export default function OrganizationsPage() {
     skip: !isSuperAdmin,
   });
 
+  // Active regions query across all organizations
+  const { data: allRegionsData, refetch: refetchRegions } = regionCrud.useList({
+    filters: { deleted: false },
+  });
+
+  // Active depots query across all organizations
+  const { data: allDepotsData, refetch: refetchDepots } = depotCrud.useList({
+    filters: { deleted: false },
+  });
+
   const { mutate: deleteOrganization, isPending: isDeleting } = useDelete();
   const { mutate: restoreOrganization, isPending: isRestoring } = useRestore();
 
   const organizations = (activeData?.data as IOrganization[]) || [];
   const deletedOrganizations = (deletedData?.data as IOrganization[]) || [];
+
+  // Map organization_id -> region count
+  const regionCountsByOrg = useMemo(() => {
+    const counts: Record<string, number> = {};
+    const regionsList = (allRegionsData?.data as IRegion[]) || [];
+    regionsList.forEach((reg) => {
+      if (reg.organization_id && !reg.deleted) {
+        counts[reg.organization_id] = (counts[reg.organization_id] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [allRegionsData]);
+
+  // Map organization_id -> depot count
+  const depotCountsByOrg = useMemo(() => {
+    const counts: Record<string, number> = {};
+    const depotsList = (allDepotsData?.data as IDepot[]) || [];
+    depotsList.forEach((dep) => {
+      if (dep.organization_id && !dep.deleted) {
+        counts[dep.organization_id] = (counts[dep.organization_id] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [allDepotsData]);
+
+  // Decorate organizations with regional zones and depot facility counts
+  const decoratedOrganizations: IOrganizationWithCounts[] = useMemo(() => {
+    return organizations.map((org) => ({
+      ...org,
+      region_count: regionCountsByOrg[org.id] || 0,
+      depot_count: depotCountsByOrg[org.id] || 0,
+    }));
+  }, [organizations, regionCountsByOrg, depotCountsByOrg]);
+
+  const decoratedDeletedOrganizations: IOrganizationWithCounts[] = useMemo(() => {
+    return deletedOrganizations.map((org) => ({
+      ...org,
+      region_count: regionCountsByOrg[org.id] || 0,
+      depot_count: depotCountsByOrg[org.id] || 0,
+    }));
+  }, [deletedOrganizations, regionCountsByOrg, depotCountsByOrg]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTab, setSelectedTab] = useState<"all" | "active" | "inactive" | "deleted">("all");
@@ -90,15 +158,15 @@ export default function OrganizationsPage() {
   const [editData, setEditData] = useState<IOrganization | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [orgToDelete, setOrgToDelete] = useState<IOrganization | null>(null);
-  const [orgToRestore, setOrgToRestore] = useState<IOrganization | null>(null);
+  const [orgToDelete, setOrgToDelete] = useState<IOrganizationWithCounts | null>(null);
+  const [orgToRestore, setOrgToRestore] = useState<IOrganizationWithCounts | null>(null);
 
   // Safety fallback if non-superadmin tries to access deleted tab
   const currentTab = !isSuperAdmin && selectedTab === "deleted" ? "all" : selectedTab;
 
   // Filter organizations by search and tab
   const filteredOrganizations = useMemo(() => {
-    const sourceList = currentTab === "deleted" ? deletedOrganizations : organizations;
+    const sourceList = currentTab === "deleted" ? decoratedDeletedOrganizations : decoratedOrganizations;
     return sourceList.filter((org) => {
       // Status filter within active organizations
       if (currentTab === "active" && org.active === false) return false;
@@ -107,25 +175,69 @@ export default function OrganizationsPage() {
       // Search query filter
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase().trim();
+      const cleanPhoneQuery = q.replace(/[^0-9]/g, "");
+      const cleanOrgPhone = org.phone ? org.phone.replace(/[^0-9]/g, "") : "";
+
       return (
         org.name?.toLowerCase().includes(q) ||
         org.email?.toLowerCase().includes(q) ||
-        org.phone?.includes(q)
+        org.id?.toLowerCase().includes(q) ||
+        (cleanPhoneQuery && cleanOrgPhone.includes(cleanPhoneQuery)) ||
+        org.phone?.toLowerCase().includes(q)
       );
     });
-  }, [currentTab, organizations, deletedOrganizations, searchQuery]);
+  }, [currentTab, decoratedOrganizations, decoratedDeletedOrganizations, searchQuery]);
 
-  const handleDeleteClick = (org: IOrganization) => {
+  const handleViewRegions = (org: IOrganizationWithCounts) => {
+    setSelectedOrganization(org);
+    navigate("/home/regions");
+  };
+
+  const handleViewDepots = (org: IOrganizationWithCounts) => {
+    setSelectedOrganization(org);
+    navigate("/home/depots");
+  };
+
+  const handleDeleteClick = (org: IOrganizationWithCounts) => {
     setOrgToDelete(org);
   };
 
+  const handleRestoreClick = (org: IOrganizationWithCounts) => {
+    setOrgToRestore(org);
+  };
+
   const handleConfirmDelete = () => {
-    if (!orgToDelete) return;
-    deleteOrganization(orgToDelete.id, {
+    if (!orgToDelete || isDeleting) return;
+
+    const isProtected =
+      orgToDelete.name?.toLowerCase() === "navitronix" ||
+      (orgToDelete as any).is_default ||
+      orgToDelete.id === "6b679098-ef69-45f0-9fb1-b457dd882060";
+
+    if (isProtected) {
+      toast.error("System organization cannot be deleted.");
+      setOrgToDelete(null);
+      return;
+    }
+
+    const deletedId = orgToDelete.id;
+    const deletedName = orgToDelete.name;
+
+    deleteOrganization(deletedId, {
       onSuccess: () => {
+        // If the deleted organization was the currently active organization in store, switch to another active agency
+        if (selectedOrganization?.id === deletedId) {
+          const nextActiveOrg = organizations.find(
+            (o) => o.id !== deletedId && o.active !== false && !o.deleted
+          );
+          setSelectedOrganization(nextActiveOrg || null);
+          if (nextActiveOrg) {
+            toast.info(`Switched active organization context to "${nextActiveOrg.name}"`);
+          }
+        }
         refetchActive();
         if (isSuperAdmin) refetchDeleted();
-        toast.success(`Organization "${orgToDelete.name}" deleted successfully`);
+        toast.success(`Organization "${deletedName}" deleted successfully`);
         setOrgToDelete(null);
       },
       onError: (error: any) => {
@@ -134,17 +246,14 @@ export default function OrganizationsPage() {
     });
   };
 
-  const handleRestoreClick = (org: IOrganization) => {
-    setOrgToRestore(org);
-  };
-
   const handleConfirmRestore = () => {
-    if (!orgToRestore) return;
+    if (!orgToRestore || isRestoring) return;
+    const restoredName = orgToRestore.name;
     restoreOrganization(orgToRestore.id, {
       onSuccess: () => {
         refetchActive();
         refetchDeleted();
-        toast.success(`Organization "${orgToRestore.name}" restored successfully`);
+        toast.success(`Organization "${restoredName}" restored successfully`);
         setOrgToRestore(null);
       },
       onError: (error: any) => {
@@ -176,11 +285,17 @@ export default function OrganizationsPage() {
   const inactiveCount = totalCount - activeCount;
   const deletedCount = deletedOrganizations.length;
 
+  const itmsEnabledCount = organizations.filter((o) => o.ITMS).length;
   const pisEnabledCount = organizations.filter((o) => o.PIS).length;
   const pasEnabledCount = organizations.filter((o) => o.PAS).length;
 
+  const activePercent = totalCount > 0 ? Math.round((activeCount / totalCount) * 100) : 0;
+  const itmsPercent = totalCount > 0 ? Math.round((itmsEnabledCount / totalCount) * 100) : 0;
+  const pisPercent = totalCount > 0 ? Math.round((pisEnabledCount / totalCount) * 100) : 0;
+  const pasPercent = totalCount > 0 ? Math.round((pasEnabledCount / totalCount) * 100) : 0;
+
   // Table columns definition
-  const columns: ColumnDef<IOrganization>[] = [
+  const columns: ColumnDef<IOrganizationWithCounts>[] = [
     {
       id: "name",
       header: "Agency Name",
@@ -193,7 +308,11 @@ export default function OrganizationsPage() {
           org.id === "6b679098-ef69-45f0-9fb1-b457dd882060";
 
         return (
-          <HStack gap="2.5">
+          <HStack
+            gap="2.5"
+            minW="0"
+            maxW={{ base: "200px", sm: "280px", md: "380px", lg: "480px" }}
+          >
             <Avatar.Root
               size="xs"
               shape="rounded"
@@ -207,23 +326,44 @@ export default function OrganizationsPage() {
               </Avatar.Fallback>
               <Avatar.Image src={org.logo || undefined} />
             </Avatar.Root>
-            <VStack align="flex-start" gap="0">
-              <HStack gap="1.5">
-                <Text fontWeight="600" color="fg.default">
+            <VStack align="flex-start" gap="0" minW="0" overflow="hidden" flex="1">
+              <HStack gap="1.5" maxW="full" minW="0">
+                <Text
+                  fontWeight="600"
+                  color="fg.default"
+                  truncate
+                  title={org.name}
+                >
                   {org.name}
                 </Text>
                 {isProtected && (
-                  <Badge size="xs" variant="subtle" colorPalette="blue" borderRadius="xs" px="1.5" fontSize="9px">
+                  <Badge
+                    size="xs"
+                    variant="subtle"
+                    colorPalette="blue"
+                    borderRadius="xs"
+                    px="1.5"
+                    fontSize="9px"
+                    shrink="0"
+                  >
                     System
                   </Badge>
                 )}
                 {org.deleted && (
-                  <Badge size="xs" variant="subtle" colorPalette="red" borderRadius="xs" px="1.5" fontSize="9px">
+                  <Badge
+                    size="xs"
+                    variant="subtle"
+                    colorPalette="red"
+                    borderRadius="xs"
+                    px="1.5"
+                    fontSize="9px"
+                    shrink="0"
+                  >
                     Deleted
                   </Badge>
                 )}
               </HStack>
-              <Text fontSize="11px" color="fg.muted">
+              <Text fontSize="11px" color="fg.muted" truncate maxW="full">
                 ID: {org.id.slice(0, 8)}...
               </Text>
             </VStack>
@@ -337,6 +477,90 @@ export default function OrganizationsPage() {
           )}
         </HStack>
       ),
+    },
+    {
+      id: "region_count",
+      header: "Regions",
+      accessorKey: "region_count",
+      sortable: true,
+      width: "140px",
+      cell: (org) => {
+        const count = org.region_count || 0;
+        return (
+          <HStack gap="1.5">
+            <Badge
+              size="xs"
+              variant="subtle"
+              colorPalette={count > 0 ? "blue" : "gray"}
+              borderRadius="xs"
+              px="2"
+              py="0.5"
+            >
+              <HStack gap="1">
+                <MapPin size={11} />
+                <Text fontWeight="600">{count} {count === 1 ? "Zone" : "Zones"}</Text>
+              </HStack>
+            </Badge>
+            {!org.deleted && (
+              <IconButton
+                size="2xs"
+                variant="ghost"
+                aria-label="View regions"
+                color="fg.muted"
+                _hover={{ color: "blue.500" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewRegions(org);
+                }}
+              >
+                <ArrowRight size={12} />
+              </IconButton>
+            )}
+          </HStack>
+        );
+      },
+    },
+    {
+      id: "depot_count",
+      header: "Depots",
+      accessorKey: "depot_count",
+      sortable: true,
+      width: "140px",
+      cell: (org) => {
+        const count = org.depot_count || 0;
+        return (
+          <HStack gap="1.5">
+            <Badge
+              size="xs"
+              variant="subtle"
+              colorPalette={count > 0 ? "green" : "gray"}
+              borderRadius="xs"
+              px="2"
+              py="0.5"
+            >
+              <HStack gap="1">
+                <Building2 size={11} />
+                <Text fontWeight="600">{count} {count === 1 ? "Depot" : "Depots"}</Text>
+              </HStack>
+            </Badge>
+            {!org.deleted && (
+              <IconButton
+                size="2xs"
+                variant="ghost"
+                aria-label="View depots"
+                color="fg.muted"
+                _hover={{ color: "green.500" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewDepots(org);
+                }}
+              >
+                <ArrowRight size={12} />
+              </IconButton>
+            )}
+          </HStack>
+        );
+      },
     },
     {
       id: "email",
@@ -499,6 +723,8 @@ export default function OrganizationsPage() {
               fontWeight="500"
               onClick={() => {
                 refetchActive();
+                refetchRegions();
+                refetchDepots();
                 if (isSuperAdmin) refetchDeleted();
                 toast.success("Agencies directory refreshed");
               }}
@@ -521,13 +747,15 @@ export default function OrganizationsPage() {
       />
 
       {/* 2. Structured Operational Metrics Bar using real Chakra UI Cards */}
-      <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} gap="3.5" mb="6">
+      <SimpleGrid columns={{ base: 1, sm: 2, md: 3, xl: 5 }} gap="3.5" mb="6">
         <StatCard
           label="Registered Agencies"
           value={totalCount}
           description="Active transit authorities"
           icon={<Building2 size={16} />}
           iconColorPalette="blue"
+          badge={{ label: "Directory", colorPalette: "blue" }}
+          progress={{ value: 100, label: "Total Fleet", colorPalette: "blue" }}
         />
         <StatCard
           label="Active Networks"
@@ -536,22 +764,38 @@ export default function OrganizationsPage() {
           description="Dispatching live telemetry"
           icon={<Radio size={16} />}
           iconColorPalette="green"
+          badge={{ label: `${activePercent}% Online`, colorPalette: "green" }}
+          progress={{ value: activePercent, label: "Operational Rate", colorPalette: "green" }}
+        />
+        <StatCard
+          label="ITMS Telemetry"
+          value={itmsEnabledCount}
+          valueColor="purple.600"
+          description="Fleet tracking & GPS AVL"
+          icon={<Cpu size={16} />}
+          iconColorPalette="purple"
+          badge={{ label: `${itmsPercent}% Fleet`, colorPalette: "purple" }}
+          progress={{ value: itmsPercent, label: "Fleet Adoption", colorPalette: "purple" }}
         />
         <StatCard
           label="PIS Displays"
           value={pisEnabledCount}
           valueColor="blue.600"
-          description="LED signs enabled"
+          description="LED & LCD destination signs"
           icon={<Tv size={16} />}
-          iconColorPalette="blue"
+          iconColorPalette="cyan"
+          badge={{ label: `${pisPercent}% Signs`, colorPalette: "cyan" }}
+          progress={{ value: pisPercent, label: "Signage Coverage", colorPalette: "cyan" }}
         />
         <StatCard
           label="PAS Audio Engine"
           value={pasEnabledCount}
-          valueColor="purple.600"
+          valueColor="orange.600"
           description="Indic TTS announcements"
           icon={<Volume2 size={16} />}
-          iconColorPalette="purple"
+          iconColorPalette="orange"
+          badge={{ label: `${pasPercent}% Audio`, colorPalette: "orange" }}
+          progress={{ value: pasPercent, label: "Announce Coverage", colorPalette: "orange" }}
         />
       </SimpleGrid>
 
@@ -567,6 +811,20 @@ export default function OrganizationsPage() {
             {/* Search Input using real Chakra UI InputGroup */}
             <InputGroup
               startElement={<Search size={15} color="var(--chakra-colors-fg-muted)" />}
+              endElement={
+                searchQuery ? (
+                  <IconButton
+                    size="2xs"
+                    variant="ghost"
+                    aria-label="Clear search"
+                    onClick={() => setSearchQuery("")}
+                    color="fg.muted"
+                    _hover={{ color: "fg.default" }}
+                  >
+                    <X size={13} />
+                  </IconButton>
+                ) : undefined
+              }
               maxW={{ base: "full", md: "340px" }}
               w="full"
             >
@@ -684,7 +942,7 @@ export default function OrganizationsPage() {
 
       {/* 4. Main Content: Table or Grid */}
       {viewMode === "table" ? (
-        <DataTable<IOrganization>
+        <DataTable<IOrganizationWithCounts>
           columns={columns}
           data={filteredOrganizations}
           keyExtractor={(org) => org.id}
@@ -697,6 +955,33 @@ export default function OrganizationsPage() {
           emptyActionLabel={emptyActionLabel}
           onEmptyAction={emptyActionHandler}
           pageSize={10}
+        />
+      ) : isCurrentLoading ? (
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap="3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Card.Root key={i} size="sm" variant="outline" bg="bg.panel" borderColor="border.default" p="4" minH="180px">
+              <HStack gap="3" mb="4">
+                <Skeleton boxSize="36px" borderRadius="md" />
+                <VStack align="start" gap="1" flex="1">
+                  <Skeleton h="14px" w="60%" />
+                  <Skeleton h="11px" w="40%" />
+                </VStack>
+              </HStack>
+              <VStack align="stretch" gap="2" mb="4">
+                <Skeleton h="12px" w="80%" />
+                <Skeleton h="12px" w="50%" />
+              </VStack>
+              <HStack justify="space-between" pt="2" borderTopWidth="1px" borderColor="border.subtle">
+                <Skeleton h="20px" w="60px" borderRadius="xs" />
+                <Skeleton h="20px" w="50px" borderRadius="xs" />
+              </HStack>
+            </Card.Root>
+          ))}
+        </SimpleGrid>
+      ) : isCurrentError ? (
+        <ErrorState
+          message="Could not connect to the database to load transport agencies."
+          onRetry={handleCurrentRetry}
         />
       ) : filteredOrganizations.length === 0 ? (
         <EmptyState
@@ -714,6 +999,8 @@ export default function OrganizationsPage() {
               onEdit={handleEdit}
               onDelete={handleDeleteClick}
               onRestore={handleRestoreClick}
+              onViewRegions={handleViewRegions}
+              onViewDepots={handleViewDepots}
               isDeleted={currentTab === "deleted" || org.deleted}
             />
           ))}
@@ -727,6 +1014,8 @@ export default function OrganizationsPage() {
         initialData={editData}
         onSuccess={() => {
           refetchActive();
+          refetchRegions();
+          refetchDepots();
           if (isSuperAdmin) refetchDeleted();
         }}
       />
@@ -735,7 +1024,9 @@ export default function OrganizationsPage() {
       <Dialog.Root
         role="alertdialog"
         open={!!orgToDelete}
-        onOpenChange={(e) => !e.open && setOrgToDelete(null)}
+        onOpenChange={(e) => {
+          if (!isDeleting && !e.open) setOrgToDelete(null);
+        }}
         size="sm"
         placement="center"
       >
@@ -782,6 +1073,23 @@ export default function OrganizationsPage() {
                       </Text>
                     </VStack>
                   </HStack>
+
+                  {((orgToDelete?.region_count || 0) > 0 || (orgToDelete?.depot_count || 0) > 0) && (
+                    <Box p="2.5" bg="amber.subtle" borderRadius="sm" borderWidth="1px" borderColor="amber.muted">
+                      <HStack align="flex-start" gap="2">
+                        <AlertTriangle size={15} color="var(--chakra-colors-amber-600)" style={{ marginTop: "2px", flexShrink: 0 }} />
+                        <VStack align="start" gap="0.5">
+                          <Text fontSize="xs" fontWeight="600" color="amber.fg">
+                            Active Operational Infrastructure Detected
+                          </Text>
+                          <Text fontSize="11px" color="fg.muted" lineHeight="1.4">
+                            This transit authority manages {orgToDelete?.region_count || 0} regional operational zone(s) and {orgToDelete?.depot_count || 0} bus depot facility(ies). Soft-deleting this agency will affect operational jurisdictions and fleet dispatch schedules.
+                          </Text>
+                        </VStack>
+                      </HStack>
+                    </Box>
+                  )}
+
                   <Text fontSize="xs" color="fg.muted" lineHeight="1.5">
                     This will soft-delete the organization. As a Super Admin, you will be able to view and restore it from the "Deleted" tab.
                   </Text>
@@ -793,7 +1101,9 @@ export default function OrganizationsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setOrgToDelete(null)}
+                    onClick={() => {
+                      if (!isDeleting) setOrgToDelete(null);
+                    }}
                     disabled={isDeleting}
                   >
                     Cancel
@@ -803,13 +1113,14 @@ export default function OrganizationsPage() {
                   colorPalette="red"
                   size="sm"
                   loading={isDeleting}
+                  disabled={isDeleting}
                   onClick={handleConfirmDelete}
                 >
                   Delete Organization
                 </Button>
               </Dialog.Footer>
               <Dialog.CloseTrigger asChild>
-                <CloseButton size="sm" position="absolute" top="2" insetEnd="2" />
+                <CloseButton size="sm" position="absolute" top="2" insetEnd="2" disabled={isDeleting} />
               </Dialog.CloseTrigger>
             </Dialog.Content>
           </Dialog.Positioner>
@@ -820,7 +1131,9 @@ export default function OrganizationsPage() {
       <Dialog.Root
         role="alertdialog"
         open={!!orgToRestore}
-        onOpenChange={(e) => !e.open && setOrgToRestore(null)}
+        onOpenChange={(e) => {
+          if (!isRestoring && !e.open) setOrgToRestore(null);
+        }}
         size="sm"
         placement="center"
       >
@@ -878,7 +1191,9 @@ export default function OrganizationsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setOrgToRestore(null)}
+                    onClick={() => {
+                      if (!isRestoring) setOrgToRestore(null);
+                    }}
                     disabled={isRestoring}
                   >
                     Cancel
@@ -888,13 +1203,14 @@ export default function OrganizationsPage() {
                   colorPalette="green"
                   size="sm"
                   loading={isRestoring}
+                  disabled={isRestoring}
                   onClick={handleConfirmRestore}
                 >
                   Restore Organization
                 </Button>
               </Dialog.Footer>
               <Dialog.CloseTrigger asChild>
-                <CloseButton size="sm" position="absolute" top="2" insetEnd="2" />
+                <CloseButton size="sm" position="absolute" top="2" insetEnd="2" disabled={isRestoring} />
               </Dialog.CloseTrigger>
             </Dialog.Content>
           </Dialog.Positioner>

@@ -4,6 +4,7 @@ import {
   Flex,
   HStack,
   VStack,
+  SimpleGrid,
   Text,
   Badge,
   IconButton,
@@ -13,7 +14,7 @@ import {
   Menu,
   Portal,
 } from "@chakra-ui/react";
-import { IOrganization, getOrgInitials } from "@/types/organization";
+import { IOrganizationWithCounts, getOrgInitials } from "@/types/organization";
 import { toast } from "react-toastify";
 import {
   MoreVertical,
@@ -21,17 +22,25 @@ import {
   Trash2,
   Check,
   Building2,
+  MapPin,
+  ArrowRight,
   Mail,
   Phone,
   Copy,
   RotateCcw,
+  ShieldCheck,
+  Cpu,
+  Tv,
+  Volume2,
 } from "lucide-react";
 
 interface OrganizationCardProps {
-  organization: IOrganization;
-  onEdit?: (org: IOrganization) => void;
-  onDelete?: (org: IOrganization) => void;
-  onRestore?: (org: IOrganization) => void;
+  organization: IOrganizationWithCounts;
+  onEdit?: (org: IOrganizationWithCounts) => void;
+  onDelete?: (org: IOrganizationWithCounts) => void;
+  onRestore?: (org: IOrganizationWithCounts) => void;
+  onViewRegions?: (org: IOrganizationWithCounts) => void;
+  onViewDepots?: (org: IOrganizationWithCounts) => void;
   isDeleted?: boolean;
 }
 
@@ -40,9 +49,13 @@ export const OrganizationCard: React.FC<OrganizationCardProps> = ({
   onEdit,
   onDelete,
   onRestore,
+  onViewRegions,
+  onViewDepots,
   isDeleted = false,
 }) => {
   const [copied, setCopied] = useState(false);
+  const regionCount = organization.region_count || 0;
+  const depotCount = organization.depot_count || 0;
 
   const isProtected =
     organization.name?.toLowerCase() === "navitronix" ||
@@ -56,255 +69,464 @@ export const OrganizationCard: React.FC<OrganizationCardProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const accentColor = isDeleted
+    ? "red"
+    : organization.active !== false
+    ? "blue"
+    : "gray";
+
   return (
     <Card.Root
       size="sm"
       variant="outline"
       bg="bg.panel"
       borderColor="border.default"
-      transition="border-color 0.15s ease"
-      _hover={{ borderColor: "blue.500" }}
+      position="relative"
+      overflow="hidden"
+      transition="all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
+      _hover={{
+        borderColor: isDeleted ? "red.muted" : "blue.muted",
+        transform: "translateY(-2px)",
+        boxShadow: "sm",
+      }}
+      h="full"
     >
+      {/* Top subtle accent bar */}
+      <Box
+        position="absolute"
+        top="0"
+        left="0"
+        right="0"
+        h="2.5px"
+        bg={`${accentColor}.solid`}
+        opacity="0.85"
+      />
+
       <Card.Body p="4" display="flex" flexDirection="column" justifyContent="space-between" h="full">
         <div>
           {/* Header: Logo / Avatar + Name + Status + Menu */}
-        <Flex justify="space-between" align="flex-start" mb="3">
-          <HStack gap="3" minW="0">
-            <Avatar.Root
-              size="sm"
-              shape="rounded"
-              colorPalette={isDeleted ? "red" : "blue"}
-              borderWidth="1px"
-              borderColor={isDeleted ? "red.subtle" : "border.subtle"}
-            >
-              <Avatar.Fallback name={organization.name}>
-                {getOrgInitials(organization.name)}
-              </Avatar.Fallback>
-              <Avatar.Image src={organization.logo || undefined} />
-            </Avatar.Root>
-
-            <VStack align="flex-start" gap="0.5" minW="0">
-              <Text
-                fontSize="sm"
-                fontWeight="600"
-                color="fg.default"
-                truncate
-                lineHeight="1.2"
+          <Flex justify="space-between" align="flex-start" mb="3">
+            <HStack gap="3" minW="0" flex="1" overflow="hidden" mr="2">
+              <Avatar.Root
+                size="sm"
+                shape="rounded"
+                colorPalette={isDeleted ? "red" : "blue"}
+                borderWidth="1px"
+                borderColor={isDeleted ? "red.subtle" : "border.subtle"}
+                shrink="0"
               >
-                {organization.name}
-              </Text>
-              <HStack gap="1.5">
-                {isDeleted ? (
-                  <Badge
-                    size="xs"
-                    variant="subtle"
-                    colorPalette="red"
-                    borderRadius="xs"
-                    px="1.5"
-                    py="0.2"
-                    fontSize="10px"
-                    fontWeight="600"
-                  >
-                    Deleted
-                  </Badge>
-                ) : (
-                  <Badge
-                    size="xs"
-                    variant="subtle"
-                    colorPalette={organization.active !== false ? "green" : "gray"}
-                    borderRadius="xs"
-                    px="1.5"
-                    py="0.2"
-                    fontSize="10px"
-                    fontWeight="500"
-                  >
-                    {organization.active !== false ? "Active" : "Inactive"}
-                  </Badge>
-                )}
-                {isProtected && (
-                  <Badge
-                    size="xs"
-                    variant="subtle"
-                    colorPalette="purple"
-                    borderRadius="xs"
-                    px="1.5"
-                    py="0.2"
-                    fontSize="10px"
-                  >
-                    System
-                  </Badge>
-                )}
-              </HStack>
-            </VStack>
-          </HStack>
+                <Avatar.Fallback name={organization.name}>
+                  {getOrgInitials(organization.name)}
+                </Avatar.Fallback>
+                <Avatar.Image src={organization.logo || undefined} />
+              </Avatar.Root>
 
-          {/* Action Menu */}
-          <Menu.Root positioning={{ placement: "bottom-end", gutter: 4 }}>
-            <Menu.Trigger asChild>
-              <IconButton
-                size="xs"
-                variant="ghost"
-                aria-label="Actions"
-                borderRadius="xs"
-                color="fg.muted"
-                _hover={{ color: "fg.default", bg: "bg.subtle" }}
-              >
-                <MoreVertical size={15} />
-              </IconButton>
-            </Menu.Trigger>
-
-            <Portal>
-              <Menu.Positioner>
-                <Menu.Content
-                  minW="140px"
-                  borderRadius="sm"
-                  borderColor="border.default"
-                  bg="bg.surface"
-                  p="1"
+              <VStack align="flex-start" gap="0.5" minW="0" overflow="hidden" flex="1">
+                <Text
+                  fontSize="sm"
+                  fontWeight="600"
+                  color="fg.default"
+                  truncate
+                  maxW="full"
+                  lineHeight="1.2"
+                  title={organization.name}
                 >
+                  {organization.name}
+                </Text>
+                <HStack gap="1.5" wrap="wrap">
                   {isDeleted ? (
-                    onRestore && (
+                    <Badge
+                      size="xs"
+                      variant="subtle"
+                      colorPalette="red"
+                      borderRadius="xs"
+                      px="1.5"
+                      py="0.2"
+                      fontSize="10px"
+                      fontWeight="600"
+                    >
+                      Deleted
+                    </Badge>
+                  ) : (
+                    <Badge
+                      size="xs"
+                      variant="subtle"
+                      colorPalette={organization.active !== false ? "green" : "gray"}
+                      borderRadius="xs"
+                      px="1.5"
+                      py="0.2"
+                      fontSize="10px"
+                      fontWeight="600"
+                    >
+                      <HStack gap="1">
+                        <Box
+                          w="5px"
+                          h="5px"
+                          borderRadius="full"
+                          bg={organization.active !== false ? "green.500" : "gray.400"}
+                          boxShadow={
+                            organization.active !== false
+                              ? "0 0 5px var(--chakra-colors-green-500)"
+                              : undefined
+                          }
+                        />
+                        <Text>
+                          {organization.active !== false ? "Active" : "Inactive"}
+                        </Text>
+                      </HStack>
+                    </Badge>
+                  )}
+                  {isProtected && (
+                    <Badge
+                      size="xs"
+                      variant="subtle"
+                      colorPalette="purple"
+                      borderRadius="xs"
+                      px="1.5"
+                      py="0.2"
+                      fontSize="10px"
+                      fontWeight="600"
+                    >
+                      <HStack gap="1">
+                        <ShieldCheck size={10} />
+                        <Text>System</Text>
+                      </HStack>
+                    </Badge>
+                  )}
+                </HStack>
+              </VStack>
+            </HStack>
+
+            {/* Action Menu */}
+            <Menu.Root positioning={{ placement: "bottom-end", gutter: 4 }}>
+              <Menu.Trigger asChild>
+                <IconButton
+                  size="xs"
+                  variant="ghost"
+                  aria-label="Actions"
+                  borderRadius="xs"
+                  color="fg.muted"
+                  _hover={{ color: "fg.default", bg: "bg.subtle" }}
+                >
+                  <MoreVertical size={15} />
+                </IconButton>
+              </Menu.Trigger>
+
+              <Portal>
+                <Menu.Positioner>
+                  <Menu.Content
+                    minW="140px"
+                    borderRadius="sm"
+                    borderColor="border.default"
+                    bg="bg.surface"
+                    p="1"
+                  >
+                    {!isDeleted && onViewRegions && (
                       <Menu.Item
-                        value="restore"
+                        value="view-regions"
                         borderRadius="xs"
                         px="2"
                         py="1.5"
                         cursor="pointer"
-                        _hover={{ bg: "green.500/10" }}
-                        onClick={() => onRestore(organization)}
+                        _hover={{ bg: "bg.subtle" }}
+                        onClick={() => onViewRegions(organization)}
                       >
                         <HStack gap="2">
-                          <RotateCcw size={13} color="var(--chakra-colors-green-600)" />
-                          <Text fontSize="xs" color="green.600" fontWeight="600">
-                            Restore Agency
-                          </Text>
+                          <MapPin size={13} color="var(--chakra-colors-blue-600)" />
+                          <Text fontSize="xs">View Regions ({regionCount})</Text>
                         </HStack>
                       </Menu.Item>
-                    )
-                  ) : (
-                    <>
-                      {onEdit && (
+                    )}
+
+                    {!isDeleted && onViewDepots && (
+                      <Menu.Item
+                        value="view-depots"
+                        borderRadius="xs"
+                        px="2"
+                        py="1.5"
+                        cursor="pointer"
+                        _hover={{ bg: "bg.subtle" }}
+                        onClick={() => onViewDepots(organization)}
+                      >
+                        <HStack gap="2">
+                          <Building2 size={13} color="var(--chakra-colors-green-600)" />
+                          <Text fontSize="xs">View Depots ({depotCount})</Text>
+                        </HStack>
+                      </Menu.Item>
+                    )}
+
+                    {isDeleted ? (
+                      onRestore && (
                         <Menu.Item
-                          value="edit"
+                          value="restore"
                           borderRadius="xs"
                           px="2"
                           py="1.5"
                           cursor="pointer"
-                          _hover={{ bg: "bg.subtle" }}
-                          onClick={() => onEdit(organization)}
+                          _hover={{ bg: "green.500/10" }}
+                          onClick={() => onRestore(organization)}
                         >
                           <HStack gap="2">
-                            <Pencil size={13} color="var(--chakra-colors-fg-muted)" />
-                            <Text fontSize="xs">Edit Agency</Text>
+                            <RotateCcw size={13} color="var(--chakra-colors-green-600)" />
+                            <Text fontSize="xs" color="green.600" fontWeight="600">
+                              Restore Agency
+                            </Text>
                           </HStack>
                         </Menu.Item>
-                      )}
-                    </>
-                  )}
+                      )
+                    ) : (
+                      <>
+                        {onEdit && (
+                          <Menu.Item
+                            value="edit"
+                            borderRadius="xs"
+                            px="2"
+                            py="1.5"
+                            cursor="pointer"
+                            _hover={{ bg: "bg.subtle" }}
+                            onClick={() => onEdit(organization)}
+                          >
+                            <HStack gap="2">
+                              <Pencil size={13} color="var(--chakra-colors-fg-muted)" />
+                              <Text fontSize="xs">Edit Agency</Text>
+                            </HStack>
+                          </Menu.Item>
+                        )}
+                      </>
+                    )}
 
-                  <Menu.Item
-                    value="copy"
-                    borderRadius="xs"
-                    px="2"
-                    py="1.5"
-                    cursor="pointer"
-                    _hover={{ bg: "bg.subtle" }}
-                    onClick={handleCopyId}
-                  >
-                    <HStack gap="2">
-                      {copied ? (
-                        <Check size={13} color="var(--chakra-colors-green-600)" />
-                      ) : (
-                        <Copy size={13} color="var(--chakra-colors-fg-muted)" />
-                      )}
-                      <Text fontSize="xs">Copy ID</Text>
-                    </HStack>
-                  </Menu.Item>
-
-                  {!isDeleted && !isProtected && onDelete && (
                     <Menu.Item
-                      value="delete"
+                      value="copy"
                       borderRadius="xs"
                       px="2"
                       py="1.5"
                       cursor="pointer"
-                      _hover={{ bg: "red.500/10" }}
-                      onClick={() => onDelete(organization)}
+                      _hover={{ bg: "bg.subtle" }}
+                      onClick={handleCopyId}
                     >
                       <HStack gap="2">
-                        <Trash2 size={13} color="var(--chakra-colors-red-600)" />
-                        <Text fontSize="xs" color="red.600">Delete</Text>
+                        {copied ? (
+                          <Check size={13} color="var(--chakra-colors-green-600)" />
+                        ) : (
+                          <Copy size={13} color="var(--chakra-colors-fg-muted)" />
+                        )}
+                        <Text fontSize="xs">Copy ID</Text>
                       </HStack>
                     </Menu.Item>
-                  )}
-                </Menu.Content>
-              </Menu.Positioner>
-            </Portal>
-          </Menu.Root>
-        </Flex>
 
-        {/* Contact Details */}
-        <VStack align="stretch" gap="1.5" my="3">
-          {organization.email && (
-            <HStack gap="2" fontSize="xs" color="fg.muted">
-              <Mail size={13} style={{ flexShrink: 0 }} />
-              <Text truncate>{organization.email}</Text>
-            </HStack>
-          )}
-          {organization.phone && (
-            <HStack gap="2" fontSize="xs" color="fg.muted">
-              <Phone size={13} style={{ flexShrink: 0 }} />
-              <Text truncate>{organization.phone}</Text>
-            </HStack>
-          )}
-        </VStack>
-      </div>
+                    {!isDeleted && !isProtected && onDelete && (
+                      <Menu.Item
+                        value="delete"
+                        borderRadius="xs"
+                        px="2"
+                        py="1.5"
+                        cursor="pointer"
+                        _hover={{ bg: "red.500/10" }}
+                        onClick={() => onDelete(organization)}
+                      >
+                        <HStack gap="2">
+                          <Trash2 size={13} color="var(--chakra-colors-red-600)" />
+                          <Text fontSize="xs" color="red.600">Delete</Text>
+                        </HStack>
+                      </Menu.Item>
+                    )}
+                  </Menu.Content>
+                </Menu.Positioner>
+              </Portal>
+            </Menu.Root>
+          </Flex>
 
-      {/* Feature tags and action */}
-      <Flex
-        pt="3"
-        borderTopWidth="1px"
-        borderColor="border.subtle"
-        justify="space-between"
-        align="center"
-        gap="2"
-        wrap="wrap"
-      >
-        <HStack gap="1.5" wrap="wrap">
-          {organization.PIS && (
-            <Badge size="xs" variant="outline" colorPalette="blue" borderRadius="xs">
-              PIS
-            </Badge>
-          )}
-          {organization.PAS && (
-            <Badge size="xs" variant="outline" colorPalette="amber" borderRadius="xs">
-              PAS
-            </Badge>
-          )}
-          {organization.ITMS && (
-            <Badge size="xs" variant="outline" colorPalette="purple" borderRadius="xs">
-              ITMS
-            </Badge>
-          )}
-          {!organization.PIS && !organization.PAS && !organization.ITMS && (
-            <Text fontSize="11px" color="fg.subtle">
-              Standard Tier
-            </Text>
-          )}
-        </HStack>
-        {isDeleted && onRestore && (
-          <Button
-            size="xs"
-            variant="outline"
-            colorPalette="green"
-            borderRadius="xs"
-            onClick={() => onRestore(organization)}
+          {/* Operational Infrastructure Cardlet: Regions & Depots */}
+          <SimpleGrid columns={2} gap="2" mb="2.5">
+            <HStack
+              p="2"
+              bg="bg.subtle"
+              borderRadius="sm"
+              borderWidth="1px"
+              borderColor="border.subtle"
+              justify="space-between"
+              align="center"
+              cursor={!isDeleted && onViewRegions ? "pointer" : "default"}
+              _hover={!isDeleted && onViewRegions ? { borderColor: "blue.subtle", bg: "blue.500/10" } : undefined}
+              onClick={() => !isDeleted && onViewRegions && onViewRegions(organization)}
+              transition="all 0.15s ease"
+            >
+              <HStack gap="2" minW="0">
+                <Box
+                  w="24px"
+                  h="24px"
+                  borderRadius="xs"
+                  bg="blue.subtle"
+                  color="blue.fg"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  shrink="0"
+                >
+                  <MapPin size={13} />
+                </Box>
+                <VStack align="start" gap="0" minW="0">
+                  <Text fontSize="xs" fontWeight="600" color="fg.default" truncate>
+                    {regionCount} {regionCount === 1 ? "Zone" : "Zones"}
+                  </Text>
+                  <Text fontSize="9px" color="fg.muted">
+                    Regions
+                  </Text>
+                </VStack>
+              </HStack>
+              {!isDeleted && onViewRegions && (
+                <ArrowRight size={11} color="var(--chakra-colors-blue-500)" />
+              )}
+            </HStack>
+
+            <HStack
+              p="2"
+              bg="bg.subtle"
+              borderRadius="sm"
+              borderWidth="1px"
+              borderColor="border.subtle"
+              justify="space-between"
+              align="center"
+              cursor={!isDeleted && onViewDepots ? "pointer" : "default"}
+              _hover={!isDeleted && onViewDepots ? { borderColor: "green.subtle", bg: "green.500/10" } : undefined}
+              onClick={() => !isDeleted && onViewDepots && onViewDepots(organization)}
+              transition="all 0.15s ease"
+            >
+              <HStack gap="2" minW="0">
+                <Box
+                  w="24px"
+                  h="24px"
+                  borderRadius="xs"
+                  bg="green.subtle"
+                  color="green.fg"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  shrink="0"
+                >
+                  <Building2 size={13} />
+                </Box>
+                <VStack align="start" gap="0" minW="0">
+                  <Text fontSize="xs" fontWeight="600" color="fg.default" truncate>
+                    {depotCount} {depotCount === 1 ? "Depot" : "Depots"}
+                  </Text>
+                  <Text fontSize="9px" color="fg.muted">
+                    Facilities
+                  </Text>
+                </VStack>
+              </HStack>
+              {!isDeleted && onViewDepots && (
+                <ArrowRight size={11} color="var(--chakra-colors-green-500)" />
+              )}
+            </HStack>
+          </SimpleGrid>
+
+          {/* Contact Details Cardlet */}
+          <VStack
+            align="stretch"
+            gap="1.5"
+            my="2.5"
+            p="2.5"
+            bg="bg.subtle"
+            borderRadius="sm"
+            borderWidth="1px"
+            borderColor="border.subtle"
           >
-            <RotateCcw size={12} style={{ marginRight: "4px" }} />
-            Restore
-          </Button>
-        )}
-      </Flex>
+            <HStack gap="2" fontSize="11px" color={organization.email ? "fg.muted" : "fg.subtle"}>
+              <Mail size={12} style={{ flexShrink: 0 }} />
+              <Text truncate>
+                {organization.email || "No contact email listed"}
+              </Text>
+            </HStack>
+            <HStack gap="2" fontSize="11px" color={organization.phone ? "fg.muted" : "fg.subtle"}>
+              <Phone size={12} style={{ flexShrink: 0 }} />
+              <Text truncate>
+                {organization.phone || "No contact phone listed"}
+              </Text>
+            </HStack>
+          </VStack>
+        </div>
+
+        {/* Feature tags and action */}
+        <Flex
+          pt="3"
+          borderTopWidth="1px"
+          borderColor="border.subtle"
+          justify="space-between"
+          align="center"
+          gap="2"
+          wrap="wrap"
+        >
+          {/* Visual feature matrix */}
+          <HStack gap="1.5" wrap="wrap">
+            <Badge
+              size="xs"
+              variant={organization.ITMS ? "subtle" : "outline"}
+              colorPalette="purple"
+              borderRadius="xs"
+              px="1.5"
+              py="0.5"
+              fontSize="10px"
+              fontWeight="600"
+              opacity={organization.ITMS ? 1 : 0.35}
+              title={organization.ITMS ? "ITMS Telemetry active" : "ITMS not enabled"}
+            >
+              <HStack gap="1">
+                <Cpu size={10} />
+                <Text>ITMS</Text>
+              </HStack>
+            </Badge>
+
+            <Badge
+              size="xs"
+              variant={organization.PIS ? "subtle" : "outline"}
+              colorPalette="cyan"
+              borderRadius="xs"
+              px="1.5"
+              py="0.5"
+              fontSize="10px"
+              fontWeight="600"
+              opacity={organization.PIS ? 1 : 0.35}
+              title={organization.PIS ? "PIS Displays active" : "PIS not enabled"}
+            >
+              <HStack gap="1">
+                <Tv size={10} />
+                <Text>PIS</Text>
+              </HStack>
+            </Badge>
+
+            <Badge
+              size="xs"
+              variant={organization.PAS ? "subtle" : "outline"}
+              colorPalette="orange"
+              borderRadius="xs"
+              px="1.5"
+              py="0.5"
+              fontSize="10px"
+              fontWeight="600"
+              opacity={organization.PAS ? 1 : 0.35}
+              title={organization.PAS ? "PAS Audio active" : "PAS not enabled"}
+            >
+              <HStack gap="1">
+                <Volume2 size={10} />
+                <Text>PAS</Text>
+              </HStack>
+            </Badge>
+          </HStack>
+
+          {isDeleted && onRestore && (
+            <Button
+              size="xs"
+              variant="outline"
+              colorPalette="green"
+              borderRadius="xs"
+              onClick={() => onRestore(organization)}
+            >
+              <RotateCcw size={12} style={{ marginRight: "4px" }} />
+              Restore
+            </Button>
+          )}
+        </Flex>
       </Card.Body>
     </Card.Root>
   );

@@ -14,19 +14,60 @@ import {
   CheckboxCard,
   Portal,
   CloseButton,
+  Avatar,
 } from "@chakra-ui/react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { IOrganization, organizationCrud } from "@/types/organization";
+import { IOrganization, organizationCrud, getOrgInitials } from "@/types/organization";
+import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { toast } from "react-toastify";
 import { Building2, Save } from "lucide-react";
 
+const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]{6,15}$/;
+
 const organizationSchema = z.object({
-  name: z.string().trim().min(1, "Organization name is required"),
-  email: z.string().trim().min(1, "Email is required").email("Invalid email format"),
-  phone: z.string().optional().or(z.literal("")),
-  logo: z.string().optional().or(z.literal("")),
+  name: z
+    .string()
+    .trim()
+    .min(2, "Organization name must be at least 2 characters")
+    .max(60, "Organization name cannot exceed 60 characters")
+    .refine(
+      (val) => /[a-zA-Z0-9]/.test(val),
+      "Organization name must contain at least one letter or number"
+    )
+    .refine(
+      (val) => !/^[^\s]{35,}$/.test(val),
+      "Organization name cannot contain unbroken strings exceeding 35 characters"
+    ),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Contact email is required")
+    .email("Please enter a valid email address (e.g. contact@agency.org)")
+    .max(100, "Email cannot exceed 100 characters"),
+  phone: z
+    .string()
+    .trim()
+    .max(20, "Phone number cannot exceed 20 characters")
+    .optional()
+    .refine(
+      (val) => !val || phoneRegex.test(val),
+      "Please enter a valid phone format (e.g. +91 98765 43210)"
+    ),
+  logo: z
+    .string()
+    .trim()
+    .max(255, "Logo URL cannot exceed 255 characters")
+    .optional()
+    .refine(
+      (val) => !val || /^(https?:\/\/).+/i.test(val),
+      "Logo URL must start with http:// or https://"
+    )
+    .refine(
+      (val) => !val || z.string().url().safeParse(val).success,
+      "Please enter a valid image URL (e.g. https://example.com/logo.png)"
+    ),
   PIS: z.boolean().optional(),
   PAS: z.boolean().optional(),
   ITMS: z.boolean().optional(),
@@ -34,6 +75,14 @@ const organizationSchema = z.object({
 });
 
 type OrganizationFormValues = z.infer<typeof organizationSchema>;
+
+const formatErrorMessage = (error: any): string => {
+  const msg = error?.message || "";
+  if (msg.includes("unique") || msg.includes("duplicate") || error?.code === "23505") {
+    return "An organization with this name already exists. Please choose a different name.";
+  }
+  return msg || "An unexpected error occurred. Please try again.";
+};
 
 interface CreateOrganizationDrawerProps {
   open: boolean;
@@ -49,6 +98,7 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
   onSuccess,
 }) => {
   const isEditMode = !!initialData;
+  const { selectedOrganization, setSelectedOrganization } = useOrganizationStore();
   const { useCreate, useUpdate } = organizationCrud;
   const { mutate: createOrganization, isPending: isCreating } = useCreate();
   const { mutate: updateOrganization, isPending: isUpdating } = useUpdate();
@@ -58,6 +108,7 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
     handleSubmit,
     reset,
     control,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<OrganizationFormValues>({
     resolver: zodResolver(organizationSchema),
@@ -72,6 +123,9 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
       active: true,
     },
   });
+
+  const watchedName = watch("name");
+  const watchedLogo = watch("logo");
 
   // Reset form when initialData changes or drawer opens
   useEffect(() => {
@@ -104,29 +158,38 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
 
   const onSubmit = (values: OrganizationFormValues) => {
     if (isEditMode && initialData) {
+      const payload = {
+        id: initialData.id,
+        name: values.name.trim(),
+        email: values.email?.trim().toLowerCase() || null,
+        phone: values.phone?.trim() || null,
+        logo: values.logo?.trim() || null,
+        PIS: values.PIS ?? false,
+        PAS: values.PAS ?? false,
+        ITMS: values.ITMS ?? false,
+        active: values.active ?? true,
+      };
+
       updateOrganization(
         {
           id: initialData.id,
-          payload: {
-            id: initialData.id,
-            name: values.name.trim(),
-            email: values.email?.trim() || null,
-            phone: values.phone?.trim() || null,
-            logo: values.logo?.trim() || null,
-            PIS: values.PIS ?? false,
-            PAS: values.PAS ?? false,
-            ITMS: values.ITMS ?? false,
-            active: values.active ?? true,
-          },
+          payload,
         },
         {
-          onSuccess: () => {
+          onSuccess: (data: any) => {
+            if (selectedOrganization?.id === initialData.id) {
+              setSelectedOrganization({
+                ...selectedOrganization,
+                ...payload,
+                ...(data || {}),
+              });
+            }
             toast.success("Organization updated successfully");
             onOpenChange(false);
             onSuccess?.();
           },
           onError: (error: any) => {
-            toast.error(`Failed to update organization: ${error.message}`);
+            toast.error(`Failed to update organization: ${formatErrorMessage(error)}`);
           },
         }
       );
@@ -134,7 +197,7 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
       createOrganization(
         {
           name: values.name.trim(),
-          email: values.email?.trim() || null,
+          email: values.email?.trim().toLowerCase() || null,
           phone: values.phone?.trim() || null,
           logo: values.logo?.trim() || null,
           PIS: values.PIS ?? false,
@@ -149,7 +212,7 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
             onSuccess?.();
           },
           onError: (error: any) => {
-            toast.error(`Failed to create organization: ${error.message}`);
+            toast.error(`Failed to create organization: ${formatErrorMessage(error)}`);
           },
         }
       );
@@ -158,10 +221,15 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
 
   const isBusy = isSubmitting || isCreating || isUpdating;
 
+  const previewName = watchedName?.trim() || initialData?.name || (isEditMode ? "Edit Agency" : "New Agency");
+  const previewLogo = watchedLogo?.trim() || initialData?.logo || undefined;
+
   return (
     <Drawer.Root
       open={open}
-      onOpenChange={(e) => onOpenChange(e.open)}
+      onOpenChange={(e) => {
+        if (!isBusy) onOpenChange(e.open);
+      }}
       size="md"
       placement="end"
     >
@@ -171,19 +239,19 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
           <Drawer.Content bg="bg.surface" borderColor="border.default" borderWidth="1px">
             <Drawer.Header borderBottomWidth="1px" borderColor="border.default">
               <HStack gap="3">
-                <Box
-                  w="32px"
-                  h="32px"
-                  borderRadius="xs"
-                  bg="blue.subtle"
-                  color="blue.600"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="center"
+                <Avatar.Root
+                  size="sm"
+                  shape="rounded"
+                  colorPalette="blue"
+                  borderWidth="1px"
+                  borderColor="border.subtle"
                   shrink="0"
                 >
-                  <Building2 size={18} />
-                </Box>
+                  <Avatar.Fallback name={previewName}>
+                    {getOrgInitials(previewName)}
+                  </Avatar.Fallback>
+                  <Avatar.Image src={previewLogo} />
+                </Avatar.Root>
                 <VStack align="start" gap="0">
                   <Drawer.Title fontSize="sm" fontWeight="600" color="fg.default">
                     {isEditMode ? "Edit Organization" : "Create New Organization"}
@@ -195,8 +263,8 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
                   </Text>
                 </VStack>
               </HStack>
-              <Drawer.CloseTrigger asChild>
-                <CloseButton size="sm" position="absolute" top="2" insetEnd="2" />
+              <Drawer.CloseTrigger asChild disabled={isBusy}>
+                <CloseButton size="sm" position="absolute" top="2" insetEnd="2" disabled={isBusy} />
               </Drawer.CloseTrigger>
             </Drawer.Header>
 
@@ -213,6 +281,7 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
                       placeholder="e.g. APSRTC or Bangalore Metro"
                       borderRadius="sm"
                       size="sm"
+                      maxLength={60}
                       {...register("name")}
                     />
                     {errors.name && <Field.ErrorText>{errors.name.message}</Field.ErrorText>}
@@ -229,6 +298,7 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
                       placeholder="contact@transit.org"
                       borderRadius="sm"
                       size="sm"
+                      maxLength={100}
                       {...register("email")}
                     />
                     {errors.email && <Field.ErrorText>{errors.email.message}</Field.ErrorText>}
@@ -241,6 +311,7 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
                       placeholder="+91 98765 43210"
                       borderRadius="sm"
                       size="sm"
+                      maxLength={20}
                       {...register("phone")}
                     />
                     {errors.phone && <Field.ErrorText>{errors.phone.message}</Field.ErrorText>}
@@ -254,10 +325,11 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
                       placeholder="https://example.com/logo.png"
                       borderRadius="sm"
                       size="sm"
+                      maxLength={255}
                       {...register("logo")}
                     />
                     {errors.logo && <Field.ErrorText>{errors.logo.message}</Field.ErrorText>}
-                    <Field.HelperText>Public image URL for the organization emblem</Field.HelperText>
+                    <Field.HelperText>Public image URL for the organization emblem (max 255 chars)</Field.HelperText>
                   </Field.Root>
 
                   <Separator my="1" borderColor="border.subtle" />

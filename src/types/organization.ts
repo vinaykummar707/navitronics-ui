@@ -28,19 +28,31 @@ export interface IOrganizationWithRegionCount extends IOrganization {
   regionsCount: number
 }
 
+export interface IOrganizationWithCounts extends IOrganization {
+  region_count?: number;
+  depot_count?: number;
+}
+
 
 // Create the hooks for 'organizations' table
 export const organizationCrud = createCrudHooks<IOrganization, IOrganizationCreate, IOrganizationUpdate>('organizations')
 
-/**
- * Returns 1-2 character uppercase initials from an organization name.
- * e.g., "APSRTC" -> "AP", "Bangalore Metro" -> "BM", "Transit" -> "TR"
- */
 export const getOrgInitials = (name?: string | null): string => {
-  if (!name || !name.trim()) return "A";
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) {
-    return parts[0].slice(0, 2).toUpperCase();
+  if (!name || !name.trim()) return "AG";
+  const words = name
+    .trim()
+    .split(/\s+/)
+    .map((w) => w.replace(/[^a-zA-Z0-9]/g, ""))
+    .filter(Boolean);
+
+  if (words.length === 0) {
+    const rawClean = name.replace(/[^a-zA-Z0-9]/g, "");
+    return rawClean ? rawClean.slice(0, 2).toUpperCase() : "AG";
   }
-  return (parts[0][0] + parts[1][0]).toUpperCase();
+
+  if (words.length === 1) {
+    return words[0].slice(0, 2).toUpperCase();
+  }
+
+  return (words[0][0] + words[1][0]).toUpperCase();
 };
