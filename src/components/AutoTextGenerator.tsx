@@ -1,5 +1,4 @@
 // import React, { useEffect, useState } from "react";
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // // Translation function
 // const translateText = async (text: string, targetLang: string) => {

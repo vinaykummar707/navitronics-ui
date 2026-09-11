@@ -9,10 +9,12 @@
     }
   ],
   "compilerOptions": {
+     "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "skipLibCheck": true,
     "paths": {
-      "@/subframe/ui/*": [
-        "./src/ui/*"
-      ]
+      "@/*": ["./src/*"]
     }
   }
 }

@@ -3,11 +3,14 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
+import { Provider } from './components/ui/provider.tsx';
 
 // ✅ Register AG Grid community modules
 ModuleRegistry.registerModules([AllCommunityModule]);
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <Provider>
+      <App />
+    </Provider>
   </StrictMode>,
 )

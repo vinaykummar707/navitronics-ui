@@ -178,7 +178,26 @@ export function createCrudHooks<
       },
     })
   }
-    
+
+  // ========================
+  // RESTORE (Soft delete restore)
+  // ========================
+  const useRestore = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+      mutationFn: async (id: string) => {
+        const { error } = await supabase
+          .from(table)
+          .update({ deleted: false }) // Restore by clearing 'deleted' flag
+          .eq('id', id)
+
+        if (error) throw error
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: [table] })
+      },
+    })
+  }
 
   return {
     useList,
@@ -187,5 +206,6 @@ export function createCrudHooks<
     useUpdate,
     useDelete,
     useDeleteAll,
+    useRestore,
   }
 }

@@ -37,10 +37,37 @@ const UserLoginForm = lazy(() =>
 );
 
 const PageLoadingFallback = () => (
-  <div className="flex h-screen w-screen items-center justify-center bg-default-background">
-    <div className="flex flex-col items-center gap-3">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-300 border-t-neutral-800" />
-      <span className="text-caption font-caption text-subtext-color">Loading...</span>
+  <div
+    style={{
+      display: "flex",
+      height: "100vh",
+      width: "100vw",
+      alignItems: "center",
+      justifyContent: "center",
+      background: "#070b14",
+    }}
+  >
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "12px",
+        color: "#94a3b8",
+        fontSize: "13px",
+      }}
+    >
+      <div
+        style={{
+          width: "32px",
+          height: "32px",
+          borderRadius: "50%",
+          border: "3px solid rgba(255,255,255,0.1)",
+          borderTopColor: "#38bdf8",
+          animation: "spin 0.8s linear infinite",
+        }}
+      />
+      <span>Loading Navitronix...</span>
     </div>
   </div>
 );
@@ -209,7 +236,7 @@ function App() {
               path="/login"
               element={
                 <PublicRoute>
-                  <div className="flex h-screen w-screen flex-col items-start bg-default-background">
+                  <div style={{ display: "flex", height: "100vh", width: "100vw", flexDirection: "column", alignItems: "flex-start", background: "#070b14" }}>
                     <UserLoginForm />
                   </div>
                 </PublicRoute>

@@ -1,13 +1,16 @@
 import { useEffect, Suspense } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { supabase } from "@/supabaseClient";
 import { ILoggedUser, loggedUserCrud } from "@/types/IUser";
-import { DefaultPageLayout } from "@/ui";
 import { toast } from "react-toastify";
+import { Box, Spinner } from "@chakra-ui/react";
+import AppShell from "@/components/layout/AppShell";
+import ShellPreviewContent from "@/components/layout/ShellPreviewContent";
 
 const HomePage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const user = useLoggedUserStore((state) => state.user);
     const logout = useLoggedUserStore((state) => state.logout);
     const { useList } = loggedUserCrud;
@@ -37,30 +40,37 @@ const HomePage = () => {
                 handleError("Your account is not active or has been deleted. Please contact support.");
                 return;
             }
-            
-            // Redirect to a specific internal page if everything is okay
         }
     }, [user, userMetadata, navigate]);
 
-    function handleError(message) {
+    function handleError(message: string) {
         logout();
         toast.error(message);
         localStorage.clear();
         supabase.auth.signOut();
-        navigate("/login"); // Ensure there is a route to handle login
+        navigate("/login");
     }
 
     return (
-        <DefaultPageLayout>
-            <Suspense fallback={
-              <div className="flex h-full w-full items-center justify-center min-h-[300px]">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-300 border-t-neutral-800" />
-              </div>
-            }>
-                <Outlet />
-            </Suspense>
-        </DefaultPageLayout>
-    )
+      <AppShell>
+        <Suspense
+          fallback={
+            <Box
+              p="16"
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
+              gap="3"
+            >
+              <Spinner size="md" color="blue.500" />
+            </Box>
+          }
+        >
+          <Outlet />
+        </Suspense>
+      </AppShell>
+    );
 };
 
 export default HomePage;

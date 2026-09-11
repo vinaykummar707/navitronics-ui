@@ -1,0 +1,420 @@
+import React, { useEffect } from "react";
+import {
+  Box,
+  Flex,
+  VStack,
+  HStack,
+  Text,
+  Input,
+  Button,
+  Separator,
+  Drawer,
+  Field,
+  Switch,
+  CheckboxCard,
+  Portal,
+  CloseButton,
+} from "@chakra-ui/react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { IOrganization, organizationCrud } from "@/types/organization";
+import { toast } from "react-toastify";
+import { Building2, Save } from "lucide-react";
+
+const organizationSchema = z.object({
+  name: z.string().trim().min(1, "Organization name is required"),
+  email: z.string().trim().min(1, "Email is required").email("Invalid email format"),
+  phone: z.string().optional().or(z.literal("")),
+  logo: z.string().optional().or(z.literal("")),
+  PIS: z.boolean().optional(),
+  PAS: z.boolean().optional(),
+  ITMS: z.boolean().optional(),
+  active: z.boolean().optional(),
+});
+
+type OrganizationFormValues = z.infer<typeof organizationSchema>;
+
+interface CreateOrganizationDrawerProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  initialData?: IOrganization | null;
+  onSuccess?: () => void;
+}
+
+export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> = ({
+  open,
+  onOpenChange,
+  initialData,
+  onSuccess,
+}) => {
+  const isEditMode = !!initialData;
+  const { useCreate, useUpdate } = organizationCrud;
+  const { mutate: createOrganization, isPending: isCreating } = useCreate();
+  const { mutate: updateOrganization, isPending: isUpdating } = useUpdate();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    formState: { errors, isSubmitting },
+  } = useForm<OrganizationFormValues>({
+    resolver: zodResolver(organizationSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      logo: "",
+      PIS: false,
+      PAS: false,
+      ITMS: false,
+      active: true,
+    },
+  });
+
+  // Reset form when initialData changes or drawer opens
+  useEffect(() => {
+    if (open) {
+      if (initialData) {
+        reset({
+          name: initialData.name || "",
+          email: initialData.email || "",
+          phone: initialData.phone || "",
+          logo: initialData.logo || "",
+          PIS: initialData.PIS ?? false,
+          PAS: initialData.PAS ?? false,
+          ITMS: initialData.ITMS ?? false,
+          active: initialData.active ?? true,
+        });
+      } else {
+        reset({
+          name: "",
+          email: "",
+          phone: "",
+          logo: "",
+          PIS: false,
+          PAS: false,
+          ITMS: false,
+          active: true,
+        });
+      }
+    }
+  }, [initialData, open, reset]);
+
+  const onSubmit = (values: OrganizationFormValues) => {
+    if (isEditMode && initialData) {
+      updateOrganization(
+        {
+          id: initialData.id,
+          payload: {
+            id: initialData.id,
+            name: values.name.trim(),
+            email: values.email?.trim() || null,
+            phone: values.phone?.trim() || null,
+            logo: values.logo?.trim() || null,
+            PIS: values.PIS ?? false,
+            PAS: values.PAS ?? false,
+            ITMS: values.ITMS ?? false,
+            active: values.active ?? true,
+          },
+        },
+        {
+          onSuccess: () => {
+            toast.success("Organization updated successfully");
+            onOpenChange(false);
+            onSuccess?.();
+          },
+          onError: (error: any) => {
+            toast.error(`Failed to update organization: ${error.message}`);
+          },
+        }
+      );
+    } else {
+      createOrganization(
+        {
+          name: values.name.trim(),
+          email: values.email?.trim() || null,
+          phone: values.phone?.trim() || null,
+          logo: values.logo?.trim() || null,
+          PIS: values.PIS ?? false,
+          PAS: values.PAS ?? false,
+          ITMS: values.ITMS ?? false,
+          active: values.active ?? true,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Organization created successfully");
+            onOpenChange(false);
+            onSuccess?.();
+          },
+          onError: (error: any) => {
+            toast.error(`Failed to create organization: ${error.message}`);
+          },
+        }
+      );
+    }
+  };
+
+  const isBusy = isSubmitting || isCreating || isUpdating;
+
+  return (
+    <Drawer.Root
+      open={open}
+      onOpenChange={(e) => onOpenChange(e.open)}
+      size="md"
+      placement="end"
+    >
+      <Portal>
+        <Drawer.Backdrop />
+        <Drawer.Positioner>
+          <Drawer.Content bg="bg.surface" borderColor="border.default" borderWidth="1px">
+            <Drawer.Header borderBottomWidth="1px" borderColor="border.default">
+              <HStack gap="3">
+                <Box
+                  w="32px"
+                  h="32px"
+                  borderRadius="xs"
+                  bg="blue.subtle"
+                  color="blue.600"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  shrink="0"
+                >
+                  <Building2 size={18} />
+                </Box>
+                <VStack align="start" gap="0">
+                  <Drawer.Title fontSize="sm" fontWeight="600" color="fg.default">
+                    {isEditMode ? "Edit Organization" : "Create New Organization"}
+                  </Drawer.Title>
+                  <Text fontSize="xs" color="fg.muted">
+                    {isEditMode
+                      ? "Update transit corporation settings and module access"
+                      : "Register a new transit corporation or transport agency"}
+                  </Text>
+                </VStack>
+              </HStack>
+              <Drawer.CloseTrigger asChild>
+                <CloseButton size="sm" position="absolute" top="2" insetEnd="2" />
+              </Drawer.CloseTrigger>
+            </Drawer.Header>
+
+            <form onSubmit={handleSubmit(onSubmit)} style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+              <Drawer.Body overflowY="auto">
+                <VStack align="stretch" gap="4">
+                  {/* Organization Name */}
+                  <Field.Root invalid={!!errors.name} required>
+                    <Field.Label>
+                      Organization Name
+                      <Field.RequiredIndicator />
+                    </Field.Label>
+                    <Input
+                      placeholder="e.g. APSRTC or Bangalore Metro"
+                      borderRadius="sm"
+                      size="sm"
+                      {...register("name")}
+                    />
+                    {errors.name && <Field.ErrorText>{errors.name.message}</Field.ErrorText>}
+                  </Field.Root>
+
+                  {/* Email Address */}
+                  <Field.Root invalid={!!errors.email} required>
+                    <Field.Label>
+                      Contact Email
+                      <Field.RequiredIndicator />
+                    </Field.Label>
+                    <Input
+                      type="email"
+                      placeholder="contact@transit.org"
+                      borderRadius="sm"
+                      size="sm"
+                      {...register("email")}
+                    />
+                    {errors.email && <Field.ErrorText>{errors.email.message}</Field.ErrorText>}
+                  </Field.Root>
+
+                  {/* Phone Number */}
+                  <Field.Root invalid={!!errors.phone}>
+                    <Field.Label>Contact Phone</Field.Label>
+                    <Input
+                      placeholder="+91 98765 43210"
+                      borderRadius="sm"
+                      size="sm"
+                      {...register("phone")}
+                    />
+                    {errors.phone && <Field.ErrorText>{errors.phone.message}</Field.ErrorText>}
+                    <Field.HelperText>Primary dispatch or control room contact number</Field.HelperText>
+                  </Field.Root>
+
+                  {/* Logo URL */}
+                  <Field.Root invalid={!!errors.logo}>
+                    <Field.Label>Logo Image URL</Field.Label>
+                    <Input
+                      placeholder="https://example.com/logo.png"
+                      borderRadius="sm"
+                      size="sm"
+                      {...register("logo")}
+                    />
+                    {errors.logo && <Field.ErrorText>{errors.logo.message}</Field.ErrorText>}
+                    <Field.HelperText>Public image URL for the organization emblem</Field.HelperText>
+                  </Field.Root>
+
+                  <Separator my="1" borderColor="border.subtle" />
+
+                  {/* Feature Entitlements using Chakra UI CheckboxCard */}
+                  <VStack align="stretch" gap="2.5">
+                    <Text fontSize="xs" fontWeight="600" color="fg.muted" textTransform="uppercase" letterSpacing="0.04em">
+                      Feature Entitlements
+                    </Text>
+
+                    <Controller
+                      name="PIS"
+                      control={control}
+                      render={({ field }) => (
+                        <CheckboxCard.Root
+                          checked={field.value}
+                          onCheckedChange={(details) => field.onChange(details.checked)}
+                          colorPalette="blue"
+                          size="sm"
+                          borderRadius="sm"
+                        >
+                          <CheckboxCard.HiddenInput />
+                          <CheckboxCard.Control>
+                            <CheckboxCard.Content>
+                              <CheckboxCard.Label>Passenger Information System (PIS)</CheckboxCard.Label>
+                              <CheckboxCard.Description>
+                                Enables front, rear, and internal LED display boards
+                              </CheckboxCard.Description>
+                            </CheckboxCard.Content>
+                            <CheckboxCard.Indicator />
+                          </CheckboxCard.Control>
+                        </CheckboxCard.Root>
+                      )}
+                    />
+
+                    <Controller
+                      name="PAS"
+                      control={control}
+                      render={({ field }) => (
+                        <CheckboxCard.Root
+                          checked={field.value}
+                          onCheckedChange={(details) => field.onChange(details.checked)}
+                          colorPalette="blue"
+                          size="sm"
+                          borderRadius="sm"
+                        >
+                          <CheckboxCard.HiddenInput />
+                          <CheckboxCard.Control>
+                            <CheckboxCard.Content>
+                              <CheckboxCard.Label>Public Address System (PAS)</CheckboxCard.Label>
+                              <CheckboxCard.Description>
+                                Enables multilingual Indic TTS audio announcements
+                              </CheckboxCard.Description>
+                            </CheckboxCard.Content>
+                            <CheckboxCard.Indicator />
+                          </CheckboxCard.Control>
+                        </CheckboxCard.Root>
+                      )}
+                    />
+
+                    <Controller
+                      name="ITMS"
+                      control={control}
+                      render={({ field }) => (
+                        <CheckboxCard.Root
+                          checked={field.value}
+                          onCheckedChange={(details) => field.onChange(details.checked)}
+                          colorPalette="blue"
+                          size="sm"
+                          borderRadius="sm"
+                        >
+                          <CheckboxCard.HiddenInput />
+                          <CheckboxCard.Control>
+                            <CheckboxCard.Content>
+                              <CheckboxCard.Label>Intelligent Transit Management (ITMS)</CheckboxCard.Label>
+                              <CheckboxCard.Description>
+                                Enables telemetry, stop scheduling, and fleet tracking
+                              </CheckboxCard.Description>
+                            </CheckboxCard.Content>
+                            <CheckboxCard.Indicator />
+                          </CheckboxCard.Control>
+                        </CheckboxCard.Root>
+                      )}
+                    />
+                  </VStack>
+
+                  <Separator my="1" borderColor="border.subtle" />
+
+                  {/* Status Toggle */}
+                  <Box
+                    p="3.5"
+                    borderRadius="sm"
+                    borderWidth="1px"
+                    borderColor="border.default"
+                    bg="bg.subtle"
+                  >
+                    <Controller
+                      name="active"
+                      control={control}
+                      render={({ field }) => (
+                        <Flex align="center" justify="space-between">
+                          <VStack align="start" gap="0">
+                            <Text fontSize="xs" fontWeight="600" color="fg.default">
+                              Organization Status
+                            </Text>
+                            <Text fontSize="11px" color="fg.muted">
+                              {field.value
+                                ? "Active: Users and depots can operate normally"
+                                : "Suspended: Operations for this organization are halted"}
+                            </Text>
+                          </VStack>
+                          <Switch.Root
+                            checked={field.value}
+                            onCheckedChange={(e) => field.onChange(e.checked)}
+                            colorPalette="green"
+                            size="sm"
+                          >
+                            <Switch.HiddenInput />
+                            <Switch.Control>
+                              <Switch.Thumb />
+                            </Switch.Control>
+                          </Switch.Root>
+                        </Flex>
+                      )}
+                    />
+                  </Box>
+                </VStack>
+              </Drawer.Body>
+
+              <Drawer.Footer borderTopWidth="1px" borderColor="border.default" gap="2.5">
+                <Button
+                  variant="outline"
+                  borderRadius="sm"
+                  size="sm"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isBusy}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  borderRadius="sm"
+                  size="sm"
+                  colorPalette="blue"
+                  loading={isBusy}
+                  fontWeight="600"
+                >
+                  <Save size={14} style={{ marginRight: "6px" }} />
+                  {isEditMode ? "Save Changes" : "Create Organization"}
+                </Button>
+              </Drawer.Footer>
+            </form>
+          </Drawer.Content>
+        </Drawer.Positioner>
+      </Portal>
+    </Drawer.Root>
+  );
+};
+
+export default CreateOrganizationDrawer;
