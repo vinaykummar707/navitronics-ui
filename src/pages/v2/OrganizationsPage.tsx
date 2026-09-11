@@ -363,9 +363,6 @@ export default function OrganizationsPage() {
                   </Badge>
                 )}
               </HStack>
-              <Text fontSize="11px" color="fg.muted" truncate maxW="full">
-                ID: {org.id.slice(0, 8)}...
-              </Text>
             </VStack>
           </HStack>
         );

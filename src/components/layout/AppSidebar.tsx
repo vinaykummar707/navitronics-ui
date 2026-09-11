@@ -60,18 +60,19 @@ const NAV_SECTIONS: NavSectionConfig[] = [
           ROLES.MASTER,
         ],
       },
-      {
-        label: "Stops & Audio",
-        path: "/home/stops",
-        icon: <MapPin size={17} />,
-        badge: "TTS",
-        roles: [
-          ROLES.DEPOT_ADMIN,
-          ROLES.REGION_ADMIN,
-          ROLES.ORGANIZATION_ADMIN,
-          ROLES.MASTER,
-        ],
-      },
+      // Stops & Audio temporarily hidden per requirements
+      // {
+      //   label: "Stops & Audio",
+      //   path: "/home/stops",
+      //   icon: <MapPin size={17} />,
+      //   badge: "TTS",
+      //   roles: [
+      //     ROLES.DEPOT_ADMIN,
+      //     ROLES.REGION_ADMIN,
+      //     ROLES.ORGANIZATION_ADMIN,
+      //     ROLES.MASTER,
+      //   ],
+      // },
       {
         label: "Depots & Fleet",
         path: "/home/depots",

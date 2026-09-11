@@ -361,9 +361,6 @@ export default function DepotsPage() {
                 </Badge>
               )}
             </HStack>
-            <Text fontSize="11px" color="fg.muted" fontFamily="mono" truncate maxW="full">
-              ID: {depot.id.slice(0, 8)}...
-            </Text>
           </VStack>
         </HStack>
       ),

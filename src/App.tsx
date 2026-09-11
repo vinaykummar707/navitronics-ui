@@ -120,7 +120,7 @@ const protectedRoutes = [
     element: <LanguageModify />,
   },
   { path: "routes", element: <RoutesPage />, features: ["PIS", "PAS", "ITMS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
-  { path: "stops", element: <StopsPage />, features: ["PAS", "ITMS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
+  { path: "stops", element: <Navigate to="/home/routes" replace /> },
   { path: "settings", element: <Settings /> },
   { path: "utility", element: <UtilityPage /> },
   { path: "font-configuration", roles: [ROLES.MASTER], features: [], element: <FontConfigurationPage /> },

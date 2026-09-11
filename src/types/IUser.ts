@@ -51,5 +51,25 @@ export interface IRole  {
     name: string;
 }
 
-export const roleCrud = createCrudHooks<IRole, Omit<IRole, 'id'>, Omit<IRole, 'id'>>('roles')
+export const roleCrud = createCrudHooks<IRole, Omit<IRole, 'id'>, Omit<IRole, 'id'>>('roles');
+
+export const getUserInitials = (email?: string | null): string => {
+  if (!email) return "OP";
+  const namePart = email.split("@")[0].replace(/[^a-zA-Z0-9]/g, " ");
+  const parts = namePart.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+  return email.slice(0, 2).toUpperCase();
+};
+
+export const formatRoleName = (roleName?: string | null): string => {
+  if (!roleName) return "Operator";
+  if (roleName === "master") return "Super Admin";
+  return roleName
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+};
+
 

@@ -318,9 +318,6 @@ export default function RegionsPage() {
                 </Badge>
               )}
             </HStack>
-            <Text fontSize="11px" color="fg.muted" fontFamily="mono" truncate maxW="full">
-              ID: {reg.id.slice(0, 8)}...
-            </Text>
           </VStack>
         </HStack>
       ),
@@ -392,7 +389,7 @@ export default function RegionsPage() {
           >
             <Box w="5px" h="5px" borderRadius="full" bg="green.500" />
             <Text fontSize="11px" fontWeight="600" color="green.600">
-              Active Zone
+              Active
             </Text>
           </HStack>
         );

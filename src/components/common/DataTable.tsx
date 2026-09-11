@@ -166,6 +166,8 @@ export function DataTable<T>({
                     borderColor="border.default"
                     cursor={canSort ? "pointer" : "default"}
                     userSelect="none"
+                    py="3.5"
+                    px="4.5"
                     onClick={() => canSort && handleSort(col.id)}
                     _hover={canSort ? { color: "fg.default" } : undefined}
                   >
@@ -224,6 +226,8 @@ export function DataTable<T>({
                         color="fg.default"
                         textAlign={col.align || "left"}
                         borderColor="border.default"
+                        py="3.5"
+                        px="4.5"
                       >
                         {content}
                       </Table.Cell>
