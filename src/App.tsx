@@ -30,11 +30,8 @@ const Settings = lazy(() => import("./pages/Settings"));
 const UtilityPage = lazy(() => import("./pages/v2/UtilityPage"));
 const FontConfigurationPage = lazy(() => import("./pages/v2/FontConfigurationPage"));
 const RouteCreatePage = lazy(() => import("./pages/v2/CreateRoutePage"));
-const UserLoginForm = lazy(() =>
-  import("./ui/components/UserLoginForm").then((module) => ({
-    default: module.UserLoginForm,
-  }))
-);
+const LoginPage = lazy(() => import("./pages/v2/LoginPage"));
+const ResetPasswordPage = lazy(() => import("./pages/v2/ResetPasswordPage"));
 
 const PageLoadingFallback = () => (
   <div
@@ -236,9 +233,15 @@ function App() {
               path="/login"
               element={
                 <PublicRoute>
-                  <div style={{ display: "flex", height: "100vh", width: "100vw", flexDirection: "column", alignItems: "flex-start", background: "#070b14" }}>
-                    <UserLoginForm />
-                  </div>
+                  <LoginPage />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/reset-password"
+              element={
+                <PublicRoute>
+                  <ResetPasswordPage />
                 </PublicRoute>
               }
             />
