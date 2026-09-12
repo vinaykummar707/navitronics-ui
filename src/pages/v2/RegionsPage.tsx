@@ -305,15 +305,7 @@ export default function RegionsPage() {
                 {reg.name}
               </Text>
               {reg.deleted && (
-                <Badge
-                  size="xs"
-                  variant="subtle"
-                  colorPalette="red"
-                  borderRadius="xs"
-                  px="1.5"
-                  fontSize="9px"
-                  shrink="0"
-                >
+                <Badge colorPalette="red" shrink="0">
                   Archived
                 </Badge>
               )}
@@ -331,21 +323,17 @@ export default function RegionsPage() {
         return (
           <HStack gap="2">
             <Badge
-              size="xs"
               variant={count > 0 ? "subtle" : "outline"}
               colorPalette={count > 0 ? "blue" : "gray"}
-              borderRadius="xs"
-              px="2"
-              py="0.5"
             >
-              <HStack gap="1">
-                <Building2 size={11} />
-                <Text fontWeight="600">{count} {count === 1 ? "Depot" : "Depots"}</Text>
+              <HStack gap="1.5">
+                <Building2 size={13} />
+                <Text>{count} {count === 1 ? "Depot" : "Depots"}</Text>
               </HStack>
             </Badge>
             {!reg.deleted && (
               <IconButton
-                size="2xs"
+                size="xs"
                 variant="ghost"
                 aria-label="Manage depots"
                 color="fg.muted"
@@ -355,7 +343,7 @@ export default function RegionsPage() {
                   handleViewDepots(reg);
                 }}
               >
-                <ArrowRight size={12} />
+                <ArrowRight size={13} />
               </IconButton>
             )}
           </HStack>
@@ -370,29 +358,9 @@ export default function RegionsPage() {
       width: "120px",
       cell: (reg) => {
         if (reg.deleted) {
-          return (
-            <Badge size="xs" variant="subtle" colorPalette="red" borderRadius="xs" px="2" py="0.5">
-              Archived
-            </Badge>
-          );
+          return <Badge colorPalette="red">Archived</Badge>;
         }
-        return (
-          <HStack
-            gap="1.5"
-            px="2"
-            py="0.5"
-            borderRadius="xs"
-            bg="green.500/10"
-            borderWidth="1px"
-            borderColor="green.500/25"
-            w="fit-content"
-          >
-            <Box w="5px" h="5px" borderRadius="full" bg="green.500" />
-            <Text fontSize="11px" fontWeight="600" color="green.600">
-              Active
-            </Text>
-          </HStack>
-        );
+        return <Badge colorPalette="green">Active</Badge>;
       },
     },
     {
@@ -402,7 +370,7 @@ export default function RegionsPage() {
       sortable: true,
       width: "120px",
       cell: (reg) => (
-        <Text color="fg.muted" fontSize="11px">
+        <Text color="fg.muted">
           {reg.created_at
             ? new Date(reg.created_at).toLocaleDateString("en-US", {
                 month: "short",
@@ -422,16 +390,15 @@ export default function RegionsPage() {
         if (currentTab === "deleted" || reg.deleted) {
           return (
             <Button
-              size="xs"
+              size="sm"
               variant="outline"
               colorPalette="green"
-              borderRadius="xs"
               onClick={(e) => {
                 e.stopPropagation();
                 handleRestoreClick(reg);
               }}
             >
-              <RotateCcw size={12} style={{ marginRight: "4px" }} />
+              <RotateCcw size={13} />
               Restore
             </Button>
           );
@@ -544,24 +511,20 @@ export default function RegionsPage() {
         actions={
           <HStack gap="2">
             <Button
-              size="xs"
+              size="sm"
               variant="outline"
-              borderRadius="sm"
-              fontWeight="500"
               onClick={handleCurrentRetry}
               loading={isCurrentLoading}
             >
-              <RotateCw size={13} style={{ marginRight: "5px" }} />
+              <RotateCw size={14} />
               Refresh
             </Button>
             <Button
-              size="xs"
+              size="sm"
               colorPalette="blue"
-              borderRadius="sm"
-              fontWeight="600"
               onClick={handleAddNew}
             >
-              <Plus size={14} style={{ marginRight: "4px" }} />
+              <Plus size={15} />
               Add Region
             </Button>
           </HStack>
@@ -650,7 +613,7 @@ export default function RegionsPage() {
               endElement={
                 searchQuery ? (
                   <IconButton
-                    size="2xs"
+                    size="xs"
                     variant="ghost"
                     aria-label="Clear search"
                     onClick={() => setSearchQuery("")}
@@ -666,7 +629,6 @@ export default function RegionsPage() {
             >
               <Input
                 size="sm"
-                borderRadius="sm"
                 placeholder={
                   currentTab === "deleted"
                     ? "Search archived regions..."
@@ -691,7 +653,6 @@ export default function RegionsPage() {
                 <Tabs.List
                   bg="bg.subtle"
                   p="1"
-                  borderRadius="sm"
                   borderWidth="1px"
                   borderColor="border.subtle"
                 >
@@ -714,7 +675,6 @@ export default function RegionsPage() {
                 gap="0.5"
                 p="1"
                 bg="bg.subtle"
-                borderRadius="sm"
                 borderWidth="1px"
                 borderColor="border.subtle"
               >
@@ -722,7 +682,6 @@ export default function RegionsPage() {
                   size="xs"
                   variant={viewMode === "table" ? "solid" : "ghost"}
                   colorPalette={viewMode === "table" ? "blue" : "gray"}
-                  borderRadius="xs"
                   aria-label="Table view"
                   onClick={() => setViewMode("table")}
                 >
@@ -732,7 +691,6 @@ export default function RegionsPage() {
                   size="xs"
                   variant={viewMode === "grid" ? "solid" : "ghost"}
                   colorPalette={viewMode === "grid" ? "blue" : "gray"}
-                  borderRadius="xs"
                   aria-label="Grid view"
                   onClick={() => setViewMode("grid")}
                 >
@@ -757,12 +715,12 @@ export default function RegionsPage() {
                   <Text fontSize="xs" fontWeight="600" color="red.fg">
                     Archived Regions Repository (Super Admin Access)
                   </Text>
-                  <Text fontSize="11px" color="fg.muted">
+                  <Text fontSize="xs" color="fg.muted">
                     These regional zones have been soft-deleted. Click "Restore" on any zone to reinstate it back to active status.
                   </Text>
                 </VStack>
               </HStack>
-              <Badge colorPalette="red" variant="outline" size="xs">
+              <Badge colorPalette="red" variant="outline">
                 {deletedCount} Archived
               </Badge>
             </Flex>
@@ -797,7 +755,7 @@ export default function RegionsPage() {
                   <Skeleton h="11px" w="40%" />
                 </VStack>
               </HStack>
-              <Skeleton h="42px" w="full" borderRadius="sm" mb="4" />
+              <Skeleton h="42px" w="full" borderRadius="md" mb="4" />
               <HStack justify="space-between" pt="2" borderTopWidth="1px" borderColor="border.subtle">
                 <Skeleton h="16px" w="70px" />
                 <Skeleton h="16px" w="50px" />
@@ -865,7 +823,7 @@ export default function RegionsPage() {
                   <Box
                     w="32px"
                     h="32px"
-                    borderRadius="sm"
+                    borderRadius="md"
                     bg="red.subtle"
                     color="red.600"
                     display="flex"
@@ -887,7 +845,7 @@ export default function RegionsPage() {
                     gap="3"
                     p="2.5"
                     bg="bg.subtle"
-                    borderRadius="sm"
+                    borderRadius="md"
                     borderWidth="1px"
                     borderColor="border.subtle"
                   >
@@ -907,12 +865,12 @@ export default function RegionsPage() {
                   </HStack>
 
                   {(regionToDelete?.depot_count ?? 0) > 0 && (
-                    <Box p="2.5" bg="amber.subtle" borderRadius="sm" borderWidth="1px" borderColor="amber.muted">
+                    <Box p="2.5" bg="amber.subtle" borderRadius="md" borderWidth="1px" borderColor="amber.muted">
                       <HStack gap="2" align="start">
                         <Box color="amber.fg" shrink="0" mt="0.5">
                           <AlertTriangle size={14} />
                         </Box>
-                        <Text fontSize="11px" color="amber.fg" lineHeight="1.4">
+                        <Text fontSize="xs" color="amber.fg" lineHeight="1.4">
                           <strong>Active Depots Assigned:</strong> This region currently contains {regionToDelete?.depot_count} operational bus depot(s). Soft-deleting this zone may orphan depots and affect route planning.
                         </Text>
                       </HStack>
@@ -981,7 +939,7 @@ export default function RegionsPage() {
                   <Box
                     w="32px"
                     h="32px"
-                    borderRadius="sm"
+                    borderRadius="md"
                     bg="green.subtle"
                     color="green.600"
                     display="flex"
@@ -1003,7 +961,7 @@ export default function RegionsPage() {
                     gap="3"
                     p="2.5"
                     bg="bg.subtle"
-                    borderRadius="sm"
+                    borderRadius="md"
                     borderWidth="1px"
                     borderColor="border.subtle"
                   >

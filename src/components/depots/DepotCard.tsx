@@ -117,56 +117,19 @@ export const DepotCard: React.FC<DepotCardProps> = ({
                 </Text>
                 <HStack gap="1.5" wrap="wrap">
                   {isDeleted ? (
-                    <Badge
-                      size="xs"
-                      variant="subtle"
-                      colorPalette="red"
-                      borderRadius="xs"
-                      px="1.5"
-                      py="0.2"
-                      fontSize="10px"
-                      fontWeight="600"
-                    >
+                    <Badge colorPalette="red">
                       Archived
                     </Badge>
                   ) : (
-                    <Badge
-                      size="xs"
-                      variant="subtle"
-                      colorPalette="green"
-                      borderRadius="xs"
-                      px="1.5"
-                      py="0.2"
-                      fontSize="10px"
-                      fontWeight="600"
-                    >
-                      <HStack gap="1">
-                        <Box
-                          w="5px"
-                          h="5px"
-                          borderRadius="full"
-                          bg="green.500"
-                          boxShadow="0 0 5px var(--chakra-colors-green-500)"
-                        />
-                        <Text>Operational</Text>
-                      </HStack>
+                    <Badge colorPalette="green">
+                      Operational
                     </Badge>
                   )}
 
                   {depot.region_name && (
-                    <Badge
-                      size="xs"
-                      variant="subtle"
-                      colorPalette="blue"
-                      borderRadius="xs"
-                      px="1.5"
-                      py="0.2"
-                      fontSize="10px"
-                      truncate
-                      maxW="130px"
-                    >
+                    <Badge colorPalette="blue" maxW="130px">
                       <HStack gap="1">
-                        <MapPin size={9} />
+                        <MapPin size={11} />
                         <Text truncate>{depot.region_name}</Text>
                       </HStack>
                     </Badge>
@@ -182,7 +145,6 @@ export const DepotCard: React.FC<DepotCardProps> = ({
                   size="xs"
                   variant="ghost"
                   aria-label="Actions"
-                  borderRadius="xs"
                   color="fg.muted"
                   _hover={{ color: "fg.default", bg: "bg.subtle" }}
                 >
@@ -194,7 +156,6 @@ export const DepotCard: React.FC<DepotCardProps> = ({
                 <Menu.Positioner>
                   <Menu.Content
                     minW="150px"
-                    borderRadius="sm"
                     borderColor="border.default"
                     bg="bg.surface"
                     p="1"
@@ -202,9 +163,6 @@ export const DepotCard: React.FC<DepotCardProps> = ({
                     {!isDeleted && onViewRoutes && (
                       <Menu.Item
                         value="view-routes"
-                        borderRadius="xs"
-                        px="2"
-                        py="1.5"
                         cursor="pointer"
                         _hover={{ bg: "bg.subtle" }}
                         onClick={() => onViewRoutes(depot)}
@@ -220,9 +178,6 @@ export const DepotCard: React.FC<DepotCardProps> = ({
                       onRestore && (
                         <Menu.Item
                           value="restore"
-                          borderRadius="xs"
-                          px="2"
-                          py="1.5"
                           cursor="pointer"
                           _hover={{ bg: "green.500/10" }}
                           onClick={() => onRestore(depot)}
@@ -240,9 +195,6 @@ export const DepotCard: React.FC<DepotCardProps> = ({
                         {onEdit && (
                           <Menu.Item
                             value="edit"
-                            borderRadius="xs"
-                            px="2"
-                            py="1.5"
                             cursor="pointer"
                             _hover={{ bg: "bg.subtle" }}
                             onClick={() => onEdit(depot)}
@@ -258,9 +210,6 @@ export const DepotCard: React.FC<DepotCardProps> = ({
 
                     <Menu.Item
                       value="copy"
-                      borderRadius="xs"
-                      px="2"
-                      py="1.5"
                       cursor="pointer"
                       _hover={{ bg: "bg.subtle" }}
                       onClick={handleCopyId}
@@ -278,9 +227,6 @@ export const DepotCard: React.FC<DepotCardProps> = ({
                     {!isDeleted && onDelete && (
                       <Menu.Item
                         value="delete"
-                        borderRadius="xs"
-                        px="2"
-                        py="1.5"
                         cursor="pointer"
                         _hover={{ bg: "red.500/10" }}
                         onClick={() => onDelete(depot)}
@@ -303,7 +249,7 @@ export const DepotCard: React.FC<DepotCardProps> = ({
             align="center"
             p="2.5"
             bg="bg.subtle"
-            borderRadius="sm"
+            borderRadius="md"
             borderWidth="1px"
             borderColor="border.subtle"
             my="3"
@@ -312,7 +258,7 @@ export const DepotCard: React.FC<DepotCardProps> = ({
               <Box
                 w="28px"
                 h="28px"
-                borderRadius="xs"
+                borderRadius="md"
                 bg="green.subtle"
                 color="green.fg"
                 display="flex"
@@ -326,7 +272,7 @@ export const DepotCard: React.FC<DepotCardProps> = ({
                 <Text fontSize="xs" fontWeight="600" color="fg.default">
                   {routeCount} Active {routeCount === 1 ? "Route" : "Routes"}
                 </Text>
-                <Text fontSize="10px" color="fg.muted">
+                <Text fontSize="xs" color="fg.muted">
                   Operating transit itineraries
                 </Text>
               </VStack>
@@ -334,13 +280,12 @@ export const DepotCard: React.FC<DepotCardProps> = ({
 
             {!isDeleted && onViewRoutes && (
               <Button
-                size="2xs"
+                size="xs"
                 variant="subtle"
                 colorPalette="green"
-                borderRadius="xs"
                 onClick={() => onViewRoutes(depot)}
               >
-                Manage <ArrowRight size={10} style={{ marginLeft: "3px" }} />
+                Manage <ArrowRight size={12} />
               </Button>
             )}
           </HStack>
@@ -356,8 +301,8 @@ export const DepotCard: React.FC<DepotCardProps> = ({
           gap="2"
           wrap="wrap"
         >
-          <HStack gap="1.5" fontSize="11px" color="fg.muted">
-            <Calendar size={12} style={{ flexShrink: 0 }} />
+          <HStack gap="1.5" fontSize="xs" color="fg.muted">
+            <Calendar size={13} style={{ flexShrink: 0 }} />
             <Text>
               {depot.created_at
                 ? new Date(depot.created_at).toLocaleDateString("en-US", {
@@ -371,13 +316,12 @@ export const DepotCard: React.FC<DepotCardProps> = ({
 
           {isDeleted && onRestore && (
             <Button
-              size="xs"
+              size="sm"
               variant="outline"
               colorPalette="green"
-              borderRadius="xs"
               onClick={() => onRestore(depot)}
             >
-              <RotateCcw size={12} style={{ marginRight: "4px" }} />
+              <RotateCcw size={13} />
               Restore
             </Button>
           )}

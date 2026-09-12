@@ -202,7 +202,7 @@ export const CreateDepotDrawer: React.FC<CreateDepotDrawerProps> = ({
                   <Drawer.Title fontSize="sm" fontWeight="600" color="fg.default">
                     {isEditMode ? "Edit Depot" : "Create New Depot"}
                   </Drawer.Title>
-                  <Text fontSize="11px" color="fg.muted">
+                  <Text fontSize="xs" color="fg.muted">
                     {isEditMode
                       ? "Update transit maintenance station and assigned region"
                       : "Register a new transit maintenance and parking depot"}
@@ -220,7 +220,7 @@ export const CreateDepotDrawer: React.FC<CreateDepotDrawerProps> = ({
                 {organization && (
                   <HStack
                     p="3"
-                    borderRadius="sm"
+                    borderRadius="md"
                     bg="blue.subtle"
                     borderWidth="1px"
                     borderColor="blue.muted"
@@ -237,12 +237,12 @@ export const CreateDepotDrawer: React.FC<CreateDepotDrawerProps> = ({
                         <Text fontSize="xs" fontWeight="600" color="blue.fg">
                           {organization.name}
                         </Text>
-                        <Text fontSize="10px" color="fg.muted">
+                        <Text fontSize="xs" color="fg.muted">
                           Parent Transport Authority
                         </Text>
                       </VStack>
                     </HStack>
-                    <Badge size="xs" colorPalette="blue" variant="outline">
+                    <Badge colorPalette="blue" variant="outline">
                       Target Agency
                     </Badge>
                   </HStack>
@@ -255,7 +255,6 @@ export const CreateDepotDrawer: React.FC<CreateDepotDrawerProps> = ({
                   </Field.Label>
                   <Input
                     size="sm"
-                    borderRadius="sm"
                     placeholder="e.g. Central Maintenance Depot, Terminal 1"
                     {...register("name")}
                     maxLength={50}
@@ -264,11 +263,11 @@ export const CreateDepotDrawer: React.FC<CreateDepotDrawerProps> = ({
                     disabled={isBusy}
                   />
                   {errors.name && (
-                    <Field.ErrorText fontSize="11px" color="red.500">
+                    <Field.ErrorText fontSize="xs" color="red.500">
                       {errors.name.message}
                     </Field.ErrorText>
                   )}
-                  <Field.HelperText fontSize="11px" color="fg.muted">
+                  <Field.HelperText fontSize="xs" color="fg.muted">
                     Unique transit operational facility or bus terminal (max 50 chars).
                   </Field.HelperText>
                 </Field.Root>
@@ -282,7 +281,6 @@ export const CreateDepotDrawer: React.FC<CreateDepotDrawerProps> = ({
                     <NativeSelect.Field
                       {...register("region_id")}
                       bg="bg.subtle"
-                      borderRadius="sm"
                       disabled={isBusy || regions.length === 0}
                     >
                       {regions.length === 0 ? (
@@ -298,24 +296,24 @@ export const CreateDepotDrawer: React.FC<CreateDepotDrawerProps> = ({
                     <NativeSelect.Indicator />
                   </NativeSelect.Root>
                   {errors.region_id && (
-                    <Field.ErrorText fontSize="11px" color="red.500">
+                    <Field.ErrorText fontSize="xs" color="red.500">
                       {errors.region_id.message}
                     </Field.ErrorText>
                   )}
-                  <Field.HelperText fontSize="11px" color="fg.muted">
+                  <Field.HelperText fontSize="xs" color="fg.muted">
                     The geographic zone responsible for this depot's vehicle allocation.
                   </Field.HelperText>
                 </Field.Root>
 
                 {/* Helpful Guidelines Card */}
-                <Box p="3" borderRadius="sm" bg="bg.subtle" borderWidth="1px" borderColor="border.subtle" mt="2">
+                <Box p="3" borderRadius="md" bg="bg.subtle" borderWidth="1px" borderColor="border.subtle" mt="2">
                   <HStack gap="2" mb="1" color="fg.default">
                     <Building2 size={13} color="var(--chakra-colors-green-600)" />
                     <Text fontSize="xs" fontWeight="600">
                       Depot Operational Role
                     </Text>
                   </HStack>
-                  <Text fontSize="11px" color="fg.muted" lineHeight="1.4">
+                  <Text fontSize="xs" color="fg.muted" lineHeight="1.4">
                     Depots serve as origin points for bus routes and house electronic hardware (PIS displays, audio engines, and GPS telematics). Routes can be created and assigned directly to this depot.
                   </Text>
                 </Box>
@@ -325,7 +323,6 @@ export const CreateDepotDrawer: React.FC<CreateDepotDrawerProps> = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  borderRadius="sm"
                   onClick={() => onOpenChange(false)}
                   disabled={isBusy}
                 >
@@ -334,12 +331,11 @@ export const CreateDepotDrawer: React.FC<CreateDepotDrawerProps> = ({
                 <Button
                   type="submit"
                   size="sm"
-                  borderRadius="sm"
                   colorPalette="green"
                   loading={isBusy}
                   disabled={isBusy || regions.length === 0}
                 >
-                  <Save size={13} style={{ marginRight: "4px" }} />
+                  <Save size={14} />
                   {isEditMode ? "Save Changes" : "Create Depot"}
                 </Button>
               </Drawer.Footer>

@@ -134,7 +134,7 @@ export const UserCard: React.FC<UserCardProps> = ({
                     <IconButton
                       aria-label="Copy email"
                       variant="ghost"
-                      size="2xs"
+                      size="xs"
                       color="fg.muted"
                       _hover={{ color: "fg.default", bg: "bg.muted" }}
                       onClick={handleCopyEmail}
@@ -146,11 +146,11 @@ export const UserCard: React.FC<UserCardProps> = ({
                 </HStack>
 
                 <HStack gap="1.5" wrap="wrap">
-                  <Badge size="xs" colorPalette={roleColorPalette} variant="subtle" borderRadius="xs">
+                  <Badge colorPalette={roleColorPalette}>
                     {formatRoleName(roleName)}
                   </Badge>
                   {isCurrentLoggedInUser && (
-                    <Badge size="xs" colorPalette="green" variant="solid" borderRadius="xs">
+                    <Badge colorPalette="green" variant="solid">
                       You
                     </Badge>
                   )}
@@ -177,20 +177,26 @@ export const UserCard: React.FC<UserCardProps> = ({
                   <Menu.Content bg="bg.panel" borderColor="border.default" boxShadow="md" minW="160px" p="1">
                     {user.email && (
                       <Menu.Item value="copy" onClick={handleCopyEmail}>
-                        <Copy size={13} style={{ marginRight: "6px" }} />
-                        Copy Email
+                        <HStack gap="2">
+                          <Copy size={13} />
+                          <Text fontSize="xs">Copy Email</Text>
+                        </HStack>
                       </Menu.Item>
                     )}
                     {!isDeleted && onEdit && (
                       <Menu.Item value="edit" onClick={() => onEdit(user)}>
-                        <Pencil size={13} style={{ marginRight: "6px" }} />
-                        Edit Account
+                        <HStack gap="2">
+                          <Pencil size={13} />
+                          <Text fontSize="xs">Edit Account</Text>
+                        </HStack>
                       </Menu.Item>
                     )}
                     {isDeleted && onRestore && (
                       <Menu.Item value="restore" color="blue.fg" onClick={() => onRestore(user)}>
-                        <RotateCcw size={13} style={{ marginRight: "6px" }} />
-                        Restore Account
+                        <HStack gap="2">
+                          <RotateCcw size={13} />
+                          <Text fontSize="xs">Restore Account</Text>
+                        </HStack>
                       </Menu.Item>
                     )}
                     {!isDeleted && onDelete && (
@@ -200,8 +206,10 @@ export const UserCard: React.FC<UserCardProps> = ({
                         disabled={isCurrentLoggedInUser}
                         onClick={() => !isCurrentLoggedInUser && onDelete(user)}
                       >
-                        <Trash2 size={13} style={{ marginRight: "6px" }} />
-                        {isCurrentLoggedInUser ? "Cannot Delete Self" : "Deactivate Account"}
+                        <HStack gap="2">
+                          <Trash2 size={13} />
+                          <Text fontSize="xs">{isCurrentLoggedInUser ? "Cannot Delete Self" : "Deactivate Account"}</Text>
+                        </HStack>
                       </Menu.Item>
                     )}
                   </Menu.Content>
@@ -214,19 +222,19 @@ export const UserCard: React.FC<UserCardProps> = ({
           <Box
             p="2.5"
             bg="bg.muted"
-            borderRadius="sm"
+            borderRadius="md"
             borderWidth="1px"
             borderColor="border.subtle"
           >
-            <VStack align="stretch" gap="2" fontSize="11px">
+            <VStack align="stretch" gap="2" fontSize="xs">
               <HStack justify="space-between" align="center" minW="0">
                 <HStack gap="1.5" color="fg.muted" shrink="0">
                   <Building2 size={12} />
                   <Text>Agency</Text>
                 </HStack>
-                <Badge size="xs" variant="subtle" colorPalette="purple" borderRadius="xs" px="2" py="0.5" maxW="180px">
+                <Badge colorPalette="purple" maxW="180px">
                   <HStack gap="1">
-                    <Building2 size={10} />
+                    <Building2 size={11} />
                     <Text truncate title={user.organization?.name || "Agency-Wide"}>
                       {user.organization?.name || "Agency-Wide"}
                     </Text>
@@ -240,9 +248,9 @@ export const UserCard: React.FC<UserCardProps> = ({
                     <Globe size={12} />
                     <Text>Region</Text>
                   </HStack>
-                  <Badge size="xs" variant="subtle" colorPalette="cyan" borderRadius="xs" px="2" py="0.5" maxW="180px">
+                  <Badge colorPalette="cyan" maxW="180px">
                     <HStack gap="1">
-                      <Globe size={10} />
+                      <Globe size={11} />
                       <Text truncate title={user.region.name}>{user.region.name}</Text>
                     </HStack>
                   </Badge>
@@ -255,9 +263,9 @@ export const UserCard: React.FC<UserCardProps> = ({
                     <Building size={12} />
                     <Text>Depot</Text>
                   </HStack>
-                  <Badge size="xs" variant="subtle" colorPalette="teal" borderRadius="xs" px="2" py="0.5" maxW="180px">
+                  <Badge colorPalette="teal" maxW="180px">
                     <HStack gap="1">
-                      <Building size={10} />
+                      <Building size={11} />
                       <Text truncate title={user.depot.name}>{user.depot.name}</Text>
                     </HStack>
                   </Badge>
@@ -268,41 +276,26 @@ export const UserCard: React.FC<UserCardProps> = ({
 
           {/* Module Access Flags */}
           <HStack justify="space-between" align="center" pt="1">
-            <Text fontSize="10px" fontWeight="600" textTransform="uppercase" letterSpacing="0.05em" color="fg.muted">
+            <Text fontSize="xs" fontWeight="600" textTransform="uppercase" letterSpacing="0.05em" color="fg.muted">
               Modules
             </Text>
             <HStack gap="1.5">
               <Badge
-                size="xs"
-                variant="subtle"
                 colorPalette={user.PIS ? "blue" : "gray"}
-                borderRadius="xs"
-                px="2"
-                py="0.5"
                 opacity={user.PIS ? 1 : 0.45}
                 title="Passenger Information System"
               >
                 PIS
               </Badge>
               <Badge
-                size="xs"
-                variant="subtle"
                 colorPalette={user.PAS ? "orange" : "gray"}
-                borderRadius="xs"
-                px="2"
-                py="0.5"
                 opacity={user.PAS ? 1 : 0.45}
                 title="Public Address System"
               >
                 PAS
               </Badge>
               <Badge
-                size="xs"
-                variant="subtle"
                 colorPalette={user.ITMS ? "purple" : "gray"}
-                borderRadius="xs"
-                px="2"
-                py="0.5"
                 opacity={user.ITMS ? 1 : 0.45}
                 title="Intelligent Fleet Management"
               >
@@ -324,50 +317,28 @@ export const UserCard: React.FC<UserCardProps> = ({
         alignItems="center"
       >
         {isDeleted ? (
-          <Badge size="xs" variant="subtle" colorPalette="red" borderRadius="xs" px="2" py="0.5">
+          <Badge colorPalette="red">
             Archived
           </Badge>
         ) : user.active ? (
-          <HStack
-            gap="1.5"
-            px="2"
-            py="0.5"
-            borderRadius="xs"
-            bg="green.500/10"
-            borderWidth="1px"
-            borderColor="green.500/25"
-          >
-            <Box w="5px" h="5px" borderRadius="full" bg="green.500" />
-            <Text fontSize="11px" fontWeight="600" color="green.600">
-              Active
-            </Text>
-          </HStack>
+          <Badge colorPalette="green">
+            Active
+          </Badge>
         ) : (
-          <HStack
-            gap="1.5"
-            px="2"
-            py="0.5"
-            borderRadius="xs"
-            bg="amber.500/10"
-            borderWidth="1px"
-            borderColor="amber.500/25"
-          >
-            <Box w="5px" h="5px" borderRadius="full" bg="amber.500" />
-            <Text fontSize="11px" fontWeight="600" color="amber.600">
-              Inactive
-            </Text>
-          </HStack>
+          <Badge colorPalette="amber">
+            Inactive
+          </Badge>
         )}
 
         {!isDeleted && onEdit && (
           <Button
-            size="2xs"
+            size="xs"
             variant="ghost"
             color="blue.fg"
             _hover={{ bg: "bg.panel" }}
             onClick={() => onEdit(user)}
           >
-            <Pencil size={11} style={{ marginRight: "4px" }} />
+            <Pencil size={12} />
             Edit
           </Button>
         )}

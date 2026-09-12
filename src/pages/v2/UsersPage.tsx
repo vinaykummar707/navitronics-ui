@@ -328,12 +328,12 @@ export default function UsersPage() {
                     {user.email || "No Email"}
                   </Text>
                   {isMe && (
-                    <Badge size="2xs" variant="subtle" colorPalette="green" borderRadius="xs" px="1.5">
+                    <Badge colorPalette="green">
                       You
                     </Badge>
                   )}
                   {user.deleted && (
-                    <Badge size="xs" variant="subtle" colorPalette="red" borderRadius="xs" px="1.5" fontSize="9px">
+                    <Badge colorPalette="red">
                       Archived
                     </Badge>
                   )}
@@ -373,17 +373,10 @@ export default function UsersPage() {
               : UserCheck;
 
           return (
-            <Badge
-              size="xs"
-              variant="subtle"
-              colorPalette={palette}
-              borderRadius="xs"
-              px="2"
-              py="0.5"
-            >
-              <HStack gap="1">
-                <IconComponent size={11} />
-                <Text fontWeight="600">{formatRoleName(roleName)}</Text>
+            <Badge colorPalette={palette}>
+              <HStack gap="1.5">
+                <IconComponent size={13} />
+                <Text>{formatRoleName(roleName)}</Text>
               </HStack>
             </Badge>
           );
@@ -398,16 +391,16 @@ export default function UsersPage() {
           if (user.depot) {
             return (
               <HStack gap="1.5" wrap="wrap">
-                <Badge size="xs" variant="subtle" colorPalette="teal" borderRadius="xs" px="2" py="0.5">
-                  <HStack gap="1">
-                    <Building size={10} />
+                <Badge colorPalette="teal">
+                  <HStack gap="1.5">
+                    <Building size={12} />
                     <Text truncate maxW="130px" title={user.depot.name}>{user.depot.name}</Text>
                   </HStack>
                 </Badge>
                 {user.region && (
-                  <Badge size="xs" variant="subtle" colorPalette="cyan" borderRadius="xs" px="1.5" py="0.5">
-                    <HStack gap="1">
-                      <Globe size={10} />
+                  <Badge colorPalette="cyan">
+                    <HStack gap="1.5">
+                      <Globe size={12} />
                       <Text truncate maxW="90px" title={user.region.name}>{user.region.name}</Text>
                     </HStack>
                   </Badge>
@@ -417,21 +410,19 @@ export default function UsersPage() {
           }
           if (user.region) {
             return (
-              <Badge size="xs" variant="subtle" colorPalette="cyan" borderRadius="xs" px="2" py="0.5">
-                <HStack gap="1">
-                  <Globe size={10} />
+              <Badge colorPalette="cyan">
+                <HStack gap="1.5">
+                  <Globe size={12} />
                   <Text truncate maxW="160px" title={user.region.name}>{user.region.name}</Text>
                 </HStack>
               </Badge>
             );
           }
           return (
-            <Badge size="xs" variant="subtle" colorPalette="purple" borderRadius="xs" px="2" py="0.5">
-              <HStack gap="1">
-                <Building2 size={10} />
-                <Text truncate maxW="160px" title={user.organization?.name || "Agency-Wide"}>
-                  {user.organization?.name || "Agency-Wide"}
-                </Text>
+            <Badge colorPalette="purple">
+              <HStack gap="1.5">
+                <Building2 size={12} />
+                <Text>Entire Organization</Text>
               </HStack>
             </Badge>
           );
@@ -444,48 +435,33 @@ export default function UsersPage() {
         cell: (user) => (
           <HStack gap="1.5">
             <Badge
-              size="xs"
-              variant="subtle"
               colorPalette={user.PIS ? "blue" : "gray"}
-              borderRadius="xs"
-              px="2"
-              py="0.5"
               opacity={user.PIS ? 1 : 0.45}
               title={user.PIS ? "Passenger Information System: Active" : "PIS: Disabled"}
             >
               <HStack gap="1">
-                <Tv size={10} />
-                <Text fontWeight="600">PIS</Text>
+                <Tv size={11} />
+                <Text>PIS</Text>
               </HStack>
             </Badge>
             <Badge
-              size="xs"
-              variant="subtle"
               colorPalette={user.PAS ? "orange" : "gray"}
-              borderRadius="xs"
-              px="2"
-              py="0.5"
               opacity={user.PAS ? 1 : 0.45}
               title={user.PAS ? "Public Address System: Active" : "PAS: Disabled"}
             >
               <HStack gap="1">
-                <Volume2 size={10} />
-                <Text fontWeight="600">PAS</Text>
+                <Volume2 size={11} />
+                <Text>PAS</Text>
               </HStack>
             </Badge>
             <Badge
-              size="xs"
-              variant="subtle"
               colorPalette={user.ITMS ? "purple" : "gray"}
-              borderRadius="xs"
-              px="2"
-              py="0.5"
               opacity={user.ITMS ? 1 : 0.45}
               title={user.ITMS ? "Intelligent Transit Management: Active" : "ITMS: Disabled"}
             >
               <HStack gap="1">
-                <Cpu size={10} />
-                <Text fontWeight="600">ITMS</Text>
+                <Cpu size={11} />
+                <Text>ITMS</Text>
               </HStack>
             </Badge>
           </HStack>
@@ -499,33 +475,12 @@ export default function UsersPage() {
         width: "120px",
         cell: (user) => {
           if (user.deleted) {
-            return (
-              <Badge size="xs" variant="subtle" colorPalette="red" borderRadius="xs" px="2" py="0.5">
-                <HStack gap="1">
-                  <Trash2 size={10} />
-                  <Text fontWeight="600">Archived</Text>
-                </HStack>
-              </Badge>
-            );
+            return <Badge colorPalette="red">Archived</Badge>;
           }
           if (user.active) {
-            return (
-              <Badge size="xs" variant="subtle" colorPalette="green" borderRadius="xs" px="2" py="0.5">
-                <HStack gap="1.5">
-                  <Box w="5px" h="5px" borderRadius="full" bg="green.500" />
-                  <Text fontWeight="600">Active</Text>
-                </HStack>
-              </Badge>
-            );
+            return <Badge colorPalette="green">Active</Badge>;
           }
-          return (
-            <Badge size="xs" variant="subtle" colorPalette="amber" borderRadius="xs" px="2" py="0.5">
-              <HStack gap="1.5">
-                <Box w="5px" h="5px" borderRadius="full" bg="amber.500" />
-                <Text fontWeight="600">Inactive</Text>
-              </HStack>
-            </Badge>
-          );
+          return <Badge colorPalette="amber">Inactive</Badge>;
         },
       },
       {
@@ -535,20 +490,15 @@ export default function UsersPage() {
         sortable: true,
         width: "130px",
         cell: (user) => (
-          <Badge size="xs" variant="subtle" colorPalette="gray" borderRadius="xs" px="2" py="0.5">
-            <HStack gap="1">
-              <Calendar size={10} />
-              <Text fontWeight="500">
-                {user.created_at
-                  ? new Date(user.created_at).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })
-                  : "—"}
-              </Text>
-            </HStack>
-          </Badge>
+          <Text color="fg.muted">
+            {user.created_at
+              ? new Date(user.created_at).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "—"}
+          </Text>
         ),
       },
       {
@@ -562,16 +512,15 @@ export default function UsersPage() {
           if (currentTab === "deleted" || user.deleted) {
             return (
               <Button
-                size="xs"
+                size="sm"
                 variant="outline"
                 colorPalette="green"
-                borderRadius="xs"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleRestoreClick(user);
                 }}
               >
-                <RotateCcw size={12} style={{ marginRight: "4px" }} />
+                <RotateCcw size={13} />
                 Restore
               </Button>
             );
@@ -666,10 +615,8 @@ export default function UsersPage() {
         actions={
           <HStack gap="2">
             <Button
-              size="xs"
+              size="sm"
               variant="outline"
-              borderRadius="sm"
-              fontWeight="500"
               onClick={() => {
                 refetchActive();
                 if (isSuperAdmin) refetchDeleted();
@@ -677,17 +624,15 @@ export default function UsersPage() {
               }}
               loading={isCurrentLoading}
             >
-              <RotateCw size={13} style={{ marginRight: "5px" }} />
+              <RotateCw size={14} />
               Refresh
             </Button>
             <Button
-              size="xs"
+              size="sm"
               colorPalette="blue"
-              borderRadius="sm"
-              fontWeight="600"
               onClick={handleCreateClick}
             >
-              <Plus size={14} style={{ marginRight: "4px" }} />
+              <Plus size={15} />
               Add Operator
             </Button>
           </HStack>
@@ -777,7 +722,7 @@ export default function UsersPage() {
                 endElement={
                   searchQuery ? (
                     <IconButton
-                      size="2xs"
+                      size="xs"
                       variant="ghost"
                       aria-label="Clear search"
                       onClick={() => setSearchQuery("")}
@@ -792,7 +737,6 @@ export default function UsersPage() {
               >
                 <Input
                   size="sm"
-                  borderRadius="sm"
                   placeholder={
                     currentTab === "deleted"
                       ? "Search archived operators..."
@@ -812,7 +756,6 @@ export default function UsersPage() {
                     value={selectedRoleFilter}
                     onChange={(e) => setSelectedRoleFilter(e.target.value)}
                     bg="bg.subtle"
-                    borderRadius="sm"
                   >
                     <option value="all">All Roles</option>
                     {isSuperAdmin && <option value="master">Super Admin</option>}
@@ -838,7 +781,6 @@ export default function UsersPage() {
                 <Tabs.List
                   bg="bg.subtle"
                   p="1"
-                  borderRadius="sm"
                   borderWidth="1px"
                   borderColor="border.subtle"
                 >
@@ -861,7 +803,6 @@ export default function UsersPage() {
                 gap="0.5"
                 p="1"
                 bg="bg.subtle"
-                borderRadius="sm"
                 borderWidth="1px"
                 borderColor="border.subtle"
               >
@@ -869,7 +810,6 @@ export default function UsersPage() {
                   size="xs"
                   variant={viewMode === "table" ? "solid" : "ghost"}
                   colorPalette={viewMode === "table" ? "blue" : "gray"}
-                  borderRadius="xs"
                   aria-label="Table view"
                   onClick={() => setViewMode("table")}
                 >
@@ -879,7 +819,6 @@ export default function UsersPage() {
                   size="xs"
                   variant={viewMode === "grid" ? "solid" : "ghost"}
                   colorPalette={viewMode === "grid" ? "blue" : "gray"}
-                  borderRadius="xs"
                   aria-label="Grid view"
                   onClick={() => setViewMode("grid")}
                 >
@@ -904,12 +843,12 @@ export default function UsersPage() {
                   <Text fontSize="xs" fontWeight="600" color="red.fg">
                     Archived Operators Repository (Super Admin Access)
                   </Text>
-                  <Text fontSize="11px" color="fg.muted">
+                  <Text fontSize="xs" color="fg.muted">
                     These operator accounts have been deactivated. Click "Restore" on any record to reinstate active console access.
                   </Text>
                 </VStack>
               </HStack>
-              <Badge colorPalette="red" variant="outline" size="xs">
+              <Badge colorPalette="red" variant="outline">
                 {deletedCount} Archived
               </Badge>
             </Flex>
@@ -1007,7 +946,7 @@ export default function UsersPage() {
                   <Box
                     w="32px"
                     h="32px"
-                    borderRadius="sm"
+                    borderRadius="md"
                     bg="red.subtle"
                     color="red.600"
                     display="flex"
@@ -1037,7 +976,7 @@ export default function UsersPage() {
                     <Box
                       p="3"
                       bg="red.subtle"
-                      borderRadius="sm"
+                      borderRadius="md"
                       borderWidth="1px"
                       borderColor="red.muted"
                     >
@@ -1052,11 +991,11 @@ export default function UsersPage() {
                     <Box
                       p="3"
                       bg="amber.subtle"
-                      borderRadius="sm"
+                      borderRadius="md"
                       borderWidth="1px"
                       borderColor="amber.muted"
                     >
-                      <Text fontSize="11px" color="amber.fg" lineHeight="1.4">
+                      <Text fontSize="xs" color="amber.fg" lineHeight="1.4">
                         The user will immediately be barred from authenticating into the transit console. The account can be restored at any time by a Super Admin.
                       </Text>
                     </Box>
@@ -1068,7 +1007,7 @@ export default function UsersPage() {
                 <Dialog.ActionTrigger asChild>
                   <Button
                     variant="outline"
-                    size="xs"
+                    size="sm"
                     disabled={isDeleting}
                     onClick={() => setUserToDelete(null)}
                   >
@@ -1077,12 +1016,12 @@ export default function UsersPage() {
                 </Dialog.ActionTrigger>
                 <Button
                   colorPalette="red"
-                  size="xs"
+                  size="sm"
                   loading={isDeleting}
                   disabled={isDeleting || userToDelete?.id === loggedInUser?.id}
                   onClick={handleConfirmDelete}
                 >
-                  <Trash2 size={13} style={{ marginRight: "4px" }} />
+                  <Trash2 size={14} />
                   Deactivate Account
                 </Button>
               </Dialog.Footer>
@@ -1110,7 +1049,7 @@ export default function UsersPage() {
                   <Box
                     w="32px"
                     h="32px"
-                    borderRadius="sm"
+                    borderRadius="md"
                     bg="blue.subtle"
                     color="blue.fg"
                     display="flex"
@@ -1140,7 +1079,7 @@ export default function UsersPage() {
                 <Dialog.ActionTrigger asChild>
                   <Button
                     variant="outline"
-                    size="xs"
+                    size="sm"
                     disabled={isRestoring}
                     onClick={() => setUserToRestore(null)}
                   >
@@ -1149,12 +1088,12 @@ export default function UsersPage() {
                 </Dialog.ActionTrigger>
                 <Button
                   colorPalette="blue"
-                  size="xs"
+                  size="sm"
                   loading={isRestoring}
                   disabled={isRestoring}
                   onClick={handleConfirmRestore}
                 >
-                  <RotateCcw size={13} style={{ marginRight: "4px" }} />
+                  <RotateCcw size={14} />
                   Restore Account
                 </Button>
               </Dialog.Footer>

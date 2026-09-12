@@ -174,18 +174,18 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <Flex minH="100vh" w="full" bg="#0b0f19" color="fg.default" align="center" justify="center" p={{ base: "4", sm: "6" }}>
+    <Flex minH="100vh" w="full" bg="bg.subtle" color="fg.default" align="center" justify="center" p={{ base: "4", sm: "6" }}>
       <Box w="full" maxW="440px">
         {/* Top Branding Header */}
         <VStack align="center" gap="2" mb="6">
-          <Avatar.Root size="md" shape="rounded" borderWidth="1px" borderColor="whiteAlpha.200" bg="#1e293b">
+          <Avatar.Root size="md" shape="rounded" borderWidth="1px" borderColor="border.subtle" bg="bg.panel">
             <Avatar.Image src="https://navitronix.in/assets/navitronix.jpeg" />
             <Avatar.Fallback name="Navitronix">NX</Avatar.Fallback>
           </Avatar.Root>
-          <Text fontSize="lg" fontWeight="700" color="white">
+          <Text fontSize="lg" fontWeight="700" color="fg.default">
             Navitronix Transit Cloud
           </Text>
-          <Text fontSize="xs" color="gray.400">
+          <Text fontSize="xs" color="fg.muted">
             Enterprise Security & Credentials Configuration
           </Text>
         </VStack>
@@ -193,8 +193,8 @@ export default function ResetPasswordPage() {
         <Card.Root
           size="md"
           variant="outline"
-          bg="#111827"
-          borderColor="whiteAlpha.200"
+          bg="bg.panel"
+          borderColor="border.default"
           borderRadius="md"
           boxShadow="sm"
           p={{ base: "6", sm: "8" }}
@@ -207,8 +207,8 @@ export default function ResetPasswordPage() {
                   w="48px"
                   h="48px"
                   borderRadius="full"
-                  bg="green.500/15"
-                  color="green.400"
+                  bg="green.subtle"
+                  color="green.600"
                   display="flex"
                   alignItems="center"
                   justifyContent="center"
@@ -217,10 +217,10 @@ export default function ResetPasswordPage() {
                   <CheckCircle2 size={26} />
                 </Box>
                 <VStack gap="1">
-                  <Text fontSize="lg" fontWeight="700" color="white">
+                  <Text fontSize="lg" fontWeight="700" color="fg.default">
                     Password Updated!
                   </Text>
-                  <Text fontSize="xs" color="gray.400">
+                  <Text fontSize="xs" color="fg.muted">
                     Your enterprise credentials have been changed successfully. You can now sign in with your new password.
                   </Text>
                 </VStack>
@@ -228,14 +228,12 @@ export default function ResetPasswordPage() {
                 <Button
                   colorPalette="blue"
                   size="sm"
-                  h="38px"
-                  borderRadius="sm"
-                  fontWeight="600"
-                  fontSize="xs"
                   onClick={() => navigate("/login")}
                 >
-                  Return to Sign In
-                  <ArrowRight size={14} style={{ marginLeft: "6px" }} />
+                  <HStack gap="2">
+                    <Text>Return to Sign In</Text>
+                    <ArrowRight size={14} />
+                  </HStack>
                 </Button>
               </VStack>
             ) : isSessionValid === false ? (
@@ -245,8 +243,8 @@ export default function ResetPasswordPage() {
                   w="48px"
                   h="48px"
                   borderRadius="full"
-                  bg="red.500/15"
-                  color="red.400"
+                  bg="red.subtle"
+                  color="red.600"
                   display="flex"
                   alignItems="center"
                   justifyContent="center"
@@ -255,10 +253,10 @@ export default function ResetPasswordPage() {
                   <AlertTriangle size={24} />
                 </Box>
                 <VStack gap="1">
-                  <Text fontSize="md" fontWeight="700" color="white">
+                  <Text fontSize="md" fontWeight="700" color="fg.default">
                     Invalid or Expired Link
                   </Text>
-                  <Text fontSize="xs" color="gray.400" lineHeight="1.5">
+                  <Text fontSize="xs" color="fg.muted" lineHeight="1.5">
                     {sessionError || "This recovery authorization token is invalid or has expired. Please return to the login screen and request a new password recovery link."}
                   </Text>
                 </VStack>
@@ -266,14 +264,12 @@ export default function ResetPasswordPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  color="white"
-                  borderColor="whiteAlpha.300"
-                  _hover={{ bg: "whiteAlpha.100" }}
-                  borderRadius="sm"
                   onClick={() => navigate("/login")}
                 >
-                  <RotateCcw size={13} style={{ marginRight: "6px" }} />
-                  Back to Sign In
+                  <HStack gap="2">
+                    <RotateCcw size={14} />
+                    <Text>Back to Sign In</Text>
+                  </HStack>
                 </Button>
               </VStack>
             ) : (
@@ -281,14 +277,14 @@ export default function ResetPasswordPage() {
               <VStack align="stretch" gap="5">
                 <VStack align="start" gap="1">
                   <HStack justify="space-between" w="full">
-                    <Text fontSize="lg" fontWeight="700" color="white">
+                    <Text fontSize="lg" fontWeight="700" color="fg.default">
                       Create New Password
                     </Text>
-                    <Badge size="xs" colorPalette="gray" variant="subtle" borderRadius="xs">
+                    <Badge colorPalette="gray">
                       Recovery
                     </Badge>
                   </HStack>
-                  <Text fontSize="xs" color="gray.400">
+                  <Text fontSize="xs" color="fg.muted">
                     Configure a strong password for your operator account.
                   </Text>
                 </VStack>
@@ -296,14 +292,14 @@ export default function ResetPasswordPage() {
                 {apiError && (
                   <Box
                     p="3"
-                    bg="red.500/10"
-                    borderRadius="sm"
+                    bg="red.subtle"
+                    borderRadius="md"
                     borderWidth="1px"
-                    borderColor="red.500/30"
+                    borderColor="red.muted"
                   >
                     <HStack align="flex-start" gap="2.5">
-                      <AlertTriangle size={15} color="var(--chakra-colors-red-400)" style={{ marginTop: "2px", flexShrink: 0 }} />
-                      <Text fontSize="xs" color="red.300" lineHeight="1.4">
+                      <AlertTriangle size={15} color="var(--chakra-colors-red-600)" style={{ marginTop: "2px", flexShrink: 0 }} />
+                      <Text fontSize="xs" color="red.fg" lineHeight="1.4">
                         {apiError}
                       </Text>
                     </HStack>
@@ -314,7 +310,7 @@ export default function ResetPasswordPage() {
                   <VStack align="stretch" gap="4">
                     {/* New Password */}
                     <Field.Root invalid={!!errors.password}>
-                      <Field.Label fontSize="xs" fontWeight="500" color="gray.300">
+                      <Field.Label fontSize="xs" fontWeight="500" color="fg.default">
                         New Password
                       </Field.Label>
                       <Box position="relative" w="full">
@@ -323,7 +319,7 @@ export default function ResetPasswordPage() {
                           left="3"
                           top="50%"
                           transform="translateY(-50%)"
-                          color="gray.400"
+                          color="fg.muted"
                           pointerEvents="none"
                           zIndex={1}
                         >
@@ -337,30 +333,29 @@ export default function ResetPasswordPage() {
                           pl="9"
                           pr="9"
                           maxLength={100}
-                          borderRadius="sm"
-                          bg="whiteAlpha.50"
-                          color="white"
-                          borderColor={errors.password ? "red.500" : "whiteAlpha.200"}
-                          _placeholder={{ color: "gray.500" }}
+                          bg="bg.subtle"
+                          color="fg.default"
+                          borderColor={errors.password ? "red.500" : "border.default"}
+                          _placeholder={{ color: "fg.subtle" }}
                           _focus={{
                             borderColor: "blue.500",
                             boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
-                            bg: "whiteAlpha.100",
+                            bg: "bg.panel",
                           }}
                           disabled={isSubmitting}
                           autoFocus
                         />
                         <IconButton
                           type="button"
-                          size="2xs"
+                          size="xs"
                           variant="ghost"
                           position="absolute"
-                          right="2"
+                          right="1"
                           top="50%"
                           transform="translateY(-50%)"
                           aria-label={showPassword ? "Hide password" : "Show password"}
-                          color="gray.400"
-                          _hover={{ color: "white", bg: "transparent" }}
+                          color="fg.muted"
+                          _hover={{ color: "fg.default", bg: "transparent" }}
                           onClick={() => setShowPassword((prev) => !prev)}
                           tabIndex={-1}
                         >
@@ -368,7 +363,7 @@ export default function ResetPasswordPage() {
                         </IconButton>
                       </Box>
                       {errors.password?.message && (
-                        <Field.ErrorText fontSize="11px" color="red.400" mt="1">
+                        <Field.ErrorText fontSize="xs" color="red.500" mt="1">
                           {errors.password.message}
                         </Field.ErrorText>
                       )}
@@ -376,17 +371,17 @@ export default function ResetPasswordPage() {
 
                     {/* Password Strength Meter */}
                     {enteredPassword && (
-                      <VStack align="stretch" gap="1" p="2" bg="whiteAlpha.50" borderRadius="xs">
+                      <VStack align="stretch" gap="1" p="2" bg="bg.subtle" borderRadius="md">
                         <HStack justify="space-between">
-                          <Text fontSize="10px" color="gray.400">
+                          <Text fontSize="xs" color="fg.muted">
                             Password Strength
                           </Text>
-                          <Text fontSize="10px" fontWeight="600" color={`${strength.colorPalette}.400`}>
+                          <Text fontSize="xs" fontWeight="600" color={`${strength.colorPalette}.600`}>
                             {strength.label}
                           </Text>
                         </HStack>
                         <Progress.Root value={strength.score} size="xs" colorPalette={strength.colorPalette as any}>
-                          <Progress.Track bg="whiteAlpha.100" h="4px">
+                          <Progress.Track bg="bg.muted" h="4px">
                             <Progress.Range borderRadius="full" />
                           </Progress.Track>
                         </Progress.Root>
@@ -395,7 +390,7 @@ export default function ResetPasswordPage() {
 
                     {/* Confirm Password */}
                     <Field.Root invalid={!!errors.confirmPassword}>
-                      <Field.Label fontSize="xs" fontWeight="500" color="gray.300">
+                      <Field.Label fontSize="xs" fontWeight="500" color="fg.default">
                         Confirm New Password
                       </Field.Label>
                       <Box position="relative" w="full">
@@ -404,7 +399,7 @@ export default function ResetPasswordPage() {
                           left="3"
                           top="50%"
                           transform="translateY(-50%)"
-                          color="gray.400"
+                          color="fg.muted"
                           pointerEvents="none"
                           zIndex={1}
                         >
@@ -418,29 +413,28 @@ export default function ResetPasswordPage() {
                           pl="9"
                           pr="9"
                           maxLength={100}
-                          borderRadius="sm"
-                          bg="whiteAlpha.50"
-                          color="white"
-                          borderColor={errors.confirmPassword ? "red.500" : "whiteAlpha.200"}
-                          _placeholder={{ color: "gray.500" }}
+                          bg="bg.subtle"
+                          color="fg.default"
+                          borderColor={errors.confirmPassword ? "red.500" : "border.default"}
+                          _placeholder={{ color: "fg.subtle" }}
                           _focus={{
                             borderColor: "blue.500",
                             boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
-                            bg: "whiteAlpha.100",
+                            bg: "bg.panel",
                           }}
                           disabled={isSubmitting}
                         />
                         <IconButton
                           type="button"
-                          size="2xs"
+                          size="xs"
                           variant="ghost"
                           position="absolute"
-                          right="2"
+                          right="1"
                           top="50%"
                           transform="translateY(-50%)"
                           aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                          color="gray.400"
-                          _hover={{ color: "white", bg: "transparent" }}
+                          color="fg.muted"
+                          _hover={{ color: "fg.default", bg: "transparent" }}
                           onClick={() => setShowConfirmPassword((prev) => !prev)}
                           tabIndex={-1}
                         >
@@ -448,7 +442,7 @@ export default function ResetPasswordPage() {
                         </IconButton>
                       </Box>
                       {errors.confirmPassword?.message && (
-                        <Field.ErrorText fontSize="11px" color="red.400" mt="1">
+                        <Field.ErrorText fontSize="xs" color="red.500" mt="1">
                           {errors.confirmPassword.message}
                         </Field.ErrorText>
                       )}
@@ -459,25 +453,23 @@ export default function ResetPasswordPage() {
                       type="submit"
                       colorPalette="blue"
                       size="sm"
-                      h="38px"
                       mt="2"
-                      borderRadius="sm"
-                      fontWeight="600"
-                      fontSize="xs"
                       loading={isSubmitting}
                       disabled={isSubmitting}
                     >
-                      Update Password
-                      <ArrowRight size={14} style={{ marginLeft: "6px" }} />
+                      <HStack gap="2">
+                        <Text>Update Password</Text>
+                        <ArrowRight size={14} />
+                      </HStack>
                     </Button>
                   </VStack>
                 </form>
               </VStack>
             )}
 
-            <Box pt="4" mt="5" borderTopWidth="1px" borderColor="whiteAlpha.100" textAlign="center">
-              <HStack justify="center" gap="1.5" color="gray.400" fontSize="11px">
-                <ShieldCheck size={13} color="var(--chakra-colors-green-400)" />
+            <Box pt="4" mt="5" borderTopWidth="1px" borderColor="border.subtle" textAlign="center">
+              <HStack justify="center" gap="1.5" color="fg.muted" fontSize="xs">
+                <ShieldCheck size={14} color="var(--chakra-colors-green-600)" />
                 <Text>Navitronix End-to-End Cryptographic Security</Text>
               </HStack>
             </Box>

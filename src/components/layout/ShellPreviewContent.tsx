@@ -320,10 +320,10 @@ export const ShellPreviewContent: React.FC<ShellPreviewContentProps> = ({
               </Box>
             </Flex>
             <HStack gap="1.5" mt="3">
-              <Badge size="xs" colorPalette="green" variant="surface" borderRadius="full">
+              <Badge colorPalette="green" variant="surface">
                 <LuTrendingUp size={11} style={{ marginRight: "2px" }} /> +12%
               </Badge>
-              <Text fontSize="11px" color={subtextColor}>
+              <Text fontSize="xs" color={subtextColor}>
                 Full PIS binary sync
               </Text>
             </HStack>
@@ -365,10 +365,10 @@ export const ShellPreviewContent: React.FC<ShellPreviewContentProps> = ({
               </Box>
             </Flex>
             <HStack gap="1.5" mt="3">
-              <Badge size="xs" colorPalette="amber" variant="surface" borderRadius="full">
+              <Badge colorPalette="amber" variant="surface">
                 <LuVolume2 size={11} style={{ marginRight: "2px" }} /> TTS Live
               </Badge>
-              <Text fontSize="11px" color={subtextColor}>
+              <Text fontSize="xs" color={subtextColor}>
                 Indic audio triggers
               </Text>
             </HStack>
@@ -410,10 +410,10 @@ export const ShellPreviewContent: React.FC<ShellPreviewContentProps> = ({
               </Box>
             </Flex>
             <HStack gap="1.5" mt="3">
-              <Badge size="xs" colorPalette="emerald" variant="surface" borderRadius="full">
+              <Badge colorPalette="emerald" variant="surface">
                 100% Online
               </Badge>
-              <Text fontSize="11px" color={subtextColor}>
+              <Text fontSize="xs" color={subtextColor}>
                 Across 6 regions
               </Text>
             </HStack>
@@ -455,10 +455,10 @@ export const ShellPreviewContent: React.FC<ShellPreviewContentProps> = ({
               </Box>
             </Flex>
             <HStack gap="1.5" mt="3">
-              <Badge size="xs" colorPalette="purple" variant="surface" borderRadius="full">
+              <Badge colorPalette="purple" variant="surface">
                 Controller Ready
               </Badge>
-              <Text fontSize="11px" color={subtextColor}>
+              <Text fontSize="xs" color={subtextColor}>
                 Socket stream active
               </Text>
             </HStack>
@@ -476,7 +476,7 @@ export const ShellPreviewContent: React.FC<ShellPreviewContentProps> = ({
             </Text>
           </VStack>
 
-          <Badge size="md" variant="surface" colorPalette="blue" borderRadius="full" px="3">
+          <Badge variant="surface" colorPalette="blue">
             Active: {location.pathname}
           </Badge>
         </Flex>
@@ -550,12 +550,8 @@ export const ShellPreviewContent: React.FC<ShellPreviewContentProps> = ({
                       {card.features.map((feature) => (
                         <Badge
                           key={feature}
-                          size="xs"
                           variant="subtle"
                           borderRadius="md"
-                          fontSize="10px"
-                          px="2"
-                          py="0.5"
                         >
                           {feature}
                         </Badge>
@@ -565,8 +561,8 @@ export const ShellPreviewContent: React.FC<ShellPreviewContentProps> = ({
 
                   {/* Action Footer */}
                   <Flex align="center" justify="space-between" pt="3" borderTopWidth="1px" borderColor={borderColor}>
-                    <Text fontSize="11px" color={subtextColor} fontWeight="medium">
-                      Route: <code style={{ fontSize: "11px" }}>{card.path}</code>
+                    <Text fontSize="xs" color={subtextColor} fontWeight="medium">
+                      Route: <code>{card.path}</code>
                     </Text>
 
                     <Button

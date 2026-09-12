@@ -190,7 +190,7 @@ export const CreateRegionDrawer: React.FC<CreateRegionDrawerProps> = ({
                   <Drawer.Title fontSize="sm" fontWeight="600" color="fg.default">
                     {isEditMode ? "Edit Region" : "Create New Region"}
                   </Drawer.Title>
-                  <Text fontSize="11px" color="fg.muted">
+                  <Text fontSize="xs" color="fg.muted">
                     {isEditMode
                       ? "Update regional zone name and operational boundaries"
                       : "Define a new operational jurisdiction zone"}
@@ -208,7 +208,7 @@ export const CreateRegionDrawer: React.FC<CreateRegionDrawerProps> = ({
                 {organization && (
                   <HStack
                     p="3"
-                    borderRadius="sm"
+                    borderRadius="md"
                     bg="blue.subtle"
                     borderWidth="1px"
                     borderColor="blue.muted"
@@ -225,12 +225,12 @@ export const CreateRegionDrawer: React.FC<CreateRegionDrawerProps> = ({
                         <Text fontSize="xs" fontWeight="600" color="blue.fg">
                           {organization.name}
                         </Text>
-                        <Text fontSize="10px" color="fg.muted">
+                        <Text fontSize="xs" color="fg.muted">
                           Parent Transport Authority
                         </Text>
                       </VStack>
                     </HStack>
-                    <Badge size="xs" colorPalette="blue" variant="outline">
+                    <Badge colorPalette="blue" variant="outline">
                       Target Agency
                     </Badge>
                   </HStack>
@@ -243,7 +243,6 @@ export const CreateRegionDrawer: React.FC<CreateRegionDrawerProps> = ({
                   </Field.Label>
                   <Input
                     size="sm"
-                    borderRadius="sm"
                     placeholder="e.g. Central Zone, North Division, Bangalore Metro"
                     {...register("name")}
                     maxLength={50}
@@ -252,24 +251,24 @@ export const CreateRegionDrawer: React.FC<CreateRegionDrawerProps> = ({
                     disabled={isBusy}
                   />
                   {errors.name && (
-                    <Field.ErrorText fontSize="11px" color="red.500">
+                    <Field.ErrorText fontSize="xs" color="red.500">
                       {errors.name.message}
                     </Field.ErrorText>
                   )}
-                  <Field.HelperText fontSize="11px" color="fg.muted">
+                  <Field.HelperText fontSize="xs" color="fg.muted">
                     Unique operational zone or geographic transit district.
                   </Field.HelperText>
                 </Field.Root>
 
                 {/* Helpful Guidelines Card */}
-                <Box p="3" borderRadius="sm" bg="bg.subtle" borderWidth="1px" borderColor="border.subtle" mt="2">
+                <Box p="3" borderRadius="md" bg="bg.subtle" borderWidth="1px" borderColor="border.subtle" mt="2">
                   <HStack gap="2" mb="1" color="fg.default">
                     <MapPin size={13} color="var(--chakra-colors-blue-600)" />
                     <Text fontSize="xs" fontWeight="600">
                       Regional Zone Hierarchy
                     </Text>
                   </HStack>
-                  <Text fontSize="11px" color="fg.muted" lineHeight="1.4">
+                  <Text fontSize="xs" color="fg.muted" lineHeight="1.4">
                     Bus depots and transit fleets are grouped under regions. Creating distinct regions enables localized dispatching, route planning, and depot-level telemetry isolation.
                   </Text>
                 </Box>
@@ -279,7 +278,6 @@ export const CreateRegionDrawer: React.FC<CreateRegionDrawerProps> = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  borderRadius="sm"
                   onClick={() => onOpenChange(false)}
                   disabled={isBusy}
                 >
@@ -288,12 +286,11 @@ export const CreateRegionDrawer: React.FC<CreateRegionDrawerProps> = ({
                 <Button
                   type="submit"
                   size="sm"
-                  borderRadius="sm"
                   colorPalette="blue"
                   loading={isBusy}
                   disabled={isBusy}
                 >
-                  <Save size={13} style={{ marginRight: "4px" }} />
+                  <Save size={14} />
                   {isEditMode ? "Save Changes" : "Create Region"}
                 </Button>
               </Drawer.Footer>

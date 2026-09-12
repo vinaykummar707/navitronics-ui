@@ -20,7 +20,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   secondaryAction,
 }) => {
   return (
-    <Card.Root size="sm" variant="outline" bg="bg.panel" w="full" borderColor="border.default">
+    <Card.Root variant="outline" bg="bg.panel" w="full" borderColor="border.default">
       <Card.Body py={{ base: "12", md: "16" }} px="6" textAlign="center">
         <VStack gap="3" maxW="sm" mx="auto">
           <Box
@@ -53,10 +53,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                 <Button
                   size="sm"
                   colorPalette="blue"
-                  borderRadius="sm"
                   onClick={onAction}
-                  fontWeight="500"
-                  fontSize="xs"
                 >
                   {actionLabel}
                 </Button>

@@ -98,7 +98,7 @@ export const AppUserMenu: React.FC<AppUserMenuProps> = ({ isCollapsed = false })
             minW="220px"
             bg="bg.surface"
             borderColor="border.default"
-            borderRadius="sm"
+            borderRadius="md"
             p="1"
           >
             {/* User Card Header */}
@@ -114,7 +114,7 @@ export const AppUserMenu: React.FC<AppUserMenuProps> = ({ isCollapsed = false })
                     {userEmail}
                   </Text>
                   <HStack gap="1">
-                    <Badge size="xs" colorPalette="blue" variant="subtle" borderRadius="xs" px="1.5" fontSize="9px">
+                    <Badge colorPalette="blue">
                       {roleDisplay}
                     </Badge>
                   </HStack>
@@ -126,9 +126,6 @@ export const AppUserMenu: React.FC<AppUserMenuProps> = ({ isCollapsed = false })
 
             <Menu.Item
               value="profile"
-              borderRadius="xs"
-              px="2.5"
-              py="1.5"
               cursor="pointer"
               _hover={{ bg: "bg.subtle" }}
               onClick={() => navigate("/home/settings")}
@@ -141,9 +138,6 @@ export const AppUserMenu: React.FC<AppUserMenuProps> = ({ isCollapsed = false })
 
             <Menu.Item
               value="theme"
-              borderRadius="xs"
-              px="2.5"
-              py="1.5"
               cursor="pointer"
               _hover={{ bg: "bg.subtle" }}
               onClick={toggleColorMode}
@@ -157,7 +151,7 @@ export const AppUserMenu: React.FC<AppUserMenuProps> = ({ isCollapsed = false })
                   )}
                   <Text fontSize="xs" color="fg.default">Theme</Text>
                 </HStack>
-                <Text fontSize="10px" color="fg.muted" textTransform="capitalize">
+                <Text fontSize="xs" color="fg.muted" textTransform="capitalize">
                   {colorMode}
                 </Text>
               </HStack>
@@ -167,9 +161,6 @@ export const AppUserMenu: React.FC<AppUserMenuProps> = ({ isCollapsed = false })
 
             <Menu.Item
               value="logout"
-              borderRadius="xs"
-              px="2.5"
-              py="1.5"
               cursor="pointer"
               _hover={{ bg: "red.500/10" }}
               onClick={handleLogout}

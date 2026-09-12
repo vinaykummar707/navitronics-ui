@@ -61,7 +61,7 @@ export const StatCard: React.FC<StatCardProps> = ({
         <div>
           <HStack justify="space-between" align="center" mb="2.5">
             <Card.Title
-              fontSize="11px"
+              fontSize="xs"
               fontWeight="600"
               color="fg.muted"
               textTransform="uppercase"
@@ -101,14 +101,8 @@ export const StatCard: React.FC<StatCardProps> = ({
             </Text>
             {badge && (
               <Badge
-                size="xs"
                 variant={badge.variant || "subtle"}
                 colorPalette={badge.colorPalette || iconColorPalette}
-                borderRadius="xs"
-                px="1.5"
-                py="0.2"
-                fontSize="10px"
-                fontWeight="600"
               >
                 {badge.label}
               </Badge>
@@ -116,7 +110,7 @@ export const StatCard: React.FC<StatCardProps> = ({
           </HStack>
 
           {description && (
-            <Card.Description fontSize="11px" color="fg.subtle" lineHeight="1.3">
+            <Card.Description fontSize="xs" color="fg.subtle" lineHeight="1.3">
               {description}
             </Card.Description>
           )}
@@ -124,7 +118,7 @@ export const StatCard: React.FC<StatCardProps> = ({
 
         {progress && (
           <VStack align="stretch" gap="1" mt="3" pt="2" borderTopWidth="1px" borderColor="border.subtle">
-            <HStack justify="space-between" fontSize="10px" color="fg.muted">
+            <HStack justify="space-between" fontSize="xs" color="fg.muted">
               <Text>{progress.label || "Coverage"}</Text>
               <Text fontWeight="600" color="fg.default">
                 {Math.round(Math.min(Math.max(progress.value, 0), 100))}%

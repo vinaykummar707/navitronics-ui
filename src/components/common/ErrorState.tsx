@@ -16,12 +16,12 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   actionLabel = "Try again",
 }) => {
   return (
-    <Card.Root size="sm" variant="outline" bg="bg.panel" w="full" borderColor="red.subtle">
+    <Card.Root variant="outline" bg="bg.panel" w="full" borderColor="red.subtle">
       <Card.Body p="6">
         <HStack gap="4" align="flex-start">
           <Box
             p="2"
-            borderRadius="sm"
+            borderRadius="md"
             bg="red.subtle"
             color="red.600"
             shrink="0"
@@ -43,14 +43,12 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
             {onRetry && (
               <Box pt="2">
                 <Button
-                  size="xs"
+                  size="sm"
                   variant="outline"
                   colorPalette="red"
-                  borderRadius="sm"
                   onClick={onRetry}
-                  fontWeight="500"
                 >
-                  <RotateCcw size={12} style={{ marginRight: "4px" }} />
+                  <RotateCcw size={14} />
                   {actionLabel}
                 </Button>
               </Box>

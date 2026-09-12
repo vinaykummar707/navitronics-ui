@@ -44,6 +44,7 @@ export interface DataTableProps<T> {
   pageSize?: number;
   onRowClick?: (item: T) => void;
   selectedId?: string | number;
+  selectedIds?: (string | number)[] | Set<string | number>;
   entityName?: string;
 }
 
@@ -62,6 +63,7 @@ export function DataTable<T>({
   pageSize = 10,
   onRowClick,
   selectedId,
+  selectedIds,
   entityName = "records",
 }: DataTableProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -138,13 +140,12 @@ export function DataTable<T>({
 
   return (
     <Card.Root
-      size="sm"
       variant="outline"
       w="full"
       overflow="hidden"
     >
       <Box overflowX="auto">
-        <Table.Root size="sm" interactive>
+        <Table.Root interactive>
           <Table.Header bg="bg.subtle">
             <Table.Row bg="bg.subtle" borderBottomWidth="1px" borderColor="border.default">
               {columns.map((col) => {
@@ -199,7 +200,11 @@ export function DataTable<T>({
           <Table.Body bg="bg.surface">
             {paginatedData.map((item, rowIdx) => {
               const rowKey = keyExtractor(item);
-              const isSelected = selectedId !== undefined && selectedId === rowKey;
+              const isSelected = selectedIds
+                ? selectedIds instanceof Set
+                  ? selectedIds.has(rowKey)
+                  : selectedIds.includes(rowKey)
+                : selectedId !== undefined && selectedId === rowKey;
 
               return (
                 <Table.Row
@@ -222,12 +227,11 @@ export function DataTable<T>({
                     return (
                       <Table.Cell
                         key={col.id}
-                        fontSize="xs"
                         color="fg.default"
                         textAlign={col.align || "left"}
                         borderColor="border.default"
-                        py="3.5"
-                        px="4.5"
+                        py="3"
+                        px=""
                       >
                         {content}
                       </Table.Cell>
@@ -286,12 +290,6 @@ export function DataTable<T>({
                       size="xs"
                       variant={isActive ? "solid" : "ghost"}
                       colorPalette={isActive ? "blue" : "gray"}
-                      borderRadius="xs"
-                      minW="24px"
-                      h="24px"
-                      px="1.5"
-                      fontSize="xs"
-                      fontWeight={isActive ? "600" : "400"}
                       onClick={() => setCurrentPage(pageNum)}
                     >
                       {pageNum}
@@ -317,14 +315,13 @@ export function DataTable<T>({
               aria-label="Next page"
               disabled={activePage >= totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              borderRadius="xs"
               borderColor="border.default"
             >
               <ChevronRight size={13} />
             </IconButton>
           </HStack>
         ) : (
-          <Text fontSize="11px" color="fg.subtle">
+          <Text fontSize="xs" color="fg.subtle">
             All records displayed
           </Text>
         )}

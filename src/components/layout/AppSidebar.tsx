@@ -192,9 +192,8 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
       flexDirection="column"
       justifyContent="space-between"
       transition="width 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
-      py="3"
-      px={isCollapsed ? "2" : "3"}
-      shrink="0"
+      py="4"
+      px={isCollapsed ? "2" : "4"}
     >
       {/* Organization Selector */}
       <Box mb="3" pb="2.5" borderBottomWidth="1px" borderColor="border.subtle">
@@ -241,8 +240,8 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                         onClick={() => handleItemClick(item.path)}
                         w="full"
                         px={isCollapsed ? "2" : "2.5"}
-                        py="2"
-                        borderRadius="sm"
+                        py="2.5"
+                        borderRadius="md"
                         display="flex"
                         alignItems="center"
                         justifyContent={isCollapsed ? "center" : "space-between"}
@@ -250,7 +249,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                         bg={isActive ? "blue.subtle" : "transparent"}
                         color={isActive ? "blue.600" : "fg.default"}
                         fontWeight={isActive ? "600" : "500"}
-                        fontSize="xs"
+                        fontSize="sm"
                         _hover={{
                           bg: isActive ? "blue.subtle" : "bg.subtle",
                           color: isActive ? "blue.600" : "fg.default",
@@ -292,14 +291,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
 
                         {!isCollapsed && item.badge && (
                           <Badge
-                            size="xs"
-                            variant="subtle"
                             colorPalette={isActive ? "blue" : "gray"}
-                            borderRadius="xs"
-                            px="1.5"
-                            py="0.2"
-                            fontSize="9px"
-                            fontWeight="500"
                           >
                             {item.badge}
                           </Badge>
@@ -352,7 +344,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
               w="full"
               px={isCollapsed ? "2" : "2.5"}
               py="2"
-              borderRadius="sm"
+              borderRadius="md"
               display="flex"
               alignItems="center"
               justifyContent={isCollapsed ? "center" : "flex-start"}
@@ -402,7 +394,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
             w="full"
             px={isCollapsed ? "2" : "2.5"}
             py="2"
-            borderRadius="sm"
+            borderRadius="md"
             display={{ base: "none", md: "flex" }}
             alignItems="center"
             justifyContent={isCollapsed ? "center" : "flex-start"}

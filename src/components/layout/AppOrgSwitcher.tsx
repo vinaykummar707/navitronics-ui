@@ -80,7 +80,7 @@ export const AppOrgSwitcher: React.FC<AppOrgSwitcherProps> = ({
         <Tooltip.Trigger asChild>
           <Box
             p="1.5"
-            borderRadius="sm"
+            borderRadius="md"
             bg="bg.surface"
             borderWidth="1px"
             borderColor="border.default"
@@ -116,7 +116,7 @@ export const AppOrgSwitcher: React.FC<AppOrgSwitcherProps> = ({
           w="full"
           px="2.5"
           py="2"
-          borderRadius="sm"
+          borderRadius="md"
           bg="bg.subtle"
           _hover={{ bg: "bg.muted", borderColor: "blue.500" }}
           transition="all 0.15s ease"
@@ -145,7 +145,7 @@ export const AppOrgSwitcher: React.FC<AppOrgSwitcherProps> = ({
                 >
                   {isLoading ? "Loading..." : orgName}
                 </Text>
-                <Text fontSize="10px" color="fg.muted" truncate maxW="130px" lineHeight="1.2">
+                <Text fontSize="xs" color="fg.muted" truncate maxW="130px" lineHeight="1.2">
                   Transit Agency
                 </Text>
               </VStack>
@@ -160,14 +160,14 @@ export const AppOrgSwitcher: React.FC<AppOrgSwitcherProps> = ({
           <Menu.Content
             minW="240px"
             maxW="280px"
-            borderRadius="sm"
+            borderRadius="md"
             borderWidth="1px"
             borderColor="border.default"
             bg="bg.surface"
             p="1"
           >
             <Box px="2.5" py="1.5">
-              <Text fontSize="11px" fontWeight="600" color="fg.muted" letterSpacing="0.03em" textTransform="uppercase">
+              <Text fontSize="xs" fontWeight="600" color="fg.muted" letterSpacing="0.03em" textTransform="uppercase">
                 Transit Agencies ({availableOrgs.length})
               </Text>
             </Box>
@@ -195,9 +195,6 @@ export const AppOrgSwitcher: React.FC<AppOrgSwitcherProps> = ({
                       key={org.id}
                       value={org.id}
                       onClick={() => setSelectedOrganization(org)}
-                      borderRadius="xs"
-                      px="2.5"
-                      py="2"
                       cursor="pointer"
                       bg={isSelected ? "blue.subtle" : "transparent"}
                       _hover={{ bg: isSelected ? "blue.subtle" : "bg.subtle" }}
@@ -226,7 +223,7 @@ export const AppOrgSwitcher: React.FC<AppOrgSwitcherProps> = ({
                               {org.name}
                             </Text>
                             {org.phone && (
-                              <Text fontSize="10px" color="fg.muted" truncate>
+                              <Text fontSize="xs" color="fg.muted" truncate>
                                 {org.phone}
                               </Text>
                             )}
@@ -247,10 +244,10 @@ export const AppOrgSwitcher: React.FC<AppOrgSwitcherProps> = ({
                 <Menu.Separator borderColor="border.subtle" my="1" />
                 <Box px="2.5" py="1.5">
                   <HStack justify="space-between">
-                    <Text fontSize="10px" color="fg.muted">
+                    <Text fontSize="xs" color="fg.muted">
                       Super Admin Access
                     </Text>
-                    <Badge size="xs" colorPalette="blue" variant="subtle" borderRadius="xs">
+                    <Badge colorPalette="blue">
                       All Orgs
                     </Badge>
                   </HStack>

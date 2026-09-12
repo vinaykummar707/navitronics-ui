@@ -139,7 +139,7 @@ export const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
                 <Box
                   w="36px"
                   h="36px"
-                  borderRadius="sm"
+                  borderRadius="md"
                   bg={isSuccess ? "green.subtle" : "blue.subtle"}
                   color={isSuccess ? "green.600" : "blue.fg"}
                   display="flex"
@@ -169,7 +169,7 @@ export const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
                   <Box
                     p="3.5"
                     bg="green.subtle"
-                    borderRadius="sm"
+                    borderRadius="md"
                     borderWidth="1px"
                     borderColor="green.muted"
                   >
@@ -190,8 +190,8 @@ export const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
                     </VStack>
                   </Box>
 
-                  <Box p="3" bg="bg.subtle" borderRadius="sm" borderWidth="1px" borderColor="border.subtle">
-                    <Text fontSize="11px" color="fg.muted" lineHeight="1.5">
+                  <Box p="3" bg="bg.subtle" borderRadius="md" borderWidth="1px" borderColor="border.subtle">
+                    <Text fontSize="xs" color="fg.muted" lineHeight="1.5">
                       💡 Didn't receive an email? Check your spam folder or wait for the cooldown timer before requesting another recovery link.
                     </Text>
                   </Box>
@@ -203,7 +203,7 @@ export const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
                       <Box
                         p="3"
                         bg="red.subtle"
-                        borderRadius="sm"
+                        borderRadius="md"
                         borderWidth="1px"
                         borderColor="red.muted"
                       >
@@ -240,7 +240,6 @@ export const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
                           size="sm"
                           pl="9"
                           maxLength={100}
-                          borderRadius="sm"
                           bg="bg.surface"
                           borderColor={errors.email ? "red.500" : "border.default"}
                           _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)" }}
@@ -249,11 +248,11 @@ export const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
                         />
                       </Box>
                       {errors.email?.message ? (
-                        <Field.ErrorText fontSize="11px" color="red.500" mt="1">
+                        <Field.ErrorText fontSize="xs" color="red.500" mt="1">
                           {errors.email.message}
                         </Field.ErrorText>
                       ) : (
-                        <Field.HelperText fontSize="11px" color="fg.subtle" mt="1">
+                        <Field.HelperText fontSize="xs" color="fg.subtle" mt="1">
                           We will send a single-use authorization token to this address.
                         </Field.HelperText>
                       )}
@@ -267,7 +266,7 @@ export const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
               {isSuccess ? (
                 <HStack justify="space-between" w="full">
                   <Button
-                    size="xs"
+                    size="sm"
                     variant="outline"
                     disabled={cooldown > 0}
                     onClick={() => {
@@ -275,10 +274,10 @@ export const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
                       setApiError(null);
                     }}
                   >
-                    <RotateCcw size={12} style={{ marginRight: "4px" }} />
+                    <RotateCcw size={14} />
                     {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend Link"}
                   </Button>
-                  <Button size="xs" colorPalette="blue" onClick={handleClose}>
+                  <Button size="sm" colorPalette="blue" onClick={handleClose}>
                     Done
                   </Button>
                 </HStack>
@@ -287,7 +286,7 @@ export const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
                   <Dialog.ActionTrigger asChild>
                     <Button
                       variant="outline"
-                      size="xs"
+                      size="sm"
                       onClick={handleClose}
                       disabled={isSubmitting}
                     >
@@ -298,13 +297,12 @@ export const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
                     type="submit"
                     form="reset-password-form"
                     colorPalette="blue"
-                    size="xs"
+                    size="sm"
                     loading={isSubmitting}
                     disabled={isSubmitting}
-                    fontWeight="600"
                   >
                     Send Recovery Link
-                    <ArrowRight size={13} style={{ marginLeft: "4px" }} />
+                    <ArrowRight size={14} />
                   </Button>
                 </HStack>
               )}

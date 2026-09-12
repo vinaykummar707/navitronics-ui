@@ -75,29 +75,23 @@ export const OrganizationPageHeader: React.FC<OrganizationPageHeaderProps> = ({
           <Button
             size="sm"
             variant="outline"
-            borderRadius="xl"
             onClick={() => {
               toast.success("Organizations refreshed");
               onRefresh();
             }}
             loading={isLoading}
           >
-            <LuRefreshCw style={{ marginRight: "6px" }} />
+            <LuRefreshCw />
             Refresh
           </Button>
 
           <RBAC roles={[ROLES.MASTER]} features={[]}>
             <Button
               size="sm"
-              borderRadius="xl"
-              bg="linear-gradient(135deg, #ec4899 0%, #be123c 100%)"
-              color="white"
-              shadow="0 4px 12px -2px rgba(236, 72, 153, 0.4)"
-              _hover={{ transform: "translateY(-1px)", shadow: "md" }}
-              fontWeight="bold"
+              colorPalette="blue"
               onClick={onAdd}
             >
-              <LuPlus style={{ marginRight: "6px" }} />
+              <LuPlus />
               Add Organization
             </Button>
           </RBAC>
@@ -108,7 +102,7 @@ export const OrganizationPageHeader: React.FC<OrganizationPageHeaderProps> = ({
       <HStack
         w={{ base: "full", md: "360px" }}
         bg="bg.panel"
-        borderRadius="xl"
+        borderRadius="md"
         borderWidth="1px"
         borderColor="border.subtle"
         px="3"

@@ -404,7 +404,7 @@ export const CreateUserDrawer: React.FC<CreateUserDrawerProps> = ({
                         </NativeSelect.Field>
                       </NativeSelect.Root>
                       {errors.organization_id?.message && (
-                        <Field.ErrorText fontSize="11px" color="red.500">
+                        <Field.ErrorText color="red.500">
                           {errors.organization_id.message}
                         </Field.ErrorText>
                       )}
@@ -413,7 +413,7 @@ export const CreateUserDrawer: React.FC<CreateUserDrawerProps> = ({
                     <Box
                       p="2.5"
                       bg="bg.muted"
-                      borderRadius="sm"
+                      borderRadius="md"
                       borderWidth="1px"
                       borderColor="border.subtle"
                     >
@@ -422,7 +422,7 @@ export const CreateUserDrawer: React.FC<CreateUserDrawerProps> = ({
                           <Building2 size={13} />
                           <Text>Transit Agency</Text>
                         </HStack>
-                        <Badge size="xs" colorPalette="blue" variant="subtle" borderRadius="xs">
+                        <Badge colorPalette="blue">
                           {selectedOrganization?.name || "Global"}
                         </Badge>
                       </HStack>
@@ -457,7 +457,7 @@ export const CreateUserDrawer: React.FC<CreateUserDrawerProps> = ({
                       </NativeSelect.Field>
                     </NativeSelect.Root>
                     {errors.role_id?.message && (
-                      <Field.ErrorText fontSize="11px" color="red.500">
+                      <Field.ErrorText color="red.500">
                         {errors.role_id.message}
                       </Field.ErrorText>
                     )}
@@ -488,7 +488,7 @@ export const CreateUserDrawer: React.FC<CreateUserDrawerProps> = ({
                         </NativeSelect.Field>
                       </NativeSelect.Root>
                       {errors.region_id?.message && (
-                        <Field.ErrorText fontSize="11px" color="red.500">
+                        <Field.ErrorText color="red.500">
                           {errors.region_id.message}
                         </Field.ErrorText>
                       )}
@@ -519,7 +519,7 @@ export const CreateUserDrawer: React.FC<CreateUserDrawerProps> = ({
                         </NativeSelect.Field>
                       </NativeSelect.Root>
                       {errors.depot_id?.message && (
-                        <Field.ErrorText fontSize="11px" color="red.500">
+                        <Field.ErrorText color="red.500">
                           {errors.depot_id.message}
                         </Field.ErrorText>
                       )}
@@ -550,16 +550,15 @@ export const CreateUserDrawer: React.FC<CreateUserDrawerProps> = ({
                         size="sm"
                         pl="9"
                         maxLength={100}
-                        borderRadius="sm"
                         disabled={isEditMode || isSubmittingInternal}
                       />
                     </Box>
                     {errors.email?.message ? (
-                      <Field.ErrorText fontSize="11px" color="red.500">
+                      <Field.ErrorText color="red.500">
                         {errors.email.message}
                       </Field.ErrorText>
                     ) : (
-                      <Field.HelperText fontSize="10px" color="fg.muted">
+                      <Field.HelperText fontSize="xs" color="fg.muted">
                         {isEditMode
                           ? "User email is permanently mapped to Supabase authentication."
                           : "Enter registered operator email for single sign-on & credential delivery."}
@@ -593,12 +592,11 @@ export const CreateUserDrawer: React.FC<CreateUserDrawerProps> = ({
                           pl="9"
                           pr="9"
                           maxLength={100}
-                          borderRadius="sm"
                           disabled={isSubmittingInternal}
                         />
                         <IconButton
                           type="button"
-                          size="2xs"
+                          size="xs"
                           variant="ghost"
                           position="absolute"
                           right="2"
@@ -610,15 +608,15 @@ export const CreateUserDrawer: React.FC<CreateUserDrawerProps> = ({
                           onClick={() => setShowPassword((prev) => !prev)}
                           tabIndex={-1}
                         >
-                          {showPassword ? <EyeOff size={13} /> : <Eye size={13} />}
+                          {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                         </IconButton>
                       </Box>
                       {errors.password?.message ? (
-                        <Field.ErrorText fontSize="11px" color="red.500">
+                        <Field.ErrorText color="red.500">
                           {errors.password.message}
                         </Field.ErrorText>
                       ) : (
-                        <Field.HelperText fontSize="10px" color="fg.muted">
+                        <Field.HelperText fontSize="xs" color="fg.muted">
                           Temporary password. User will be encouraged to update upon first login.
                         </Field.HelperText>
                       )}
@@ -629,7 +627,7 @@ export const CreateUserDrawer: React.FC<CreateUserDrawerProps> = ({
                   <Box
                     p="3"
                     bg="bg.muted"
-                    borderRadius="sm"
+                    borderRadius="md"
                     borderWidth="1px"
                     borderColor="border.subtle"
                   >
@@ -638,7 +636,7 @@ export const CreateUserDrawer: React.FC<CreateUserDrawerProps> = ({
                         <Text fontSize="xs" fontWeight="600" color="fg.default">
                           Module Privileges
                         </Text>
-                        <Badge size="xs" colorPalette="blue" variant="subtle" borderRadius="xs">
+                        <Badge colorPalette="blue">
                           Access Control
                         </Badge>
                       </HStack>
@@ -655,7 +653,7 @@ export const CreateUserDrawer: React.FC<CreateUserDrawerProps> = ({
                                 <Text fontSize="xs" fontWeight="500" color="fg.default">
                                   PIS (Passenger Information)
                                 </Text>
-                                <Text fontSize="10px" color="fg.muted">
+                                <Text fontSize="xs" color="fg.muted">
                                   Display LED matrix, routes, and station boards
                                 </Text>
                               </VStack>
@@ -683,7 +681,7 @@ export const CreateUserDrawer: React.FC<CreateUserDrawerProps> = ({
                                 <Text fontSize="xs" fontWeight="500" color="fg.default">
                                   PAS (Public Address)
                                 </Text>
-                                <Text fontSize="10px" color="fg.muted">
+                                <Text fontSize="xs" color="fg.muted">
                                   TTS audio synthesis & announcements
                                 </Text>
                               </VStack>
@@ -711,7 +709,7 @@ export const CreateUserDrawer: React.FC<CreateUserDrawerProps> = ({
                                 <Text fontSize="xs" fontWeight="500" color="fg.default">
                                   ITMS (Fleet Telemetry)
                                 </Text>
-                                <Text fontSize="10px" color="fg.muted">
+                                <Text fontSize="xs" color="fg.muted">
                                   Live AVL telemetry, headways, and tracking
                                 </Text>
                               </VStack>
@@ -737,7 +735,7 @@ export const CreateUserDrawer: React.FC<CreateUserDrawerProps> = ({
                       <Box
                         p="3"
                         bg="bg.muted"
-                        borderRadius="sm"
+                        borderRadius="md"
                         borderWidth="1px"
                         borderColor="border.subtle"
                       >
@@ -751,7 +749,7 @@ export const CreateUserDrawer: React.FC<CreateUserDrawerProps> = ({
                               <Text fontSize="xs" fontWeight="500" color="fg.default">
                                 Account Active Status
                               </Text>
-                              <Text fontSize="10px" color="fg.muted">
+                              <Text fontSize="xs" color="fg.muted">
                                 Inactive accounts cannot sign in to the transit console
                               </Text>
                             </VStack>
@@ -795,7 +793,7 @@ export const CreateUserDrawer: React.FC<CreateUserDrawerProps> = ({
                 loading={isSubmittingInternal}
                 disabled={isSubmittingInternal}
               >
-                <Save size={14} style={{ marginRight: "6px" }} />
+                <Save size={14} />
                 {isEditMode ? "Save Changes" : "Create Operator"}
               </Button>
             </Drawer.Footer>

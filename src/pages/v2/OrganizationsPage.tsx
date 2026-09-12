@@ -337,28 +337,12 @@ export default function OrganizationsPage() {
                   {org.name}
                 </Text>
                 {isProtected && (
-                  <Badge
-                    size="xs"
-                    variant="subtle"
-                    colorPalette="blue"
-                    borderRadius="xs"
-                    px="1.5"
-                    fontSize="9px"
-                    shrink="0"
-                  >
+                  <Badge colorPalette="blue" shrink="0">
                     System
                   </Badge>
                 )}
                 {org.deleted && (
-                  <Badge
-                    size="xs"
-                    variant="subtle"
-                    colorPalette="red"
-                    borderRadius="xs"
-                    px="1.5"
-                    fontSize="9px"
-                    shrink="0"
-                  >
+                  <Badge colorPalette="red" shrink="0">
                     Deleted
                   </Badge>
                 )}
@@ -373,102 +357,41 @@ export default function OrganizationsPage() {
       header: "Status",
       accessorKey: "active",
       sortable: true,
-      width: "115px",
+      width: "125px",
       cell: (org) => {
         if (org.deleted) {
-          return (
-            <Badge
-              size="xs"
-              variant="subtle"
-              colorPalette="red"
-              borderRadius="xs"
-              px="2"
-              py="0.5"
-              fontSize="11px"
-              fontWeight="600"
-            >
-              Archived
-            </Badge>
-          );
+          return <Badge colorPalette="red">Archived</Badge>;
         }
-        return (
-          <HStack
-            gap="1.5"
-            px="2"
-            py="0.5"
-            borderRadius="xs"
-            bg={org.active !== false ? "green.500/10" : "gray.500/10"}
-            borderWidth="1px"
-            borderColor={org.active !== false ? "green.500/25" : "gray.500/20"}
-            w="fit-content"
-          >
-            <Box
-              w="5px"
-              h="5px"
-              borderRadius="full"
-              bg={org.active !== false ? "green.400" : "gray.400"}
-            />
-            <Text
-              fontSize="11px"
-              fontWeight="600"
-              color={org.active !== false ? "green.400" : "gray.400"}
-            >
-              {org.active !== false ? "Active" : "Inactive"}
-            </Text>
-          </HStack>
+        return org.active !== false ? (
+          <Badge colorPalette="green">Active</Badge>
+        ) : (
+          <Badge colorPalette="gray">Inactive</Badge>
         );
       },
     },
     {
       id: "modules",
       header: "Entitlements",
-      width: "180px",
+      width: "190px",
       cell: (org) => (
         <HStack gap="1.5">
           {org.PIS && (
-            <Badge
-              size="xs"
-              variant="subtle"
-              colorPalette="blue"
-              borderRadius="xs"
-              px="1.5"
-              py="0.2"
-              fontSize="10px"
-              fontWeight="600"
-            >
+            <Badge colorPalette="blue">
               PIS
             </Badge>
           )}
           {org.PAS && (
-            <Badge
-              size="xs"
-              variant="subtle"
-              colorPalette="amber"
-              borderRadius="xs"
-              px="1.5"
-              py="0.2"
-              fontSize="10px"
-              fontWeight="600"
-            >
+            <Badge colorPalette="amber">
               PAS
             </Badge>
           )}
           {org.ITMS && (
-            <Badge
-              size="xs"
-              variant="subtle"
-              colorPalette="purple"
-              borderRadius="xs"
-              px="1.5"
-              py="0.2"
-              fontSize="10px"
-              fontWeight="600"
-            >
+            <Badge colorPalette="purple">
               ITMS
             </Badge>
           )}
           {!org.PIS && !org.PAS && !org.ITMS && (
-            <Text fontSize="11px" color="fg.subtle">
+            <Text fontSize="xs" color="fg.subtle">
               Standard
             </Text>
           )}
@@ -486,21 +409,17 @@ export default function OrganizationsPage() {
         return (
           <HStack gap="1.5">
             <Badge
-              size="xs"
-              variant="subtle"
+              variant={count > 0 ? "subtle" : "outline"}
               colorPalette={count > 0 ? "blue" : "gray"}
-              borderRadius="xs"
-              px="2"
-              py="0.5"
             >
-              <HStack gap="1">
-                <MapPin size={11} />
-                <Text fontWeight="600">{count} {count === 1 ? "Zone" : "Zones"}</Text>
+              <HStack gap="1.5">
+                <MapPin size={12} />
+                <Text>{count} {count === 1 ? "Zone" : "Zones"}</Text>
               </HStack>
             </Badge>
             {!org.deleted && (
               <IconButton
-                size="2xs"
+                size="xs"
                 variant="ghost"
                 aria-label="View regions"
                 color="fg.muted"
@@ -510,7 +429,7 @@ export default function OrganizationsPage() {
                   handleViewRegions(org);
                 }}
               >
-                <ArrowRight size={12} />
+                <ArrowRight size={13} />
               </IconButton>
             )}
           </HStack>
@@ -528,21 +447,17 @@ export default function OrganizationsPage() {
         return (
           <HStack gap="1.5">
             <Badge
-              size="xs"
-              variant="subtle"
+              variant={count > 0 ? "subtle" : "outline"}
               colorPalette={count > 0 ? "green" : "gray"}
-              borderRadius="xs"
-              px="2"
-              py="0.5"
             >
-              <HStack gap="1">
-                <Building2 size={11} />
-                <Text fontWeight="600">{count} {count === 1 ? "Depot" : "Depots"}</Text>
+              <HStack gap="1.5">
+                <Building2 size={12} />
+                <Text>{count} {count === 1 ? "Depot" : "Depots"}</Text>
               </HStack>
             </Badge>
             {!org.deleted && (
               <IconButton
-                size="2xs"
+                size="xs"
                 variant="ghost"
                 aria-label="View depots"
                 color="fg.muted"
@@ -552,7 +467,7 @@ export default function OrganizationsPage() {
                   handleViewDepots(org);
                 }}
               >
-                <ArrowRight size={12} />
+                <ArrowRight size={13} />
               </IconButton>
             )}
           </HStack>
@@ -586,7 +501,7 @@ export default function OrganizationsPage() {
       sortable: true,
       width: "120px",
       cell: (org) => (
-        <Text color="fg.muted" fontSize="11px">
+        <Text color="fg.muted">
           {org.created_at
             ? new Date(org.created_at).toLocaleDateString("en-US", {
                 month: "short",
@@ -606,14 +521,12 @@ export default function OrganizationsPage() {
         if (currentTab === "deleted" || org.deleted) {
           return (
             <Button
-              size="xs"
+              size="sm"
               variant="outline"
               colorPalette="green"
-              borderRadius="xs"
               onClick={() => handleRestoreClick(org)}
-              fontWeight="600"
             >
-              <RotateCcw size={12} style={{ marginRight: "4px" }} />
+              <RotateCcw size={13} />
               Restore
             </Button>
           );
@@ -633,7 +546,6 @@ export default function OrganizationsPage() {
               onClick={() => handleCopyId(org.id)}
               color="fg.muted"
               _hover={{ color: "fg.default", bg: "bg.muted" }}
-              borderRadius="xs"
             >
               {copiedId === org.id ? (
                 <Check size={13} color="var(--chakra-colors-green-400)" />
@@ -649,7 +561,6 @@ export default function OrganizationsPage() {
               onClick={() => handleEdit(org)}
               color="fg.muted"
               _hover={{ color: "blue.500", bg: "bg.muted" }}
-              borderRadius="xs"
             >
               <Pencil size={13} />
             </IconButton>
@@ -662,7 +573,6 @@ export default function OrganizationsPage() {
                 onClick={() => handleDeleteClick(org)}
                 color="fg.muted"
                 _hover={{ color: "red.400", bg: "red.500/10" }}
-                borderRadius="xs"
               >
                 <Trash2 size={13} />
               </IconButton>
@@ -714,10 +624,8 @@ export default function OrganizationsPage() {
         actions={
           <HStack gap="2">
             <Button
-              size="xs"
+              size="sm"
               variant="outline"
-              borderRadius="sm"
-              fontWeight="500"
               onClick={() => {
                 refetchActive();
                 refetchRegions();
@@ -726,17 +634,15 @@ export default function OrganizationsPage() {
                 toast.success("Agencies directory refreshed");
               }}
             >
-              <RotateCw size={13} style={{ marginRight: "5px" }} />
+              <RotateCw size={14} />
               Refresh
             </Button>
             <Button
-              size="xs"
+              size="sm"
               colorPalette="blue"
-              borderRadius="sm"
-              fontWeight="600"
               onClick={handleAddNew}
             >
-              <Plus size={14} style={{ marginRight: "4px" }} />
+              <Plus size={15} />
               Register Agency
             </Button>
           </HStack>
@@ -811,7 +717,7 @@ export default function OrganizationsPage() {
               endElement={
                 searchQuery ? (
                   <IconButton
-                    size="2xs"
+                    size="xs"
                     variant="ghost"
                     aria-label="Clear search"
                     onClick={() => setSearchQuery("")}
@@ -827,7 +733,6 @@ export default function OrganizationsPage() {
             >
               <Input
                 size="sm"
-                borderRadius="sm"
                 placeholder={
                   currentTab === "deleted"
                     ? "Search deleted agencies..."
@@ -852,7 +757,6 @@ export default function OrganizationsPage() {
                 <Tabs.List
                   bg="bg.subtle"
                   p="1"
-                  borderRadius="sm"
                   borderWidth="1px"
                   borderColor="border.subtle"
                 >
@@ -881,7 +785,6 @@ export default function OrganizationsPage() {
                 gap="0.5"
                 p="1"
                 bg="bg.subtle"
-                borderRadius="sm"
                 borderWidth="1px"
                 borderColor="border.subtle"
               >
@@ -889,7 +792,6 @@ export default function OrganizationsPage() {
                   size="xs"
                   variant={viewMode === "table" ? "solid" : "ghost"}
                   colorPalette={viewMode === "table" ? "blue" : "gray"}
-                  borderRadius="xs"
                   aria-label="Table view"
                   onClick={() => setViewMode("table")}
                 >
@@ -899,7 +801,6 @@ export default function OrganizationsPage() {
                   size="xs"
                   variant={viewMode === "grid" ? "solid" : "ghost"}
                   colorPalette={viewMode === "grid" ? "blue" : "gray"}
-                  borderRadius="xs"
                   aria-label="Grid view"
                   onClick={() => setViewMode("grid")}
                 >
@@ -924,12 +825,12 @@ export default function OrganizationsPage() {
                   <Text fontSize="xs" fontWeight="600" color="red.fg">
                     Deleted Organizations Archive (Super Admin Access)
                   </Text>
-                  <Text fontSize="11px" color="fg.muted">
+                  <Text fontSize="xs" color="fg.muted">
                     These organizations have been soft-deleted. Click "Restore" on any record to reinstate the organization and its route network.
                   </Text>
                 </VStack>
               </HStack>
-              <Badge colorPalette="red" variant="outline" size="xs">
+              <Badge colorPalette="red" variant="outline">
                 {deletedCount} Archived
               </Badge>
             </Flex>
@@ -969,8 +870,8 @@ export default function OrganizationsPage() {
                 <Skeleton h="12px" w="50%" />
               </VStack>
               <HStack justify="space-between" pt="2" borderTopWidth="1px" borderColor="border.subtle">
-                <Skeleton h="20px" w="60px" borderRadius="xs" />
-                <Skeleton h="20px" w="50px" borderRadius="xs" />
+                <Skeleton h="20px" w="60px" borderRadius="md" />
+                <Skeleton h="20px" w="50px" borderRadius="md" />
               </HStack>
             </Card.Root>
           ))}
@@ -1036,7 +937,7 @@ export default function OrganizationsPage() {
                   <Box
                     w="32px"
                     h="32px"
-                    borderRadius="sm"
+                    borderRadius="md"
                     bg="red.subtle"
                     color="red.600"
                     display="flex"
@@ -1054,7 +955,7 @@ export default function OrganizationsPage() {
 
               <Dialog.Body>
                 <VStack align="stretch" gap="3">
-                  <HStack gap="3" p="2.5" bg="bg.subtle" borderRadius="sm" borderWidth="1px" borderColor="border.subtle">
+                  <HStack gap="3" p="2.5" bg="bg.subtle" borderRadius="md" borderWidth="1px" borderColor="border.subtle">
                     <Avatar.Root size="sm" shape="rounded" colorPalette="red">
                       <Avatar.Fallback name={orgToDelete?.name}>
                         {getOrgInitials(orgToDelete?.name)}
@@ -1072,14 +973,14 @@ export default function OrganizationsPage() {
                   </HStack>
 
                   {((orgToDelete?.region_count || 0) > 0 || (orgToDelete?.depot_count || 0) > 0) && (
-                    <Box p="2.5" bg="amber.subtle" borderRadius="sm" borderWidth="1px" borderColor="amber.muted">
+                    <Box p="2.5" bg="amber.subtle" borderRadius="md" borderWidth="1px" borderColor="amber.muted">
                       <HStack align="flex-start" gap="2">
                         <AlertTriangle size={15} color="var(--chakra-colors-amber-600)" style={{ marginTop: "2px", flexShrink: 0 }} />
                         <VStack align="start" gap="0.5">
                           <Text fontSize="xs" fontWeight="600" color="amber.fg">
                             Active Operational Infrastructure Detected
                           </Text>
-                          <Text fontSize="11px" color="fg.muted" lineHeight="1.4">
+                          <Text fontSize="xs" color="fg.muted" lineHeight="1.4">
                             This transit authority manages {orgToDelete?.region_count || 0} regional operational zone(s) and {orgToDelete?.depot_count || 0} bus depot facility(ies). Soft-deleting this agency will affect operational jurisdictions and fleet dispatch schedules.
                           </Text>
                         </VStack>
@@ -1143,7 +1044,7 @@ export default function OrganizationsPage() {
                   <Box
                     w="32px"
                     h="32px"
-                    borderRadius="sm"
+                    borderRadius="md"
                     bg="green.subtle"
                     color="green.600"
                     display="flex"
@@ -1161,7 +1062,7 @@ export default function OrganizationsPage() {
 
               <Dialog.Body>
                 <VStack align="stretch" gap="3">
-                  <HStack gap="3" p="2.5" bg="bg.subtle" borderRadius="sm" borderWidth="1px" borderColor="border.subtle">
+                  <HStack gap="3" p="2.5" bg="bg.subtle" borderRadius="md" borderWidth="1px" borderColor="border.subtle">
                     <Avatar.Root size="sm" shape="rounded" colorPalette="green">
                       <Avatar.Fallback name={orgToRestore?.name}>
                         {getOrgInitials(orgToRestore?.name)}

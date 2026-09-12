@@ -279,7 +279,6 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
                     </Field.Label>
                     <Input
                       placeholder="e.g. APSRTC or Bangalore Metro"
-                      borderRadius="sm"
                       size="sm"
                       maxLength={60}
                       {...register("name")}
@@ -296,7 +295,6 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
                     <Input
                       type="email"
                       placeholder="contact@transit.org"
-                      borderRadius="sm"
                       size="sm"
                       maxLength={100}
                       {...register("email")}
@@ -309,7 +307,6 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
                     <Field.Label>Contact Phone</Field.Label>
                     <Input
                       placeholder="+91 98765 43210"
-                      borderRadius="sm"
                       size="sm"
                       maxLength={20}
                       {...register("phone")}
@@ -323,7 +320,6 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
                     <Field.Label>Logo Image URL</Field.Label>
                     <Input
                       placeholder="https://example.com/logo.png"
-                      borderRadius="sm"
                       size="sm"
                       maxLength={255}
                       {...register("logo")}
@@ -334,11 +330,16 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
 
                   <Separator my="1" borderColor="border.subtle" />
 
-                  {/* Feature Entitlements using Chakra UI CheckboxCard */}
-                  <VStack align="stretch" gap="2.5">
-                    <Text fontSize="xs" fontWeight="600" color="fg.muted" textTransform="uppercase" letterSpacing="0.04em">
-                      Feature Entitlements
-                    </Text>
+                  {/* Operational Modules / Subscriptions */}
+                  <VStack align="stretch" gap="3">
+                    <VStack align="start" gap="0.5">
+                      <Text fontSize="xs" fontWeight="600" color="fg.default">
+                        Licensed Operational Modules
+                      </Text>
+                      <Text fontSize="xs" color="fg.muted">
+                        Configure subsystem access rights and capabilities provisioned for this agency
+                      </Text>
+                    </VStack>
 
                     <Controller
                       name="PIS"
@@ -349,7 +350,6 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
                           onCheckedChange={(details) => field.onChange(details.checked)}
                           colorPalette="blue"
                           size="sm"
-                          borderRadius="sm"
                         >
                           <CheckboxCard.HiddenInput />
                           <CheckboxCard.Control>
@@ -374,7 +374,6 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
                           onCheckedChange={(details) => field.onChange(details.checked)}
                           colorPalette="blue"
                           size="sm"
-                          borderRadius="sm"
                         >
                           <CheckboxCard.HiddenInput />
                           <CheckboxCard.Control>
@@ -399,7 +398,6 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
                           onCheckedChange={(details) => field.onChange(details.checked)}
                           colorPalette="blue"
                           size="sm"
-                          borderRadius="sm"
                         >
                           <CheckboxCard.HiddenInput />
                           <CheckboxCard.Control>
@@ -421,7 +419,7 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
                   {/* Status Toggle */}
                   <Box
                     p="3.5"
-                    borderRadius="sm"
+                    borderRadius="md"
                     borderWidth="1px"
                     borderColor="border.default"
                     bg="bg.subtle"
@@ -435,7 +433,7 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
                             <Text fontSize="xs" fontWeight="600" color="fg.default">
                               Organization Status
                             </Text>
-                            <Text fontSize="11px" color="fg.muted">
+                            <Text fontSize="xs" color="fg.muted">
                               {field.value
                                 ? "Active: Users and depots can operate normally"
                                 : "Suspended: Operations for this organization are halted"}
@@ -462,7 +460,6 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
               <Drawer.Footer borderTopWidth="1px" borderColor="border.default" gap="2.5">
                 <Button
                   variant="outline"
-                  borderRadius="sm"
                   size="sm"
                   onClick={() => onOpenChange(false)}
                   disabled={isBusy}
@@ -471,13 +468,11 @@ export const CreateOrganizationDrawer: React.FC<CreateOrganizationDrawerProps> =
                 </Button>
                 <Button
                   type="submit"
-                  borderRadius="sm"
                   size="sm"
                   colorPalette="blue"
                   loading={isBusy}
-                  fontWeight="600"
                 >
-                  <Save size={14} style={{ marginRight: "6px" }} />
+                  <Save size={14} />
                   {isEditMode ? "Save Changes" : "Create Organization"}
                 </Button>
               </Drawer.Footer>

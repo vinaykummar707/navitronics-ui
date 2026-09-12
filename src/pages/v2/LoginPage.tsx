@@ -156,13 +156,13 @@ export const LoginPage: React.FC = () => {
     <Flex
       minH="100vh"
       w="full"
-      bg="#0b0f19"
+      bg="bg.subtle"
       color="fg.default"
       direction="column"
       justify="space-between"
       align="stretch"
     >
-      {/* 1. TOP MINIMAL SYSTEM NAVIGATION BAR */}
+      {/* 1. TOP SYSTEM NAVIGATION BAR */}
       <Flex
         as="header"
         w="full"
@@ -171,23 +171,23 @@ export const LoginPage: React.FC = () => {
         align="center"
         justify="space-between"
         borderBottomWidth="1px"
-        borderColor="whiteAlpha.100"
-        bg="#0b0f19"
+        borderColor="border.default"
+        bg="bg.panel"
       >
         <HStack gap="3" align="center">
-          <Avatar.Root size="sm" shape="rounded" borderWidth="1px" borderColor="whiteAlpha.200" bg="#1e293b">
+          <Avatar.Root size="sm" shape="rounded" borderWidth="1px" borderColor="border.subtle" bg="bg.subtle">
             <Avatar.Image src="https://navitronix.in/assets/navitronix.jpeg" />
             <Avatar.Fallback name="Navitronix">NX</Avatar.Fallback>
           </Avatar.Root>
           <HStack gap="2" align="baseline">
-            <Text fontSize="sm" fontWeight="700" color="white" letterSpacing="-0.01em">
+            <Text fontSize="sm" fontWeight="700" color="fg.default" letterSpacing="-0.01em">
               Navitronix
             </Text>
-            <Text fontSize="xs" color="gray.400" display={{ base: "none", sm: "inline" }}>
+            <Text fontSize="xs" color="fg.muted" display={{ base: "none", sm: "inline" }}>
               Transit Cloud
             </Text>
           </HStack>
-          <Badge size="xs" colorPalette="gray" variant="subtle" borderRadius="xs" display={{ base: "none", md: "inline-flex" }}>
+          <Badge colorPalette="gray" display={{ base: "none", md: "inline-flex" }}>
             v2.4
           </Badge>
         </HStack>
@@ -197,17 +197,17 @@ export const LoginPage: React.FC = () => {
             gap="2"
             px="2.5"
             py="1"
-            bg="whiteAlpha.50"
+            bg="bg.subtle"
             borderRadius="full"
             borderWidth="1px"
-            borderColor="whiteAlpha.100"
+            borderColor="border.subtle"
           >
-            <Box w="6px" h="6px" borderRadius="full" bg="green.400" />
-            <Text fontSize="11px" fontWeight="500" color="gray.300">
+            <Box w="6px" h="6px" borderRadius="full" bg="green.500" />
+            <Text fontSize="xs" fontWeight="500" color="fg.muted">
               Systems Operational
             </Text>
           </HStack>
-          <Text fontSize="11px" color="gray.400" fontFamily="mono" display={{ base: "none", sm: "inline" }}>
+          <Text fontSize="xs" color="fg.subtle" fontFamily="mono" display={{ base: "none", sm: "inline" }}>
             ~38ms
           </Text>
         </HStack>
@@ -225,8 +225,8 @@ export const LoginPage: React.FC = () => {
           <Card.Root
             size="md"
             variant="outline"
-            bg="#111827"
-            borderColor="whiteAlpha.200"
+            bg="bg.panel"
+            borderColor="border.default"
             borderRadius="md"
             boxShadow="sm"
             p={{ base: "6", sm: "8" }}
@@ -239,24 +239,24 @@ export const LoginPage: React.FC = () => {
                     <Box
                       w="36px"
                       h="36px"
-                      borderRadius="sm"
-                      bg="whiteAlpha.100"
-                      color="blue.400"
+                      borderRadius="md"
+                      bg="blue.subtle"
+                      color="blue.fg"
                       display="flex"
                       alignItems="center"
                       justifyContent="center"
                     >
                       <KeyRound size={18} />
                     </Box>
-                    <Badge size="xs" colorPalette="gray" variant="subtle" borderRadius="xs">
+                    <Badge colorPalette="gray">
                       Operator Gateway
                     </Badge>
                   </HStack>
                   <VStack align="start" gap="1">
-                    <Text fontSize="xl" fontWeight="700" color="white" letterSpacing="-0.01em">
+                    <Text fontSize="xl" fontWeight="700" color="fg.default" letterSpacing="-0.01em">
                       Sign In to Console
                     </Text>
-                    <Text fontSize="xs" color="gray.400" lineHeight="1.5">
+                    <Text fontSize="xs" color="fg.muted" lineHeight="1.5">
                       Enter your enterprise credentials to access fleet telemetry, display matrix controllers, and dispatch schedules.
                     </Text>
                   </VStack>
@@ -266,14 +266,14 @@ export const LoginPage: React.FC = () => {
                 {authError && (
                   <Box
                     p="3"
-                    bg="red.500/10"
-                    borderRadius="sm"
+                    bg="red.subtle"
+                    borderRadius="md"
                     borderWidth="1px"
-                    borderColor="red.500/20"
+                    borderColor="red.muted"
                   >
                     <HStack align="flex-start" gap="2.5">
-                      <AlertTriangle size={16} color="var(--chakra-colors-red-400)" style={{ marginTop: "2px", flexShrink: 0 }} />
-                      <Text fontSize="xs" color="red.300" lineHeight="1.4">
+                      <AlertTriangle size={16} color="var(--chakra-colors-red-600)" style={{ marginTop: "2px", flexShrink: 0 }} />
+                      <Text fontSize="xs" color="red.fg" lineHeight="1.4">
                         {authError}
                       </Text>
                     </HStack>
@@ -285,7 +285,7 @@ export const LoginPage: React.FC = () => {
                   <VStack align="stretch" gap="4">
                     {/* Work Email */}
                     <Field.Root invalid={!!errors.email}>
-                      <Field.Label fontSize="xs" fontWeight="500" color="gray.300">
+                      <Field.Label fontSize="xs" fontWeight="500" color="fg.default">
                         Work Email
                       </Field.Label>
                       <Box position="relative" w="full">
@@ -294,7 +294,7 @@ export const LoginPage: React.FC = () => {
                           left="3"
                           top="50%"
                           transform="translateY(-50%)"
-                          color="gray.400"
+                          color="fg.muted"
                           pointerEvents="none"
                           zIndex={1}
                         >
@@ -308,22 +308,21 @@ export const LoginPage: React.FC = () => {
                           size="sm"
                           pl="9"
                           maxLength={100}
-                          borderRadius="sm"
-                          bg="whiteAlpha.50"
-                          color="white"
-                          borderColor={errors.email ? "red.500" : "whiteAlpha.200"}
-                          _placeholder={{ color: "gray.500" }}
+                          bg="bg.subtle"
+                          color="fg.default"
+                          borderColor={errors.email ? "red.500" : "border.default"}
+                          _placeholder={{ color: "fg.subtle" }}
                           _focus={{
                             borderColor: "blue.500",
                             boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
-                            bg: "whiteAlpha.100",
+                            bg: "bg.panel",
                           }}
                           disabled={isSubmitting}
                           autoFocus
                         />
                       </Box>
                       {errors.email?.message && (
-                        <Field.ErrorText fontSize="11px" color="red.400" mt="1">
+                        <Field.ErrorText fontSize="xs" color="red.500" mt="1">
                           {errors.email.message}
                         </Field.ErrorText>
                       )}
@@ -332,15 +331,15 @@ export const LoginPage: React.FC = () => {
                     {/* Password */}
                     <Field.Root invalid={!!errors.password}>
                       <Flex justify="space-between" align="center" w="full">
-                        <Field.Label fontSize="xs" fontWeight="500" color="gray.300" m="0">
+                        <Field.Label fontSize="xs" fontWeight="500" color="fg.default" m="0">
                           Password
                         </Field.Label>
                         <Button
                           type="button"
                           variant="plain"
-                          size="2xs"
-                          color="blue.400"
-                          _hover={{ color: "blue.300", textDecoration: "underline" }}
+                          size="xs"
+                          color="blue.600"
+                          _hover={{ color: "blue.700", textDecoration: "underline" }}
                           onClick={() => setResetDialogOpen(true)}
                           disabled={isSubmitting}
                           tabIndex={-1}
@@ -356,7 +355,7 @@ export const LoginPage: React.FC = () => {
                           left="3"
                           top="50%"
                           transform="translateY(-50%)"
-                          color="gray.400"
+                          color="fg.muted"
                           pointerEvents="none"
                           zIndex={1}
                         >
@@ -371,29 +370,28 @@ export const LoginPage: React.FC = () => {
                           pl="9"
                           pr="9"
                           maxLength={100}
-                          borderRadius="sm"
-                          bg="whiteAlpha.50"
-                          color="white"
-                          borderColor={errors.password ? "red.500" : "whiteAlpha.200"}
-                          _placeholder={{ color: "gray.500" }}
+                          bg="bg.subtle"
+                          color="fg.default"
+                          borderColor={errors.password ? "red.500" : "border.default"}
+                          _placeholder={{ color: "fg.subtle" }}
                           _focus={{
                             borderColor: "blue.500",
                             boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
-                            bg: "whiteAlpha.100",
+                            bg: "bg.panel",
                           }}
                           disabled={isSubmitting}
                         />
                         <IconButton
                           type="button"
-                          size="2xs"
+                          size="xs"
                           variant="ghost"
                           position="absolute"
-                          right="2"
+                          right="1"
                           top="50%"
                           transform="translateY(-50%)"
                           aria-label={showPassword ? "Hide password" : "Show password"}
-                          color="gray.400"
-                          _hover={{ color: "white", bg: "transparent" }}
+                          color="fg.muted"
+                          _hover={{ color: "fg.default", bg: "transparent" }}
                           onClick={() => setShowPassword((prev) => !prev)}
                           tabIndex={-1}
                         >
@@ -401,56 +399,36 @@ export const LoginPage: React.FC = () => {
                         </IconButton>
                       </Box>
                       {errors.password?.message && (
-                        <Field.ErrorText fontSize="11px" color="red.400" mt="1">
+                        <Field.ErrorText fontSize="xs" color="red.500" mt="1">
                           {errors.password.message}
                         </Field.ErrorText>
                       )}
                     </Field.Root>
 
-                    {/* Submit Button with Keyboard Hint */}
+                    {/* Submit Button */}
                     <Button
                       type="submit"
                       colorPalette="blue"
                       size="sm"
-                      h="38px"
                       mt="2"
-                      borderRadius="sm"
-                      fontWeight="600"
-                      fontSize="xs"
                       loading={isSubmitting}
                       disabled={isSubmitting}
-                      display="flex"
-                      justifyContent="center"
-                      alignItems="center"
                     >
                       <HStack gap="2" justify="center">
                         <Text>Sign In to Console</Text>
-                        <Box
-                          as="span"
-                          display="inline-flex"
-                          alignItems="center"
-                          justifyContent="center"
-                          px="1.5"
-                          py="0.5"
-                          bg="whiteAlpha.200"
-                          borderRadius="xs"
-                          fontSize="10px"
-                          lineHeight="1"
-                        >
-                          ↵
-                        </Box>
+                        <ArrowRight size={14} />
                       </HStack>
                     </Button>
                   </VStack>
                 </form>
 
                 {/* Single-Tenant Security Notice */}
-                <Box pt="4" borderTopWidth="1px" borderColor="whiteAlpha.100" textAlign="center">
-                  <HStack justify="center" gap="1.5" color="gray.400" fontSize="11px">
-                    <ShieldCheck size={13} color="var(--chakra-colors-green-400)" />
+                <Box pt="4" borderTopWidth="1px" borderColor="border.subtle" textAlign="center">
+                  <HStack justify="center" gap="1.5" color="fg.muted" fontSize="xs">
+                    <ShieldCheck size={14} color="var(--chakra-colors-green-600)" />
                     <Text>Cryptographic Identity & Access Control</Text>
                   </HStack>
-                  <Text fontSize="10px" color="gray.400" mt="1">
+                  <Text fontSize="xs" color="fg.muted" mt="1">
                     Single-tenant authenticated session. Operator actions are audited per transit security policies.
                   </Text>
                 </Box>
@@ -469,26 +447,26 @@ export const LoginPage: React.FC = () => {
         align="center"
         justify="space-between"
         borderTopWidth="1px"
-        borderColor="whiteAlpha.100"
-        bg="#0b0f19"
+        borderColor="border.default"
+        bg="bg.panel"
         direction={{ base: "column", sm: "row" }}
         gap="2"
       >
-        <Text fontSize="11px" color="gray.400">
+        <Text fontSize="xs" color="fg.muted">
           Navitronix Systems India Pvt Ltd • All rights reserved
         </Text>
 
-        <HStack gap="4" fontSize="11px" color="gray.400" wrap="wrap" justify="center">
+        <HStack gap="4" fontSize="xs" color="fg.muted" wrap="wrap" justify="center">
           <HStack gap="1.5">
-            <Box w="5px" h="5px" borderRadius="full" bg="blue.400" />
+            <Box w="5px" h="5px" borderRadius="full" bg="blue.500" />
             <Text>TLS 1.3 Active</Text>
           </HStack>
-          <Separator orientation="vertical" h="12px" borderColor="whiteAlpha.200" />
+          <Separator orientation="vertical" h="12px" />
           <HStack gap="1.5">
-            <Box w="5px" h="5px" borderRadius="full" bg="blue.400" />
+            <Box w="5px" h="5px" borderRadius="full" bg="blue.500" />
             <Text>ISO 27001 Certified</Text>
           </HStack>
-          <Separator orientation="vertical" h="12px" borderColor="whiteAlpha.200" display={{ base: "none", md: "block" }} />
+          <Separator orientation="vertical" h="12px" display={{ base: "none", md: "block" }} />
           <Text display={{ base: "none", md: "inline" }}>Region: ap-south-1</Text>
         </HStack>
       </Flex>

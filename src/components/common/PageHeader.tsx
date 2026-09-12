@@ -47,13 +47,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
               {title}
             </Heading>
             {badge !== undefined && badge !== null && (
-              <Badge
-                variant="subtle"
-                colorPalette={badgeColorPalette}
-                borderRadius="xs"
-                fontSize="xs"
-                fontWeight="500"
-              >
+              <Badge colorPalette={badgeColorPalette}>
                 {badge}
               </Badge>
             )}

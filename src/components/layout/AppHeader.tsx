@@ -31,9 +31,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   return (
     <Box
       as="header"
-      h="56px"
+      h="64px"
       w="full"
-      px="4"
+      px="8"
       bg="bg.surface"
       borderBottomWidth="1px"
       borderColor="border.default"
@@ -53,7 +53,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           aria-label="Toggle navigation menu"
           display={{ base: "flex", md: "none" }}
           onClick={onToggleMobileMenu}
-          borderRadius="xs"
         >
           <MenuIcon size={18} />
         </IconButton>
@@ -63,7 +62,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           <Box
             w="28px"
             h="28px"
-            borderRadius="xs"
+            borderRadius="md"
             bg="blue.600"
             color="white"
             display="flex"
@@ -94,7 +93,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       >
         <InputGroup
           startElement={<Search size={14} color="var(--chakra-colors-fg-muted)" />}
-          endElement={<Kbd size="sm" fontSize="10px">⌘K</Kbd>}
+          endElement={<Kbd size="sm">⌘K</Kbd>}
           w="full"
         >
           <Input
@@ -121,14 +120,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           gap="1.5"
           px="2"
           py="1"
-          borderRadius="xs"
+          borderRadius="md"
           bg="bg.subtle"
           borderWidth="1px"
           borderColor="border.subtle"
           display={{ base: "none", lg: "flex" }}
         >
           <Box w="6px" h="6px" borderRadius="full" bg="green.500" />
-          <Text fontSize="11px" fontWeight="500" color="fg.muted">
+          <Text fontSize="xs" fontWeight="500" color="fg.muted">
             Live Gateway
           </Text>
         </HStack>
@@ -139,7 +138,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             size="xs"
             variant="ghost"
             aria-label="Notifications"
-            borderRadius="xs"
             color="fg.muted"
             _hover={{ color: "fg.default", bg: "bg.subtle" }}
           >
@@ -161,7 +159,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         <ColorModeButton
           size="xs"
           variant="ghost"
-          borderRadius="xs"
           color="fg.muted"
           _hover={{ color: "fg.default", bg: "bg.subtle" }}
         />
