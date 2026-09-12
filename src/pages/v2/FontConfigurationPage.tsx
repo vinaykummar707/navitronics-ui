@@ -7,6 +7,8 @@ import { LanguageItem } from "@/ui/components/LanguageItem";
 import { FeatherPlus, FeatherRefreshCw } from "@subframe/core";
 import React from "react";
 import { toast } from "react-toastify";
+import PageHeader from "@/components/common/PageHeader";
+import { Box, HStack } from "@chakra-ui/react";
 
 const QUERY_OPTIONS = { filters: { deleted: false } };
 
@@ -44,43 +46,41 @@ export default function FontConfigurationPage() {
 
   return (
     <RBACPage roles={["master"]} features={[]}>
-      <div className="flex h-full w-full flex-col items-start gap-6 ">
-        <div className="flex w-full flex-col items-start gap-1">
-          <span className="w-full text-heading-2 font-heading-2 text-default-font">
-            Font Configuration
-          </span>
-          <span className="text-body font-body text-subtext-color">
-            Manage system font settings and language mappings (Super Admin only)
-          </span>
-        </div>
-
-        <div className="flex w-full items-center justify-between mobile:flex-col mobile:items-start gap-4">
-          <span className="text-caption font-caption text-subtext-color ">
-            Showing {fontSettings.length || 0} records
-          </span>
-          <div className="flex justify-end items-center col-span-4 gap-2">
-            <Button
-              variant="neutral-secondary"
-              className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
-              icon={<FeatherRefreshCw />}
-              onClick={() => {
-                toast.success("Refreshed font settings");
-                refetchFontSettings();
-              }}
-            >
-              Refresh
-            </Button>
-            <Button
-              icon={<FeatherPlus />}
-              onClick={() => {
-                setShowDrawer(true);
-                setEditData(null);
-              }}
-            >
-              Add Language Setting
-            </Button>
-          </div>
-        </div>
+      <Box w="full" mb="4">
+        <PageHeader
+          title="Font & Language Configurations"
+          description="Manage system font settings, LED matrix typography, and Indic script language mappings (Super Admin only)."
+          breadcrumbs={[
+            { label: "Home", href: "/home" },
+            { label: "Font Configuration" },
+          ]}
+          badge={`${fontSettings.length || 0} Records`}
+          badgeColorPalette="blue"
+          actions={
+            <HStack gap="2">
+              <Button
+                variant="neutral-secondary"
+                icon={<FeatherRefreshCw />}
+                onClick={() => {
+                  toast.success("Refreshed font settings");
+                  refetchFontSettings();
+                }}
+              >
+                Refresh
+              </Button>
+              <Button
+                icon={<FeatherPlus />}
+                onClick={() => {
+                  setShowDrawer(true);
+                  setEditData(null);
+                }}
+              >
+                Add Language Setting
+              </Button>
+            </HStack>
+          }
+        />
+      </Box>
 
         <ConfigurationDetailsView
           sidebarTitle="Configurations"
@@ -109,7 +109,6 @@ export default function FontConfigurationPage() {
             />
           </Drawer.Content>
         </Drawer>
-      </div>
     </RBACPage>
   );
 }

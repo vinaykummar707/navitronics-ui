@@ -63,14 +63,15 @@ export const DepotCard: React.FC<DepotCardProps> = ({
       size="sm"
       variant="outline"
       bg="bg.panel"
-      borderColor="border.default"
+      borderRadius="2xl"
+      borderColor="border.subtle"
       position="relative"
       overflow="hidden"
       transition="all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
       _hover={{
         borderColor: isDeleted ? "red.muted" : "green.muted",
-        transform: "translateY(-2px)",
-        boxShadow: "sm",
+        transform: "translateY(-3px)",
+        boxShadow: "md",
       }}
       h="full"
     >
@@ -117,17 +118,17 @@ export const DepotCard: React.FC<DepotCardProps> = ({
                 </Text>
                 <HStack gap="1.5" wrap="wrap">
                   {isDeleted ? (
-                    <Badge colorPalette="red">
+                    <Badge colorPalette="red" borderRadius="full" px="2.5">
                       Archived
                     </Badge>
                   ) : (
-                    <Badge colorPalette="green">
+                    <Badge colorPalette="green" borderRadius="full" px="2.5">
                       Operational
                     </Badge>
                   )}
 
                   {depot.region_name && (
-                    <Badge colorPalette="blue" maxW="130px">
+                    <Badge colorPalette="blue" maxW="130px" borderRadius="full" px="2.5">
                       <HStack gap="1">
                         <MapPin size={11} />
                         <Text truncate>{depot.region_name}</Text>
@@ -156,9 +157,11 @@ export const DepotCard: React.FC<DepotCardProps> = ({
                 <Menu.Positioner>
                   <Menu.Content
                     minW="150px"
-                    borderColor="border.default"
+                    borderColor="border.subtle"
+                    borderRadius="xl"
                     bg="bg.surface"
-                    p="1"
+                    p="1.5"
+                    boxShadow="md"
                   >
                     {!isDeleted && onViewRoutes && (
                       <Menu.Item

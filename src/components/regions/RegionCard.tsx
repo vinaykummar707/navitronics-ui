@@ -62,14 +62,15 @@ export const RegionCard: React.FC<RegionCardProps> = ({
       size="sm"
       variant="outline"
       bg="bg.panel"
-      borderColor="border.default"
+      borderRadius="2xl"
+      borderColor="border.subtle"
       position="relative"
       overflow="hidden"
       transition="all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
       _hover={{
         borderColor: isDeleted ? "red.muted" : "blue.muted",
-        transform: "translateY(-2px)",
-        boxShadow: "sm",
+        transform: "translateY(-3px)",
+        boxShadow: "md",
       }}
       h="full"
     >
@@ -116,11 +117,11 @@ export const RegionCard: React.FC<RegionCardProps> = ({
                 </Text>
                 <HStack gap="1.5" wrap="wrap">
                   {isDeleted ? (
-                    <Badge colorPalette="red">
+                    <Badge colorPalette="red" borderRadius="full" px="2.5">
                       Archived
                     </Badge>
                   ) : (
-                    <Badge colorPalette="green">
+                    <Badge colorPalette="green" borderRadius="full" px="2.5">
                       Active Zone
                     </Badge>
                   )}
@@ -128,6 +129,8 @@ export const RegionCard: React.FC<RegionCardProps> = ({
                     variant="outline"
                     colorPalette="gray"
                     fontFamily="mono"
+                    borderRadius="full"
+                    px="2"
                   >
                     {region.id.slice(0, 8)}
                   </Badge>
@@ -153,9 +156,11 @@ export const RegionCard: React.FC<RegionCardProps> = ({
                 <Menu.Positioner>
                   <Menu.Content
                     minW="150px"
-                    borderColor="border.default"
+                    borderColor="border.subtle"
+                    borderRadius="xl"
                     bg="bg.surface"
-                    p="1"
+                    p="1.5"
+                    boxShadow="md"
                   >
                     {!isDeleted && onViewDepots && (
                       <Menu.Item
@@ -246,7 +251,7 @@ export const RegionCard: React.FC<RegionCardProps> = ({
             align="center"
             p="2.5"
             bg="bg.subtle"
-            borderRadius="md"
+            borderRadius="xl"
             borderWidth="1px"
             borderColor="border.subtle"
             my="3"
@@ -255,7 +260,7 @@ export const RegionCard: React.FC<RegionCardProps> = ({
               <Box
                 w="28px"
                 h="28px"
-                borderRadius="md"
+                borderRadius="lg"
                 bg="blue.subtle"
                 color="blue.fg"
                 display="flex"
@@ -280,6 +285,7 @@ export const RegionCard: React.FC<RegionCardProps> = ({
                 size="xs"
                 variant="subtle"
                 colorPalette="blue"
+                borderRadius="full"
                 onClick={() => onViewDepots(region)}
               >
                 Manage <ArrowRight size={12} />
@@ -316,6 +322,7 @@ export const RegionCard: React.FC<RegionCardProps> = ({
               size="sm"
               variant="outline"
               colorPalette="green"
+              borderRadius="full"
               onClick={() => onRestore(region)}
             >
               <RotateCcw size={13} />

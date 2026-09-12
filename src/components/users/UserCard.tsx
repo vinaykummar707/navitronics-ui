@@ -80,17 +80,18 @@ export const UserCard: React.FC<UserCardProps> = ({
       size="sm"
       variant="outline"
       bg="bg.panel"
-      borderColor="border.default"
-      borderRadius="md"
+      borderColor="border.subtle"
+      borderRadius="2xl"
       position="relative"
       overflow="hidden"
       display="flex"
       flexDirection="column"
       justifyContent="space-between"
-      transition="all 0.15s ease"
+      transition="all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
       _hover={{
         borderColor: "border.emphasized",
-        boxShadow: "sm",
+        transform: "translateY(-3px)",
+        boxShadow: "md",
       }}
     >
       {/* Top Status Accent Bar */}
@@ -146,11 +147,11 @@ export const UserCard: React.FC<UserCardProps> = ({
                 </HStack>
 
                 <HStack gap="1.5" wrap="wrap">
-                  <Badge colorPalette={roleColorPalette}>
+                  <Badge colorPalette={roleColorPalette} borderRadius="full" px="2.5">
                     {formatRoleName(roleName)}
                   </Badge>
                   {isCurrentLoggedInUser && (
-                    <Badge colorPalette="green" variant="solid">
+                    <Badge colorPalette="green" variant="solid" borderRadius="full" px="2.5">
                       You
                     </Badge>
                   )}
@@ -174,7 +175,14 @@ export const UserCard: React.FC<UserCardProps> = ({
               </Menu.Trigger>
               <Portal>
                 <Menu.Positioner>
-                  <Menu.Content bg="bg.panel" borderColor="border.default" boxShadow="md" minW="160px" p="1">
+                  <Menu.Content
+                    bg="bg.surface"
+                    borderColor="border.subtle"
+                    borderRadius="xl"
+                    boxShadow="md"
+                    minW="160px"
+                    p="1.5"
+                  >
                     {user.email && (
                       <Menu.Item value="copy" onClick={handleCopyEmail}>
                         <HStack gap="2">
@@ -222,7 +230,7 @@ export const UserCard: React.FC<UserCardProps> = ({
           <Box
             p="2.5"
             bg="bg.muted"
-            borderRadius="md"
+            borderRadius="xl"
             borderWidth="1px"
             borderColor="border.subtle"
           >
@@ -232,7 +240,7 @@ export const UserCard: React.FC<UserCardProps> = ({
                   <Building2 size={12} />
                   <Text>Agency</Text>
                 </HStack>
-                <Badge colorPalette="purple" maxW="180px">
+                <Badge colorPalette="purple" maxW="180px" borderRadius="full" px="2.5">
                   <HStack gap="1">
                     <Building2 size={11} />
                     <Text truncate title={user.organization?.name || "Agency-Wide"}>
@@ -248,7 +256,7 @@ export const UserCard: React.FC<UserCardProps> = ({
                     <Globe size={12} />
                     <Text>Region</Text>
                   </HStack>
-                  <Badge colorPalette="cyan" maxW="180px">
+                  <Badge colorPalette="cyan" maxW="180px" borderRadius="full" px="2.5">
                     <HStack gap="1">
                       <Globe size={11} />
                       <Text truncate title={user.region.name}>{user.region.name}</Text>
@@ -263,7 +271,7 @@ export const UserCard: React.FC<UserCardProps> = ({
                     <Building size={12} />
                     <Text>Depot</Text>
                   </HStack>
-                  <Badge colorPalette="teal" maxW="180px">
+                  <Badge colorPalette="teal" maxW="180px" borderRadius="full" px="2.5">
                     <HStack gap="1">
                       <Building size={11} />
                       <Text truncate title={user.depot.name}>{user.depot.name}</Text>
@@ -282,6 +290,8 @@ export const UserCard: React.FC<UserCardProps> = ({
             <HStack gap="1.5">
               <Badge
                 colorPalette={user.PIS ? "blue" : "gray"}
+                borderRadius="full"
+                px="2.5"
                 opacity={user.PIS ? 1 : 0.45}
                 title="Passenger Information System"
               >
@@ -289,6 +299,8 @@ export const UserCard: React.FC<UserCardProps> = ({
               </Badge>
               <Badge
                 colorPalette={user.PAS ? "orange" : "gray"}
+                borderRadius="full"
+                px="2.5"
                 opacity={user.PAS ? 1 : 0.45}
                 title="Public Address System"
               >
@@ -296,6 +308,8 @@ export const UserCard: React.FC<UserCardProps> = ({
               </Badge>
               <Badge
                 colorPalette={user.ITMS ? "purple" : "gray"}
+                borderRadius="full"
+                px="2.5"
                 opacity={user.ITMS ? 1 : 0.45}
                 title="Intelligent Fleet Management"
               >
@@ -317,15 +331,15 @@ export const UserCard: React.FC<UserCardProps> = ({
         alignItems="center"
       >
         {isDeleted ? (
-          <Badge colorPalette="red">
+          <Badge colorPalette="red" borderRadius="full" px="2.5">
             Archived
           </Badge>
         ) : user.active ? (
-          <Badge colorPalette="green">
+          <Badge colorPalette="green" borderRadius="full" px="2.5">
             Active
           </Badge>
         ) : (
-          <Badge colorPalette="amber">
+          <Badge colorPalette="amber" borderRadius="full" px="2.5">
             Inactive
           </Badge>
         )}
@@ -335,6 +349,7 @@ export const UserCard: React.FC<UserCardProps> = ({
             size="xs"
             variant="ghost"
             color="blue.fg"
+            borderRadius="full"
             _hover={{ bg: "bg.panel" }}
             onClick={() => onEdit(user)}
           >

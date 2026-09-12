@@ -338,14 +338,9 @@ export const CreateUserDrawer: React.FC<CreateUserDrawerProps> = ({
       <Portal>
         <Drawer.Backdrop />
         <Drawer.Positioner>
-          <Drawer.Content bg="bg.panel" borderColor="border.default" boxShadow="2xl">
+          <Drawer.Content>
             {/* Header */}
-            <Drawer.Header
-              borderBottomWidth="1px"
-              borderColor="border.subtle"
-              py="4"
-              px="6"
-            >
+            <Drawer.Header>
               <HStack justify="space-between" align="center" w="full">
                 <HStack gap="3">
                   <Avatar.Root
@@ -770,13 +765,7 @@ export const CreateUserDrawer: React.FC<CreateUserDrawerProps> = ({
             </Drawer.Body>
 
             {/* Footer Actions */}
-            <Drawer.Footer
-              borderTopWidth="1px"
-              borderColor="border.subtle"
-              py="3.5"
-              px="6"
-              gap="3"
-            >
+            <Drawer.Footer gap="3">
               <Button
                 variant="outline"
                 size="sm"

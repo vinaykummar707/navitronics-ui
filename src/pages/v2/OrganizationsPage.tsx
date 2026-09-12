@@ -360,12 +360,20 @@ export default function OrganizationsPage() {
       width: "125px",
       cell: (org) => {
         if (org.deleted) {
-          return <Badge colorPalette="red">Archived</Badge>;
+          return (
+            <Badge colorPalette="red">
+              Archived
+            </Badge>
+          );
         }
         return org.active !== false ? (
-          <Badge colorPalette="green">Active</Badge>
+          <Badge colorPalette="green">
+            Active
+          </Badge>
         ) : (
-          <Badge colorPalette="gray">Inactive</Badge>
+          <Badge colorPalette="gray">
+            Inactive
+          </Badge>
         );
       },
     },
@@ -411,6 +419,9 @@ export default function OrganizationsPage() {
             <Badge
               variant={count > 0 ? "subtle" : "outline"}
               colorPalette={count > 0 ? "blue" : "gray"}
+              borderRadius="full"
+              px="2.5"
+              py="0.5"
             >
               <HStack gap="1.5">
                 <MapPin size={12} />
@@ -421,6 +432,7 @@ export default function OrganizationsPage() {
               <IconButton
                 size="xs"
                 variant="ghost"
+                borderRadius="full"
                 aria-label="View regions"
                 color="fg.muted"
                 _hover={{ color: "blue.500" }}
@@ -449,6 +461,9 @@ export default function OrganizationsPage() {
             <Badge
               variant={count > 0 ? "subtle" : "outline"}
               colorPalette={count > 0 ? "green" : "gray"}
+              borderRadius="full"
+              px="2.5"
+              py="0.5"
             >
               <HStack gap="1.5">
                 <Building2 size={12} />
@@ -459,6 +474,7 @@ export default function OrganizationsPage() {
               <IconButton
                 size="xs"
                 variant="ghost"
+                borderRadius="full"
                 aria-label="View depots"
                 color="fg.muted"
                 _hover={{ color: "green.500" }}
@@ -524,6 +540,7 @@ export default function OrganizationsPage() {
               size="sm"
               variant="outline"
               colorPalette="green"
+              borderRadius="full"
               onClick={() => handleRestoreClick(org)}
             >
               <RotateCcw size={13} />
@@ -542,6 +559,7 @@ export default function OrganizationsPage() {
             <IconButton
               size="xs"
               variant="ghost"
+              borderRadius="full"
               aria-label="Copy ID"
               onClick={() => handleCopyId(org.id)}
               color="fg.muted"
@@ -557,6 +575,7 @@ export default function OrganizationsPage() {
             <IconButton
               size="xs"
               variant="ghost"
+              borderRadius="full"
               aria-label="Edit organization"
               onClick={() => handleEdit(org)}
               color="fg.muted"
@@ -569,6 +588,7 @@ export default function OrganizationsPage() {
               <IconButton
                 size="xs"
                 variant="ghost"
+                borderRadius="full"
                 aria-label="Delete organization"
                 onClick={() => handleDeleteClick(org)}
                 color="fg.muted"
@@ -626,6 +646,7 @@ export default function OrganizationsPage() {
             <Button
               size="sm"
               variant="outline"
+              borderRadius="full"
               onClick={() => {
                 refetchActive();
                 refetchRegions();
@@ -640,6 +661,7 @@ export default function OrganizationsPage() {
             <Button
               size="sm"
               colorPalette="blue"
+              borderRadius="full"
               onClick={handleAddNew}
             >
               <Plus size={15} />
@@ -703,7 +725,7 @@ export default function OrganizationsPage() {
       </SimpleGrid>
 
       {/* 3. Filter & View Toolbar using real Chakra UI Card */}
-      <Card.Root size="sm" variant="outline" mb="4" bg="bg.panel" borderColor="border.default">
+      <Card.Root size="sm" mb="4">
         <Card.Body p="3">
           <Flex
             direction={{ base: "column", md: "row" }}
@@ -740,8 +762,6 @@ export default function OrganizationsPage() {
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                bg="bg.subtle"
-                _focus={{ borderColor: "blue.500", bg: "bg.surface" }}
               />
             </InputGroup>
 
@@ -751,15 +771,9 @@ export default function OrganizationsPage() {
               <Tabs.Root
                 value={currentTab}
                 onValueChange={(e) => setSelectedTab(e.value as any)}
-                variant="subtle"
                 size="sm"
               >
-                <Tabs.List
-                  bg="bg.subtle"
-                  p="1"
-                  borderWidth="1px"
-                  borderColor="border.subtle"
-                >
+                <Tabs.List>
                   <Tabs.Trigger value="all">
                     All ({totalCount})
                   </Tabs.Trigger>
@@ -785,6 +799,7 @@ export default function OrganizationsPage() {
                 gap="0.5"
                 p="1"
                 bg="bg.subtle"
+                borderRadius="full"
                 borderWidth="1px"
                 borderColor="border.subtle"
               >
@@ -814,7 +829,7 @@ export default function OrganizationsPage() {
 
       {/* Super Admin Notice Banner when viewing Deleted Organizations */}
       {currentTab === "deleted" && (
-        <Card.Root size="sm" variant="subtle" bg="red.subtle" borderColor="red.muted" mb="4">
+        <Card.Root size="sm" variant="subtle" bg="red.subtle" borderColor="red.muted" borderRadius="2xl" mb="4">
           <Card.Body p="3">
             <Flex justify="space-between" align="center" gap="3" wrap="wrap">
               <HStack gap="2.5">
@@ -830,7 +845,7 @@ export default function OrganizationsPage() {
                   </Text>
                 </VStack>
               </HStack>
-              <Badge colorPalette="red" variant="outline">
+              <Badge colorPalette="red" variant="outline" borderRadius="full" px="2.5">
                 {deletedCount} Archived
               </Badge>
             </Flex>

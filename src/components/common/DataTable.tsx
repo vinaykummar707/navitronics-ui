@@ -139,15 +139,11 @@ export function DataTable<T>({
   const endEntry = Math.min(activePage * pageSize, totalItems);
 
   return (
-    <Card.Root
-      variant="outline"
-      w="full"
-      overflow="hidden"
-    >
+    <Card.Root w="full">
       <Box overflowX="auto">
-        <Table.Root interactive>
+        <Table.Root interactive variant="plain">
           <Table.Header bg="bg.subtle">
-            <Table.Row bg="bg.subtle" borderBottomWidth="1px" borderColor="border.default">
+            <Table.Row bg="bg.subtle" borderBottomWidth="1px" borderColor="border.subtle">
               {columns.map((col) => {
                 const isSorted = sortColumn === col.id;
                 const canSort = col.sortable !== false && col.accessorKey;
@@ -164,7 +160,7 @@ export function DataTable<T>({
                     textTransform="uppercase"
                     bg="bg.subtle"
                     borderBottomWidth="1px"
-                    borderColor="border.default"
+                    borderColor="border.subtle"
                     cursor={canSort ? "pointer" : "default"}
                     userSelect="none"
                     py="3.5"
@@ -197,7 +193,7 @@ export function DataTable<T>({
             </Table.Row>
           </Table.Header>
 
-          <Table.Body bg="bg.surface">
+          <Table.Body bg="transparent">
             {paginatedData.map((item, rowIdx) => {
               const rowKey = keyExtractor(item);
               const isSelected = selectedIds
@@ -214,7 +210,7 @@ export function DataTable<T>({
                   bg={isSelected ? "blue.subtle" : undefined}
                   _hover={{ bg: isSelected ? "blue.subtle" : "bg.subtle" }}
                   borderBottomWidth={rowIdx === paginatedData.length - 1 ? "0px" : "1px"}
-                  borderColor="border.default"
+                  borderColor="border.subtle"
                   transition="background-color 0.12s ease"
                 >
                   {columns.map((col) => {
@@ -229,9 +225,10 @@ export function DataTable<T>({
                         key={col.id}
                         color="fg.default"
                         textAlign={col.align || "left"}
-                        borderColor="border.default"
-                        py="3"
-                        px=""
+                        borderColor="border.subtle"
+                        borderBottomWidth={rowIdx === paginatedData.length - 1 ? "0px" : "1px"}
+                        py="3.5"
+                        px="4.5"
                       >
                         {content}
                       </Table.Cell>
@@ -246,10 +243,10 @@ export function DataTable<T>({
 
       {/* Grounded Pagination Footer Bar */}
       <HStack
-        px="4"
-        py="2.5"
+        px="4.5"
+        py="3"
         borderTopWidth="1px"
-        borderColor="border.default"
+        borderColor="border.subtle"
         justify="space-between"
         bg="bg.subtle"
         wrap="wrap"
@@ -269,8 +266,6 @@ export function DataTable<T>({
               aria-label="Previous page"
               disabled={activePage <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              borderRadius="xs"
-              borderColor="border.default"
             >
               <ChevronLeft size={13} />
             </IconButton>
@@ -315,7 +310,6 @@ export function DataTable<T>({
               aria-label="Next page"
               disabled={activePage >= totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              borderColor="border.default"
             >
               <ChevronRight size={13} />
             </IconButton>

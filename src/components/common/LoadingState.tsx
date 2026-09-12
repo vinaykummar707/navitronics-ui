@@ -19,17 +19,17 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
         w="full"
       >
         {Array.from({ length: rows }).map((_, i) => (
-          <Card.Root key={i} variant="outline" bg="bg.panel" borderColor="border.default">
+          <Card.Root key={i} variant="outline" bg="bg.panel" borderColor="border.subtle" borderRadius="2xl" shadow="none" boxShadow="none">
             <Card.Body p="4">
               <HStack justify="space-between" mb="3">
-                <Skeleton h="16px" w="45%" borderRadius="md" />
-                <Skeleton h="16px" w="50px" borderRadius="md" />
+                <Skeleton h="16px" w="45%" borderRadius="lg" />
+                <Skeleton h="16px" w="50px" borderRadius="full" />
               </HStack>
               <Skeleton h="12px" w="75%" mb="2" borderRadius="md" />
               <Skeleton h="12px" w="60%" mb="4" borderRadius="md" />
               <HStack justify="space-between" pt="3" borderTopWidth="1px" borderColor="border.subtle">
                 <Skeleton h="14px" w="60px" borderRadius="md" />
-                <Skeleton h="24px" w="70px" borderRadius="md" />
+                <Skeleton h="24px" w="70px" borderRadius="full" />
               </HStack>
             </Card.Body>
           </Card.Root>
@@ -40,9 +40,9 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
 
   // Table skeleton fallback
   return (
-    <Card.Root variant="outline" bg="bg.panel" borderColor="border.default" overflow="hidden" w="full">
+    <Card.Root variant="outline" bg="bg.panel" borderColor="border.subtle" borderRadius="2xl" shadow="none" boxShadow="none" overflow="hidden" w="full">
       {/* Header bar */}
-      <HStack px="4" py="3" bg="bg.subtle" borderBottomWidth="1px" borderColor="border.default" gap="4">
+      <HStack px="4" py="3" bg="bg.subtle" borderBottomWidth="1px" borderColor="border.subtle" gap="4">
         <Skeleton h="14px" w="25%" borderRadius="md" />
         <Skeleton h="14px" w="20%" borderRadius="md" />
         <Skeleton h="14px" w="25%" borderRadius="md" />

@@ -90,14 +90,15 @@ export const RouteCard: React.FC<RouteCardProps> = ({
       size="sm"
       variant="outline"
       bg="bg.panel"
-      borderColor={isSelected ? "blue.solid" : "border.default"}
+      borderRadius="2xl"
+      borderColor={isSelected ? "blue.solid" : "border.subtle"}
       position="relative"
       overflow="hidden"
       transition="all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
       _hover={{
         borderColor: isSelected ? "blue.solid" : `${accentColor}.muted`,
-        transform: "translateY(-2px)",
-        boxShadow: "sm",
+        transform: "translateY(-3px)",
+        boxShadow: "md",
       }}
       h="full"
     >
@@ -154,7 +155,7 @@ export const RouteCard: React.FC<RouteCardProps> = ({
 
                 <HStack gap="1.5" wrap="wrap">
                   {/* Status Badge with Live Indicator Dot */}
-                  <Badge colorPalette={accentColor}>
+                  <Badge colorPalette={accentColor} borderRadius="full" px="2.5">
                     <HStack gap="1">
                       <Box
                         w="1.5"
@@ -167,7 +168,7 @@ export const RouteCard: React.FC<RouteCardProps> = ({
                   </Badge>
 
                   {route.is_split_route && (
-                    <Badge colorPalette="amber">
+                    <Badge colorPalette="amber" borderRadius="full" px="2.5">
                       <HStack gap="1">
                         <Split size={11} />
                         <Text>Split</Text>
@@ -175,7 +176,7 @@ export const RouteCard: React.FC<RouteCardProps> = ({
                     </Badge>
                   )}
 
-                  <Badge colorPalette="gray">
+                  <Badge colorPalette="gray" borderRadius="full" px="2.5">
                     v{route.version || "1.0"}
                   </Badge>
                 </HStack>
@@ -199,9 +200,11 @@ export const RouteCard: React.FC<RouteCardProps> = ({
                 <Menu.Positioner>
                   <Menu.Content
                     minW="160px"
-                    borderColor="border.default"
+                    borderColor="border.subtle"
+                    borderRadius="xl"
                     bg="bg.surface"
-                    p="1"
+                    p="1.5"
+                    boxShadow="md"
                   >
                     {onEdit && (
                       <Menu.Item

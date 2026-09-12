@@ -56,11 +56,7 @@ export const OrganizationPageHeader: React.FC<OrganizationPageHeaderProps> = ({
             </Heading>
             <Badge
               size="md"
-              variant="surface"
               colorPalette="rose"
-              borderRadius="full"
-              px="2.5"
-              fontWeight="bold"
             >
               {count} {count === 1 ? "Agency" : "Agencies"}
             </Badge>
@@ -98,41 +94,42 @@ export const OrganizationPageHeader: React.FC<OrganizationPageHeaderProps> = ({
         </HStack>
       </Flex>
 
-      {/* Search & Filter Bar */}
-      <HStack
-        w={{ base: "full", md: "360px" }}
-        bg="bg.panel"
-        borderRadius="md"
-        borderWidth="1px"
-        borderColor="border.subtle"
-        px="3"
-        py="1.5"
-        shadow="xs"
-      >
-        <LuSearch size={15} style={{ color: "var(--chakra-colors-gray-400)", flexShrink: 0 }} />
+      {/* Search Bar */}
+      <Box position="relative" w={{ base: "full", md: "380px" }}>
+        <Box
+          position="absolute"
+          left="3.5"
+          top="50%"
+          transform="translateY(-50%)"
+          color="fg.muted"
+          pointerEvents="none"
+          zIndex={1}
+        >
+          <LuSearch size={14} />
+        </Box>
         <Input
           size="sm"
-          variant="subtle"
-          border="none"
-          outline="none"
-          px="2"
-          bg="transparent"
+          pl="9"
+          pr={searchQuery ? "8" : "3.5"}
           placeholder="Filter organizations by name or email..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          _focus={{ outline: "none", boxShadow: "none" }}
         />
         {searchQuery && (
           <IconButton
             size="xs"
             variant="ghost"
+            position="absolute"
+            right="2"
+            top="50%"
+            transform="translateY(-50%)"
             aria-label="Clear search"
             onClick={() => onSearchChange("")}
           >
             <LuX size={12} />
           </IconButton>
         )}
-      </HStack>
+      </Box>
     </Box>
   );
 };

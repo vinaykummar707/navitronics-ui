@@ -95,29 +95,28 @@ export const AppUserMenu: React.FC<AppUserMenuProps> = ({ isCollapsed = false })
       <Portal>
         <Menu.Positioner>
           <Menu.Content
-            minW="220px"
+            minW="240px"
             bg="bg.surface"
-            borderColor="border.default"
-            borderRadius="md"
-            p="1"
+            borderColor="border.subtle"
+            borderRadius="2xl"
+            p="1.5"
+            boxShadow="floating"
           >
             {/* User Card Header */}
-            <Box px="2.5" py="2">
-              <HStack gap="2">
-                <Avatar.Root size="xs" colorPalette="blue" shape="rounded">
+            <Box px="3" py="2.5">
+              <HStack gap="3">
+                <Avatar.Root size="sm" colorPalette="pink" shape="full">
                   <Avatar.Fallback name={userEmail}>
                     {userInitial}
                   </Avatar.Fallback>
                 </Avatar.Root>
-                <VStack align="start" gap="0" minW="0">
-                  <Text fontSize="xs" fontWeight="600" color="fg.default" truncate maxW="150px">
+                <VStack align="start" gap="0.5" minW="0">
+                  <Text fontSize="xs" fontWeight="700" color="fg.default" truncate maxW="150px">
                     {userEmail}
                   </Text>
-                  <HStack gap="1">
-                    <Badge colorPalette="blue">
-                      {roleDisplay}
-                    </Badge>
-                  </HStack>
+                  <Badge colorPalette="blue" variant="subtle">
+                    {roleDisplay}
+                  </Badge>
                 </VStack>
               </HStack>
             </Box>
@@ -127,29 +126,31 @@ export const AppUserMenu: React.FC<AppUserMenuProps> = ({ isCollapsed = false })
             <Menu.Item
               value="profile"
               cursor="pointer"
+              borderRadius="lg"
               _hover={{ bg: "bg.subtle" }}
               onClick={() => navigate("/home/settings")}
             >
-              <HStack gap="2">
-                <User size={14} color="var(--chakra-colors-fg-muted)" />
-                <Text fontSize="xs" color="fg.default">Account Settings</Text>
+              <HStack gap="2.5">
+                <User size={15} color="var(--chakra-colors-fg-muted)" />
+                <Text fontSize="xs" color="fg.default" fontWeight="500">Account Settings</Text>
               </HStack>
             </Menu.Item>
 
             <Menu.Item
               value="theme"
               cursor="pointer"
+              borderRadius="lg"
               _hover={{ bg: "bg.subtle" }}
               onClick={toggleColorMode}
             >
               <HStack justify="space-between" w="full">
-                <HStack gap="2">
+                <HStack gap="2.5">
                   {colorMode === "dark" ? (
-                    <Sun size={14} color="var(--chakra-colors-fg-muted)" />
+                    <Sun size={15} color="var(--chakra-colors-fg-muted)" />
                   ) : (
-                    <Moon size={14} color="var(--chakra-colors-fg-muted)" />
+                    <Moon size={15} color="var(--chakra-colors-fg-muted)" />
                   )}
-                  <Text fontSize="xs" color="fg.default">Theme</Text>
+                  <Text fontSize="xs" color="fg.default" fontWeight="500">Theme</Text>
                 </HStack>
                 <Text fontSize="xs" color="fg.muted" textTransform="capitalize">
                   {colorMode}
@@ -162,12 +163,13 @@ export const AppUserMenu: React.FC<AppUserMenuProps> = ({ isCollapsed = false })
             <Menu.Item
               value="logout"
               cursor="pointer"
+              borderRadius="lg"
               _hover={{ bg: "red.500/10" }}
               onClick={handleLogout}
             >
-              <HStack gap="2">
-                <LogOut size={14} color="var(--chakra-colors-red-600)" />
-                <Text fontSize="xs" color="red.600" fontWeight="500">
+              <HStack gap="2.5">
+                <LogOut size={15} color="var(--chakra-colors-red-600)" />
+                <Text fontSize="xs" color="red.600" fontWeight="600">
                   Sign out
                 </Text>
               </HStack>

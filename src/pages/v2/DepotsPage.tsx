@@ -414,9 +414,17 @@ export default function DepotsPage() {
       width: "120px",
       cell: (depot) => {
         if (depot.deleted) {
-          return <Badge colorPalette="red">Archived</Badge>;
+          return (
+            <Badge colorPalette="red">
+              Archived
+            </Badge>
+          );
         }
-        return <Badge colorPalette="green">Active</Badge>;
+        return (
+          <Badge colorPalette="green">
+            Active
+          </Badge>
+        );
       },
     },
     {
@@ -449,6 +457,7 @@ export default function DepotsPage() {
               size="sm"
               variant="outline"
               colorPalette="green"
+              borderRadius="full"
               onClick={(e) => {
                 e.stopPropagation();
                 handleRestoreClick(depot);
@@ -464,6 +473,7 @@ export default function DepotsPage() {
             <IconButton
               size="xs"
               variant="ghost"
+              borderRadius="full"
               aria-label="Copy ID"
               color="fg.muted"
               _hover={{ color: "fg.default", bg: "bg.subtle" }}
@@ -481,6 +491,7 @@ export default function DepotsPage() {
             <IconButton
               size="xs"
               variant="ghost"
+              borderRadius="full"
               aria-label="Edit Depot"
               color="fg.muted"
               _hover={{ color: "fg.default", bg: "bg.subtle" }}
@@ -494,6 +505,7 @@ export default function DepotsPage() {
             <IconButton
               size="xs"
               variant="ghost"
+              borderRadius="full"
               aria-label="Delete Depot"
               color="red.600"
               _hover={{ bg: "red.500/10" }}
@@ -659,7 +671,7 @@ export default function DepotsPage() {
       </SimpleGrid>
 
       {/* 3. Filter & View Toolbar */}
-      <Card.Root size="sm" variant="outline" mb="4" bg="bg.panel" borderColor="border.default">
+      <Card.Root size="sm" mb="4">
         <Card.Body p="3">
           <Flex
             direction={{ base: "column", md: "row" }}
@@ -696,8 +708,6 @@ export default function DepotsPage() {
                   }
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  bg="bg.subtle"
-                  _focus={{ borderColor: "green.500", bg: "bg.surface" }}
                 />
               </InputGroup>
 
@@ -716,7 +726,6 @@ export default function DepotsPage() {
                         if (target) setSelectedRegion(target);
                       }
                     }}
-                    bg="bg.subtle"
                   >
                     <option value="all">All Regions ({regions.length})</option>
                     {regions.map((reg) => (
@@ -736,15 +745,9 @@ export default function DepotsPage() {
               <Tabs.Root
                 value={currentTab}
                 onValueChange={(e) => setSelectedTab(e.value as any)}
-                variant="subtle"
                 size="sm"
               >
-                <Tabs.List
-                  bg="bg.subtle"
-                  p="1"
-                  borderWidth="1px"
-                  borderColor="border.subtle"
-                >
+                <Tabs.List>
                   <Tabs.Trigger value="all">
                     Active ({totalCount})
                   </Tabs.Trigger>
@@ -764,6 +767,7 @@ export default function DepotsPage() {
                 gap="0.5"
                 p="1"
                 bg="bg.subtle"
+                borderRadius="full"
                 borderWidth="1px"
                 borderColor="border.subtle"
               >
@@ -793,7 +797,7 @@ export default function DepotsPage() {
 
       {/* Super Admin Notice Banner when viewing Deleted Depots */}
       {currentTab === "deleted" && (
-        <Card.Root size="sm" variant="subtle" bg="red.subtle" borderColor="red.muted" mb="4">
+        <Card.Root size="sm" variant="subtle" bg="red.subtle" borderColor="red.muted" borderRadius="2xl" mb="4">
           <Card.Body p="3">
             <Flex justify="space-between" align="center" gap="3" wrap="wrap">
               <HStack gap="2.5">
@@ -809,7 +813,7 @@ export default function DepotsPage() {
                   </Text>
                 </VStack>
               </HStack>
-              <Badge colorPalette="red" variant="outline">
+              <Badge colorPalette="red" variant="outline" borderRadius="full" px="2.5">
                 {deletedCount} Archived
               </Badge>
             </Flex>

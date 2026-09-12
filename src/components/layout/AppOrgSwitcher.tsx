@@ -20,10 +20,12 @@ import { Building2, Check, ChevronsUpDown, Sparkles } from "lucide-react";
 
 interface AppOrgSwitcherProps {
   isCollapsed?: boolean;
+  variant?: "card" | "pill";
 }
 
 export const AppOrgSwitcher: React.FC<AppOrgSwitcherProps> = ({
   isCollapsed = false,
+  variant = "pill",
 }) => {
   const { selectedOrganization, setSelectedOrganization } =
     useOrganizationStore();
@@ -72,7 +74,7 @@ export const AppOrgSwitcher: React.FC<AppOrgSwitcherProps> = ({
 
   const availableOrgs = orgs;
 
-  const orgName = selectedOrganization?.name || "Select Organization";
+  const orgName = selectedOrganization?.name || "Choose Agency";
 
   if (isCollapsed) {
     return (
@@ -80,10 +82,10 @@ export const AppOrgSwitcher: React.FC<AppOrgSwitcherProps> = ({
         <Tooltip.Trigger asChild>
           <Box
             p="1.5"
-            borderRadius="md"
+            borderRadius="full"
             bg="bg.surface"
             borderWidth="1px"
-            borderColor="border.default"
+            borderColor="border.subtle"
             display="flex"
             alignItems="center"
             justifyContent="center"
@@ -91,7 +93,7 @@ export const AppOrgSwitcher: React.FC<AppOrgSwitcherProps> = ({
             _hover={{ borderColor: "blue.500", bg: "bg.subtle" }}
             transition="all 0.15s"
           >
-            <Avatar.Root size="2xs" shape="rounded">
+            <Avatar.Root size="2xs" shape="full">
               <Avatar.Fallback name={selectedOrganization?.name || orgName}>
                 {getOrgInitials(selectedOrganization?.name || orgName)}
               </Avatar.Fallback>
@@ -109,62 +111,95 @@ export const AppOrgSwitcher: React.FC<AppOrgSwitcherProps> = ({
   }
 
   return (
-    <Menu.Root positioning={{ placement: "bottom-start", gutter: 4 }}>
+    <Menu.Root positioning={{ placement: "bottom-end", gutter: 6 }}>
       <Menu.Trigger asChild>
-        <Box
-          as="button"
-          w="full"
-          px="2.5"
-          py="2"
-          borderRadius="md"
-          bg="bg.subtle"
-          _hover={{ bg: "bg.muted", borderColor: "blue.500" }}
-          transition="all 0.15s ease"
-          textAlign="left"
-          cursor="pointer"
-          borderWidth="1px"
-          borderColor="border.default"
-          outline="none"
-        >
-          <Flex align="center" justify="space-between" gap="2">
-            <HStack gap="2" minW="0">
-              <Avatar.Root size="2xs" shape="rounded" shrink="0">
-                <Avatar.Fallback name={selectedOrganization?.name || orgName}>
-                  {getOrgInitials(selectedOrganization?.name || orgName)}
-                </Avatar.Fallback>
-                <Avatar.Image src={selectedOrganization?.logo || undefined} />
-              </Avatar.Root>
-              <VStack align="start" gap="0" minW="0">
-                <Text
-                  fontSize="xs"
-                  fontWeight="600"
-                  color="fg.default"
-                  truncate
-                  maxW="130px"
-                  lineHeight="1.2"
-                >
-                  {isLoading ? "Loading..." : orgName}
-                </Text>
-                <Text fontSize="xs" color="fg.muted" truncate maxW="130px" lineHeight="1.2">
-                  Transit Agency
-                </Text>
-              </VStack>
-            </HStack>
+        {variant === "pill" ? (
+          <Box
+            as="button"
+            px="3.5"
+            py="2"
+            borderRadius="full"
+            bg="bg.subtle"
+            _hover={{ bg: "bg.muted", borderColor: "border.default" }}
+            borderWidth="1px"
+            borderColor="border.subtle"
+            transition="all 0.15s ease"
+            textAlign="left"
+            cursor="pointer"
+            outline="none"
+            display="flex"
+            alignItems="center"
+            gap="2.5"
+          >
+            <Avatar.Root size="2xs" shape="full" shrink="0">
+              <Avatar.Fallback name={selectedOrganization?.name || orgName}>
+                {getOrgInitials(selectedOrganization?.name || orgName)}
+              </Avatar.Fallback>
+              <Avatar.Image src={selectedOrganization?.logo || undefined} />
+            </Avatar.Root>
+            <Text
+              fontSize="xs"
+              fontWeight="600"
+              color="fg.default"
+              maxW="140px"
+              truncate
+            >
+              {isLoading ? "Loading..." : orgName}
+            </Text>
             <ChevronsUpDown size={13} style={{ opacity: 0.5, flexShrink: 0 }} />
-          </Flex>
-        </Box>
+          </Box>
+        ) : (
+          <Box
+            as="button"
+            w="full"
+            px="3"
+            py="2"
+            borderRadius="xl"
+            bg="bg.subtle"
+            _hover={{ bg: "bg.muted", borderColor: "blue.500" }}
+            transition="all 0.15s ease"
+            textAlign="left"
+            cursor="pointer"
+            borderWidth="1px"
+            borderColor="border.default"
+            outline="none"
+          >
+            <Flex align="center" justify="space-between" gap="2">
+              <HStack gap="2" minW="0">
+                <Avatar.Root size="2xs" shape="rounded" shrink="0">
+                  <Avatar.Fallback name={selectedOrganization?.name || orgName}>
+                    {getOrgInitials(selectedOrganization?.name || orgName)}
+                  </Avatar.Fallback>
+                  <Avatar.Image src={selectedOrganization?.logo || undefined} />
+                </Avatar.Root>
+                <VStack align="start" gap="0" minW="0">
+                  <Text
+                    fontSize="xs"
+                    fontWeight="600"
+                    color="fg.default"
+                    truncate
+                    maxW="130px"
+                    lineHeight="1.2"
+                  >
+                    {isLoading ? "Loading..." : orgName}
+                  </Text>
+                  <Text fontSize="xs" color="fg.muted" truncate maxW="130px" lineHeight="1.2">
+                    Transit Agency
+                  </Text>
+                </VStack>
+              </HStack>
+              <ChevronsUpDown size={13} style={{ opacity: 0.5, flexShrink: 0 }} />
+            </Flex>
+          </Box>
+        )}
       </Menu.Trigger>
 
       <Portal>
         <Menu.Positioner>
           <Menu.Content
-            minW="240px"
-            maxW="280px"
-            borderRadius="md"
-            borderWidth="1px"
-            borderColor="border.default"
-            bg="bg.surface"
-            p="1"
+            minW="260px"
+            maxW="300px"
+            p="1.5"
           >
             <Box px="2.5" py="1.5">
               <Text fontSize="xs" fontWeight="600" color="fg.muted" letterSpacing="0.03em" textTransform="uppercase">

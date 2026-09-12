@@ -6,7 +6,9 @@ import { RoleForm } from '../components/roles/RoleForm';
 import { Dialog } from '@headlessui/react';
 import { useOrganizationStore } from '../store/useOrganizationStore';
 import { Icon } from '@iconify-icon/react';
-import { Container } from '@chakra-ui/react';
+import { Box, Button, Card, Table, Badge, IconButton } from '@chakra-ui/react';
+import PageHeader from '@/components/common/PageHeader';
+import EmptyState from '@/components/common/EmptyState';
 import { toast } from 'react-toastify';
 
 const Roles = () => {
@@ -59,118 +61,154 @@ const Roles = () => {
 
   if (!selectedOrganization) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="text-center text-stone-500">Please select an organization first</div>
-      </div>
+      <Box w="full">
+        <PageHeader
+          title="Role Permissions & Access"
+          description="Manage security roles and user permission levels"
+          breadcrumbs={[
+            { label: "Home", href: "/home" },
+            { label: "Roles" },
+          ]}
+        />
+        <EmptyState
+          title="Select an Organization"
+          description="Please choose an organization first to configure its access roles."
+        />
+      </Box>
     );
   }
 
   return (
-		<Container overflow={'scroll'} fluid className="py-4">
-			<div className="flex justify-between items-center mb-6">
-				<div>
-					<h1 className="text-lg font-=">Roles</h1>
-				</div>
-				<button
-					onClick={() => setIsCreateModalOpen(true)}
-					className="bg-indigo-600 text-white text-sm px-3 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-				>
-					Create Role
-				</button>
-			</div>
+    <Box w="full">
+      <PageHeader
+        title="Role Permissions & Access"
+        description={`Manage security roles and capability access for ${selectedOrganization.name || "selected organization"}`}
+        breadcrumbs={[
+          { label: "Home", href: "/home" },
+          { label: "Roles" },
+        ]}
+        badge={`${roles?.length || 0} Roles`}
+        badgeColorPalette="purple"
+        actions={
+          <Button
+            size="sm"
+            colorPalette="purple"
+            onClick={() => setIsCreateModalOpen(true)}
+          >
+            Create Role
+          </Button>
+        }
+      />
 
-			{isLoading ? (
-				<div className="flex items-center justify-center h-48">
-					<div className="text-lg">Loading...</div>
-				</div>
-			) : (
-				<div className="bg-white rounded-lg shadow overflow-hidden">
-					<table className="min-w-full divide-y divide-stone-200">
-						<thead className="bg-stone-50">
-							<tr>
-								<th
-									scope="col"
-									className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
-								>
-									Role Name
-								</th>
-
-								<th
-									scope="col"
-									className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider"
-								>
-									Status
-								</th>
-								<th
-									scope="col"
-									className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider"
-								>
-									Actions
-								</th>
-							</tr>
-						</thead>
-						<tbody className="bg-white divide-y divide-stone-200">
-							{roles && roles.length > 0 ? (
-								roles.map((role) => (
-									<tr key={role.id} className="hover:bg-stone-50">
-										<td className="px-6 py-4 whitespace-nowrap">
-											<div className="text-sm font-medium text-stone-900">
-												{role.roleName}
-											</div>
-										</td>
-
-										<td className="px-6 py-4 whitespace-nowrap">
-											<span
-												className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-													role.active
-														? 'bg-green-100 text-green-800'
-														: 'bg-red-100 text-red-800'
-												}`}
-											>
-												{role.active ? 'Active' : 'Inactive'}
-											</span>
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-											<button
-												onClick={() => setEditingRole(role)}
-												className="text-indigo-600 hover:text-indigo-900 mr-4"
-											>
-												<Icon icon="solar:pen-bold" className="inline-block" />
-											</button>
-											<button
-												onClick={() => {
-													if (
-														confirm(
-															'Are you sure you want to delete this role?'
-														)
-													) {
-														deleteMutation.mutate(role.id);
-													}
-												}}
-												className="text-red-600 hover:text-red-900"
-											>
-												<Icon
-													icon="solar:trash-bin-trash-bold"
-													className="inline-block"
-												/>
-											</button>
-										</td>
-									</tr>
-								))
-							) : (
-								<tr>
-									<td
-										colSpan={6}
-										className="px-6 py-4 text-center text-stone-500"
-									>
-										No roles found
-									</td>
-								</tr>
-							)}
-						</tbody>
-					</table>
-				</div>
-			)}
+      {isLoading ? (
+        <div className="flex items-center justify-center h-48">
+          <div className="text-sm text-stone-500">Loading roles...</div>
+        </div>
+      ) : (
+        <Box overflow="hidden">
+          <Table.Root size="md" interactive>
+            <Table.Header bg="bg.subtle">
+              <Table.Row borderColor="border.subtle">
+                <Table.ColumnHeader
+                  py="3.5"
+                  px="6"
+                  textTransform="uppercase"
+                  fontSize="xs"
+                  fontWeight="semibold"
+                  color="fg.muted"
+                >
+                  Role Name
+                </Table.ColumnHeader>
+                <Table.ColumnHeader
+                  py="3.5"
+                  px="6"
+                  textTransform="uppercase"
+                  fontSize="xs"
+                  fontWeight="semibold"
+                  color="fg.muted"
+                >
+                  Status
+                </Table.ColumnHeader>
+                <Table.ColumnHeader
+                  py="3.5"
+                  px="6"
+                  textAlign="end"
+                  textTransform="uppercase"
+                  fontSize="xs"
+                  fontWeight="semibold"
+                  color="fg.muted"
+                >
+                  Actions
+                </Table.ColumnHeader>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {roles && roles.length > 0 ? (
+                roles.map((role) => (
+                  <Table.Row
+                    key={role.id}
+                    borderColor="border.subtle"
+                    _hover={{ bg: "bg.subtle" }}
+                    transition="colors 0.15s"
+                  >
+                    <Table.Cell py="3.5" px="6" fontWeight="semibold" color="fg.default">
+                      {role.roleName}
+                    </Table.Cell>
+                    <Table.Cell py="3.5" px="6">
+                      <Badge colorPalette={role.active ? "green" : "red"}>
+                        {role.active ? "Active" : "Inactive"}
+                      </Badge>
+                    </Table.Cell>
+                    <Table.Cell py="3.5" px="6" textAlign="end">
+                      <IconButton
+                        aria-label="Edit role"
+                        size="xs"
+                        variant="ghost"
+                        color="blue.600"
+                        _hover={{ bg: "blue.subtle" }}
+                        mr="2"
+                        onClick={() => setEditingRole(role)}
+                      >
+                        <Icon icon="solar:pen-bold" />
+                      </IconButton>
+                      <IconButton
+                        aria-label="Delete role"
+                        size="xs"
+                        variant="ghost"
+                        color="red.600"
+                        _hover={{ bg: "red.subtle" }}
+                        onClick={() => {
+                          if (
+                            confirm(
+                              'Are you sure you want to delete this role?'
+                            )
+                          ) {
+                            deleteMutation.mutate(role.id);
+                          }
+                        }}
+                      >
+                        <Icon icon="solar:trash-bin-trash-bold" />
+                      </IconButton>
+                    </Table.Cell>
+                  </Table.Row>
+                ))
+              ) : (
+                <Table.Row>
+                  <Table.Cell
+                    colSpan={3}
+                    py="8"
+                    textAlign="center"
+                    color="fg.muted"
+                    fontSize="sm"
+                  >
+                    No roles found
+                  </Table.Cell>
+                </Table.Row>
+              )}
+            </Table.Body>
+          </Table.Root>
+        </Box>
+      )}
 
 			{/* Create Modal */}
 			<Dialog
@@ -214,7 +252,7 @@ const Roles = () => {
 					</Dialog.Panel>
 				</div>
 			</Dialog>
-		</Container>
+		</Box>
 	);
 };
 

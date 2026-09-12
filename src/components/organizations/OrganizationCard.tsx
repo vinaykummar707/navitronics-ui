@@ -80,14 +80,15 @@ export const OrganizationCard: React.FC<OrganizationCardProps> = ({
       size="sm"
       variant="outline"
       bg="bg.panel"
-      borderColor="border.default"
+      borderRadius="2xl"
+      borderColor="border.subtle"
       position="relative"
       overflow="hidden"
       transition="all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
       _hover={{
         borderColor: isDeleted ? "red.muted" : "blue.muted",
-        transform: "translateY(-2px)",
-        boxShadow: "sm",
+        transform: "translateY(-3px)",
+        boxShadow: "md",
       }}
       h="full"
     >
@@ -135,16 +136,16 @@ export const OrganizationCard: React.FC<OrganizationCardProps> = ({
                 </Text>
                 <HStack gap="1.5" wrap="wrap">
                   {isDeleted ? (
-                    <Badge colorPalette="red">
+                    <Badge colorPalette="red" borderRadius="full" px="2.5">
                       Deleted
                     </Badge>
                   ) : (
-                    <Badge colorPalette={organization.active !== false ? "green" : "gray"}>
+                    <Badge colorPalette={organization.active !== false ? "green" : "gray"} borderRadius="full" px="2.5">
                       {organization.active !== false ? "Active" : "Inactive"}
                     </Badge>
                   )}
                   {isProtected && (
-                    <Badge colorPalette="purple">
+                    <Badge colorPalette="purple" borderRadius="full" px="2.5">
                       <HStack gap="1">
                         <ShieldCheck size={12} />
                         <Text>System</Text>
@@ -173,9 +174,11 @@ export const OrganizationCard: React.FC<OrganizationCardProps> = ({
                 <Menu.Positioner>
                   <Menu.Content
                     minW="140px"
-                    borderColor="border.default"
+                    borderColor="border.subtle"
+                    borderRadius="xl"
                     bg="bg.surface"
-                    p="1"
+                    p="1.5"
+                    boxShadow="md"
                   >
                     {!isDeleted && onViewRegions && (
                       <Menu.Item
@@ -279,7 +282,7 @@ export const OrganizationCard: React.FC<OrganizationCardProps> = ({
             <HStack
               p="2"
               bg="bg.subtle"
-              borderRadius="md"
+              borderRadius="xl"
               borderWidth="1px"
               borderColor="border.subtle"
               justify="space-between"
@@ -293,7 +296,7 @@ export const OrganizationCard: React.FC<OrganizationCardProps> = ({
                 <Box
                   w="24px"
                   h="24px"
-                  borderRadius="md"
+                  borderRadius="lg"
                   bg="blue.subtle"
                   color="blue.fg"
                   display="flex"
@@ -320,7 +323,7 @@ export const OrganizationCard: React.FC<OrganizationCardProps> = ({
             <HStack
               p="2"
               bg="bg.subtle"
-              borderRadius="md"
+              borderRadius="xl"
               borderWidth="1px"
               borderColor="border.subtle"
               justify="space-between"
@@ -334,7 +337,7 @@ export const OrganizationCard: React.FC<OrganizationCardProps> = ({
                 <Box
                   w="24px"
                   h="24px"
-                  borderRadius="md"
+                  borderRadius="lg"
                   bg="green.subtle"
                   color="green.fg"
                   display="flex"
@@ -366,7 +369,7 @@ export const OrganizationCard: React.FC<OrganizationCardProps> = ({
             my="2.5"
             p="2.5"
             bg="bg.subtle"
-            borderRadius="md"
+            borderRadius="xl"
             borderWidth="1px"
             borderColor="border.subtle"
           >
@@ -400,6 +403,8 @@ export const OrganizationCard: React.FC<OrganizationCardProps> = ({
             <Badge
               variant={organization.ITMS ? "subtle" : "outline"}
               colorPalette="purple"
+              borderRadius="full"
+              px="2.5"
               opacity={organization.ITMS ? 1 : 0.35}
               title={organization.ITMS ? "ITMS Telemetry active" : "ITMS not enabled"}
             >
@@ -412,6 +417,8 @@ export const OrganizationCard: React.FC<OrganizationCardProps> = ({
             <Badge
               variant={organization.PIS ? "subtle" : "outline"}
               colorPalette="cyan"
+              borderRadius="full"
+              px="2.5"
               opacity={organization.PIS ? 1 : 0.35}
               title={organization.PIS ? "PIS Displays active" : "PIS not enabled"}
             >
@@ -424,6 +431,8 @@ export const OrganizationCard: React.FC<OrganizationCardProps> = ({
             <Badge
               variant={organization.PAS ? "subtle" : "outline"}
               colorPalette="orange"
+              borderRadius="full"
+              px="2.5"
               opacity={organization.PAS ? 1 : 0.35}
               title={organization.PAS ? "PAS Audio active" : "PAS not enabled"}
             >
@@ -439,6 +448,7 @@ export const OrganizationCard: React.FC<OrganizationCardProps> = ({
               size="sm"
               variant="outline"
               colorPalette="green"
+              borderRadius="full"
               onClick={() => onRestore(organization)}
             >
               <RotateCcw size={13} />

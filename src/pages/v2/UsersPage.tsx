@@ -475,12 +475,24 @@ export default function UsersPage() {
         width: "120px",
         cell: (user) => {
           if (user.deleted) {
-            return <Badge colorPalette="red">Archived</Badge>;
+            return (
+              <Badge colorPalette="red">
+                Archived
+              </Badge>
+            );
           }
           if (user.active) {
-            return <Badge colorPalette="green">Active</Badge>;
+            return (
+              <Badge colorPalette="green">
+                Active
+              </Badge>
+            );
           }
-          return <Badge colorPalette="amber">Inactive</Badge>;
+          return (
+            <Badge colorPalette="amber">
+              Inactive
+            </Badge>
+          );
         },
       },
       {
@@ -515,6 +527,7 @@ export default function UsersPage() {
                 size="sm"
                 variant="outline"
                 colorPalette="green"
+                borderRadius="full"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleRestoreClick(user);
@@ -531,6 +544,7 @@ export default function UsersPage() {
               <IconButton
                 size="xs"
                 variant="ghost"
+                borderRadius="full"
                 aria-label="Copy Email"
                 color="fg.muted"
                 _hover={{ color: "fg.default", bg: "bg.subtle" }}
@@ -548,6 +562,7 @@ export default function UsersPage() {
               <IconButton
                 size="xs"
                 variant="ghost"
+                borderRadius="full"
                 aria-label="Edit User"
                 color="fg.muted"
                 _hover={{ color: "fg.default", bg: "bg.subtle" }}
@@ -561,6 +576,7 @@ export default function UsersPage() {
               <IconButton
                 size="xs"
                 variant="ghost"
+                borderRadius="full"
                 aria-label="Deactivate User"
                 color="red.600"
                 _hover={{ bg: "red.500/10" }}
@@ -617,6 +633,7 @@ export default function UsersPage() {
             <Button
               size="sm"
               variant="outline"
+              borderRadius="full"
               onClick={() => {
                 refetchActive();
                 if (isSuperAdmin) refetchDeleted();
@@ -707,7 +724,7 @@ export default function UsersPage() {
       </SimpleGrid>
 
       {/* 3. Filter Bar & View Toggle matching DepotsPage */}
-      <Card.Root size="sm" variant="outline" mb="4" bg="bg.panel" borderColor="border.default">
+      <Card.Root size="sm" mb="4">
         <Card.Body p="3">
           <Flex
             direction={{ base: "column", md: "row" }}
@@ -744,8 +761,6 @@ export default function UsersPage() {
                   }
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  bg="bg.subtle"
-                  _focus={{ borderColor: "blue.500", bg: "bg.surface" }}
                 />
               </InputGroup>
 
@@ -755,7 +770,6 @@ export default function UsersPage() {
                   <NativeSelect.Field
                     value={selectedRoleFilter}
                     onChange={(e) => setSelectedRoleFilter(e.target.value)}
-                    bg="bg.subtle"
                   >
                     <option value="all">All Roles</option>
                     {isSuperAdmin && <option value="master">Super Admin</option>}
@@ -775,15 +789,9 @@ export default function UsersPage() {
               <Tabs.Root
                 value={currentTab}
                 onValueChange={(e) => setCurrentTab(e.value as any)}
-                variant="subtle"
                 size="sm"
               >
-                <Tabs.List
-                  bg="bg.subtle"
-                  p="1"
-                  borderWidth="1px"
-                  borderColor="border.subtle"
-                >
+                <Tabs.List>
                   <Tabs.Trigger value="active">
                     Active ({activeUsers.length})
                   </Tabs.Trigger>
@@ -803,6 +811,7 @@ export default function UsersPage() {
                 gap="0.5"
                 p="1"
                 bg="bg.subtle"
+                borderRadius="full"
                 borderWidth="1px"
                 borderColor="border.subtle"
               >
@@ -832,7 +841,7 @@ export default function UsersPage() {
 
       {/* Super Admin Notice Banner for Archived Tab */}
       {currentTab === "deleted" && (
-        <Card.Root size="sm" variant="subtle" bg="red.subtle" borderColor="red.muted" mb="4">
+        <Card.Root size="sm" variant="subtle" bg="red.subtle" borderColor="red.muted" borderRadius="2xl" mb="4">
           <Card.Body p="3">
             <Flex justify="space-between" align="center" gap="3" wrap="wrap">
               <HStack gap="2.5">
@@ -848,7 +857,7 @@ export default function UsersPage() {
                   </Text>
                 </VStack>
               </HStack>
-              <Badge colorPalette="red" variant="outline">
+              <Badge colorPalette="red" variant="outline" borderRadius="full" px="2.5">
                 {deletedCount} Archived
               </Badge>
             </Flex>

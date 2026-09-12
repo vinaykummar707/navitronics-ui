@@ -626,7 +626,9 @@ export default function RoutesPage() {
       header: "Direction",
       width: "120px",
       cell: (route) => (
-        <Badge colorPalette={route.return ? "purple" : "blue"}>
+        <Badge
+          colorPalette={route.return ? "purple" : "blue"}
+        >
           <HStack gap="1.5">
             <Box
               w="1.5"
@@ -644,7 +646,9 @@ export default function RoutesPage() {
       header: "Split",
       width: "105px",
       cell: (route) => (
-        <Badge colorPalette={route.is_split_route ? "amber" : "gray"}>
+        <Badge
+          colorPalette={route.is_split_route ? "amber" : "gray"}
+        >
           {route.is_split_route ? "Split Route" : "Standard"}
         </Badge>
       ),
@@ -656,7 +660,9 @@ export default function RoutesPage() {
       cell: (route) => {
         const count = parseStopsCount(route.stops);
         return (
-          <Badge colorPalette={count > 0 ? "teal" : "gray"}>
+          <Badge
+            colorPalette={count > 0 ? "teal" : "gray"}
+          >
             {count > 0 ? `${count} Stops` : "Direct"}
           </Badge>
         );
@@ -667,7 +673,9 @@ export default function RoutesPage() {
       header: "Version",
       width: "90px",
       cell: (route) => (
-        <Badge colorPalette="gray">
+        <Badge
+          colorPalette="gray"
+        >
           v{route.version || "1.0"}
         </Badge>
       ),
@@ -714,6 +722,7 @@ export default function RoutesPage() {
           <IconButton
             size="xs"
             variant="ghost"
+            borderRadius="full"
             aria-label="Copy Route No"
             color="fg.muted"
             _hover={{ color: "fg.default", bg: "bg.subtle" }}
@@ -733,6 +742,7 @@ export default function RoutesPage() {
           <IconButton
             size="xs"
             variant="ghost"
+            borderRadius="full"
             aria-label="Edit Route"
             color="fg.muted"
             _hover={{ color: "fg.default", bg: "bg.subtle" }}
@@ -748,6 +758,7 @@ export default function RoutesPage() {
           <IconButton
             size="xs"
             variant="ghost"
+            borderRadius="full"
             aria-label="Delete Route"
             color="red.600"
             _hover={{ bg: "red.500/10" }}
@@ -765,6 +776,7 @@ export default function RoutesPage() {
               <IconButton
                 size="xs"
                 variant="ghost"
+                borderRadius="full"
                 aria-label="More Actions"
                 color="fg.muted"
                 _hover={{ color: "fg.default", bg: "bg.subtle" }}
@@ -947,6 +959,7 @@ export default function RoutesPage() {
             <Button
               size="sm"
               variant="outline"
+              borderRadius="full"
               onClick={handleRefresh}
               loading={isRefreshing}
             >
@@ -958,6 +971,7 @@ export default function RoutesPage() {
               <Button
                 size="sm"
                 colorPalette="blue"
+                borderRadius="full"
                 disabled={!selectedDepot}
                 onClick={handleAddRoute}
               >
@@ -1018,7 +1032,7 @@ export default function RoutesPage() {
       </SimpleGrid>
 
       {/* 3. Filter & View Toolbar */}
-      <Card.Root size="sm" variant="outline" mb="4" bg="bg.panel" borderColor="border.default">
+      <Card.Root size="sm" mb="4">
         <Card.Body p="3">
           <Flex
             direction={{ base: "column", md: "row" }}
@@ -1052,7 +1066,6 @@ export default function RoutesPage() {
                   placeholder="Search routes by route no, source, or destination..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  bg="bg.subtle"
                 />
               </InputGroup>
 
@@ -1062,7 +1075,6 @@ export default function RoutesPage() {
                   <NativeSelect.Field
                     value={selectedRegion?.id || ""}
                     onChange={(e) => handleRegionChange(e.target.value)}
-                    bg="bg.subtle"
                   >
                     {regions.map((r) => (
                       <option key={r.id} value={r.id}>
@@ -1080,7 +1092,6 @@ export default function RoutesPage() {
                   <NativeSelect.Field
                     value={selectedDepot?.id || ""}
                     onChange={(e) => handleDepotChange(e.target.value)}
-                    bg="bg.subtle"
                   >
                     {depots.map((d) => (
                       <option key={d.id} value={d.id}>
@@ -1098,10 +1109,9 @@ export default function RoutesPage() {
               <Tabs.Root
                 value={typeFilter}
                 onValueChange={(e) => setTypeFilter(e.value as any)}
-                variant="subtle"
                 size="sm"
               >
-                <Tabs.List bg="bg.subtle" p="1">
+                <Tabs.List>
                   <Tabs.Trigger value="all">
                     All ({metrics.total})
                   </Tabs.Trigger>
@@ -1118,7 +1128,7 @@ export default function RoutesPage() {
               </Tabs.Root>
 
               {/* View Mode Switcher (Table vs Grid) */}
-              <HStack gap="0.5" p="1" bg="bg.subtle" borderRadius="md">
+              <HStack gap="0.5" p="1" bg="bg.subtle" borderRadius="full">
                 <IconButton
                   size="xs"
                   variant={viewMode === "table" ? "solid" : "ghost"}
@@ -1151,11 +1161,12 @@ export default function RoutesPage() {
           mb="4"
           bg="blue.subtle"
           borderColor="blue.muted"
+          borderRadius="2xl"
         >
           <Card.Body p="3">
             <Flex justify="space-between" align="center" wrap="wrap" gap="2.5">
               <HStack gap="2.5">
-                <Badge colorPalette="blue">
+                <Badge colorPalette="blue" borderRadius="full" px="2.5">
                   {selectedRouteIds.length} Selected
                 </Badge>
                 <Text fontSize="xs" color="fg.default">
@@ -1169,6 +1180,7 @@ export default function RoutesPage() {
                 <Button
                   size="sm"
                   variant="outline"
+                  borderRadius="full"
                   onClick={() => setSelectedRouteIds([])}
                 >
                   Deselect All
@@ -1176,6 +1188,7 @@ export default function RoutesPage() {
                 <Button
                   size="sm"
                   colorPalette="blue"
+                  borderRadius="full"
                   onClick={handleOpenBatchExport}
                 >
                   <Download size={14} />
@@ -1186,6 +1199,7 @@ export default function RoutesPage() {
                     size="sm"
                     colorPalette="red"
                     variant="subtle"
+                    borderRadius="full"
                     onClick={() => setIsBatchDeleteDialogOpen(true)}
                   >
                     <Trash2 size={14} />

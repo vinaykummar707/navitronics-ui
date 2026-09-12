@@ -183,8 +183,8 @@ export const CreateDepotDrawer: React.FC<CreateDepotDrawerProps> = ({
       <Portal>
         <Drawer.Backdrop />
         <Drawer.Positioner>
-          <Drawer.Content bg="bg.surface" borderColor="border.default" borderWidth="1px">
-            <Drawer.Header borderBottomWidth="1px" borderColor="border.default">
+          <Drawer.Content>
+            <Drawer.Header>
               <HStack gap="3">
                 <Avatar.Root
                   size="sm"
@@ -319,7 +319,7 @@ export const CreateDepotDrawer: React.FC<CreateDepotDrawerProps> = ({
                 </Box>
               </Drawer.Body>
 
-              <Drawer.Footer borderTopWidth="1px" borderColor="border.default" gap="2">
+              <Drawer.Footer gap="2">
                 <Button
                   variant="outline"
                   size="sm"

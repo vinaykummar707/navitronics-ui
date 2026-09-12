@@ -3,22 +3,21 @@ import {
   Box,
   Flex,
   HStack,
+  VStack,
   Text,
-  Badge,
   IconButton,
-  Input,
-  Kbd,
-  InputGroup,
 } from "@chakra-ui/react";
-import { ColorModeButton } from "@/components/ui/color-mode";
+import useLoggedUserStore from "@/store/useLoggedUserStore";
+import AppOrgSwitcher from "./AppOrgSwitcher";
 import AppUserMenu from "./AppUserMenu";
 import {
   Menu as MenuIcon,
   Search,
   Bell,
   Radio,
-  Layers,
+  Settings,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface AppHeaderProps {
   onToggleMobileMenu?: () => void;
@@ -28,28 +27,40 @@ interface AppHeaderProps {
 export const AppHeader: React.FC<AppHeaderProps> = ({
   onToggleMobileMenu,
 }) => {
+  const user = useLoggedUserStore((state) => state.user);
+  const navigate = useNavigate();
+
+  const userName = (() => {
+    if (user?.email) {
+      const prefix = user.email.split("@")[0];
+      return prefix.charAt(0).toUpperCase() + prefix.slice(1);
+    }
+    return "Operator";
+  })();
+
   return (
     <Box
       as="header"
-      h="64px"
+      h={{ base: "64px", md: "76px" }}
       w="full"
-      px="8"
-      bg="bg.surface"
-      borderBottomWidth="1px"
-      borderColor="border.default"
+      px={{ base: "4", md: "8" }}
+      py="3"
       display="flex"
       alignItems="center"
       justifyContent="space-between"
       position="sticky"
       top="0"
-      zIndex="20"
+      zIndex="10"
+      bg="bg.workspace"
+      borderBottomWidth="1px"
+      borderColor="border.subtle"
     >
-      {/* Left: Mobile menu toggle + Brand Mark + Org Switcher */}
+      {/* Left: Mobile Toggle & "Hello {Name} 👋" greeting */}
       <HStack gap="3" align="center">
-        {/* Mobile menu button */}
         <IconButton
           size="sm"
           variant="ghost"
+          borderRadius="full"
           aria-label="Toggle navigation menu"
           display={{ base: "flex", md: "none" }}
           onClick={onToggleMobileMenu}
@@ -57,113 +68,105 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           <MenuIcon size={18} />
         </IconButton>
 
-        {/* Brand Logo & Name */}
-        <HStack gap="2.5" align="center">
-          <Box
-            w="28px"
-            h="28px"
-            borderRadius="md"
-            bg="blue.600"
-            color="white"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            shrink="0"
-          >
-            <Layers size={16} strokeWidth={2.4} />
-          </Box>
+        <VStack align="start" gap="0">
+          <HStack gap="1.5">
+            <Text
+              fontSize={{ base: "lg", md: "2xl" }}
+              fontWeight="800"
+              color="fg.default"
+              letterSpacing="-0.03em"
+              lineHeight="1.2"
+            >
+              Hello {userName}
+            </Text>
+            <Text fontSize={{ base: "lg", md: "2xl" }} lineHeight="1.2">
+              👋
+            </Text>
+          </HStack>
           <Text
-            fontSize="sm"
-            fontWeight="700"
-            color="fg.default"
-            letterSpacing="-0.02em"
-            lineHeight="1"
+            fontSize="xs"
+            color="fg.muted"
+            display={{ base: "none", sm: "block" }}
           >
-            Navitronix
+            Transit Operations & Telematics Console
           </Text>
-        </HStack>
+        </VStack>
       </HStack>
 
-      {/* Center: Global Search Bar */}
-      <Box
-        flex="1"
-        maxW="420px"
-        mx="4"
-        display={{ base: "none", md: "block" }}
-      >
-        <InputGroup
-          startElement={<Search size={14} color="var(--chakra-colors-fg-muted)" />}
-          endElement={<Kbd size="sm">⌘K</Kbd>}
-          w="full"
-        >
-          <Input
-            placeholder="Search routes, stops, agencies... (⌘K)"
-            size="sm"
-            borderRadius="md"
-            bg="bg.subtle"
-            borderWidth="1px"
-            borderColor="border.default"
-            _hover={{ borderColor: "blue.500" }}
-            _focus={{
-              borderColor: "blue.500",
-              outline: "none",
-              bg: "bg.surface",
-            }}
-          />
-        </InputGroup>
-      </Box>
+      {/* Right: "Choose Account ⬍" Org Switcher + Action Icons cluster */}
+      <HStack gap={{ base: "2", md: "3" }} align="center">
+        {/* Choose Account / Organization Switcher */}
+        <AppOrgSwitcher variant="pill" />
 
-      {/* Right: Connectivity Indicator + Notifications + Theme + User Menu */}
-      <HStack gap="2" align="center">
-        {/* System online indicator */}
-        <HStack
-          gap="1.5"
-          px="2"
-          py="1"
-          borderRadius="md"
+        {/* Search Circular Button */}
+        <IconButton
+          size="sm"
+          variant="subtle"
+          borderRadius="full"
           bg="bg.subtle"
-          borderWidth="1px"
-          borderColor="border.subtle"
-          display={{ base: "none", lg: "flex" }}
+          color="fg.muted"
+          _hover={{ bg: "bg.muted", color: "fg.default" }}
+          aria-label="Search"
+          display={{ base: "none", sm: "inline-flex" }}
         >
-          <Box w="6px" h="6px" borderRadius="full" bg="green.500" />
-          <Text fontSize="xs" fontWeight="500" color="fg.muted">
-            Live Gateway
-          </Text>
-        </HStack>
+          <Search size={15} />
+        </IconButton>
 
-        {/* Notifications Icon */}
+        {/* Notifications Circular Button */}
         <Box position="relative">
           <IconButton
-            size="xs"
-            variant="ghost"
-            aria-label="Notifications"
+            size="sm"
+            variant="subtle"
+            borderRadius="full"
+            bg="bg.subtle"
             color="fg.muted"
-            _hover={{ color: "fg.default", bg: "bg.subtle" }}
+            _hover={{ bg: "bg.muted", color: "fg.default" }}
+            aria-label="Notifications"
           >
             <Bell size={15} />
           </IconButton>
-          {/* Unread indicator dot */}
           <Box
             position="absolute"
-            top="5px"
-            right="5px"
-            w="5px"
-            h="5px"
+            top="7px"
+            right="7px"
+            w="6px"
+            h="6px"
             borderRadius="full"
             bg="blue.500"
           />
         </Box>
 
-        {/* Color Mode Toggle */}
-        <ColorModeButton
-          size="xs"
-          variant="ghost"
-          color="fg.muted"
-          _hover={{ color: "fg.default", bg: "bg.subtle" }}
-        />
+        {/* Live Gateway Indicator Button */}
+        <IconButton
+          size="sm"
+          variant="subtle"
+          borderRadius="full"
+          bg="bg.subtle"
+          color="green.500"
+          _hover={{ bg: "bg.muted" }}
+          aria-label="Live Telemetry Status"
+          title="Live Telemetry Stream Active"
+          display={{ base: "none", md: "inline-flex" }}
+        >
+          <Radio size={15} />
+        </IconButton>
 
-        {/* User Profile Dropdown Menu */}
+        {/* Settings Quick Icon */}
+        <IconButton
+          size="sm"
+          variant="subtle"
+          borderRadius="full"
+          bg="bg.subtle"
+          color="fg.muted"
+          _hover={{ bg: "bg.muted", color: "fg.default" }}
+          aria-label="Account Settings"
+          onClick={() => navigate("/home/settings")}
+          display={{ base: "none", md: "inline-flex" }}
+        >
+          <Settings size={15} />
+        </IconButton>
+
+        {/* User Profile Avatar Menu */}
         <AppUserMenu />
       </HStack>
     </Box>

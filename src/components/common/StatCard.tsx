@@ -6,7 +6,7 @@ export interface StatCardProps {
   value: string | number;
   description?: string;
   icon?: React.ReactNode;
-  iconColorPalette?: "blue" | "green" | "purple" | "amber" | "gray" | "red" | "cyan" | "orange";
+  iconColorPalette?: "blue" | "green" | "purple" | "amber" | "gray" | "red" | "cyan" | "orange" | "teal";
   valueColor?: string;
   badge?: {
     label: string;
@@ -30,42 +30,97 @@ export const StatCard: React.FC<StatCardProps> = ({
   badge,
   progress,
 }) => {
+  const pastelStyles = (() => {
+    switch (iconColorPalette) {
+      case "green":
+      case "teal":
+        return {
+          bg: { base: "pastel.mint", _dark: "rgba(16, 185, 129, 0.08)" },
+          accentColor: "green.600",
+          waveColor: "#10B981",
+        };
+      case "amber":
+      case "orange":
+      case "red":
+        return {
+          bg: { base: "pastel.peach", _dark: "rgba(249, 115, 22, 0.08)" },
+          accentColor: "orange.600",
+          waveColor: "#F97316",
+        };
+      case "purple":
+        return {
+          bg: { base: "pastel.lavender", _dark: "rgba(168, 85, 247, 0.08)" },
+          accentColor: "purple.600",
+          waveColor: "#A855F7",
+        };
+      case "blue":
+      case "cyan":
+      default:
+        return {
+          bg: { base: "pastel.sky", _dark: "rgba(59, 130, 246, 0.08)" },
+          accentColor: "blue.600",
+          waveColor: "#3B82F6",
+        };
+    }
+  })();
+
   return (
     <Card.Root
       size="sm"
-      variant="outline"
-      bg="bg.panel"
-      borderColor="border.default"
+      bg={pastelStyles.bg}
       position="relative"
       overflow="hidden"
-      transition="all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
+      transition="transform 0.2s ease"
       _hover={{
         transform: "translateY(-2px)",
-        boxShadow: "sm",
-        borderColor: `${iconColorPalette}.muted`,
       }}
       h="full"
     >
-      {/* Top subtle accent bar */}
+      {/* Decorative background trend wave matching mockup cards */}
       <Box
         position="absolute"
-        top="0"
-        left="0"
         right="0"
-        h="2.5px"
-        bg={`${iconColorPalette}.solid`}
-        opacity="0.85"
-      />
+        bottom="10px"
+        w="110px"
+        h="36px"
+        pointerEvents="none"
+        opacity="0.45"
+        zIndex="0"
+      >
+        <svg
+          width="100%"
+          height="100%"
+          viewBox="0 0 110 36"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M0 24 C 20 28, 35 12, 55 18 C 75 24, 85 4, 110 8"
+            stroke={pastelStyles.waveColor}
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            fill="none"
+          />
+        </svg>
+      </Box>
 
-      <Card.Body p="4" display="flex" flexDirection="column" justifyContent="space-between" h="full">
+      <Card.Body
+        p="4.5"
+        display="flex"
+        flexDirection="column"
+        justifyContent="space-between"
+        h="full"
+        position="relative"
+        zIndex="1"
+      >
         <div>
           <HStack justify="space-between" align="center" mb="2.5">
             <Card.Title
               fontSize="xs"
-              fontWeight="600"
+              fontWeight="700"
               color="fg.muted"
               textTransform="uppercase"
-              letterSpacing="0.05em"
+              letterSpacing="0.04em"
               truncate
             >
               {label}
@@ -74,11 +129,12 @@ export const StatCard: React.FC<StatCardProps> = ({
               <Box
                 w="32px"
                 h="32px"
-                borderRadius="md"
-                bg={`${iconColorPalette}.subtle`}
-                color={`${iconColorPalette}.fg`}
+                borderRadius="xl"
+                bg="bg.workspace"
+                color={pastelStyles.accentColor}
                 borderWidth="1px"
-                borderColor={`${iconColorPalette}.muted`}
+                borderColor="border.subtle"
+                shadow="pill"
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
@@ -89,19 +145,19 @@ export const StatCard: React.FC<StatCardProps> = ({
             )}
           </HStack>
 
-          <HStack align="baseline" gap="2" mb="1">
+          <HStack align="baseline" gap="2.5" mb="1">
             <Text
               fontSize="2xl"
-              fontWeight="700"
+              fontWeight="800"
               color={valueColor || "fg.default"}
               lineHeight="1.1"
-              letterSpacing="-0.02em"
+              letterSpacing="-0.03em"
             >
               {value}
             </Text>
             {badge && (
               <Badge
-                variant={badge.variant || "subtle"}
+                variant={badge.variant}
                 colorPalette={badge.colorPalette || iconColorPalette}
               >
                 {badge.label}
@@ -117,10 +173,17 @@ export const StatCard: React.FC<StatCardProps> = ({
         </div>
 
         {progress && (
-          <VStack align="stretch" gap="1" mt="3" pt="2" borderTopWidth="1px" borderColor="border.subtle">
+          <VStack
+            align="stretch"
+            gap="1.5"
+            mt="3.5"
+            pt="2.5"
+            borderTopWidth="1px"
+            borderColor="border.subtle"
+          >
             <HStack justify="space-between" fontSize="xs" color="fg.muted">
-              <Text>{progress.label || "Coverage"}</Text>
-              <Text fontWeight="600" color="fg.default">
+              <Text fontWeight="500">{progress.label || "Coverage"}</Text>
+              <Text fontWeight="700" color="fg.default">
                 {Math.round(Math.min(Math.max(progress.value, 0), 100))}%
               </Text>
             </HStack>
@@ -128,10 +191,9 @@ export const StatCard: React.FC<StatCardProps> = ({
               value={Math.min(Math.max(progress.value, 0), 100)}
               size="xs"
               colorPalette={progress.colorPalette || iconColorPalette}
-              shape="full"
             >
-              <Progress.Track bg="bg.subtle" h="4px">
-                <Progress.Range borderRadius="full" />
+              <Progress.Track bg="bg.workspace/60" h="5px">
+                <Progress.Range />
               </Progress.Track>
             </Progress.Root>
           </VStack>

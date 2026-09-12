@@ -20,9 +20,9 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   actions,
 }) => {
   return (
-    <Box w="full" mb="6">
+    <Box w="full" mb="5">
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <Box mb="2.5">
+        <Box mb="2">
           <Breadcrumbs items={breadcrumbs} />
         </Box>
       )}
@@ -38,11 +38,11 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           <HStack gap="3" align="center" wrap="wrap">
             <Heading
               as="h1"
-              fontSize={{ base: "xl", md: "22px" }}
-              fontWeight="600"
+              fontSize={{ base: "xl", md: "24px" }}
+              fontWeight="800"
               color="fg.default"
-              letterSpacing="-0.015em"
-              lineHeight="1.25"
+              letterSpacing="-0.03em"
+              lineHeight="1.2"
             >
               {title}
             </Heading>
@@ -53,7 +53,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             )}
           </HStack>
           {description && (
-            <Text fontSize="sm" color="fg.muted" lineHeight="1.5">
+            <Text fontSize="xs" color="fg.muted" lineHeight="1.4">
               {description}
             </Text>
           )}
