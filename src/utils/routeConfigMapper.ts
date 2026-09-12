@@ -1,7 +1,8 @@
-import { DisplayConfig } from "@/types/displayConfig";
+import { DisplayConfig } from "@/types/v1RouteTypes";
+import { IRouteCreate } from "@/types/IRoute";
 
 /**
- * Determines the primary language code of a V2 simulation screen object.
+ * Determines the primary language code of a simulation screen object.
  */
 function getScreenLanguage(screen: any): string {
   const texts = screen?.texts || {};
@@ -38,7 +39,7 @@ function parseSection(val: any): any[] {
 }
 
 /**
- * Converts a single V2 route configuration object into a V1 DisplayConfig object.
+ * Converts a single V2 or Supabase route configuration object into a V1 DisplayConfig object.
  */
 export function convertV2ToV1(v2Route: any): DisplayConfig {
   if (!v2Route) return v2Route;
@@ -122,7 +123,7 @@ export function convertV2ToV1(v2Route: any): DisplayConfig {
   }
 
   // 3. Assemble V1 structure
-  const v1Config: any = {
+  const v1Config: DisplayConfig = {
     id: v2Route.id,
     route,
     displayConfig: languageDisplayConfig,
@@ -136,4 +137,89 @@ export function convertV2ToV1(v2Route: any): DisplayConfig {
   };
 
   return v1Config;
+}
+
+/**
+ * Converts a V1 DisplayConfig object into a Supabase IRouteCreate/IRouteUpdate payload.
+ */
+export function convertV1ToDbRoute(
+  v1Config: DisplayConfig,
+  options?: {
+    userId?: string;
+    organizationId?: string;
+    depotId?: string;
+  }
+): IRouteCreate {
+  const route = v1Config.route || ({} as any);
+  const displayLocations = ["front", "side", "rear", "internal"] as const;
+  const boardData: Record<string, string> = {};
+
+  for (const loc of displayLocations) {
+    const screens: any[] = [];
+    for (const [lang, boards] of Object.entries(v1Config.displayConfig || {})) {
+      const screen = (boards as any)?.[loc];
+      if (screen) {
+        const cleanTexts: Record<string, any> = {};
+        for (const [tKey, tVal] of Object.entries(screen.texts || {})) {
+          if (tVal && typeof tVal === "object") {
+            cleanTexts[tKey] = {
+              ...(tVal as any),
+              language: lang,
+            };
+          }
+        }
+        screens.push({
+          format: screen.format || "single",
+          height: screen.height ?? 16,
+          width: screen.width ?? 96,
+          texts: cleanTexts,
+        });
+      }
+    }
+    boardData[loc] = JSON.stringify(screens);
+  }
+
+  const routeNumber = route.splitRoute
+    ? `${route.routeNumber1 || ""}${route.separation || "-"}${route.routeNumber2 || ""}`
+    : route.routeNumber || "";
+
+  const payload: any = {
+    route_number: routeNumber,
+    route_number_1: route.routeNumber1 || "",
+    route_number_2: route.routeNumber2 || "",
+    is_split_route: Boolean(route.splitRoute),
+    source: route.source || "",
+    destination: route.destination || "",
+    via: route.via || "",
+    separation: route.separation !== undefined && route.separation !== "" ? route.separation : "-",
+    version: "1.0",
+    front: boardData.front || "[]",
+    side: boardData.side || "[]",
+    rear: boardData.rear || "[]",
+    internal: boardData.internal || "[]",
+    stops: "[]",
+    return: false,
+  };
+
+  const orgId = options?.organizationId || v1Config.areaId;
+  if (orgId && typeof orgId === "string" && orgId.trim() !== "") {
+    payload.organization_id = orgId.trim();
+  }
+
+  const depotId = options?.depotId || v1Config.depotId;
+  if (depotId && typeof depotId === "string" && depotId.trim() !== "") {
+    payload.depot_id = depotId.trim();
+  }
+
+  // Only attach id if it's a valid non-empty UUID string
+  if (v1Config.id && typeof v1Config.id === "string" && v1Config.id.trim() !== "") {
+    payload.id = v1Config.id.trim();
+  }
+
+  // Only attach created_by if it's a valid non-empty UUID string (never send empty string "")
+  if (options?.userId && typeof options.userId === "string" && options.userId.trim() !== "") {
+    payload.created_by = options.userId.trim();
+  }
+
+  return payload;
 }

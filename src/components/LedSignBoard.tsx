@@ -21,6 +21,16 @@ const LEDBitmapSimulator = ({
   onBitmapTextChange,
   isRouteNumber = false, // Flag to indicate if this is a route number display
 }) => {
+  const safeText = text || {
+    text: "",
+    fontHeight: 12,
+    fontWeight: "Regular",
+    scrollType: "Fixed",
+    position: "Center",
+    scrollSpeed: 1,
+    fontSize: 12,
+  };
+
   const [ledSize, setLedSize] = useState(4);
   const [ledSpacing, setLedSpacing] = useState(horizontalSpacing);
   const [rowSpacing, setRowSpacing] = useState(verticalSpacing);
@@ -98,24 +108,24 @@ const LEDBitmapSimulator = ({
 
   const getApiUrl = () => {
     const params: BitmapApiParams = {
-      text: text?.text !== undefined && text?.text !== null ? text.text : " ",
-      icon: text?.icon || undefined,
-      iconPosition: text?.iconPosition || (text?.icon ? "start" : undefined),
-      iconWordIndex: text?.iconWordIndex || undefined,
-      iconSpacing: text?.iconSpacing !== undefined ? text.iconSpacing : undefined,
-      iconWidthScale: text?.iconWidthScale !== undefined ? text.iconWidthScale : undefined,
-      height: text?.fontHeight || rows,
-      weight: text?.fontWeight === "Bold" ? "Bold" : "Regular",
+      text: safeText?.text !== undefined && safeText?.text !== null ? safeText.text : " ",
+      icon: (safeText as any)?.icon || undefined,
+      iconPosition: (safeText as any)?.iconPosition || ((safeText as any)?.icon ? "start" : undefined),
+      iconWordIndex: (safeText as any)?.iconWordIndex || undefined,
+      iconSpacing: (safeText as any)?.iconSpacing !== undefined ? (safeText as any).iconSpacing : undefined,
+      iconWidthScale: (safeText as any)?.iconWidthScale !== undefined ? (safeText as any).iconWidthScale : undefined,
+      height: safeText?.fontHeight || rows,
+      weight: safeText?.fontWeight === "Bold" ? "Bold" : "Regular",
       family: fontFamily,
-      vAlign: text?.vAlign || undefined,
-      threshold: text?.threshold || undefined,
-      spaceWidth: text?.spaceWidth || undefined,
+      vAlign: (safeText as any)?.vAlign || undefined,
+      threshold: (safeText as any)?.threshold || undefined,
+      spaceWidth: (safeText as any)?.spaceWidth || undefined,
     };
 
     if (isRouteNumber) {
       params.padding = true;
-      params.pleft = text?.position === "Left" ? 1 : 2;
-      params.pright = text?.position === "Right" ? 1 : 2;
+      params.pleft = safeText?.position === "Left" ? 1 : 2;
+      params.pright = safeText?.position === "Right" ? 1 : 2;
     }
 
     return buildBitmapApiUrl(params);
@@ -141,27 +151,27 @@ const LEDBitmapSimulator = ({
       fetchBitmap();
     }, 300);
 
-    if (text?.scrollType === "Left To Right") {
+    if (safeText?.scrollType === "Left To Right") {
       setIsScrolling(true);
       setScrollDirection("right");
     }
-    if (text?.scrollType === "Right To Left") {
+    if (safeText?.scrollType === "Right To Left") {
       setIsScrolling(true);
       setScrollDirection("left");
     }
-    if (text?.scrollType === "Fixed") {
+    if (safeText?.scrollType === "Fixed") {
       setIsScrolling(false);
       setScrollOffset(0);
     }
-    setScrollSpeed(text?.scrollSpeed);
-    if (text?.scrollType !== "Fixed") {
+    setScrollSpeed(safeText?.scrollSpeed || 1);
+    if (safeText?.scrollType !== "Fixed") {
       setIsScrolling(stopScroll);
     }
 
-    if (!text?.fontSize || text.fontSize <= 0) {
+    if (!safeText?.fontSize || safeText.fontSize <= 0) {
       setWidthAspect(0.8);
     } else {
-      setWidthAspect(text.fontSize);
+      setWidthAspect(safeText.fontSize);
     }
 
     return () => {
@@ -169,22 +179,22 @@ const LEDBitmapSimulator = ({
       controller.abort();
     };
   }, [
-    text?.text,
-    text?.icon,
-    text?.iconPosition,
-    text?.iconSpacing,
-    text?.iconWidthScale,
-    text?.iconWordIndex,
-    text?.scrollType,
-    text?.position,
-    text?.scrollSpeed,
-    text?.fontSize,
-    text?.fontWeight,
-    text?.fontHeight,
-    text?.fontfile,
-    text?.x_offset,
-    text?.y_offset,
-    text?.spacing,
+    safeText?.text,
+    (safeText as any)?.icon,
+    (safeText as any)?.iconPosition,
+    (safeText as any)?.iconSpacing,
+    (safeText as any)?.iconWidthScale,
+    (safeText as any)?.iconWordIndex,
+    safeText?.scrollType,
+    safeText?.position,
+    safeText?.scrollSpeed,
+    safeText?.fontSize,
+    safeText?.fontWeight,
+    safeText?.fontHeight,
+    (safeText as any)?.fontfile,
+    (safeText as any)?.x_offset,
+    (safeText as any)?.y_offset,
+    (safeText as any)?.spacing,
     fontFamily,
     stopScroll,
   ]);
@@ -193,7 +203,7 @@ const LEDBitmapSimulator = ({
     setLedMatrix(processBitmapText(bitmapText, scrollOffset));
   }, [bitmapText]);
 
-  const convertScrollTypeToMarqueeDirection = (scrollType) => {
+  const convertScrollTypeToMarqueeDirection = (scrollType: any) => {
     switch (scrollType) {
       case "Left To Right":
         return "ltr";
@@ -206,7 +216,7 @@ const LEDBitmapSimulator = ({
     }
   };
 
-  const convertPositionToAlignment = (position) => {
+  const convertPositionToAlignment = (position: any) => {
     switch (position) {
       case "Left":
         return "start";
@@ -227,27 +237,26 @@ const LEDBitmapSimulator = ({
   }
 
   useEffect(() => {
-    onBitmapTextChange(bitmapText);
-  }, [bitmapText]);
+    if (onBitmapTextChange) {
+      onBitmapTextChange(bitmapText);
+    }
+  }, [bitmapText, onBitmapTextChange]);
 
   return (
     <div className="flex flex-col ">
-      {text.text && (
+      {safeText.text && (
         <canvas
           ref={canvasRef}
           className="border border-gray-300 mb-4 hidden"
         ></canvas>
       )}
-      {/* <pre className="bg-gray-900 text-amber-400 p-2 rounded overflow-auto font-mono text-sm whitespace-pre">
-				{bitmapText}
-			</pre> */}
       <LEDMatrix
         rows={rows}
         columns={cols}
         pattern={convertAsciiToArray(bitmapText)}
-        marqueeDirection={convertScrollTypeToMarqueeDirection(text.scrollType)}
-        scrollSpeed={parseInt(text.scrollSpeed)}
-        alignment={convertPositionToAlignment(text.position)}
+        marqueeDirection={convertScrollTypeToMarqueeDirection(safeText.scrollType)}
+        scrollSpeed={parseInt(String(safeText.scrollSpeed || 1), 10)}
+        alignment={convertPositionToAlignment(safeText.position)}
         paused={stopScroll}
       />
     </div>

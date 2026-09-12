@@ -141,9 +141,16 @@ export default function RoutesPage() {
     setSelectedDepotInStore(depots.find((d) => d.id === val) || null);
 
   const handleEditRoute = (routeId: string) => {
-    navigate(
-      `/routes/create/${selectedOrganization?.id}/${selectedDepot?.id}/${routeId}`,
-    );
+    const route = routes?.find((r) => r.id === routeId);
+    if (route?.version === "1.0") {
+      navigate(
+        `/routes/create-v1/${selectedOrganization?.id}/${selectedDepot?.id}/${routeId}`,
+      );
+    } else {
+      navigate(
+        `/routes/create/${selectedOrganization?.id}/${selectedDepot?.id}/${routeId}`,
+      );
+    }
   };
 
   const handleDeleteRoute = (routeId: string) => {
@@ -518,6 +525,18 @@ export default function RoutesPage() {
             >
               <Button
                 icon={<FeatherPlus />}
+                variant="brand-secondary-2"
+                disabled={!selectedDepot}
+                onClick={() =>
+                  navigate(
+                    `/routes/create-v1/${selectedOrganization?.id}/${selectedDepot?.id}`,
+                  )
+                }
+              >
+                V1 Add Route
+              </Button>
+              <Button
+                icon={<FeatherPlus />}
                 disabled={!selectedDepot}
                 onClick={() =>
                   navigate(
@@ -525,7 +544,7 @@ export default function RoutesPage() {
                   )
                 }
               >
-                Add Route
+                V2 Add Route
               </Button>
             </RBAC>
             {selectedRouteIds.length > 0 && (

@@ -30,6 +30,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const UtilityPage = lazy(() => import("./pages/v2/UtilityPage"));
 const FontConfigurationPage = lazy(() => import("./pages/v2/FontConfigurationPage"));
 const RouteCreatePage = lazy(() => import("./pages/v2/CreateRoutePage"));
+const CreateRoutePageV1 = lazy(() => import("./pages/v1/CreateRoutePageV1"));
 const UserLoginForm = lazy(() =>
   import("./ui/components/UserLoginForm").then((module) => ({
     default: module.UserLoginForm,
@@ -143,6 +144,46 @@ function App() {
                   >
                     <LanguageConfigProvider>
                       <RouteCreatePage />
+                    </LanguageConfigProvider>
+                  </RBACPage>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="routes/create-v1/:areaId/:depotId"
+              element={
+                <ProtectedRoute>
+                  <RBACPage
+                    roles={[
+                      ROLES.MASTER,
+                      ROLES.ORGANIZATION_ADMIN,
+                      ROLES.REGION_ADMIN,
+                      ROLES.DEPOT_ADMIN,
+                    ]}
+                    features={["PIS", "PAS", "ITMS"]}
+                  >
+                    <LanguageConfigProvider>
+                      <CreateRoutePageV1 />
+                    </LanguageConfigProvider>
+                  </RBACPage>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="routes/create-v1/:areaId/:depotId/:routeId"
+              element={
+                <ProtectedRoute>
+                  <RBACPage
+                    roles={[
+                      ROLES.MASTER,
+                      ROLES.ORGANIZATION_ADMIN,
+                      ROLES.REGION_ADMIN,
+                      ROLES.DEPOT_ADMIN,
+                    ]}
+                    features={["PIS", "PAS", "ITMS"]}
+                  >
+                    <LanguageConfigProvider>
+                      <CreateRoutePageV1 />
                     </LanguageConfigProvider>
                   </RBACPage>
                 </ProtectedRoute>
