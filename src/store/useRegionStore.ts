@@ -4,7 +4,15 @@ import { persist } from 'zustand/middleware';
 
 interface RegionStore {
   selectedRegion: IRegion | null;
-  setSelectedRegion: (region:  IRegion | null) => void;
+  setSelectedRegion: (region: IRegion | null) => void;
+
+  // Depots page last selected region
+  depotsPageRegion: IRegion | null;
+  setDepotsPageRegion: (region: IRegion | null) => void;
+
+  // Routes page last selected region
+  routesPageRegion: IRegion | null;
+  setRoutesPageRegion: (region: IRegion | null) => void;
 }
 
 export const useRegionStore = create<RegionStore>()(
@@ -12,10 +20,22 @@ export const useRegionStore = create<RegionStore>()(
     (set) => ({
       selectedRegion: null,
       setSelectedRegion: (region) => set({ selectedRegion: region }),
+
+      depotsPageRegion: null,
+      setDepotsPageRegion: (region) =>
+        set({ depotsPageRegion: region, selectedRegion: region }),
+
+      routesPageRegion: null,
+      setRoutesPageRegion: (region) =>
+        set({ routesPageRegion: region, selectedRegion: region }),
     }),
     {
       name: 'region-storage',
-      partialize: (state) => ({ selectedRegion: state.selectedRegion }),
+      partialize: (state) => ({
+        selectedRegion: state.selectedRegion,
+        depotsPageRegion: state.depotsPageRegion,
+        routesPageRegion: state.routesPageRegion,
+      }),
     }
   )
 );

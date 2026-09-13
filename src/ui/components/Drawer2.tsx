@@ -22,7 +22,7 @@ const Content = React.forwardRef<HTMLDivElement, ContentProps>(function Content(
     <SubframeCore.Drawer.Content asChild={true} {...otherProps}>
       <div
         className={SubframeUtils.twClassNames(
-          "flex h-full min-w-[320px] flex-col items-start gap-2 border-l border-solid border-neutral-border bg-default-background",
+          "flex h-full min-w-[320px] flex-col items-start gap-2 border-l border-solid border-neutral-border bg-default-background z-50",
           className
         )}
         ref={ref}
@@ -50,7 +50,7 @@ const Drawer2Root = React.forwardRef<HTMLDivElement, Drawer2RootProps>(
       <SubframeCore.Drawer.Root asChild={true} {...otherProps}>
         <div
           className={SubframeUtils.twClassNames(
-            "flex h-full w-full flex-col items-end justify-center gap-2 bg-[#00000066]",
+            "flex h-full w-full flex-col items-end justify-center gap-2 bg-[#00000066] z-50",
             className
           )}
           ref={ref}

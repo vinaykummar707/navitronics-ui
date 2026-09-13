@@ -37,10 +37,18 @@ import { getUserRouteAccess } from "@/utils/featureFlags";
 // ─── Sub-components ──────────────────────────────
 function useRoutesPageData() {
   const { selectedOrganization } = useOrganizationStore();
-  const selectedRegion = useRegionStore((state) => state.selectedRegion);
-  const { setSelectedRegion: setSelectedRegionInStore } = useRegionStore();
-  const selectedDepot = useDepotStore((state) => state.selectedDepot);
-  const { setSelectedDepot: setSelectedDepotInStore } = useDepotStore();
+  const selectedRegion = useRegionStore(
+    (state) => state.routesPageRegion ?? state.selectedRegion,
+  );
+  const setRoutesPageRegion = useRegionStore(
+    (state) => state.setRoutesPageRegion,
+  );
+  const selectedDepot = useDepotStore(
+    (state) => state.routesPageDepot ?? state.selectedDepot,
+  );
+  const setRoutesPageDepot = useDepotStore(
+    (state) => state.setRoutesPageDepot,
+  );
   const user = useLoggedUserStore((state) => state.user);
 
   const { data: regionData, refetch: refetchRegions } = regionCrud.useList({
@@ -75,18 +83,35 @@ function useRoutesPageData() {
   const depots = depotData?.data as IDepot[];
   const routes = routesData?.data as IRoute[];
 
-  // Auto-select first region
+  // Auto-select or validate region:
+  // If regions are still loading, do not touch selection
   useEffect(() => {
-    if (regions?.length > 0 && !selectedRegion) {
-      setSelectedRegionInStore(regions[0]);
-    }
-  }, [regions, selectedRegion, setSelectedRegionInStore]);
+    if (!regions) return;
 
-  // Auto-select / clear depot
+    if (regions.length === 0) {
+      if (selectedRegion) {
+        setRoutesPageRegion(null);
+      }
+      return;
+    }
+
+    const isSelectedRegionValid = regions.some(
+      (region) => region.id === selectedRegion?.id,
+    );
+
+    if (!isSelectedRegionValid) {
+      setRoutesPageRegion(regions[0]);
+    }
+  }, [regions, selectedRegion, setRoutesPageRegion]);
+
+  // Auto-select or validate depot:
+  // If depots are still loading, do not touch selection
   useEffect(() => {
-    if (!depots || depots.length === 0) {
+    if (!depots) return;
+
+    if (depots.length === 0) {
       if (selectedDepot) {
-        setSelectedDepotInStore(null);
+        setRoutesPageDepot(null);
       }
       return;
     }
@@ -96,9 +121,9 @@ function useRoutesPageData() {
     );
 
     if (!isSelectedDepotValid) {
-      setSelectedDepotInStore(depots[0]);
+      setRoutesPageDepot(depots[0]);
     }
-  }, [depots, selectedDepot, setSelectedDepotInStore]);
+  }, [depots, selectedDepot, setRoutesPageDepot]);
 
   return {
     user,
@@ -108,8 +133,8 @@ function useRoutesPageData() {
     selectedRegion,
     selectedDepot,
     selectedOrganization,
-    setSelectedRegionInStore,
-    setSelectedDepotInStore,
+    setRoutesPageRegion,
+    setRoutesPageDepot,
     refetchRoutes,
   };
 }
@@ -126,8 +151,8 @@ export default function RoutesPage() {
     selectedRegion,
     selectedDepot,
     selectedOrganization,
-    setSelectedRegionInStore,
-    setSelectedDepotInStore,
+    setRoutesPageRegion,
+    setRoutesPageDepot,
     refetchRoutes,
   } = useRoutesPageData();
 
@@ -137,11 +162,15 @@ export default function RoutesPage() {
   const { mutate: deleteSelectedRoutes } = routeCrud.useDeleteAll();
   const { mutate: createRoute } = routeCrud.useCreate();
 
-  const handleRegionChange = (val: string) =>
-    setSelectedRegionInStore(regions.find((r) => r.id === val) || null);
+  const handleRegionChange = (val: string) => {
+    const nextRegion = regions?.find((r) => r.id === val) || null;
+    setRoutesPageRegion(nextRegion);
+  };
 
-  const handleDepotChange = (val: string) =>
-    setSelectedDepotInStore(depots.find((d) => d.id === val) || null);
+  const handleDepotChange = (val: string) => {
+    const nextDepot = depots?.find((d) => d.id === val) || null;
+    setRoutesPageDepot(nextDepot);
+  };
 
   const handleEditRoute = (routeId: string) => {
     const route = routes?.find((r) => r.id === routeId);

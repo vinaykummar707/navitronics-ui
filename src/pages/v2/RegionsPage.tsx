@@ -4,7 +4,7 @@ import { useRegionStore } from "@/store/useRegionStore";
 import { IRegion, regionCrud } from "@/types/IRegion";
 import { CreateRegionForm } from "@/ui";
 import { Button } from "@/ui/components/Button";
-import { Dialog } from "@/ui/components/Dialog";
+import { Drawer } from "@/ui/components/Drawer";
 import { OptionsDropdown } from "@/ui/components/OptionsDropdown";
 import { Table } from "@/ui/components/Table";
 import { FeatherMapPin, FeatherPlus } from "@subframe/core";
@@ -158,14 +158,14 @@ export default function AreasPage() {
           </div>
         </div>
       ) : null}
-      <Dialog
+      <Drawer
         open={open}
         onOpenChange={(open: boolean) => {
           setOpen(open);
           if (!open) setEditData(null);
         }}
       >
-        <Dialog.Content>
+        <Drawer.Content>
           <CreateRegionForm
             initialData={editData}
             onSuccess={handleFormSuccess}
@@ -175,8 +175,8 @@ export default function AreasPage() {
             }}
             organizationId={selectedOrganization ? selectedOrganization.id : ""}
           />
-        </Dialog.Content>
-      </Dialog>
+        </Drawer.Content>
+      </Drawer>
     </div>
   );
 }

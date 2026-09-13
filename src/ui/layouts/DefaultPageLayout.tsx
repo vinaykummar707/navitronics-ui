@@ -8,7 +8,7 @@
  */
 // @subframe/sync-disable
 import React from "react";
-import { FeatherBusFront, FeatherCctv, FeatherPanelLeft } from "@subframe/core";
+import { FeatherBusFront, FeatherPanelLeft } from "@subframe/core";
 import { FeatherCpu } from "@subframe/core";
 import { FeatherGlobe2 } from "@subframe/core";
 import { FeatherHotel } from "@subframe/core";
@@ -54,7 +54,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
       {...otherProps}
     >
       {/* Global Top Bar */}
-      <header className="flex h-14 w-full flex-none items-center justify-between border-b border-solid border-neutral-border bg-sidebar-background px-4 z-20">
+      <header className="flex h-14 w-full flex-none items-center justify-between border-b border-solid border-neutral-border bg-sidebar-background px-4 z-10">
         <div className="flex items-center gap-3">
           <IconButton
             variant="neutral-tertiary"

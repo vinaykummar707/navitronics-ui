@@ -1,7 +1,7 @@
 import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { CreateDepotForm, Select } from "@/ui";
 import { Button } from "@/ui/components/Button";
-import { Dialog } from "@/ui/components/Dialog";
+import { Drawer } from "@/ui/components/Drawer";
 import { OptionsDropdown } from "@/ui/components/OptionsDropdown";
 import { Table } from "@/ui/components/Table";
 import {
@@ -24,8 +24,13 @@ export default function DepotsPage() {
   const [editData, setEditData] = useState<IDepot | null>(null);
 
   const { selectedOrganization } = useOrganizationStore();
-  const selectedRegion = useRegionStore((state) => state.selectedRegion);
-  const { setSelectedRegion: setSelectedRegionInStore } = useRegionStore();
+
+  const selectedRegion = useRegionStore(
+    (state) => state.depotsPageRegion ?? state.selectedRegion,
+  );
+  const setDepotsPageRegion = useRegionStore(
+    (state) => state.setDepotsPageRegion,
+  );
 
   const user = useLoggedUserStore((state) => state.user);
 
@@ -56,9 +61,11 @@ export default function DepotsPage() {
   const { mutate: deleteDepot } = useDelete();
 
   useEffect(() => {
-    if (!regions || regions.length === 0) {
+    if (!regions) return; // Do not clear while regions are loading
+
+    if (regions.length === 0) {
       if (selectedRegion) {
-        setSelectedRegionInStore(null);
+        setDepotsPageRegion(null);
       }
       return;
     }
@@ -68,9 +75,9 @@ export default function DepotsPage() {
     );
 
     if (!isSelectedRegionValid) {
-      setSelectedRegionInStore(regions[0]);
+      setDepotsPageRegion(regions[0]);
     }
-  }, [regions, selectedRegion, setSelectedRegionInStore, selectedOrganization]);
+  }, [regions, selectedRegion, setDepotsPageRegion, selectedOrganization]);
 
   const handleDeleteDepot = (depotId: string) => {
     deleteDepot(depotId, {
@@ -115,7 +122,7 @@ export default function DepotsPage() {
                 placeholder="Select Region"
                 value={selectedRegion ? selectedRegion.id : ""}
                 onValueChange={(val) =>
-                  setSelectedRegionInStore(
+                  setDepotsPageRegion(
                     regions.find((r) => r.id === val) || null,
                   )
                 }
@@ -138,7 +145,7 @@ export default function DepotsPage() {
                 placeholder="Select Region"
                 value={selectedRegion ? selectedRegion.id : ""}
                 onValueChange={(val) =>
-                  setSelectedRegionInStore(
+                  setDepotsPageRegion(
                     regions.find((r) => r.id === val) || null,
                   )
                 }
@@ -268,14 +275,14 @@ export default function DepotsPage() {
         </div>
       )}
 
-      <Dialog
+      <Drawer
         open={open}
         onOpenChange={(open: boolean) => {
           setOpen(open);
           if (!open) setEditData(null);
         }}
       >
-        <Dialog.Content>
+        <Drawer.Content>
           <CreateDepotForm
             region_id={selectedRegion ? selectedRegion.id : ""}
             initialData={editData}
@@ -286,8 +293,8 @@ export default function DepotsPage() {
             }}
             organizationId={selectedOrganization ? selectedOrganization.id : ""}
           />
-        </Dialog.Content>
-      </Dialog>
+        </Drawer.Content>
+      </Drawer>
     </div>
   );
 }

@@ -16,6 +16,7 @@ import { DropdownMenu } from "./DropdownMenu";
 import { useNavigate } from "react-router-dom";
 import { ROLES } from "@/constants/roles";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
+import { supabase } from "@/supabaseClient";
 
 interface LoggedUserRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -29,6 +30,22 @@ const LoggedUserRoot = React.forwardRef<HTMLDivElement, LoggedUserRootProps>(
     const user = useLoggedUserStore((state) => state.user); // Zustand store
     const logout = useLoggedUserStore((state) => state.logout); // Zustand store
     const navigate = useNavigate(); // React Router navigation4
+
+    const handleLogout = async () => {
+      try {
+        await supabase.auth.signOut();
+      } catch (err) {
+        console.error("Sign out error:", err);
+      }
+      logout();
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch {
+        // Ignore storage access errors
+      }
+      navigate("/login", { replace: true });
+    };
 
     // write a function that returns assigned organization name, region name and depot name based on user object and role
     const use = (() => {
@@ -87,11 +104,7 @@ const LoggedUserRoot = React.forwardRef<HTMLDivElement, LoggedUserRootProps>(
                 </div>
                 <DropdownMenu.DropdownItem
                   icon={<FeatherLogOut />}
-                  onClick={() => {
-                    localStorage.clear();
-                    logout();
-                    navigate("/login");
-                  }}
+                  onClick={handleLogout}
                 >
                   Log out
                 </DropdownMenu.DropdownItem>

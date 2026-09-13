@@ -40,18 +40,22 @@ export default function UsersPage() {
 
   const usersData = data ? (data.data as ILoggedUser[]) : ([] as ILoggedUser[]);
 
-  // write a function to soft delete a user by setting deleted to true and active to false, and then refetch the users list using supabase client, and also handle any errors that may occur during the process
+  // Soft delete a user by setting deleted to true and active to false
   const handleDeleteUser = async (userId: string) => {
-    deleteMutate(userId, {
-      onSuccess: () => {
-        toast.success("User deleted successfully");
-        refetch();
-      },
-      onError: (error) => {
-        toast.error(`Failed to delete user: ${error.message}`);
-        console.error("Error deleting user:", error);
-      },
-    });
+    try {
+      const { error } = await supabase
+        .from("users")
+        .update({ deleted: true, active: false })
+        .eq("id", userId);
+
+      if (error) throw error;
+
+      toast.success("User deleted successfully");
+      refetch();
+    } catch (error: any) {
+      toast.error(`Failed to delete user: ${error.message}`);
+      console.error("Error deleting user:", error);
+    }
   };
 
   return (

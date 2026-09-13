@@ -3,15 +3,14 @@
 
 import React from "react";
 import { useForm } from "react-hook-form";
-import { FeatherCheck, FeatherUser } from "@subframe/core";
+import { FeatherCheck, FeatherUser, FeatherX } from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { Button } from "./Button";
+import { IconButton } from "./IconButton";
 import { TextField } from "./TextField";
 import { Select } from "./Select";
 import { depotCrud, IDepot } from "@/types/IDepot";
 import { toast } from "react-toastify";
-
-
 
 interface CreateDepotFormProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -48,9 +47,9 @@ const CreateDepotFormRoot = React.forwardRef<
 
   const [apiError, setApiError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
-      const { useCreate, useUpdate } = depotCrud;
-      const { mutate: createDepot, isPending: isCreating } = useCreate();
-      const { mutate: updateDepot, isPending: isUpdating } = useUpdate();
+  const { useCreate, useUpdate } = depotCrud;
+  const { mutate: createDepot, isPending: isCreating } = useCreate();
+  const { mutate: updateDepot, isPending: isUpdating } = useUpdate();
 
   const isUpdate = !!initialData;
 
@@ -58,128 +57,153 @@ const CreateDepotFormRoot = React.forwardRef<
     setApiError(null);
     setSuccessMessage(null);
     if (isUpdate && initialData) {
-      await updateDepot({
-        id: initialData.id,
-        payload: {
+      await updateDepot(
+        {
           id: initialData.id,
+          payload: {
+            id: initialData.id,
+            name: values.name,
+            region_id: values.region_id,
+            organization_id: organizationId,
+          },
+        },
+        {
+          onSuccess: () => {
+            toast.success("Depot updated successfully");
+            reset();
+            if (onSuccess) onSuccess();
+          },
+          onError: (error) => {
+            toast.error(`Failed to update depot: ${error.message}`);
+            console.error("Update Error:", error);
+          },
+        }
+      );
+    } else {
+      await createDepot(
+        {
           name: values.name,
           region_id: values.region_id,
           organization_id: organizationId,
         },
-      }, {
-        onSuccess: () => {
-          toast.success("Depot updated successfully");
-          reset();
-          if (onSuccess) onSuccess();
+        {
+          onSuccess: () => {
+            toast.success("Depot created successfully");
+            reset();
+            if (onSuccess) onSuccess();
+          },
+          onError: (error) => {
+            toast.error(`Failed to create depot: ${error.message}`);
+            console.error("Creation Error:", error);
+          },
         }
-        , onError: (error) => {
-          toast.error(`Failed to update depot: ${error.message}`);
-          console.error("Update Error:", error);
-        }
-      });
-    } else {
-      await createDepot({
-        name: values.name,
-        region_id: values.region_id,
-        organization_id: organizationId,
-      }, {
-        onSuccess: () => {
-          toast.success("Depot created successfully");
-          reset();
-          if (onSuccess) onSuccess();
-        },
-        onError: (error) => {
-          toast.error(`Failed to create depot: ${error.message}`);
-          console.error("Creation Error:", error);
-        }
-      });
+      );
     }
   };
 
   const handleCancel = () => {
-    reset(initialData
-      ? { name: initialData.name, region_id: initialData.region_id }
-      : { name: "", region_id: "" });
+    reset(
+      initialData
+        ? { name: initialData.name, region_id: initialData.region_id }
+        : { name: "", region_id: "" }
+    );
     setSuccessMessage(null);
     setApiError(null);
-    onCancel();
+    if (onCancel) onCancel();
   };
 
   return (
-    <div
+    <form
+      onSubmit={handleSubmit(onSubmit)}
       className={SubframeUtils.twClassNames(
-        "flex h-full w-full flex-col items-start gap-4 bg-default-background px-6 py-6",
+        "flex h-full w-full sm:w-[480px] max-w-[100vw] flex-col bg-default-background overflow-hidden",
         className
       )}
-      ref={ref}
+      ref={ref as any}
       {...otherProps}
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4">
-        <div className="flex w-full flex-col items-start gap-1">
+      {/* Fixed Header */}
+      <div className="flex flex-none w-full items-start justify-between gap-4 border-b border-neutral-border px-6 py-4 bg-default-background">
+        <div className="flex flex-col items-start gap-1">
           <span className="text-heading-3 font-heading-3 text-default-font">
             {isUpdate ? "Update Depot" : "Create Depot"}
           </span>
           <span className="text-caption font-caption text-subtext-color">
             {isUpdate
-              ? "Edit the details below to update the depot"
-              : "Fill in the details below to create a new depot"}
+              ? "Edit details to update the depot"
+              : "Fill in details to create a new depot"}
           </span>
         </div>
-        
-        <div className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-4">
-          <TextField
-            className="h-auto w-full flex-none"
-            label={
-              <span>
-                Depot Name <span className="text-red-500">*</span>
-              </span>
-            }
-            helpText={errors.name?.message || apiError || "Name of the depot"}
-            icon={<FeatherUser />}
-            error={!!errors.name || !!apiError}
-          >
-            <TextField.Input
-              placeholder="Ex: Mumbai"
-              {...register("name", { required: "Depot name is required" })}
-            />
-          </TextField>
-        </div>
-        <div className="flex w-full flex-col items-start gap-2">
-          <Button
-            className="h-9 w-full flex-none"
-            icon={<FeatherCheck />}
-            type="submit"
-            disabled={isSubmitting || isCreating || isUpdating}
-            loading={isCreating || isUpdating}
-          >
-            {isCreating || isUpdating
-              ? isUpdate
-                ? "Updating..."
-                : "Creating..."
-              : isUpdate
-              ? "Update Depot"
-              : "Create Depot"}
-          </Button>
-          <Button
-            className="h-9 w-full flex-none"
-            variant="neutral-secondary"
-            type="button"
-            onClick={handleCancel}
-            disabled={isSubmitting || isCreating || isUpdating}
-          >
-            Cancel
-          </Button>
-          {isSubmitting && (
-            <span className="text-sm text-subtext-color">
-              {isUpdate ? "Updating depot..." : "Creating depot..."}
+        {onCancel && (
+          <IconButton
+            icon={<FeatherX className="h-4 w-4" />}
+            size="small"
+            variant="neutral-tertiary"
+            onClick={(e) => {
+              e.preventDefault();
+              handleCancel();
+            }}
+            title="Close"
+          />
+        )}
+      </div>
+
+      {/* Scrollable Center Form Body */}
+      <div className="flex flex-1 min-h-0 w-full flex-col items-start gap-4 overflow-y-auto px-6 py-5">
+        <TextField
+          className="h-auto w-full flex-none"
+          label={
+            <span>
+              Depot Name <span className="text-red-500">*</span>
             </span>
-          )}
-          {successMessage && (
-            <span className="text-sm text-green-700">{successMessage}</span>
-          )}
-        </div>
-      </form>
-    </div>
+          }
+          helpText={errors.name?.message || apiError || "Name of the depot"}
+          icon={<FeatherUser />}
+          error={!!errors.name || !!apiError}
+        >
+          <TextField.Input
+            placeholder="Ex: Mumbai"
+            {...register("name", { required: "Depot name is required" })}
+          />
+        </TextField>
+      </div>
+
+      {/* Fixed Footer Actions */}
+      <div className="flex flex-none w-full flex-col items-start gap-2 border-t border-neutral-border bg-default-background px-6 py-4 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
+        <Button
+          className="h-9 w-full flex-none"
+          icon={<FeatherCheck />}
+          type="submit"
+          disabled={isSubmitting || isCreating || isUpdating}
+          loading={isCreating || isUpdating}
+        >
+          {isCreating || isUpdating
+            ? isUpdate
+              ? "Updating..."
+              : "Creating..."
+            : isUpdate
+            ? "Update Depot"
+            : "Create Depot"}
+        </Button>
+        <Button
+          className="h-9 w-full flex-none"
+          variant="neutral-secondary"
+          type="button"
+          onClick={handleCancel}
+          disabled={isSubmitting || isCreating || isUpdating}
+        >
+          Cancel
+        </Button>
+        {isSubmitting && (
+          <span className="text-sm text-subtext-color">
+            {isUpdate ? "Updating depot..." : "Creating depot..."}
+          </span>
+        )}
+        {successMessage && (
+          <span className="text-sm text-green-700">{successMessage}</span>
+        )}
+      </div>
+    </form>
   );
 });
 

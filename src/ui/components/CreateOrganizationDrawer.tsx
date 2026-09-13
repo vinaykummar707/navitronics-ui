@@ -12,11 +12,13 @@ import {
   FeatherUser,
   FeatherSave,
   FeatherImage,
+  FeatherX,
 } from "@subframe/core";
 import * as SubframeUtils from "../utils";
 
 // Import your actual UI components
 import { Button } from "./Button";
+import { IconButton } from "./IconButton";
 import { Switch } from "./Switch";
 import { TextField } from "./TextField";
 import { FeatureToggle } from "./FeatureToggle";
@@ -207,26 +209,40 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
     <form
       onSubmit={handleSubmit(onSubmit)}
       className={SubframeUtils.twClassNames(
-        "flex h-full w-full flex-col items-start gap-6 overflow-y-auto bg-default-background px-6 py-6",
+        "flex h-full w-full sm:w-[480px] max-w-[100vw] flex-col bg-default-background overflow-hidden",
         className,
       )}
       ref={ref}
       {...otherProps}
     >
-      {/* Header Section */}
-      <div className="flex w-full flex-col items-start gap-1">
-        <span className="text-heading-3 font-heading-3 text-default-font">
-          {isEditMode ? "Edit Organization" : "Create Organization"}
-        </span>
-        <span className="text-caption font-caption text-subtext-color">
-          {isEditMode
-            ? "Update the details and module access of the existing organization"
-            : "Fill in the details below to create a new organization with module permissions"}
-        </span>
+      {/* Fixed Header */}
+      <div className="flex flex-none w-full items-start justify-between gap-4 border-b border-neutral-border px-6 py-4 bg-default-background">
+        <div className="flex flex-col items-start gap-1">
+          <span className="text-heading-3 font-heading-3 text-default-font">
+            {isEditMode ? "Edit Organization" : "Create Organization"}
+          </span>
+          <span className="text-caption font-caption text-subtext-color">
+            {isEditMode
+              ? "Update details and module access"
+              : "Fill in details to create an organization"}
+          </span>
+        </div>
+        {onCancel && (
+          <IconButton
+            icon={<FeatherX className="h-4 w-4" />}
+            size="small"
+            variant="neutral-tertiary"
+            onClick={(e) => {
+              e.preventDefault();
+              onCancel();
+            }}
+            title="Close"
+          />
+        )}
       </div>
 
-      {/* Fields Section */}
-      <div className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-4 ">
+      {/* Scrollable Center Fields Section */}
+      <div className="flex flex-1 min-h-0 w-full flex-col items-start gap-4 overflow-y-auto px-6 py-5">
         {/* Organization Name */}
         <TextField
           className="h-auto w-full flex-none"
@@ -340,14 +356,14 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
         </div>
       </div>
 
-      {/* Actions Section */}
-      <div className="flex w-full flex-col items-start gap-2">
+      {/* Fixed Footer Actions */}
+      <div className="flex flex-none w-full flex-col items-start gap-2 border-t border-neutral-border bg-default-background px-6 py-4 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
         <Button
           className="h-9 w-full flex-none"
           icon={isEditMode ? <FeatherSave /> : <FeatherPlus />}
           disabled={isSubmitting || isCreating || isUpdating}
           loading={isCreating || isUpdating}
-          onClick={() => handleSubmit(onSubmit)()} // Trigger submit manually if button is not type="submit"
+          type="submit"
         >
           {isCreating || isUpdating
             ? "Saving..."
@@ -359,6 +375,7 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
         <Button
           className="h-9 w-full flex-none"
           variant="neutral-secondary"
+          type="button"
           disabled={isSubmitting || isCreating || isUpdating}
           onClick={(e) => {
             e.preventDefault();

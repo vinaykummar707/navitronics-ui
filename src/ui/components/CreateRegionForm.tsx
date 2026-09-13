@@ -3,13 +3,14 @@
 
 import React from "react";
 import { useForm } from "react-hook-form";
-import { FeatherCheck } from "@subframe/core";
-import { FeatherUser } from "@subframe/core";
+import { FeatherCheck, FeatherUser, FeatherX } from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { Button } from "./Button";
+import { IconButton } from "./IconButton";
 import { TextField } from "./TextField";
 import { IRegion, IRegionCreate, regionCrud } from "@/types/IRegion";
 import { toast } from "react-toastify";
+
 interface CreateRegionFormProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   organizationId: string;
@@ -17,10 +18,6 @@ interface CreateRegionFormProps extends React.HTMLAttributes<HTMLDivElement> {
   onSuccess?: () => void;
   onCancel?: () => void;
 }
-
-type FormValues = {
-  name: string;
-};
 
 const CreateRegionFormRoot = React.forwardRef<
   HTMLDivElement,
@@ -39,135 +36,157 @@ const CreateRegionFormRoot = React.forwardRef<
     defaultValues: { name: initialData?.name || "" },
   });
 
-
   const [apiError, setApiError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
 
-    const isEditMode = !!initialData;
-    const { useCreate, useUpdate } = regionCrud;
-    const { mutate: createRegion, isPending: isCreating } = useCreate();
-    const { mutate: updateRegion, isPending: isUpdating } = useUpdate();
+  const isEditMode = !!initialData;
+  const { useCreate, useUpdate } = regionCrud;
+  const { mutate: createRegion, isPending: isCreating } = useCreate();
+  const { mutate: updateRegion, isPending: isUpdating } = useUpdate();
 
   const onSubmit = async (values: IRegionCreate) => {
     if (isEditMode && initialData) {
-      await updateRegion({
-        id: initialData.id,
-        payload: {
+      await updateRegion(
+        {
           id: initialData.id,
+          payload: {
+            id: initialData.id,
+            name: values.name,
+            organization_id: organizationId,
+          },
+        },
+        {
+          onSuccess: () => {
+            toast.success("Region updated successfully");
+            reset(); // Reset form after successful update
+            if (onSuccess) onSuccess();
+          },
+          onError: (error) => {
+            toast.error(`Failed to update region: ${error.message}`);
+            console.error("Update Error:", error);
+          },
+        }
+      );
+    } else {
+      await createRegion(
+        {
           name: values.name,
           organization_id: organizationId,
         },
-      }, {
-        onSuccess: () => {
-          toast.success("Region updated successfully");
-          reset(); // Reset form after successful update
-          if (onSuccess) onSuccess();
+        {
+          onSuccess: () => {
+            toast.success("Region created successfully");
+            reset(); // Reset form after successful creation
+            if (onSuccess) onSuccess();
+          },
+          onError: (error) => {
+            toast.error(`Failed to create region: ${error.message}`);
+            console.error("Creation Error:", error);
+          },
         }
-        , onError: (error) => {
-          toast.error(`Failed to update region: ${error.message}`);
-          console.error("Update Error:", error);
-        }
-      });
-    } else {
-      await createRegion({
-        name: values.name,
-        organization_id: organizationId,
-        // Add other fields if necessary
-      }, {
-        onSuccess: () => {
-          toast.success("Region created successfully");
-          reset(); // Reset form after successful creation
-          if (onSuccess) onSuccess();
-        },
-        onError: (error) => {
-          toast.error(`Failed to create region: ${error.message}`);
-          console.error("Creation Error:", error);
-        }
-      });
-     
-    };
+      );
+    }
   };
+
   const handleCancel = () => {
     reset(initialData ? { name: initialData.name } : { name: "" });
     setSuccessMessage(null);
     setApiError(null);
-    onCancel();
+    if (onCancel) onCancel();
   };
 
   return (
-    <div
+    <form
+      onSubmit={handleSubmit(onSubmit)}
       className={SubframeUtils.twClassNames(
-        "flex h-full w-full flex-col items-start gap-4 bg-default-background px-6 py-6",
+        "flex h-full w-full sm:w-[480px] max-w-[100vw] flex-col bg-default-background overflow-hidden",
         className
       )}
-      ref={ref}
+      ref={ref as any}
       {...otherProps}
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4">
-        <div className="flex w-full flex-col items-start gap-1">
+      {/* Fixed Header */}
+      <div className="flex flex-none w-full items-start justify-between gap-4 border-b border-neutral-border px-6 py-4 bg-default-background">
+        <div className="flex flex-col items-start gap-1">
           <span className="text-heading-3 font-heading-3 text-default-font">
             {isEditMode ? "Update Region" : "Create Region"}
           </span>
           <span className="text-caption font-caption text-subtext-color">
             {isEditMode
-              ? "Edit the details below to update the region"
-              : "Fill in the details below to create a new region"}
+              ? "Edit details to update the region"
+              : "Fill in details to create a new region"}
           </span>
         </div>
-        <div className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-4">
-          <TextField
-            className="h-auto w-full flex-none"
-            label={
-              <span>
-                Region Name <span className="text-red-500">*</span>
-              </span>
-            }
-            helpText={errors.name?.message || apiError || "Name of the region"}
-            icon={<FeatherUser />}
-            error={!!errors.name || !!apiError}
-          >
-            <TextField.Input
-              placeholder="Ex: Mumbai"
-              {...register("name", { required: "Region name is required" })}
-            />
-          </TextField>
-        </div>
-        <div className="flex w-full flex-col items-start gap-2">
-          <Button
-            className="h-9 w-full flex-none"
-            icon={<FeatherCheck />}
-            type="submit"
-            disabled={isSubmitting || isCreating || isUpdating}
-            loading={isCreating || isUpdating}
-          >
-            {isCreating || isUpdating
-              ? isEditMode
-                ? "Updating..."
-                : "Creating..."
-              : isEditMode
-              ? "Update Region"
-              : "Create Region"}
-          </Button>
-          <Button
-            className="h-9 w-full flex-none"
-            variant="neutral-secondary"
-            type="button"
-            onClick={handleCancel}
-            disabled={isSubmitting || isCreating || isUpdating}
-          >
-            Cancel
-          </Button>
-          {isSubmitting && (
-            <span className="text-sm text-subtext-color">
-              {isEditMode ? "Updating region..." : "Creating region..."}
+        {onCancel && (
+          <IconButton
+            icon={<FeatherX className="h-4 w-4" />}
+            size="small"
+            variant="neutral-tertiary"
+            onClick={(e) => {
+              e.preventDefault();
+              handleCancel();
+            }}
+            title="Close"
+          />
+        )}
+      </div>
+
+      {/* Scrollable Center Form Body */}
+      <div className="flex flex-1 min-h-0 w-full flex-col items-start gap-4 overflow-y-auto px-6 py-5">
+        <TextField
+          className="h-auto w-full flex-none"
+          label={
+            <span>
+              Region Name <span className="text-red-500">*</span>
             </span>
-          )}
-          {successMessage && (
-            <span className="text-sm text-green-700">{successMessage}</span>
-          )}
-        </div>
-      </form>
-    </div>
+          }
+          helpText={errors.name?.message || apiError || "Name of the region"}
+          icon={<FeatherUser />}
+          error={!!errors.name || !!apiError}
+        >
+          <TextField.Input
+            placeholder="Ex: Mumbai"
+            {...register("name", { required: "Region name is required" })}
+          />
+        </TextField>
+      </div>
+
+      {/* Fixed Footer Actions */}
+      <div className="flex flex-none w-full flex-col items-start gap-2 border-t border-neutral-border bg-default-background px-6 py-4 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
+        <Button
+          className="h-9 w-full flex-none"
+          icon={<FeatherCheck />}
+          type="submit"
+          disabled={isSubmitting || isCreating || isUpdating}
+          loading={isCreating || isUpdating}
+        >
+          {isCreating || isUpdating
+            ? isEditMode
+              ? "Updating..."
+              : "Creating..."
+            : isEditMode
+            ? "Update Region"
+            : "Create Region"}
+        </Button>
+        <Button
+          className="h-9 w-full flex-none"
+          variant="neutral-secondary"
+          type="button"
+          onClick={handleCancel}
+          disabled={isSubmitting || isCreating || isUpdating}
+        >
+          Cancel
+        </Button>
+        {isSubmitting && (
+          <span className="text-sm text-subtext-color">
+            {isEditMode ? "Updating region..." : "Creating region..."}
+          </span>
+        )}
+        {successMessage && (
+          <span className="text-sm text-green-700">{successMessage}</span>
+        )}
+      </div>
+    </form>
   );
 });
 

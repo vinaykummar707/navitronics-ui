@@ -7,10 +7,12 @@ import {
   FeatherEyeOff,
   FeatherKey,
   FeatherUser,
+  FeatherX,
 } from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { Alert } from "./Alert";
 import { Button } from "./Button";
+import { IconButton } from "./IconButton";
 import { Select } from "./Select";
 import { TextField } from "./TextField";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
@@ -120,6 +122,9 @@ const CreateUserForm2Root = React.forwardRef<
       active: initialData?.active ?? true,
       v1_routes: initialData?.v1_routes ?? selectedOrganization?.v1_routes ?? false,
       v2_routes: initialData?.v2_routes ?? selectedOrganization?.v2_routes ?? true,
+      PIS: (initialData as any)?.PIS ?? (selectedOrganization as any)?.PIS ?? true,
+      PAS: (initialData as any)?.PAS ?? (selectedOrganization as any)?.PAS ?? true,
+      ITMS: (initialData as any)?.ITMS ?? (selectedOrganization as any)?.ITMS ?? true,
     },
   });
 
@@ -135,17 +140,21 @@ const CreateUserForm2Root = React.forwardRef<
   // Depots hook based on organization & region
   const { data: depotsData } = useDepotList({
     filters: {
-      organization_id: selectedOrgId || "",
-      region_id: selectedRegionId || null,
+      organization_id: selectedOrgId || selectedOrganization?.id,
+      region_id: selectedRegionId,
+      deleted: false,
     },
+    skip: !selectedOrgId && !selectedOrganization?.id,
   });
   const depots = depotsData?.data || [];
 
   // Regions hook based on organization
   const { data: regionsData } = useRegionList({
     filters: {
-      organization_id: selectedOrgId || "",
+      organization_id: selectedOrgId || selectedOrganization?.id,
+      deleted: false,
     },
+    skip: !selectedOrgId && !selectedOrganization?.id,
   });
   const regions = regionsData?.data || [];
 
@@ -178,6 +187,9 @@ const CreateUserForm2Root = React.forwardRef<
       active: data.active,
       v1_routes: Boolean(data.v1_routes),
       v2_routes: Boolean(data.v2_routes),
+      PIS: Boolean(data.PIS),
+      PAS: Boolean(data.PAS),
+      ITMS: Boolean(data.ITMS),
     };
 
     if (isEditMode && initialData) {
@@ -252,12 +264,22 @@ const CreateUserForm2Root = React.forwardRef<
               return;
             }
           }
-          toast.success("User account reactivated successfully");
+
+          // Trigger password reset email so user can set their password
+          try {
+            await supabase.auth.resetPasswordForEmail(data.email);
+          } catch (resetErr) {
+            console.error("Password reset trigger error:", resetErr);
+          }
+
+          toast.success(
+            `User account reactivated! A password reset link has been sent to ${data.email} to set their password.`
+          );
           reset();
           if (onUserCreated) onUserCreated();
           return;
         } else {
-          toast.error("A user with this email already exists.");
+          toast.error("A user with this email address already exists and is active.");
           return;
         }
       }
@@ -271,11 +293,50 @@ const CreateUserForm2Root = React.forwardRef<
             data: {
               v1_routes: Boolean(data.v1_routes),
               v2_routes: Boolean(data.v2_routes),
+              PIS: Boolean(data.PIS),
+              PAS: Boolean(data.PAS),
+              ITMS: Boolean(data.ITMS),
             },
           },
         });
 
       if (signUpError) {
+        const errorMsg = signUpError.message.toLowerCase();
+        if (
+          errorMsg.includes("already registered") ||
+          errorMsg.includes("already exists")
+        ) {
+          // Check if user exists in public.users
+          const { data: dbUser } = await supabase
+            .from("users")
+            .select("*")
+            .eq("email", data.email)
+            .maybeSingle();
+
+          if (dbUser) {
+            await supabase
+              .from("users")
+              .update({
+                deleted: false,
+                ...basePayload,
+              })
+              .eq("id", dbUser.id);
+
+            try {
+              await supabase.auth.resetPasswordForEmail(data.email);
+            } catch (resetErr) {
+              console.error("Password reset trigger error:", resetErr);
+            }
+
+            toast.success(
+              `User account reactivated! A password reset link has been sent to ${data.email} to set their password.`
+            );
+            reset();
+            if (onUserCreated) onUserCreated();
+            return;
+          }
+        }
+
         toast.error(`Signup failed: ${signUpError.message}`);
         return;
       }
@@ -321,28 +382,42 @@ const CreateUserForm2Root = React.forwardRef<
   };
 
   return (
-    <div
+    <form
+      onSubmit={handleSubmit(onSubmit)}
       className={SubframeUtils.twClassNames(
-        "flex h-full w-full flex-col items-start gap-4 bg-default-background px-6 py-6 overflow-y-auto no-scrollbar",
+        "flex h-full w-full sm:w-[500px] max-w-[100vw] flex-col bg-default-background overflow-hidden",
         className,
       )}
-      ref={ref}
+      ref={ref as any}
       {...otherProps}
     >
-      <div className="flex w-full flex-col items-start gap-1">
-        <span className="text-heading-3 font-heading-3 text-default-font">
-          {isEditMode ? "Edit User" : "Create User"}
-        </span>
-        <span className="text-caption font-caption text-subtext-color">
-          Fill in the details below to{" "}
-          {isEditMode ? "edit user and module permissions" : "create a new user with configured access"}
-        </span>
+      {/* Fixed Header */}
+      <div className="flex flex-none w-full items-start justify-between gap-4 border-b border-neutral-border px-6 py-4 bg-default-background">
+        <div className="flex flex-col items-start gap-1">
+          <span className="text-heading-3 font-heading-3 text-default-font">
+            {isEditMode ? "Edit User" : "Create User"}
+          </span>
+          <span className="text-caption font-caption text-subtext-color">
+            Fill in the details below to{" "}
+            {isEditMode ? "edit user and permissions" : "create a new user with configured access"}
+          </span>
+        </div>
+        {onCancel && (
+          <IconButton
+            icon={<FeatherX className="h-4 w-4" />}
+            size="small"
+            variant="neutral-tertiary"
+            onClick={(e) => {
+              e.preventDefault();
+              onCancel();
+            }}
+            title="Close"
+          />
+        )}
       </div>
 
-      <form
-        className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-4"
-        onSubmit={handleSubmit(onSubmit)}
-      >
+      {/* Scrollable Center Form Fields */}
+      <div className="flex flex-1 min-h-0 w-full flex-col items-start gap-4 overflow-y-auto px-6 py-5">
         {isSuperAdmin && (
           <Controller
             control={control}
@@ -584,6 +659,45 @@ const CreateUserForm2Root = React.forwardRef<
           </>
         )}
 
+        {/* Module Access Permissions */}
+        <div className="flex flex-col gap-3 w-full border-t border-neutral-border py-3">
+          <span className="text-caption-bold font-caption-bold text-default-font">
+            Module Access Permissions
+          </span>
+          <div className="flex flex-col gap-2 w-full">
+            <FeatureToggle
+              label="PIS"
+              description="Passenger Information System (Routes & Signboard Displays)"
+              toggle={
+                <Switch
+                  checked={Boolean(watch("PIS"))}
+                  onCheckedChange={(checked) => setValue("PIS", checked)}
+                />
+              }
+            />
+            <FeatureToggle
+              label="PAS"
+              description="Public Address System (Routes, Stops & Audio Announcements)"
+              toggle={
+                <Switch
+                  checked={Boolean(watch("PAS"))}
+                  onCheckedChange={(checked) => setValue("PAS", checked)}
+                />
+              }
+            />
+            <FeatureToggle
+              label="ITMS"
+              description="Intelligent Transit Management System (Routes, Stops & Fleet Scheduling)"
+              toggle={
+                <Switch
+                  checked={Boolean(watch("ITMS"))}
+                  onCheckedChange={(checked) => setValue("ITMS", checked)}
+                />
+              }
+            />
+          </div>
+        </div>
+
         {/* Route Version Capabilities */}
         <div className="flex flex-col gap-3 w-full border-t border-b border-neutral-border py-3">
           <span className="text-caption-bold font-caption-bold text-default-font">
@@ -624,29 +738,39 @@ const CreateUserForm2Root = React.forwardRef<
           }
         />
 
-        <div className="flex w-full flex-col items-start gap-2 pt-2">
-          <Button
-            className="h-9 w-full flex-none"
-            icon={<FeatherCheck />}
-            type="submit"
-            disabled={isSubmitting || isCreating || isUpdating}
-          >
-            {isEditMode ? "Update User" : "Create User"}
-          </Button>
-          <Button
-            className="h-9 w-full flex-none"
-            variant="neutral-secondary"
-            type="button"
-            onClick={() => {
-              if (onCancel) onCancel();
-              else reset();
-            }}
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </div>
+      </div>
+
+      {/* Fixed Footer Actions */}
+      <div className="flex flex-none w-full flex-col items-start gap-2 border-t border-neutral-border bg-default-background px-6 py-4 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
+        <Button
+          className="h-9 w-full flex-none"
+          icon={<FeatherCheck />}
+          type="submit"
+          disabled={isSubmitting || isCreating || isUpdating}
+          loading={isCreating || isUpdating}
+        >
+          {isCreating || isUpdating
+            ? isEditMode
+              ? "Updating..."
+              : "Creating..."
+            : isEditMode
+            ? "Update User"
+            : "Create User"}
+        </Button>
+        <Button
+          className="h-9 w-full flex-none"
+          variant="neutral-secondary"
+          type="button"
+          onClick={() => {
+            if (onCancel) onCancel();
+            else reset();
+          }}
+          disabled={isSubmitting || isCreating || isUpdating}
+        >
+          Cancel
+        </Button>
+      </div>
+    </form>
   );
 });
 

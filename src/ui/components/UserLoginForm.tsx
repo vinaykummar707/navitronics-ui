@@ -24,6 +24,7 @@ import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { Dialog } from "./Dialog";
 import { ResetPasswordForm } from "./ResetPassword";
+import { Checkbox } from "./Checkbox";
 interface UserLoginFormRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
 }
@@ -37,6 +38,8 @@ const UserLoginFormRoot = React.forwardRef<
 ) {
   const login = useLoggedUserStore((state) => state.login); // Zustand store
   const logout = useLoggedUserStore((state) => state.logout); // Zustand store
+  const rememberMe = useLoggedUserStore((state) => state.rememberMe);
+  const setRememberMe = useLoggedUserStore((state) => state.setRememberMe);
   const { setSelectedOrganization } = useOrganizationStore((state) => state); // Access organization store if needed
   const navigate = useNavigate(); // React Router navigation
 
@@ -140,12 +143,12 @@ const UserLoginFormRoot = React.forwardRef<
           navigate("/home");
         } else {
           throw new Error(
-            "Your account is not active or has been deleted. Please contact support.",
+            "Your account is inactive or has been deactivated. Please contact support at support@navitronix.in or reach your administrator.",
           );
         }
       } else {
         throw new Error(
-          "Your organization is not active. Please contact support.",
+          "Your organization account is inactive. Please contact support at support@navitronix.in.",
         );
       }
     } catch (error: any) {
@@ -174,31 +177,65 @@ const UserLoginFormRoot = React.forwardRef<
       ref={ref}
       {...otherProps}
     >
-      <div className="flex grow justify-center shrink-0 bg-[url('https://images.pexels.com/photos/9980493/pexels-photo-9980493.jpeg')] bg-no-repeat bg-cover bg-center basis-0 flex-col items-center gap-12 self-stretch bg-brand-50 p-12 mobile:hidden">
-        <div className="flex max-w-[320px] grow shrink-0 basis-0 flex-col items-center justify-center gap-4">
-          <Avatar
-            size="x-large"
-            image="https://navitronix.in/assets/navitronix.jpeg"
-          >
-            HW
-          </Avatar>
-          <div className="flex w-full flex-col items-center gap-2">
-            <span className="text-heading text-white-default font-heading text-center tracking-wide">
-              Navitronix
-            </span>
-            <span className="text-body text-white font-body text-center opacity-90">
+      <div className="relative flex grow justify-center shrink-0 bg-[url('https://images.pexels.com/photos/9980493/pexels-photo-9980493.jpeg')] bg-no-repeat bg-cover bg-center basis-0 flex-col items-center justify-center gap-8 self-stretch p-12 mobile:hidden overflow-hidden">
+        {/* Dark gradient overlay for crystal clear contrast (BUG-004) */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-black/85 via-neutral-900/75 to-black/80 backdrop-blur-[1px]" />
+
+        {/* Premium glassmorphic branding card (BUG-004, BUG-013) */}
+        <div className="relative z-10 flex max-w-[420px] w-full flex-col items-center justify-center gap-6 rounded-2xl border border-white/15 bg-white/10 p-8 backdrop-blur-md shadow-2xl">
+          <div className="relative flex items-center justify-center">
+            <div className="absolute -inset-1 rounded-full bg-brand-500/30 blur-sm" />
+            <Avatar
+              size="x-large"
+              className="relative ring-2 ring-white/30 shadow-lg"
+              image="https://navitronix.in/assets/navitronix.jpeg"
+            >
+              NX
+            </Avatar>
+          </div>
+
+          <div className="flex w-full flex-col items-center gap-2 text-center">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold tracking-tight text-white drop-shadow-md">
+                NAVITRONIX
+              </span>
+              <span className="rounded-full bg-brand-500/20 px-2 py-0.5 text-[10px] font-semibold text-brand-300 border border-brand-500/30 tracking-wider uppercase">
+                RMS v2
+              </span>
+            </div>
+            <p className="text-sm text-neutral-200 leading-relaxed drop-shadow-sm font-medium">
               Intelligent Passenger Information & Transit Management System
-            </span>
+            </p>
+          </div>
+
+          <div className="flex w-full flex-col gap-2.5 pt-3 border-t border-white/10">
+            <div className="flex items-center gap-2 text-xs text-neutral-300 font-medium">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
+              <span>Real-Time LED Signboard & Route Studio</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-neutral-300 font-medium">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
+              <span>Multilingual Audio & Public Address System</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-neutral-300 font-medium">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
+              <span>Hierarchical Organization, Region & Depot Control</span>
+            </div>
           </div>
         </div>
       </div>
-      <div className="flex w-[480px] max-w-full flex-none flex-col items-center justify-center gap-8 self-stretch p-8 md:p-14 bg-default-background">
+      <div className="flex w-[520px] max-w-full flex-none flex-col items-center justify-center gap-8 self-stretch p-8 md:p-12 lg:p-16 bg-default-background shadow-xl">
         <div className="flex w-full flex-col items-start gap-8">
           <div className="flex flex-col items-start gap-2 w-full">
-            <span className="text-heading-1 font-heading-1 text-default-font">
+            <div className="flex items-center gap-2">
+              <span className="rounded bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-primary border border-brand-200">
+                Enterprise Portal
+              </span>
+            </div>
+            <span className="text-heading-1 font-heading-1 text-default-font tracking-tight text-2xl font-bold">
               Sign In
             </span>
-            <span className="text-body font-body text-subtext-color">
+            <span className="text-body font-body text-subtext-color text-sm">
               Welcome back! Please enter your credentials to access your account.
             </span>
           </div>
@@ -262,7 +299,16 @@ const UserLoginFormRoot = React.forwardRef<
                 autoComplete="current-password"
               />
             </TextField>
-            <div className="flex w-full justify-end">
+            <div className="flex w-full items-center justify-between pt-1">
+              <Checkbox
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(checked)}
+                label={
+                  <span className="text-caption font-caption text-subtext-color select-none">
+                    Remember me
+                  </span>
+                }
+              />
               <LinkButton
                 variant="brand"
                 size="small"
