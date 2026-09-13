@@ -26,7 +26,7 @@ export const CreateRoutePageV1: React.FC = () => {
   const defaultHost =
     window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
       ? "http://localhost:3090"
-      : "https://navitronix.in";
+      : "http://31.97.228.29:9091";
 
   const v1BaseUrl = (import.meta.env.VITE_V1_APP_URL || defaultHost).replace(/\/$/, "");
   const userParam = user?.id ? `?userId=${encodeURIComponent(user.id)}` : "";
