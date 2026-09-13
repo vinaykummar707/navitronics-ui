@@ -38,6 +38,7 @@ interface TextFieldRootProps
   disabled?: boolean;
   error?: boolean;
   variant?: "outline" | "filled";
+  size?: "small" | "medium";
   label?: React.ReactNode;
   helpText?: React.ReactNode;
   icon?: React.ReactNode;
@@ -52,6 +53,7 @@ const TextFieldRoot = React.forwardRef<HTMLLabelElement, TextFieldRootProps>(
       disabled = false,
       error = false,
       variant = "outline",
+      size = "medium",
       label,
       helpText,
       icon = null,
@@ -65,7 +67,7 @@ const TextFieldRoot = React.forwardRef<HTMLLabelElement, TextFieldRootProps>(
     return (
       <label
         className={SubframeUtils.twClassNames(
-          "group/be48ca43 flex flex-col items-start gap-2",
+          "group/be48ca43 flex flex-col items-start gap-1.5",
           className
         )}
         ref={ref}
@@ -80,7 +82,8 @@ const TextFieldRoot = React.forwardRef<HTMLLabelElement, TextFieldRootProps>(
           className={SubframeUtils.twClassNames(
             "flex h-10 w-full flex-none items-center gap-1 rounded-md border border-solid border-neutral-border bg-default-background px-2 group-focus-within/be48ca43:border group-focus-within/be48ca43:border-solid group-focus-within/be48ca43:border-brand-primary",
             {
-              "h-10 w-full flex-none border border-solid border-neutral-200 bg-neutral-100 group-hover/be48ca43:border group-hover/be48ca43:border-solid group-hover/be48ca43:border-neutral-border group-focus-within/be48ca43:bg-default-background":
+              "h-9": size === "small",
+              "border border-solid border-neutral-200 bg-neutral-100 group-hover/be48ca43:border group-hover/be48ca43:border-solid group-hover/be48ca43:border-neutral-border group-focus-within/be48ca43:bg-default-background":
                 variant === "filled",
               "border border-solid border-error-600": error,
               "border border-solid border-neutral-200 bg-neutral-200": disabled,

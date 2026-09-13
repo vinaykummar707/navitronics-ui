@@ -21,6 +21,9 @@ interface JsonViewerDialogRootProps extends React.HTMLAttributes<HTMLDivElement>
   dialogTitle?: React.ReactNode;
   jsonContent?: string;
   getJsonData?: () => any;
+  size?: "large" | "medium" | "small";
+  variant?: any;
+  buttonClassName?: string;
   className?: string;
 }
 
@@ -33,6 +36,9 @@ const JsonViewerDialogRoot = React.forwardRef<
     dialogTitle,
     jsonContent,
     getJsonData,
+    size = "small",
+    variant = "neutral-secondary",
+    buttonClassName,
     className,
     ...otherProps
   }: JsonViewerDialogRootProps,
@@ -67,13 +73,19 @@ const JsonViewerDialogRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex flex-col items-start gap-2",
+        "inline-flex items-center",
         className,
       )}
       ref={ref}
       {...otherProps}
     >
-      <Button variant="neutral-primary" icon={<FeatherCurlyBraces />} onClick={handleOpenDialog}>
+      <Button
+        variant={variant}
+        size={size}
+        className={SubframeUtils.twClassNames("h-8 text-xs font-medium px-3", buttonClassName)}
+        icon={<FeatherCurlyBraces className="h-3.5 w-3.5" />}
+        onClick={handleOpenDialog}
+      >
         {buttonLabel}
       </Button>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>

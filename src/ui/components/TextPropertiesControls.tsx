@@ -27,8 +27,6 @@ import { Controller, useFormContext } from "react-hook-form";
 import useTabsStore from "@/store/useTabsStore";
 import useSimulationStore from "@/store/useSimulationStore";
 import { ControlItem } from "./ControlItem";
-import { SelectionCard } from "./SelectionCard";
-import { SelectionCardWithText } from "./SelectionCardWithText";
 import { IconButton } from "./IconButton";
 import AutoTextGenerator from "@/components/AutoTextGenerator";
 import { Select } from "./Select";
@@ -176,9 +174,9 @@ const TextPropertiesControlsRoot = React.forwardRef<
           </div>
         ) : (
           <Button
-            className="w-full justify-center h-10 border-dashed"
+            className="w-full justify-center h-8 text-xs font-medium border-dashed"
             variant="neutral-secondary"
-            size="medium"
+            size="small"
             onClick={() => setIsIconPickerOpen(true)}
           >
             + Choose Icon
@@ -196,46 +194,49 @@ const TextPropertiesControlsRoot = React.forwardRef<
       {watch(`${pathBase}.icon`) && (
         <>
           <ControlItem label="Icon Placement">
-            <div className="flex grow shrink-0 basis-0 items-center justify-center gap-1 w-full">
-              <SelectionCardWithText
-                title="Start"
-                onClick={() => {
-                  setValue(`${pathBase}.iconWordIndex`, undefined);
-                  handleSelection("iconPosition", "start");
-                }}
-                selected={
-                  watch(`${pathBase}.iconPosition`) === "start" ||
-                  !watch(`${pathBase}.iconPosition`)
-                }
-              />
-              <SelectionCardWithText
-                title="Center"
-                onClick={() => {
-                  const defaultIndex = Math.max(1, Math.floor(wordsCount / 2));
-                  setValue(`${pathBase}.iconWordIndex`, defaultIndex);
-                  handleSelection("iconPosition", "center");
-                }}
-                selected={watch(`${pathBase}.iconPosition`) === "center"}
-              />
-              <SelectionCardWithText
-                title="End"
-                onClick={() => {
-                  setValue(`${pathBase}.iconWordIndex`, undefined);
-                  handleSelection("iconPosition", "end");
-                }}
-                selected={watch(`${pathBase}.iconPosition`) === "end"}
-              />
+            <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-neutral-100/60 border border-neutral-border/60 w-full">
+              {[
+                { value: "start", label: "Start" },
+                { value: "center", label: "Center" },
+                { value: "end", label: "End" },
+              ].map((pos) => {
+                const currentPos = watch(`${pathBase}.iconPosition`) || "start";
+                const active = currentPos === pos.value;
+                return (
+                  <button
+                    key={pos.value}
+                    type="button"
+                    onClick={() => {
+                      if (pos.value === "center") {
+                        const defaultIndex = Math.max(1, Math.floor(wordsCount / 2));
+                        setValue(`${pathBase}.iconWordIndex`, defaultIndex);
+                      } else {
+                        setValue(`${pathBase}.iconWordIndex`, undefined);
+                      }
+                      handleSelection("iconPosition", pos.value);
+                    }}
+                    className={SubframeUtils.twClassNames(
+                      "h-8 flex items-center justify-center rounded text-xs font-medium transition-all cursor-pointer select-none",
+                      active
+                        ? "bg-neutral-0 text-brand-primary font-bold shadow-xs ring-1 ring-neutral-border"
+                        : "text-subtext-color hover:text-default-font hover:bg-neutral-200/50"
+                    )}
+                  >
+                    <span>{pos.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </ControlItem>
 
           {watch(`${pathBase}.iconPosition`) === "center" && (
             <ControlItem label="Icon Word Index">
-              <div className="flex grow shrink-0 basis-0 items-center justify-end gap-1 self-stretch">
+              <div className="flex items-center gap-1.5 w-full">
                 <IconButton
-                  className="h-9 w-9 flex-none"
-                  variant="neutral-primary"
-                  size="medium"
-                  icon={<FeatherMinus />}
+                  className="h-8 w-8 flex-none"
+                  variant="neutral-secondary"
+                  size="small"
+                  icon={<FeatherMinus className="h-3.5 w-3.5" />}
                   onClick={() => {
                     if (currentWordIndex > 1) {
                       setValue(`${pathBase}.iconWordIndex`, currentWordIndex - 1);
@@ -243,18 +244,18 @@ const TextPropertiesControlsRoot = React.forwardRef<
                   }}
                   disabled={currentWordIndex <= 1}
                 />
-                <div className="flex h-9 grow shrink-0 basis-0 flex-col items-center justify-center gap-2 rounded-md border border-solid border-neutral-border bg-default-background px-2">
-                  <span className="text-caption font-caption text-subtext-color truncate">
+                <div className="flex h-8 grow items-center justify-center rounded-lg border border-neutral-border bg-neutral-100/60 px-2">
+                  <span className="text-xs font-medium text-default-font truncate">
                     {wordsCount > 1
                       ? `${currentWordIndex} of ${wordsCount} (${wordsList[currentWordIndex - 1] || ""})`
-                      : ""}
+                      : "1 of 1"}
                   </span>
                 </div>
                 <IconButton
-                  className="h-9 w-9 flex-none"
-                  variant="neutral-primary"
-                  size="medium"
-                  icon={<FeatherPlus />}
+                  className="h-8 w-8 flex-none"
+                  variant="neutral-secondary"
+                  size="small"
+                  icon={<FeatherPlus className="h-3.5 w-3.5" />}
                   onClick={() => {
                     if (currentWordIndex < maxWordIndex) {
                       setValue(`${pathBase}.iconWordIndex`, currentWordIndex + 1);
@@ -267,27 +268,25 @@ const TextPropertiesControlsRoot = React.forwardRef<
           )}
 
           <ControlItem label="Icon Spacing">
-            <div className="flex grow shrink-0 basis-0 items-center justify-end gap-1 self-stretch">
+            <div className="flex items-center gap-1.5 w-full">
               <IconButton
-                className="h-9 w-9 flex-none"
-                variant="neutral-primary"
-                size="medium"
-                icon={<FeatherMinus />}
+                className="h-8 w-8 flex-none"
+                variant="neutral-secondary"
+                size="small"
+                icon={<FeatherMinus className="h-3.5 w-3.5" />}
                 onClick={() => {
                   const cur = watch(`${pathBase}.iconSpacing`) ?? 2;
                   if (cur > 0) setValue(`${pathBase}.iconSpacing`, cur - 1);
                 }}
               />
-              <div className="flex h-9 grow shrink-0 basis-0 flex-col items-center justify-center gap-2 rounded-md border border-solid border-neutral-border bg-default-background">
-                <span className="text-caption font-caption text-subtext-color">
-                  {watch(`${pathBase}.iconSpacing`) ?? 2} dots
-                </span>
+              <div className="flex h-8 grow items-center justify-center rounded-lg border border-neutral-border bg-neutral-100/60 font-mono text-xs text-default-font">
+                <span>{watch(`${pathBase}.iconSpacing`) ?? 2} dots</span>
               </div>
               <IconButton
-                className="h-9 w-9 flex-none"
-                variant="neutral-primary"
-                size="medium"
-                icon={<FeatherPlus />}
+                className="h-8 w-8 flex-none"
+                variant="neutral-secondary"
+                size="small"
+                icon={<FeatherPlus className="h-3.5 w-3.5" />}
                 onClick={() => {
                   const cur = watch(`${pathBase}.iconSpacing`) ?? 2;
                   if (cur < 20) setValue(`${pathBase}.iconSpacing`, cur + 1);
@@ -297,12 +296,12 @@ const TextPropertiesControlsRoot = React.forwardRef<
           </ControlItem>
 
           <ControlItem label="Icon Width Scale">
-            <div className="flex grow shrink-0 basis-0 items-center justify-end gap-1 self-stretch">
+            <div className="flex items-center gap-1.5 w-full">
               <IconButton
-                className="h-9 w-9 flex-none"
-                variant="neutral-primary"
-                size="medium"
-                icon={<FeatherMinus />}
+                className="h-8 w-8 flex-none"
+                variant="neutral-secondary"
+                size="small"
+                icon={<FeatherMinus className="h-3.5 w-3.5" />}
                 onClick={() => {
                   const cur = Number(watch(`${pathBase}.iconWidthScale`) ?? 1.0);
                   if (cur > 0.5)
@@ -312,16 +311,14 @@ const TextPropertiesControlsRoot = React.forwardRef<
                     );
                 }}
               />
-              <div className="flex h-9 grow shrink-0 basis-0 flex-col items-center justify-center gap-2 rounded-md border border-solid border-neutral-border bg-default-background">
-                <span className="text-caption font-caption text-subtext-color">
-                  {(Number(watch(`${pathBase}.iconWidthScale`) ?? 1.0)).toFixed(1)}x
-                </span>
+              <div className="flex h-8 grow items-center justify-center rounded-lg border border-neutral-border bg-neutral-100/60 font-mono text-xs text-default-font">
+                <span>{(Number(watch(`${pathBase}.iconWidthScale`) ?? 1.0)).toFixed(1)}x</span>
               </div>
               <IconButton
-                className="h-9 w-9 flex-none"
-                variant="neutral-primary"
-                size="medium"
-                icon={<FeatherPlus />}
+                className="h-8 w-8 flex-none"
+                variant="neutral-secondary"
+                size="small"
+                icon={<FeatherPlus className="h-3.5 w-3.5" />}
                 onClick={() => {
                   const cur = Number(watch(`${pathBase}.iconWidthScale`) ?? 1.0);
                   if (cur < 3.0)
@@ -346,118 +343,157 @@ const TextPropertiesControlsRoot = React.forwardRef<
       </ControlItem>
 
       <ControlItem label="Text Scroll Direction">
-        <div className="flex grow shrink-0 basis-0 items-center justify-center gap-1.5 grid grid-cols-3 w-full">
-          <SelectionCard
-            icon={<FeatherChevronsLeft className="w-4 h-4" />}
-            variant="icon-text-vertical"
-            onClick={() => handleSelection("scrollType", "Right To Left")}
-            selected={isSelected("scrollType", "Right To Left")}
-          />
-          <SelectionCard
-            icon={<FeatherAlignHCenter className="w-4 h-4" />}
-            variant="icon-text-vertical"
-            onClick={() => handleSelection("scrollType", "Fixed")}
-            selected={isSelected("scrollType", "Fixed")}
-          />
-          <SelectionCard
-            icon={<FeatherChevronsRight className="w-4 h-4" />}
-            variant="icon-text-vertical"
-            onClick={() => handleSelection("scrollType", "Left To Right")}
-            selected={isSelected("scrollType", "Left To Right")}
-          />
+        <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-neutral-100/60 border border-neutral-border/60 w-full">
+          {[
+            { value: "Right To Left", label: "Left", icon: <FeatherChevronsLeft className="h-3.5 w-3.5" /> },
+            { value: "Fixed", label: "Static", icon: <FeatherAlignHCenter className="h-3.5 w-3.5" /> },
+            { value: "Left To Right", label: "Right", icon: <FeatherChevronsRight className="h-3.5 w-3.5" /> },
+          ].map((item) => {
+            const active = isSelected("scrollType", item.value);
+            return (
+              <button
+                key={item.value}
+                type="button"
+                onClick={() => handleSelection("scrollType", item.value)}
+                className={SubframeUtils.twClassNames(
+                  "h-8 flex items-center justify-center gap-1.5 px-2 rounded text-xs font-medium transition-all cursor-pointer select-none",
+                  active
+                    ? "bg-neutral-0 text-brand-primary font-bold shadow-xs ring-1 ring-neutral-border"
+                    : "text-subtext-color hover:text-default-font hover:bg-neutral-200/50"
+                )}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
         </div>
       </ControlItem>
 
       <ControlItem label="Text Position">
-        <div className="flex grow shrink-0 basis-0 items-center justify-center gap-1 w-full">
-          <SelectionCard
-            icon={<FeatherAlignLeft />}
-            text="Left"
-            onClick={() => handleSelection("position", "Left")}
-            selected={isSelected("position", "Left")}
-          />
-          <SelectionCard
-            icon={<FeatherAlignCenter />}
-            text="Center"
-            onClick={() => handleSelection("position", "Center")}
-            selected={isSelected("position", "Center")}
-          />
-          <SelectionCard
-            icon={<FeatherAlignRight />}
-            text="Right"
-            onClick={() => handleSelection("position", "Right")}
-            selected={isSelected("position", "Right")}
-          />
+        <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-neutral-100/60 border border-neutral-border/60 w-full">
+          {[
+            { value: "Left", label: "Left", icon: <FeatherAlignLeft className="h-3.5 w-3.5" /> },
+            { value: "Center", label: "Center", icon: <FeatherAlignCenter className="h-3.5 w-3.5" /> },
+            { value: "Right", label: "Right", icon: <FeatherAlignRight className="h-3.5 w-3.5" /> },
+          ].map((item) => {
+            const active = isSelected("position", item.value);
+            return (
+              <button
+                key={item.value}
+                type="button"
+                onClick={() => handleSelection("position", item.value)}
+                className={SubframeUtils.twClassNames(
+                  "h-8 flex items-center justify-center gap-1.5 px-2 rounded text-xs font-medium transition-all cursor-pointer select-none",
+                  active
+                    ? "bg-neutral-0 text-brand-primary font-bold shadow-xs ring-1 ring-neutral-border"
+                    : "text-subtext-color hover:text-default-font hover:bg-neutral-200/50"
+                )}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
         </div>
       </ControlItem>
 
       <ControlItem label="Text Weight">
-        <div className="flex grow shrink-0 basis-0 items-center justify-center gap-1 w-full">
-          <SelectionCardWithText
-            title="Regular"
-            onClick={() => handleSelection("fontWeight", "Regular")}
-            selected={isSelected("fontWeight", "Regular")}
-          />
-          <SelectionCardWithText
-            title="Bold"
-            onClick={() => handleSelection("fontWeight", "Bold")}
-            selected={isSelected("fontWeight", "Bold")}
-          />
+        <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-neutral-100/60 border border-neutral-border/60 w-full">
+          {[
+            { value: "Regular", label: "Regular" },
+            { value: "Bold", label: "Bold" },
+          ].map((item) => {
+            const active = isSelected("fontWeight", item.value);
+            return (
+              <button
+                key={item.value}
+                type="button"
+                onClick={() => handleSelection("fontWeight", item.value)}
+                className={SubframeUtils.twClassNames(
+                  "h-8 flex items-center justify-center rounded text-xs font-medium transition-all cursor-pointer select-none",
+                  active
+                    ? "bg-neutral-0 text-brand-primary font-bold shadow-xs ring-1 ring-neutral-border"
+                    : "text-subtext-color hover:text-default-font hover:bg-neutral-200/50"
+                )}
+              >
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
         </div>
       </ControlItem>
 
       <ControlItem label="Text Height">
-        <div className="flex grow shrink-0 basis-0 items-center justify-end gap-1 self-stretch">
+        <div className="flex items-center gap-1.5 w-full">
           <IconButton
-            className="h-9 w-9 flex-none"
-            variant="neutral-primary"
-            size="medium"
-            icon={<FeatherMinus />}
+            className="h-8 w-8 flex-none"
+            variant="neutral-secondary"
+            size="small"
+            icon={<FeatherMinus className="h-3.5 w-3.5" />}
             onClick={handleDecrement}
           />
-          <div className="flex h-9 grow shrink-0 basis-0 flex-col items-center justify-center gap-2 rounded-md border border-solid border-neutral-border bg-default-background">
-            <span className="text-caption font-caption text-subtext-color">
-              {getValues(`${pathBase}.fontHeight`)} (Bitmap/
-              {getBitmapHeight(getValues(`${pathBase}.bitmap`))})
+          <div className="flex h-8 grow items-center justify-center rounded-lg border border-neutral-border bg-neutral-100/60 px-2 font-mono text-xs text-default-font">
+            <span className="font-bold text-brand-primary mr-1">
+              {watch(`${pathBase}.fontHeight`) || 16} px
+            </span>
+            <span className="text-[10px] text-subtext-color">
+              (Bitmap: {getBitmapHeight(watch(`${pathBase}.bitmap`))})
             </span>
           </div>
           <IconButton
-            className="h-9 w-9 flex-none"
-            variant="neutral-primary"
-            size="medium"
-            icon={<FeatherPlus />}
+            className="h-8 w-8 flex-none"
+            variant="neutral-secondary"
+            size="small"
+            icon={<FeatherPlus className="h-3.5 w-3.5" />}
             onClick={handleIncrement}
           />
         </div>
       </ControlItem>
 
       <ControlItem label="Scroll Speed">
-        <div className="grow shrink-0 basis-0 items-center justify-center gap-1 grid grid-cols-1 w-full">
-          <SelectionCardWithText
-            title="Very Fast"
-            onClick={() => handleSelection("scrollSpeed", 1)}
-            selected={isSelected("scrollSpeed", 1)}
-          />
-          <SelectionCardWithText
-            title="Medium Fast"
-            onClick={() => handleSelection("scrollSpeed", 3)}
-            selected={isSelected("scrollSpeed", 3)}
-          />
-          <SelectionCardWithText
-            title="Normal"
-            onClick={() => handleSelection("scrollSpeed", 4)}
-            selected={isSelected("scrollSpeed", 4)}
-          />
-          <SelectionCardWithText
-            title="Slow"
-            onClick={() => handleSelection("scrollSpeed", 6)}
-            selected={isSelected("scrollSpeed", 6)}
-          />
-          <SelectionCardWithText
-            title="Very Slow"
-            onClick={() => handleSelection("scrollSpeed", 9)}
-            selected={isSelected("scrollSpeed", 9)}
-          />
+        <div className="flex flex-col gap-1.5 w-full">
+          <div className="grid grid-cols-5 gap-1 p-1 rounded-lg bg-neutral-100/60 border border-neutral-border/60">
+            {[
+              { label: "V.Fast", speed: 1 },
+              { label: "Fast", speed: 3 },
+              { label: "Normal", speed: 4 },
+              { label: "Slow", speed: 6 },
+              { label: "V.Slow", speed: 9 },
+            ].map((item) => {
+              const active = isSelected("scrollSpeed", item.speed);
+              return (
+                <button
+                  key={item.speed}
+                  type="button"
+                  onClick={() => handleSelection("scrollSpeed", item.speed)}
+                  title={`${item.label} (Value: ${item.speed})`}
+                  className={SubframeUtils.twClassNames(
+                    "h-8 flex flex-col items-center justify-center rounded text-[11px] font-medium transition-all cursor-pointer select-none",
+                    active
+                      ? "bg-brand-500 text-neutral-0 font-bold shadow-xs ring-1 ring-brand-400"
+                      : "text-subtext-color hover:text-default-font hover:bg-neutral-200/50"
+                  )}
+                >
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex items-center justify-between px-1 text-[10px] text-subtext-color font-mono">
+            <span>◄ Fastest (1)</span>
+            <span className="text-brand-primary font-semibold">
+              Current: {
+                watch(`${pathBase}.scrollSpeed`) === 1 ? "Very Fast" :
+                watch(`${pathBase}.scrollSpeed`) === 3 ? "Medium Fast" :
+                watch(`${pathBase}.scrollSpeed`) === 4 ? "Normal" :
+                watch(`${pathBase}.scrollSpeed`) === 6 ? "Slow" :
+                watch(`${pathBase}.scrollSpeed`) === 9 ? "Very Slow" :
+                `${watch(`${pathBase}.scrollSpeed`) || 4}`
+              }
+            </span>
+            <span>Slowest (9) ►</span>
+          </div>
         </div>
       </ControlItem>
     </div>

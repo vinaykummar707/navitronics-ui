@@ -9,14 +9,12 @@
  * TextSettingsPanel — https://app.subframe.com/11b10bc240cf/library?component=TextSettingsPanel_4a1acded-5433-4051-89f3-db7282cc2d47
  */
 // @subframe/sync-disable
-import React from "react";
+import React, { useRef } from "react";
 import * as SubframeUtils from "../utils";
 import { RouteCreationHeader } from "./RouteCreationHeader";
-import { RouteSettingsPanel } from "./RouteSettingsPanel";
-import { SimulationSettingsPanel } from "./SimulationSettingsPanel";
-import { SimulationsPlayerPanel } from "./SimulationsPlayerPanel";
-import { TextSettingsPanel } from "./TextSettingsPanel";
-import useToggleStore from "@/store/useToggleStore";
+import { RouteSpecificationPanel } from "./RouteSpecificationPanel";
+import { SignboardCanvasStage } from "./SignboardCanvasStage";
+import { SlidePropertyInspector } from "./SlidePropertyInspector";
 
 interface RouteCreationLayoutRootProps
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -31,11 +29,12 @@ const RouteCreationLayoutRoot = React.forwardRef<
   { className, mode, ...otherProps }: RouteCreationLayoutRootProps,
   ref
 ) {
-  const { isSimulationSettingsPanelOpen, isTextSettingsPanelOpen } = useToggleStore();
+  const addSimRef = useRef<((format: string, type?: any, defaultText?: string) => void) | null>(null);
+
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex h-full w-full flex-col items-start bg-default-background",
+        "flex h-full w-full flex-col items-start bg-default-background overflow-hidden",
         className
       )}
       ref={ref}
@@ -43,13 +42,15 @@ const RouteCreationLayoutRoot = React.forwardRef<
     >
       <RouteCreationHeader mode={mode} />
       <div className="flex w-full grow shrink-0 basis-0 items-start overflow-hidden">
-        <SimulationsPlayerPanel className="flex-1 min-w-0 h-full self-stretch" />
-        {isSimulationSettingsPanelOpen && (
-          <SimulationSettingsPanel className="h-auto w-72 flex-none self-stretch" />
-        )}
-        {isTextSettingsPanelOpen && (
-          <TextSettingsPanel className="h-auto w-72 flex-none self-stretch" />
-        )}
+        <RouteSpecificationPanel />
+        <SignboardCanvasStage
+          className="flex-1 min-w-0 h-full self-stretch"
+          onAddSimulationRef={addSimRef}
+        />
+        <SlidePropertyInspector
+          className="h-full self-stretch"
+          onAddSimulation={(format, type) => addSimRef.current?.(format, type)}
+        />
       </div>
     </div>
   );

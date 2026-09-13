@@ -6,10 +6,15 @@
  */
 // @subframe/sync-disable
 import React, { useState } from "react";
-import { FeatherChevronLeft, FeatherEyeOff } from "@subframe/core";
-import { FeatherCloud } from "@subframe/core";
-import { FeatherDownload } from "@subframe/core";
-import { FeatherEye } from "@subframe/core";
+import {
+  FeatherChevronLeft,
+  FeatherCloud,
+  FeatherDownload,
+  FeatherEye,
+  FeatherEyeOff,
+  FeatherRoute,
+  FeatherSliders,
+} from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { Button } from "./Button";
 import { SubmitHandler, useFormContext } from "react-hook-form";
@@ -23,7 +28,6 @@ import RBAC from "@/components/RBAC";
 import { IRoute, routeCrud } from "@/types/IRoute";
 import { toast } from "react-toastify";
 import { Dialog } from "./Dialog";
-
 
 interface RouteCreationHeaderRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -42,18 +46,43 @@ const RouteCreationHeaderRoot = React.forwardRef<
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const {
-    isSimulationSettingsPanelOpen,
-    isTextSettingsPanelOpen,
-    isRouteSettingsPanelOpen,
-    toggleRouteSettingsPanel,
-    toggleSimulationSettingsPanel,
-    toggleTextSettingsPanel,
+    isRoutePanelOpen,
+    toggleRoutePanel,
+    isInspectorOpen,
+    toggleInspector,
   } = useToggleStore();
 
-  const { handleSubmit, getValues, formState } = useFormContext<IRoute>();
+  const { handleSubmit, getValues, watch, formState } = useFormContext<IRoute>();
   const { useCreate, useUpdate } = routeCrud;
   const { mutate: createRoute, isPending: isCreatingRoute } = useCreate();
   const { mutate: updateRoute, isPending: isUpdatingRoute } = useUpdate();
+
+  // Watch route summary data
+  const routeNumber = watch("route_number");
+  const isSplitRoute = watch("is_split_route");
+  const routeNumber1 = watch("route_number_1");
+  const routeNumber2 = watch("route_number_2");
+  const source = watch("source");
+  const destination = watch("destination");
+  const isReturn = watch("return");
+
+  const displayRouteNum = isSplitRoute
+    ? `${routeNumber1 || "?"} / ${routeNumber2 || "?"}`
+    : routeNumber || "---";
+
+  const handleExportRoute = () => {
+    const values = getValues();
+    const safeNum = (displayRouteNum || "config").replace(/[^a-zA-Z0-9_-]/g, "_");
+    const filename = `route-v2-${safeNum}.json`;
+    const blob = new Blob([JSON.stringify(values, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported route config as ${filename}`);
+  };
 
   const onSubmit: SubmitHandler<IRoute> = async (data) => {
     if (isCreatingRoute || isUpdatingRoute) return;
@@ -68,7 +97,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
             console.log("Route updated successfully:", data);
             toast.success("Route updated successfully");
             setHasBeenSaved(true);
-            navigate(-1); // Navigate back after successful update
+            navigate(-1);
           },
           onError: (error) => {
             console.error("Error updating route:", error);
@@ -82,7 +111,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
           console.log("Route created successfully:", data);
           toast.success("Route created successfully");
           setHasBeenSaved(true);
-          navigate(-1); // Navigate back after successful creation
+          navigate(-1);
         },
         onError: (error) => {
           console.error("Error creating route:", error);
@@ -114,64 +143,115 @@ const RouteCreationHeaderRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex h-12 w-full items-center justify-between border-b border-solid border-neutral-border px-3 py-2",
+        "flex h-13 w-full items-center justify-between border-b border-solid border-neutral-border bg-sidebar-background px-3 py-2 select-none",
         className,
       )}
       ref={ref}
       {...otherProps}
     >
-      <div className="flex w-64 flex-none items-center justify-between">
+      {/* Left: Back Action & Live Route Identity */}
+      <div className="flex items-center gap-3 min-w-0">
         <Button
-          variant="neutral-primary"
-          icon={<FeatherChevronLeft />}
+          variant="neutral-secondary"
+          size="small"
+          className="h-8 text-xs font-medium px-3"
+          icon={<FeatherChevronLeft className="h-3.5 w-3.5" />}
           onClick={handleBackClick}
+          title="Return to Routes list"
         >
           Back
         </Button>
+
+        {formState.isDirty && !hasBeenSaved && (
+          <span
+            className="flex h-2 w-2 rounded-full bg-amber-400 animate-pulse"
+            title="Unsaved changes"
+          />
+        )}
+
+        <div className="hidden sm:flex items-center gap-2 border-l border-neutral-border pl-3">
+          <span className="px-2 py-0.5 rounded bg-brand-500/10 border border-brand-500/20 text-brand-primary font-mono font-bold text-xs tracking-wider">
+            {displayRouteNum}
+          </span>
+          <div className="flex items-center gap-1.5 text-xs text-default-font font-medium truncate max-w-[280px]">
+            <span className="truncate">{source || "Origin"}</span>
+            <span className="text-brand-primary font-bold">➔</span>
+            <span className="truncate">{destination || "Terminus"}</span>
+          </div>
+          {isReturn && (
+            <span className="px-1.5 py-0.5 rounded bg-warning-500/10 text-warning-400 text-[10px] uppercase font-bold tracking-wider">
+              Return
+            </span>
+          )}
+        </div>
       </div>
-      <div className="flex grow shrink-0 basis-0 flex-col items-center gap-2 px-2 py-2">
-        <span className="text-body-bold font-body-bold text-default-font">
-          Route Creation
+
+      {/* Center Studio Title */}
+      <div className="flex items-center gap-2 px-2">
+        <span className="text-caption-bold font-caption-bold text-default-font uppercase tracking-wider text-[11px] text-subtext-color">
+          {mode === "edit" ? "Route Editor Studio" : "Route Creation Studio"}
         </span>
       </div>
+
+      {/* Right: Actions */}
       <div className="flex items-center justify-end gap-2 flex-wrap">
         <Button
-          variant={isSimulationSettingsPanelOpen ? "brand-primary" : "neutral-primary"}
-          icon={isSimulationSettingsPanelOpen ? <FeatherEye /> : <FeatherEyeOff />}
-          onClick={toggleSimulationSettingsPanel}
-          title={isSimulationSettingsPanelOpen ? "Hide Simulation Settings" : "Show Simulation Settings"}
+          variant="neutral-secondary"
+          size="small"
+          className="h-8 text-xs font-medium px-3"
+          icon={<FeatherDownload className="h-3.5 w-3.5" />}
+          onClick={handleExportRoute}
+          title="Export route configuration as JSON"
         >
-          Simulation Settings
+          Export
         </Button>
-        <Button
-          variant={isTextSettingsPanelOpen ? "brand-primary" : "neutral-primary"}
-          icon={isTextSettingsPanelOpen ? <FeatherEye /> : <FeatherEyeOff />}
-          onClick={toggleTextSettingsPanel}
-          title={isTextSettingsPanelOpen ? "Hide Text Settings" : "Show Text Settings"}
-        >
-          Text Settings
-        </Button>
+
         <RBAC roles={["master"]} features={[]}>
           <JsonViewerDialog
-            dialogTitle="Route Configuration"
-            buttonLabel="Show JSON"
+            dialogTitle="Route Configuration JSON"
+            buttonLabel="JSON"
             getJsonData={() => getValues()}
           />
         </RBAC>
+
+        <Button
+          variant={isRoutePanelOpen ? "brand-secondary" : "neutral-secondary"}
+          size="small"
+          className="h-8 text-xs font-medium px-3"
+          icon={<FeatherRoute className="h-3.5 w-3.5" />}
+          onClick={toggleRoutePanel}
+          title={isRoutePanelOpen ? "Hide Route Info Panel" : "Show Route Info Panel"}
+        >
+          Route Info
+        </Button>
+
+        <Button
+          variant={isInspectorOpen ? "brand-secondary" : "neutral-secondary"}
+          size="small"
+          className="h-8 text-xs font-medium px-3"
+          icon={<FeatherSliders className="h-3.5 w-3.5" />}
+          onClick={toggleInspector}
+          title={isInspectorOpen ? "Hide Slide Inspector" : "Show Slide Inspector"}
+        >
+          Slide Inspector
+        </Button>
+
         <Button
           type="submit"
           onClick={handleSubmit(onSubmit)}
           variant="brand-primary"
-          icon={<FeatherCloud />}
+          size="small"
+          className="h-8 text-xs font-medium px-3 shadow-xs"
+          icon={<FeatherCloud className="h-3.5 w-3.5" />}
           disabled={isCreatingRoute || isUpdatingRoute}
           loading={isCreatingRoute || isUpdatingRoute}
         >
           {mode === "create"
             ? isCreatingRoute
-              ? "Saving Route..."
+              ? "Saving..."
               : "Save Route"
             : isUpdatingRoute
-              ? "Updating Route..."
+              ? "Updating..."
               : "Update Route"}
         </Button>
       </div>

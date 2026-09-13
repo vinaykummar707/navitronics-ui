@@ -2,6 +2,10 @@
 import { create } from "zustand";
 
 interface ToggleState {
+    isRoutePanelOpen: boolean;
+    toggleRoutePanel: () => void;
+    isInspectorOpen: boolean;
+    toggleInspector: () => void;
     isSimulationSettingsPanelOpen: boolean;
     isTextSettingsPanelOpen: boolean;
     isRouteSettingsPanelOpen: boolean;
@@ -13,6 +17,10 @@ interface ToggleState {
 }
 
 const useToggleStore = create<ToggleState>((set) => ({
+    isRoutePanelOpen: true,
+    toggleRoutePanel: () => set((state) => ({ isRoutePanelOpen: !state.isRoutePanelOpen })),
+    isInspectorOpen: true,
+    toggleInspector: () => set((state) => ({ isInspectorOpen: !state.isInspectorOpen })),
     isSimulationSettingsPanelOpen: true,
     isTextSettingsPanelOpen: true,
     isRouteSettingsPanelOpen: true,

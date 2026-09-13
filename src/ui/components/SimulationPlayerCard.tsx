@@ -14,6 +14,7 @@ import { FeatherAirplay } from "@subframe/core";
 import { FeatherCopy } from "@subframe/core";
 import { FeatherMoveDown } from "@subframe/core";
 import { FeatherMoveUp } from "@subframe/core";
+import { FeatherPause } from "@subframe/core";
 import { FeatherPlay } from "@subframe/core";
 import { FeatherTrash } from "@subframe/core";
 import * as SubframeUtils from "../utils";
@@ -75,7 +76,9 @@ const SimulationPlayerCardRoot = React.forwardRef<
     updatedSimulations.splice(index, 1);
     setValue(selectedTab, updatedSimulations);
     if (index === selectedSimulationIndex) {
-      setSelectedSimulationIndex(-1);
+      setSelectedSimulationIndex(updatedSimulations.length > 0 ? Math.max(0, index - 1) : -1);
+    } else if (index < selectedSimulationIndex) {
+      setSelectedSimulationIndex(selectedSimulationIndex - 1);
     }
   };
 
@@ -128,7 +131,9 @@ const SimulationPlayerCardRoot = React.forwardRef<
 
   //function to return the text based on the screen format
   const getSimulationCardText = () => {
-    const { format } = getValues(`${selectedTab}[${listIndex}]`) as Simulation;
+    const sim = getValues(`${selectedTab}[${listIndex}]`) as Simulation;
+    if (!sim) return "Slide";
+    const { format } = sim;
     switch (format) {
       case "single":
         return getValues(`${selectedTab}[${listIndex}].texts.text.text`);
@@ -154,113 +159,102 @@ const SimulationPlayerCardRoot = React.forwardRef<
     >
       <div
         className={SubframeUtils.twClassNames(
-          "flex  flex-col items-start rounded-md border border-solid border-neutral-border bg-default-background hover:bg-neutral-50",
-          { "border border-solid border-brand-800": isSelected },
+          "flex w-full flex-col items-start rounded-xl border border-solid transition-all overflow-hidden",
+          isSelected
+            ? "border-brand-primary ring-1 ring-brand-primary/50 shadow-md bg-neutral-0/40"
+            : "border-neutral-border bg-sidebar-background hover:border-neutral-300/40",
         )}
       >
         <Accordion
           onClick={() => {
             setSelectedSimulationIndex(listIndex);
-            // console.log("Selected Simulation Index:", listIndex);
-            // console.log("Selected Simulation:", getValues(`${selectedTab}[${listIndex}]`));
-            // setSelectedSimulation(getValues(`${selectedTab}[${listIndex}]`));
           }}
           trigger={
-            <div className="flex w-full items-center gap-4 px-4 py-4">
+            <div className="flex w-full items-center gap-3 px-4 py-3">
+              <span className="px-2 py-0.5 rounded text-xs font-mono font-bold bg-brand-500/10 text-brand-primary border border-brand-500/20">
+                #{String(listIndex + 1).padStart(2, "0")}
+              </span>
               <IconWithBackground
-                variant="success"
-                size="medium"
+                variant="brand"
+                size="small"
                 icon={<FeatherAirplay />}
               />
-              <span className="grow shrink-0  truncate line-clamp-1 basis-0 text-body-bold font-body-bold text-default-font">
-                {getSimulationCardText()}
+              <span className="grow shrink-0 truncate line-clamp-1 basis-0 text-caption-bold font-caption-bold text-default-font">
+                {getSimulationCardText() || "Untitled Slide"}
               </span>
-              <div className="flex items-center gap-1">
-                <Badge className="capitalize" variant="warning">
-                  {" "}
-                  {watch(`${selectedTab}[${listIndex}].type`)}{" "}
-                  Simulation
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <Badge className="capitalize text-[10px]" variant="warning">
+                  {watch(`${selectedTab}[${listIndex}].type`)}
                 </Badge>
-                <Badge className="capitalize" variant="success">
+                <Badge className="capitalize text-[10px]" variant="success">
                   {watch(`${selectedTab}[${listIndex}].format`)} Text
                 </Badge>
-                <Badge className="capitalize" variant="warning">
-                  {watch(`${selectedTab}[${listIndex}].height`)} Height
-                </Badge>
-                <Badge className="capitalize" variant="error">
-                  {watch(`${selectedTab}[${listIndex}].width`)} Width
-                </Badge>
+                <span className="px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-400 font-mono text-[10px] font-bold border border-neutral-border">
+                  {watch(`${selectedTab}[${listIndex}].width`)}×{watch(`${selectedTab}[${listIndex}].height`)}
+                </span>
               </div>
               <Accordion.Chevron />
             </div>
           }
           defaultOpen={true}
         >
-          <div className="flex w-full  flex-col items-start gap-4 px-4 pb-4">
+          <div className="flex w-full flex-col items-start gap-3 px-4 pb-4">
             <RadioCardGroup className="h-auto w-full flex-none">
-              <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2">
+              <div className="flex grow shrink-0 basis-0 flex-col items-start gap-2 w-full">
                 <DisplayEditor stopScroll={pauseSimulation} listIndex={listIndex} />
 
-                <div className="flex w-full items-start gap-1">
-                  <Button
-                    className="h-9 grow shrink-0 basis-0"
-                    disabled={false}
-                    variant="neutral-primary"
-                    size="medium"
-                    icon={<FeatherPlay />}
-                    loading={false}
-                    onClick={() => setPauseSimulation((prev) => !prev)}
-                  >
-                    {pauseSimulation ? "Play" : "Pause"}
-                  </Button>
-                  <Button
-                    className="h-9 grow shrink-0 basis-0"
-                    disabled={false}
-                    variant="neutral-primary"
-                    size="medium"
-                    icon={<FeatherCopy />}
-                    iconRight={null}
-                    loading={false}
-                    onClick={() => handleDuplicateSimulation(listIndex)}
-                  >
-                    Duplicate
-                  </Button>
-                  <Button
-                    className="h-9 grow shrink-0 basis-0"
-                    disabled={false}
-                    variant="neutral-primary"
-                    size="medium"
-                    icon={<FeatherMoveUp />}
-                    iconRight={null}
-                    loading={false}
-                    onClick={() => handleMoveUpSimulation(listIndex)}
-                  >
-                    Move Up
-                  </Button>
-                  <Button
-                    className="h-9 grow shrink-0 basis-0"
-                    disabled={false}
-                    variant="neutral-primary"
-                    size="medium"
-                    icon={<FeatherMoveDown />}
-                    iconRight={null}
-                    loading={false}
-                    onClick={() => handleMoveDownSimulation(listIndex)}
-                  >
-                    Move Down
-                  </Button>
-                  <Button
-                    className="h-9 grow shrink-0 basis-0"
-                    disabled={false}
-                    variant="neutral-primary"
-                    size="medium"
-                    icon={<FeatherTrash />}
-                    iconRight={null}
-                    loading={false}
-                    onClick={() => handleRemoveSimulation(listIndex)}
-                  >
-                    Delete
-                  </Button>
+                {/* Sleek Action Toolbar */}
+                <div className="flex w-full items-center justify-between gap-2 pt-2 border-t border-neutral-border">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={pauseSimulation ? "brand-secondary" : "neutral-secondary"}
+                      size="small"
+                      icon={pauseSimulation ? <FeatherPlay /> : <FeatherPause />}
+                      onClick={() => setPauseSimulation((prev) => !prev)}
+                    >
+                      {pauseSimulation ? "Resume" : "Pause"}
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      variant="neutral-secondary"
+                      size="small"
+                      icon={<FeatherCopy />}
+                      onClick={() => handleDuplicateSimulation(listIndex)}
+                      title="Duplicate Slide"
+                    >
+                      Duplicate
+                    </Button>
+                    <Button
+                      variant="neutral-secondary"
+                      size="small"
+                      icon={<FeatherMoveUp />}
+                      disabled={listIndex === 0}
+                      onClick={() => handleMoveUpSimulation(listIndex)}
+                      title="Move Up"
+                    >
+                      Up
+                    </Button>
+                    <Button
+                      variant="neutral-secondary"
+                      size="small"
+                      icon={<FeatherMoveDown />}
+                      disabled={listIndex === (getValues(selectedTab) || []).length - 1}
+                      onClick={() => handleMoveDownSimulation(listIndex)}
+                      title="Move Down"
+                    >
+                      Down
+                    </Button>
+                    <Button
+                      variant="destructive-secondary"
+                      size="small"
+                      icon={<FeatherTrash />}
+                      onClick={() => handleRemoveSimulation(listIndex)}
+                      title="Delete Slide"
+                    >
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               </div>
             </RadioCardGroup>

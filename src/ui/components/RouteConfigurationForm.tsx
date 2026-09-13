@@ -32,7 +32,7 @@ const RouteConfigurationFormRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex w-full flex-col items-start gap-4",
+        "flex w-full flex-col items-start gap-3",
         className,
       )}
       ref={ref}
@@ -40,6 +40,7 @@ const RouteConfigurationFormRoot = React.forwardRef<
     >
       {!isSplitRoute && (
         <TextField
+          size="small"
           className="h-auto w-full flex-none"
           label={
             <span>
@@ -50,14 +51,16 @@ const RouteConfigurationFormRoot = React.forwardRef<
           error={!!errors.route_number}
           helpText={(errors.route_number?.message as string) || ""}
         >
-        <TextField.Input
-          placeholder="Enter route number"
-          {...register("route_number", {
-            required: !isSplitRoute ? "Route number is required" : false,
-          })}
-        />
-      </TextField> )}
+          <TextField.Input
+            placeholder="Enter route number"
+            {...register("route_number", {
+              required: !isSplitRoute ? "Route number is required" : false,
+            })}
+          />
+        </TextField>
+      )}
       <TextField
+        size="small"
         className="h-auto w-full flex-none"
         label={
           <span>
@@ -74,6 +77,7 @@ const RouteConfigurationFormRoot = React.forwardRef<
         />
       </TextField>
       <TextField
+        size="small"
         className="h-auto w-full flex-none"
         label={
           <span>
@@ -89,10 +93,11 @@ const RouteConfigurationFormRoot = React.forwardRef<
           {...register("destination", { required: "Destination is required" })}
         />
       </TextField>
-      <TextField className="h-auto w-full flex-none" label="Via" variant="filled" helpText="">
+      <TextField size="small" className="h-auto w-full flex-none" label="Via" variant="filled" helpText="">
         <TextField.Input placeholder="Enter via" {...register("via")} />
       </TextField>
       {/* <TextField
+        size="small"
         className="h-auto w-full flex-none"
         label="Separation"
         variant="filled"
@@ -108,6 +113,7 @@ const RouteConfigurationFormRoot = React.forwardRef<
       {isSplitRoute && (
         <>
           <TextField
+            size="small"
             className="h-auto w-full flex-none"
             label={
               <span>
@@ -126,6 +132,7 @@ const RouteConfigurationFormRoot = React.forwardRef<
             />
           </TextField>
           <TextField
+            size="small"
             className="h-auto w-full flex-none"
             label={
               <span>

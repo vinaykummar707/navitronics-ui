@@ -122,7 +122,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
     }
   };
 
-  const { fields, append } = useFieldArray({
+  const { fields, append, replace } = useFieldArray({
     control: methods.control,
     name: selectedTab,
   });
@@ -167,7 +167,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
     return texts.filter(Boolean).join(" - ");
   };
 
-  // function to append a new Simulation into the "front" field array
+  // function to append a new Simulation into the active signboard array
   const handleAddSimulation = (
     format: string,
     type: SimulationType = DEFAULT_SIMULATION_TYPE,
@@ -222,8 +222,15 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
         return;
     }
 
+    // BUG-053: Smart Dimension Inheritance - inherit dimensions from existing cards on this board
+    const currentBoardSims = getValues(selectedTab) || [];
+    if (currentBoardSims.length > 0 && newSimulation) {
+      newSimulation.height = currentBoardSims[0].height;
+      newSimulation.width = currentBoardSims[0].width;
+    }
+
     append(newSimulation);
-    setSelectedSimulationIndex(simulations.length); // Set the newly added simulation as selected
+    setSelectedSimulationIndex(simulations.length);
   };
 
   // log stop and language selection changes in useEffect for debugging
@@ -497,9 +504,11 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
               icon={<FeatherTrash />}
               loading={false}
               onClick={() => {
-                if (confirm("Are you sure you want to delete all simulations?")) {
+                if (confirm(`Are you sure you want to delete all ${selectedTab.toUpperCase()} simulations?`)) {
                   setValue(selectedTab, []);
+                  replace([]);
                   setSelectedSimulationIndex(-1);
+                  toast.info(`Deleted all ${selectedTab.toUpperCase()} simulations`);
                 }
               }}
             >
@@ -576,11 +585,44 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
             ))}
 
             {simulations.length === 0 && (
-              <div className="py-24 text-center text-subtext-color flex flex-col items-center justify-center">
-                <p className="text-base font-semibold text-neutral-700">No Simulations Added</p>
-                <p className="text-xs mt-1 text-subtext-color">
-                  Click "Add Simulation" above to create an LED screen simulation.
+              <div className="w-full flex flex-col items-center justify-center py-20 px-4 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-500/10 border border-brand-500/20 text-brand-primary mb-4 shadow-inner">
+                  <SubframeCore.FeatherRectangleHorizontal className="h-8 w-8" />
+                </div>
+                <h3 className="text-base font-heading-3 font-semibold text-default-font">
+                  No Slides on {selectedTab.toUpperCase()} Signboard
+                </h3>
+                <p className="text-xs text-subtext-color max-w-sm mt-1.5 mb-6">
+                  This electronic display currently has no slides in its loop sequence. Add a slide or use a preset below to start.
                 </p>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <Button
+                    variant="brand-primary"
+                    size="small"
+                    icon={<FeatherPlus />}
+                    onClick={() => handleAddSimulation("single")}
+                  >
+                    Add Single-Line Route
+                  </Button>
+                  <Button
+                    variant="neutral-secondary"
+                    size="small"
+                    icon={<SubframeCore.FeatherColumns2 />}
+                    onClick={() => handleAddSimulation("two")}
+                  >
+                    Add Route + Terminus
+                  </Button>
+                  <Button
+                    variant="neutral-secondary"
+                    size="small"
+                    icon={<SubframeCore.FeatherSpeech />}
+                    onClick={() =>
+                      handleAddSimulation("single", "slogan", "PLEASE WEAR SEAT BELT")
+                    }
+                  >
+                    Add Slogan Slide
+                  </Button>
+                </div>
               </div>
             )}
           </div>
