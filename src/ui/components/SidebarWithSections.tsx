@@ -124,7 +124,7 @@ const SidebarWithSectionsRoot = React.forwardRef<
   return (
     <nav
       className={SubframeUtils.twClassNames(
-        "flex h-full w-60 flex-col items-start border-r border-solid border-neutral-border bg-default-background",
+        "flex h-full w-60 flex-col items-start border-r border-solid border-neutral-border bg-sidebar-background",
         className
       )}
       ref={ref}

@@ -112,7 +112,7 @@ const TextSettingsPanelRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex h-full w-64 flex-col items-start no-scrollbar border-l border-solid border-neutral-border overflow-y-auto",
+        "flex h-full w-64 flex-col items-start no-scrollbar border-l border-solid border-neutral-border overflow-y-auto bg-sidebar-background",
         className,
       )}
       ref={ref}

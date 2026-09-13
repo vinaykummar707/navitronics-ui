@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { Button } from "@/ui/components/Button";
-import { FeatherChevronLeft, FeatherExternalLink } from "@subframe/core";
+import { FeatherExternalLink } from "@subframe/core";
 import { toast } from "react-toastify";
 
 interface RouteParams extends Record<string, string> {
@@ -62,16 +62,6 @@ export const CreateRoutePageV1: React.FC = () => {
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-default-background">
       {/* Top Header Bar */}
       <div className="flex h-12 w-full items-center justify-between border-b border-solid border-neutral-border bg-default-background px-4 py-2 flex-none z-10 shadow-sm">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="neutral-primary"
-            icon={<FeatherChevronLeft />}
-            onClick={() => navigate("/home/routes")}
-          >
-            Back to Routes
-          </Button>
-        </div>
-
         <div className="flex items-center gap-2">
           <span className="text-body-bold font-body-bold text-default-font">
             {isEdit ? "Edit Route (V1 Live Simulator)" : "Route Creation (V1 Live Simulator)"}

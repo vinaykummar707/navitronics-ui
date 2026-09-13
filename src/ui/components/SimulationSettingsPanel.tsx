@@ -262,7 +262,7 @@ const SimulationSettingsPanelRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex h-full w-72 flex-col items-start overflow-y-auto no-scrollbar",
+        "flex h-full w-72 flex-col items-start overflow-y-auto no-scrollbar border-l border-solid border-neutral-border bg-sidebar-background",
         className,
       )}
       ref={ref}

@@ -40,10 +40,14 @@ const UserLoginFormRoot = React.forwardRef<
   const { setSelectedOrganization } = useOrganizationStore((state) => state); // Access organization store if needed
   const navigate = useNavigate(); // React Router navigation
 
-  const [emailOrUsername, setEmailOrUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [userId, setUserId] = useState(""); // State to hold user ID after login
+
+  const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
   const { useList } = loggedUserCrud;
 
@@ -72,10 +76,32 @@ const UserLoginFormRoot = React.forwardRef<
   // Update input values and submit handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    let hasError = false;
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setEmailError("Enter email address");
+      hasError = true;
+    } else if (!EMAIL_REGEX.test(trimmedEmail)) {
+      setEmailError("Invalid email address");
+      hasError = true;
+    } else {
+      setEmailError("");
+    }
+
+    if (!password) {
+      setPasswordError("Enter password");
+      hasError = true;
+    } else {
+      setPasswordError("");
+    }
+
+    if (hasError) return;
+
     setUserId(""); // Clear previous user ID on new login attempt
-    // Authenticate with Supabase (assuming email)
+    // Authenticate with Supabase
     const { data, error: supaError } = await supabase.auth.signInWithPassword({
-      email: emailOrUsername,
+      email: trimmedEmail,
       password,
     });
     if (supaError) {
@@ -89,7 +115,22 @@ const UserLoginFormRoot = React.forwardRef<
   useEffect(() => {
     if (!userId || !loggedUserDetails?.data) return;
 
-    const userData = loggedUserDetails.data as ILoggedUser;
+    const userData = { ...(loggedUserDetails.data as ILoggedUser) };
+
+    // Hydrate feature flags from user_metadata if not present on DB row
+    supabase.auth.getUser().then(({ data: authUser }) => {
+      const meta = authUser?.user?.user_metadata;
+      if (meta) {
+        if (meta.v1_routes !== undefined && userData.v1_routes === undefined) {
+          userData.v1_routes = meta.v1_routes;
+        }
+        if (meta.v2_routes !== undefined && userData.v2_routes === undefined) {
+          userData.v2_routes = meta.v2_routes;
+        }
+        login(userData);
+      }
+    }).catch(() => {});
+
     try {
       login(userData);
       if (userData.organization?.active) {
@@ -164,22 +205,35 @@ const UserLoginFormRoot = React.forwardRef<
           <form onSubmit={handleSubmit} className="flex w-full flex-col items-start justify-center gap-4">
             <TextField
               className="h-auto w-full flex-none"
-              label="Email or Username"
-              helpText=""
+              label={
+                <span>
+                  Email <span className="text-red-500">*</span>
+                </span>
+              }
+              helpText={emailError}
+              error={!!emailError}
               icon={<FeatherUser />}
             >
               <TextField.Input
                 placeholder="Enter your work email"
-                value={emailOrUsername}
-                onChange={(e) => setEmailOrUsername(e.target.value)}
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (emailError) setEmailError("");
+                }}
                 autoComplete="email"
                 autoFocus
               />
             </TextField>
             <TextField
               className="h-auto w-full flex-none"
-              label="Password"
-              helpText=""
+              label={
+                <span>
+                  Password <span className="text-red-500">*</span>
+                </span>
+              }
+              helpText={passwordError}
+              error={!!passwordError}
               icon={<FeatherKeyRound />}
               iconRight={
                 <button
@@ -201,12 +255,25 @@ const UserLoginFormRoot = React.forwardRef<
                 placeholder="Enter your password"
                 type={showPassword ? "text" : "password"}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (passwordError) setPasswordError("");
+                }}
                 autoComplete="current-password"
               />
             </TextField>
+            <div className="flex w-full justify-end">
+              <LinkButton
+                variant="brand"
+                size="small"
+                type="button"
+                onClick={() => setShowResetDialog(true)}
+              >
+                Forgot Password?
+              </LinkButton>
+            </div>
             <Button
-              className="h-11 mt-2 w-full flex-none text-body-bold font-body-bold"
+              className="h-11 mt-1 w-full flex-none text-body-bold font-body-bold"
               size="large"
               type="submit"
               disabled={usersLoading}

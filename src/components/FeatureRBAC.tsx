@@ -1,4 +1,6 @@
+import React from 'react';
 import useLoggedUserStore from '@/store/useLoggedUserStore';
+import { hasUserFeature } from '@/utils/featureFlags';
 
 interface RBACProps {
   features: string[];
@@ -10,18 +12,9 @@ const FeatureRBAC: React.FC<RBACProps> = ({ features, children }) => {
 
   const hasAccess = (() => {
     if (!user) return false;
-    if (user.role?.name === 'master') return true;
     if (!features || features.length === 0) return true;
 
-    const userObj = user as any;
-    const userOrg = user.organization as any;
-
-    return features.some((f) => {
-      if (userObj && userObj[f] !== undefined && userObj[f] !== null) {
-        return Boolean(userObj[f]);
-      }
-      return userOrg ? Boolean(userOrg[f]) : false;
-    });
+    return features.some((f) => hasUserFeature(user, f));
   })();
 
   return hasAccess ? <>{children}</> : null;

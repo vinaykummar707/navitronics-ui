@@ -50,7 +50,10 @@ const DepotCardRoot = React.forwardRef<HTMLDivElement, DepotCardRootProps>(
           />
           <div className="flex flex-col items-start justify-center">
             {locationName ? (
-              <span className="text-body-bold font-body-bold text-default-font">
+              <span
+                className="text-body-bold font-body-bold text-default-font truncate max-w-[200px]"
+                title={typeof locationName === "string" ? locationName : undefined}
+              >
                 {locationName}
               </span>
             ) : null}

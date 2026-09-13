@@ -32,8 +32,10 @@ import { RegionSelect } from "@/components/RegionSelect";
 import { EmptyState } from "@/components/EmptyState";
 import { IStop, IStopWithAudio, stopCrud } from "@/types/IStop";
 import { handleStopAudioGeneration } from "@/utils/fetchTTS";
-import { StopDetailsCard } from "@/ui/components/StopDetailsCard";
-import { AudioFileContainer } from "@/ui/components/AudioFileContainer";
+import { Table } from "@/ui/components/Table";
+import { Badge } from "@/ui/components/Badge";
+import { OptionsDropdown } from "@/ui/components/OptionsDropdown";
+import { IconButton } from "@/ui/components/IconButton";
 import { CreateStopForm } from "@/ui/components/CreateStopForm";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -408,116 +410,131 @@ export default function StopsPage() {
       {/* Content */}
       {hasStops ? (
         <div className="flex w-full flex-col gap-4">
-          <div className="w-full flex-col items-start gap-2 grid md:grid-cols-1 lg:grid-cols-2">
-            {paginatedStops.map((stop) => (
-              <StopDetailsCard
-                key={stop.id}
-                icon={<FeatherPin />}
-                title={stop.name}
-                downwardLatitude={stop.down_latitude}
-                downwardLongitude={stop.down_longitude}
-                upwardLatitude={stop.up_latitude}
-                upwardLongitude={stop.up_longitude}
-                onDeleteClick={() => {
-                  if (
-                    confirm(
-                      "Are you sure you want to delete this stop? This action cannot be undone.",
-                    )
-                  ) {
-                    if (stop.stop_audios && stop.stop_audios.url) {
-                      deleteAudioFileAndStopAudioRecordAndStop(
-                        stop.stop_audios.url,
-                        stop.id || "",
-                        stop.stop_audios.id || undefined,
-                      );
-                    } else {
-                      handleDeleteStop(stop.id || "");
-                    }
-                  }
-                }}
-                onEditClick={() => {
-                  setOpen(true);
-                  setEditData(stop);
-                }}
-                audioFile={
-                  <AudioFileContainer
-                    fileName={
-                      stop.stop_audios?.file_name || "No Audio File Found"
-                    }
-                    fileSize={
-                      stop.stop_audios?.file_size
-                        ? `${((stop.stop_audios.file_size ?? 0) / 1024 / 1024).toFixed(2)} MB`
-                        : "No Audio File Found"
-                    }
-                    isAudioAvailable={
-                      stop.stop_audios && stop.stop_audios.url ? true : false
-                    }
-                    actions={
-                      <>
-                        <Button
-                          className="h-8 w-auto flex-none"
-                          disabled={generatingStopId !== null}
-                          variant="brand-primary"
-                          size="medium"
-                          icon={<FeatherMusic />}
-                          iconRight={null}
-                          loading={generatingStopId === stop.id}
-                          onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
-                            genAudio(stop.name, stop.id)
-                          }
-                        >
-                          {generatingStopId === stop.id ? "Generating..." : "Generate Audio"}
-                        </Button>
-                      </>
-                    }
-                    audioFileActions={
-                      <>
-                        <Button
-                          className="h-8 w-auto flex-none"
-                          disabled={false}
-                          variant="brand-primary"
-                          size="medium"
-                          icon={<FeatherPlay />}
-                          iconRight={null}
-                          loading={false}
-                          onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
-                            handlePlayAudio(stop.stop_audios?.url || "")
-                          }
-                        >
-                          Play&#39; Audio
-                        </Button>
-                        <Button
-                          className="h-8 w-auto flex-none"
-                          disabled={false}
-                          variant="destructive-secondary"
-                          size="medium"
-                          icon={<FeatherTrash />}
-                          iconRight={null}
-                          loading={false}
-                          onClick={(
-                            event: React.MouseEvent<HTMLButtonElement>,
-                          ) => {
-                            if (
-                              confirm(
-                                "Are you sure you want to delete this audio? This action cannot be undone.",
-                              )
-                            ) {
-                              deleteAudioFileAndStopAudioRecord(
-                                stop.stop_audios?.url || "",
+          <div className="flex w-full flex-col items-start overflow-x-auto rounded-md border border-solid border-neutral-border bg-neutral-50">
+            <Table
+              header={
+                <Table.HeaderRow>
+                  <Table.HeaderCell className="w-16">#</Table.HeaderCell>
+                  <Table.HeaderCell className="min-w-[200px]">Stop Name</Table.HeaderCell>
+                  <Table.HeaderCell className="min-w-[180px]">Downward (Lat, Long)</Table.HeaderCell>
+                  <Table.HeaderCell className="min-w-[180px]">Upward (Lat, Long)</Table.HeaderCell>
+                  <Table.HeaderCell className="min-w-[220px]">Audio Announcement</Table.HeaderCell>
+                  <Table.HeaderCell className="w-12 justify-end" />
+                </Table.HeaderRow>
+              }
+            >
+              {paginatedStops.map((stop, index) => {
+                const serialNumber = (currentPage - 1) * pageSize + index + 1;
+                const hasAudio = !!(stop.stop_audios && stop.stop_audios.url);
+
+                return (
+                  <Table.Row key={stop.id}>
+                    <Table.Cell>
+                      <span className="text-caption-bold font-mono px-2 py-0.5 rounded bg-brand-50 text-brand-primary border border-brand-primary/30">
+                        #{serialNumber}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <div className="flex flex-col">
+                        <span className="whitespace-nowrap text-body-bold font-body-bold text-default-font">
+                          {stop.name}
+                        </span>
+                        {(stop as any).name_kn ? (
+                          <span className="whitespace-nowrap text-caption font-caption text-subtext-color">
+                            {(stop as any).name_kn}
+                          </span>
+                        ) : null}
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="whitespace-nowrap text-caption font-mono text-default-font">
+                        {stop.down_latitude != null && stop.down_longitude != null
+                          ? `${stop.down_latitude}, ${stop.down_longitude}`
+                          : "—"}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="whitespace-nowrap text-caption font-mono text-default-font">
+                        {stop.up_latitude != null && stop.up_longitude != null
+                          ? `${stop.up_latitude}, ${stop.up_longitude}`
+                          : "—"}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      {hasAudio ? (
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="small"
+                            variant="brand-secondary"
+                            icon={<FeatherPlay className="h-3 w-3" />}
+                            onClick={() => handlePlayAudio(stop.stop_audios?.url || "")}
+                          >
+                            Play
+                          </Button>
+                          <Badge variant="success">Audio Ready</Badge>
+                          <IconButton
+                            size="small"
+                            variant="destructive-tertiary"
+                            icon={<FeatherTrash className="h-3.5 w-3.5" />}
+                            onClick={() => {
+                              if (
+                                confirm(
+                                  "Are you sure you want to delete this audio? This action cannot be undone.",
+                                )
+                              ) {
+                                deleteAudioFileAndStopAudioRecord(
+                                  stop.stop_audios?.url || "",
+                                  stop.id || "",
+                                  stop.stop_audios?.id || undefined,
+                                );
+                              }
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="small"
+                            variant="neutral-secondary"
+                            icon={<FeatherMusic className="h-3 w-3" />}
+                            loading={generatingStopId === stop.id}
+                            disabled={generatingStopId !== null}
+                            onClick={() => genAudio(stop.name, stop.id || "")}
+                          >
+                            {generatingStopId === stop.id ? "Generating..." : "Generate Audio"}
+                          </Button>
+                        </div>
+                      )}
+                    </Table.Cell>
+                    <Table.Cell className="justify-end">
+                      <OptionsDropdown
+                        onEdit={() => {
+                          setOpen(true);
+                          setEditData(stop);
+                        }}
+                        onDelete={() => {
+                          if (
+                            confirm(
+                              "Are you sure you want to delete this stop? This action cannot be undone.",
+                            )
+                          ) {
+                            if (stop.stop_audios && stop.stop_audios.url) {
+                              deleteAudioFileAndStopAudioRecordAndStop(
+                                stop.stop_audios.url,
                                 stop.id || "",
-                                stop.stop_audios?.id || undefined,
+                                stop.stop_audios.id || undefined,
                               );
+                            } else {
+                              handleDeleteStop(stop.id || "");
                             }
-                          }}
-                        >
-                          Delete
-                        </Button>
-                      </>
-                    }
-                  />
-                }
-              />
-            ))}
+                          }
+                        }}
+                      />
+                    </Table.Cell>
+                  </Table.Row>
+                );
+              })}
+            </Table>
           </div>
 
           {totalPages > 1 && (

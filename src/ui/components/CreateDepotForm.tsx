@@ -129,10 +129,14 @@ const CreateDepotFormRoot = React.forwardRef<
         <div className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-4">
           <TextField
             className="h-auto w-full flex-none"
-            label="Depot Name"
-            helpText="Name of the depot"
+            label={
+              <span>
+                Depot Name <span className="text-red-500">*</span>
+              </span>
+            }
+            helpText={errors.name?.message || apiError || "Name of the depot"}
             icon={<FeatherUser />}
-            error={errors.name?.message || apiError}
+            error={!!errors.name || !!apiError}
           >
             <TextField.Input
               placeholder="Ex: Mumbai"
@@ -153,8 +157,8 @@ const CreateDepotFormRoot = React.forwardRef<
                 ? "Updating..."
                 : "Creating..."
               : isUpdate
-              ? "Update"
-              : "Submit"}
+              ? "Update Depot"
+              : "Create Depot"}
           </Button>
           <Button
             className="h-9 w-full flex-none"

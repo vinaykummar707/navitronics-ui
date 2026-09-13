@@ -1,6 +1,7 @@
 import React from 'react';
 import { FeatherShieldQuestion } from '@subframe/core';
 import useLoggedUserStore from '@/store/useLoggedUserStore';
+import { hasUserFeature } from '@/utils/featureFlags';
 
 interface RBACProps {
   roles: string[];
@@ -16,18 +17,9 @@ const RBACPage: React.FC<RBACProps> = ({ roles, features, children }) => {
 
   const hasFeatureAccess = useLoggedUserStore(state => {
     if (!state.user) return false;
-    if (state.user.role?.name === 'master') return true;
     if (!features || features.length === 0) return true;
 
-    const userObj = state.user as any;
-    const userOrg = state.user.organization as any;
-
-    return features.some((f) => {
-      if (userObj && userObj[f] !== undefined && userObj[f] !== null) {
-        return Boolean(userObj[f]);
-      }
-      return userOrg ? Boolean(userOrg[f]) : false;
-    });
+    return features.some((f) => hasUserFeature(state.user, f));
   });
 
 

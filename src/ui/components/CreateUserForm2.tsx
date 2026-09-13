@@ -1,6 +1,7 @@
 "use client";
 import React, { useMemo, useState } from "react";
 import {
+  FeatherAlertTriangle,
   FeatherCheck,
   FeatherEye,
   FeatherEyeOff,
@@ -8,6 +9,7 @@ import {
   FeatherUser,
 } from "@subframe/core";
 import * as SubframeUtils from "../utils";
+import { Alert } from "./Alert";
 import { Button } from "./Button";
 import { Select } from "./Select";
 import { TextField } from "./TextField";
@@ -16,6 +18,7 @@ import { useForm, Controller, useWatch } from "react-hook-form";
 import { supabase, supabaseAuthHelper } from "@/supabaseClient";
 import { FeatureToggle } from "./FeatureToggle";
 import { Switch } from "./Switch";
+import { getRoleLabel } from "@/constants/roles";
 import {
   ILoggedUser,
   IRole,
@@ -48,6 +51,30 @@ const CreateUserForm2Root = React.forwardRef<
 
   const isEditMode = !!initialData;
   const [showPassword, setShowPassword] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+
+  const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+  const handleResetPassword = async () => {
+    const targetEmail = initialData?.email;
+    if (!targetEmail) {
+      toast.error("User email not found");
+      return;
+    }
+    setIsResettingPassword(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(targetEmail);
+      if (error) {
+        toast.error(error.message || "Failed to send reset password email");
+      } else {
+        toast.success(`Password reset email sent to ${targetEmail}`);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send reset password email");
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
 
   // Fetch organizations
   const { useList: useOrgList } = organizationCrud;
@@ -59,9 +86,13 @@ const CreateUserForm2Root = React.forwardRef<
   // Fetch roles
   const { useList: useRoleList } = roleCrud;
   const { data: rolesData } = useRoleList();
-  const roles = rolesData
-    ? (rolesData?.data.filter((role) => role.name !== "master") as IRole[])
-    : [];
+  const roles = useMemo(() => {
+    if (!rolesData?.data) return [];
+    const list = isSuperAdmin
+      ? rolesData.data
+      : rolesData.data.filter((role) => role.name !== "master");
+    return list as IRole[];
+  }, [rolesData, isSuperAdmin]);
 
   const defaultOrgId =
     initialData?.organization?.id ||
@@ -87,9 +118,8 @@ const CreateUserForm2Root = React.forwardRef<
       organization_id: defaultOrgId,
       user_id: initialData?.user_id || "",
       active: initialData?.active ?? true,
-      PIS: initialData?.PIS ?? selectedOrganization?.PIS ?? true,
-      PAS: initialData?.PAS ?? selectedOrganization?.PAS ?? true,
-      ITMS: initialData?.ITMS ?? selectedOrganization?.ITMS ?? false,
+      v1_routes: initialData?.v1_routes ?? selectedOrganization?.v1_routes ?? false,
+      v2_routes: initialData?.v2_routes ?? selectedOrganization?.v2_routes ?? true,
     },
   });
 
@@ -140,35 +170,51 @@ const CreateUserForm2Root = React.forwardRef<
   const onSubmit = async (data: ILoggedUser) => {
     const targetOrgId = data.organization_id || selectedOrganization?.id || null;
 
+    const basePayload: any = {
+      role_id: data.role_id,
+      region_id: data.region_id || null,
+      depot_id: data.depot_id || null,
+      organization_id: targetOrgId,
+      active: data.active,
+      v1_routes: Boolean(data.v1_routes),
+      v2_routes: Boolean(data.v2_routes),
+    };
+
     if (isEditMode && initialData) {
       // Update existing user
-      await updateUser(
-        {
-          id: initialData.id,
-          payload: {
-            id: initialData.id,
-            role_id: data.role_id,
-            region_id: data.region_id || null,
-            depot_id: data.depot_id || null,
-            organization_id: targetOrgId,
-            active: data.active,
-            PIS: data.PIS,
-            PAS: data.PAS,
-            ITMS: data.ITMS,
-          },
-        },
-        {
-          onSuccess: () => {
-            toast.success("User updated successfully");
-            reset();
-            if (onUserCreated) onUserCreated();
-          },
-          onError: (error) => {
-            toast.error(`Failed to update user: ${error.message}`);
-            console.error("Update Error:", error);
-          },
-        },
-      );
+      try {
+        const { error: updateError } = await supabase
+          .from("users")
+          .update(basePayload)
+          .eq("id", initialData.id);
+
+        if (updateError) {
+          // If columns don't exist yet in public.users, fallback without them
+          if (updateError.code === "42703") {
+            const fallbackPayload = {
+              role_id: data.role_id,
+              region_id: data.region_id || null,
+              depot_id: data.depot_id || null,
+              organization_id: targetOrgId,
+              active: data.active,
+            };
+            const { error: fbErr } = await supabase
+              .from("users")
+              .update(fallbackPayload)
+              .eq("id", initialData.id);
+            if (fbErr) throw fbErr;
+          } else {
+            throw updateError;
+          }
+        }
+
+        toast.success("User updated successfully");
+        reset();
+        if (onUserCreated) onUserCreated();
+      } catch (error: any) {
+        toast.error(`Failed to update user: ${error.message || "Unknown error"}`);
+        console.error("Update Error:", error);
+      }
     } else {
       // Create user: Check if email already existed (including soft deleted)
       const { data: existingUser } = await supabase
@@ -184,20 +230,27 @@ const CreateUserForm2Root = React.forwardRef<
             .from("users")
             .update({
               deleted: false,
-              active: data.active,
-              role_id: data.role_id,
-              region_id: data.region_id || null,
-              depot_id: data.depot_id || null,
-              organization_id: targetOrgId,
-              PIS: data.PIS,
-              PAS: data.PAS,
-              ITMS: data.ITMS,
+              ...basePayload,
             })
             .eq("id", existingUser.id);
 
           if (updateErr) {
-            toast.error(`Failed to reactivate user: ${updateErr.message}`);
-            return;
+            if (updateErr.code === "42703") {
+              await supabase
+                .from("users")
+                .update({
+                  deleted: false,
+                  role_id: data.role_id,
+                  region_id: data.region_id || null,
+                  depot_id: data.depot_id || null,
+                  organization_id: targetOrgId,
+                  active: data.active,
+                })
+                .eq("id", existingUser.id);
+            } else {
+              toast.error(`Failed to reactivate user: ${updateErr.message}`);
+              return;
+            }
           }
           toast.success("User account reactivated successfully");
           reset();
@@ -214,6 +267,12 @@ const CreateUserForm2Root = React.forwardRef<
         await supabaseAuthHelper.auth.signUp({
           email: data.email,
           password: data.password,
+          options: {
+            data: {
+              v1_routes: Boolean(data.v1_routes),
+              v2_routes: Boolean(data.v2_routes),
+            },
+          },
         });
 
       if (signUpError) {
@@ -227,31 +286,37 @@ const CreateUserForm2Root = React.forwardRef<
         return;
       }
 
-      createUser(
-        {
+      try {
+        const { error: insertError } = await supabase.from("users").insert({
           email: data.email,
-          role_id: data.role_id,
-          region_id: data.region_id || null,
-          depot_id: data.depot_id || null,
-          organization_id: targetOrgId,
           user_id: userId,
-          active: data.active,
-          PIS: data.PIS,
-          PAS: data.PAS,
-          ITMS: data.ITMS,
-        },
-        {
-          onSuccess: () => {
-            toast.success("User created successfully");
-            reset();
-            if (onUserCreated) onUserCreated();
-          },
-          onError: (error) => {
-            toast.error(`Failed to create user: ${error.message}`);
-            console.error("Creation Error:", error);
-          },
-        },
-      );
+          ...basePayload,
+        });
+
+        if (insertError) {
+          if (insertError.code === "42703") {
+            const { error: fbErr } = await supabase.from("users").insert({
+              email: data.email,
+              user_id: userId,
+              role_id: data.role_id,
+              region_id: data.region_id || null,
+              depot_id: data.depot_id || null,
+              organization_id: targetOrgId,
+              active: data.active,
+            });
+            if (fbErr) throw fbErr;
+          } else {
+            throw insertError;
+          }
+        }
+
+        toast.success("User created successfully");
+        reset();
+        if (onUserCreated) onUserCreated();
+      } catch (error: any) {
+        toast.error(`Failed to create user: ${error.message || "Unknown error"}`);
+        console.error("Creation Error:", error);
+      }
     }
   };
 
@@ -285,7 +350,11 @@ const CreateUserForm2Root = React.forwardRef<
             render={({ field }) => (
               <Select
                 className="h-auto w-full flex-none"
-                label="Organization *"
+                label={
+                  <span>
+                    Organization <span className="text-red-500">*</span>
+                  </span>
+                }
                 placeholder="Select Organization"
                 {...field}
                 value={field.value || ""}
@@ -312,7 +381,11 @@ const CreateUserForm2Root = React.forwardRef<
           render={({ field, fieldState }) => (
             <Select
               className="h-auto w-full flex-none"
-              label="Select Role *"
+              label={
+                <span>
+                  Select Role <span className="text-red-500">*</span>
+                </span>
+              }
               placeholder="Select Role"
               error={!!fieldState.error}
               helpText={fieldState.error?.message}
@@ -322,7 +395,7 @@ const CreateUserForm2Root = React.forwardRef<
             >
               {roles.map((role) => (
                 <Select.Item key={role.id} value={role.id}>
-                  {role.name.split("_").join(" ")}
+                  {getRoleLabel(role.name)}
                 </Select.Item>
               ))}
             </Select>
@@ -338,7 +411,11 @@ const CreateUserForm2Root = React.forwardRef<
             render={({ field, fieldState }) => (
               <Select
                 className="h-auto w-full flex-none"
-                label="Select Region *"
+                label={
+                  <span>
+                    Select Region <span className="text-red-500">*</span>
+                  </span>
+                }
                 placeholder="Select Region"
                 error={!!fieldState.error}
                 helpText={fieldState.error?.message}
@@ -360,44 +437,100 @@ const CreateUserForm2Root = React.forwardRef<
         )}
 
         {selectedRole?.name === "depot_admin" && (
-          <Controller
-            control={control}
-            name="depot_id"
-            rules={{ required: "Depot is required" }}
-            render={({ field, fieldState }) => (
-              <Select
-                className="h-auto w-full flex-none"
-                label="Select Depot *"
-                placeholder="Select Depot"
-                error={!!fieldState.error}
-                helpText={fieldState.error?.message}
-                {...field}
-                value={field.value || ""}
-                onValueChange={field.onChange}
-              >
-                {depots.map((depot) => (
-                  <Select.Item key={depot.id} value={depot.id}>
-                    {depot.name}
-                  </Select.Item>
-                ))}
-              </Select>
+          <>
+            <Controller
+              control={control}
+              name="depot_id"
+              rules={{ required: "Depot is required" }}
+              render={({ field, fieldState }) => (
+                <Select
+                  className="h-auto w-full flex-none"
+                  label={
+                    <span>
+                      Select Depot <span className="text-red-500">*</span>
+                    </span>
+                  }
+                  placeholder="Select Depot"
+                  error={!!fieldState.error}
+                  helpText={fieldState.error?.message}
+                  {...field}
+                  value={field.value || ""}
+                  onValueChange={field.onChange}
+                >
+                  {depots.map((depot) => (
+                    <Select.Item key={depot.id} value={depot.id}>
+                      {depot.name}
+                    </Select.Item>
+                  ))}
+                </Select>
+              )}
+            />
+            {selectedRegionId && depots.length === 0 && (
+              <Alert
+                variant="warning"
+                icon={<FeatherAlertTriangle className="h-5 w-5" />}
+                description="No depots found in this region"
+              />
             )}
-          />
+          </>
         )}
 
-        {!isEditMode && (
+        {isEditMode ? (
+          <>
+            <TextField
+              className="h-auto w-full flex-none"
+              label={
+                <span>
+                  Email <span className="text-red-500">*</span>
+                </span>
+              }
+              helpText="Email cannot be changed once created"
+              icon={<FeatherUser />}
+              disabled
+            >
+              <TextField.Input
+                value={initialData?.email || watch("email") || ""}
+                readOnly
+                disabled
+                className="cursor-not-allowed opacity-75"
+              />
+            </TextField>
+            <div className="flex w-full flex-col items-start gap-1">
+              <Button
+                className="h-9 w-full flex-none"
+                variant="neutral-secondary"
+                type="button"
+                disabled={isResettingPassword}
+                loading={isResettingPassword}
+                onClick={handleResetPassword}
+              >
+                Reset Password
+              </Button>
+              <span className="text-caption font-caption text-subtext-color">
+                Sends a password reset link to {initialData?.email || "user"}
+              </span>
+            </div>
+          </>
+        ) : (
           <>
             <Controller
               control={control}
               name="email"
               rules={{
                 required: "Email is required",
-                pattern: { value: /^\S+@\S+$/, message: "Invalid email" },
+                pattern: {
+                  value: EMAIL_REGEX,
+                  message: "Enter a valid email address",
+                },
               }}
               render={({ field, fieldState }) => (
                 <TextField
                   className="h-auto w-full flex-none"
-                  label="Email *"
+                  label={
+                    <span>
+                      Email <span className="text-red-500">*</span>
+                    </span>
+                  }
                   helpText={fieldState.error?.message || ""}
                   icon={<FeatherUser />}
                   error={!!fieldState.error}
@@ -416,7 +549,11 @@ const CreateUserForm2Root = React.forwardRef<
               render={({ field, fieldState }) => (
                 <TextField
                   className="h-auto w-full flex-none"
-                  label="Password *"
+                  label={
+                    <span>
+                      Password <span className="text-red-500">*</span>
+                    </span>
+                  }
                   helpText={fieldState.error?.message || "Minimum 6 characters"}
                   icon={<FeatherKey />}
                   error={!!fieldState.error}
@@ -447,39 +584,29 @@ const CreateUserForm2Root = React.forwardRef<
           </>
         )}
 
-        {/* Module Access Configuration */}
+        {/* Route Version Capabilities */}
         <div className="flex flex-col gap-3 w-full border-t border-b border-neutral-border py-3">
           <span className="text-caption-bold font-caption-bold text-default-font">
-            Module-Level Access
+            Route Version Access
           </span>
           <div className="flex flex-col gap-2 w-full">
             <FeatureToggle
-              label="PIS (Passenger Information System)"
-              description="Access to Routes, Regions, and Depots"
+              label="V1 Routes (Legacy Format)"
+              description="Enable creation, editing, and export of V1 LED matrix route configurations"
               toggle={
                 <Switch
-                  checked={Boolean(watch("PIS"))}
-                  onCheckedChange={(checked) => setValue("PIS", checked)}
+                  checked={Boolean(watch("v1_routes"))}
+                  onCheckedChange={(checked) => setValue("v1_routes", checked)}
                 />
               }
             />
             <FeatureToggle
-              label="PAS (Public Address System)"
-              description="Access to Routes, Stops & Stop Creation"
+              label="V2 Routes (Modern Format)"
+              description="Enable creation, editing, and export of V2 multi-screen LED configurations"
               toggle={
                 <Switch
-                  checked={Boolean(watch("PAS"))}
-                  onCheckedChange={(checked) => setValue("PAS", checked)}
-                />
-              }
-            />
-            <FeatureToggle
-              label="ITMS (Intelligent Transit Management)"
-              description="Full access to Routes, Stops & Live Streaming"
-              toggle={
-                <Switch
-                  checked={Boolean(watch("ITMS"))}
-                  onCheckedChange={(checked) => setValue("ITMS", checked)}
+                  checked={Boolean(watch("v2_routes"))}
+                  onCheckedChange={(checked) => setValue("v2_routes", checked)}
                 />
               }
             />

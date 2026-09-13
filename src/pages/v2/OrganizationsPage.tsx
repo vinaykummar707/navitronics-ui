@@ -4,8 +4,7 @@ import React from "react";
 import { Avatar } from "@/ui/components/Avatar";
 import { Badge } from "@/ui/components/Badge";
 import { Button } from "@/ui/components/Button";
-import { OrganizationCard } from "@/ui/components/OrganizationCard";
-import { OrganizationList } from "@/ui/components/OrganizationList";
+import { Table } from "@/ui/components/Table";
 import { DefaultPageLayout } from "@/ui/layouts/DefaultPageLayout";
 import {
   FeatherMoreHorizontal,
@@ -74,45 +73,97 @@ function OrganizationsPage() {
           Failed to load organizations. Please click refresh to try again.
         </div>
       )}
-      {!isLoading && !isError && (
-        <OrganizationList>
-          {organizations &&
-            organizations.map((org) => (
-              <OrganizationCard
-                title={org.name}
-                subtitle={org.email ? org.email : "No email provided"}
-                timestamp={`Created on ${new Date(org.created_at).toLocaleDateString()}`}
-                key={org.id}
-                isSuspended={!org.active}
-                logo2={org.logo || undefined}
-                actions={
-                  <OptionsDropdown
-                    isDisabled={
-                      org.name?.toLowerCase() === "navitronix" ||
-                      (org as any).is_default ||
-                      org.id === "6b679098-ef69-45f0-9fb1-b457dd882060"
-                    }
-                    onEdit={() => {
-                      setEditData(org);
-                      setOpen(true);
-                    }}
-                    onDelete={() => {
-                      if (
-                        confirm(
-                          "Are you sure you want to delete this organization? This action cannot be undone.",
-                        )
-                      ) {
-                        handleDelete(org.id);
-                      }
-                    }}
-                  />
-                }
-                features={
-                  <ButtonGroup pas={org.PAS} pis={org.PIS} itms={org.ITMS} />
-                }
-              />
-            ))}
-        </OrganizationList>
+      {!isLoading && !isError && organizations.length > 0 && (
+        <div className="flex w-full flex-col items-start overflow-x-auto rounded-md border border-solid border-neutral-border bg-neutral-50">
+          <Table
+            header={
+              <Table.HeaderRow>
+                <Table.HeaderCell className="min-w-[220px]">Organization</Table.HeaderCell>
+                <Table.HeaderCell className="min-w-[180px]">Contact Email</Table.HeaderCell>
+                <Table.HeaderCell className="min-w-[120px]">Status</Table.HeaderCell>
+                <Table.HeaderCell className="min-w-[200px]">Active Modules</Table.HeaderCell>
+                <Table.HeaderCell className="min-w-[150px]">Created At</Table.HeaderCell>
+                <Table.HeaderCell className="w-12 justify-end" />
+              </Table.HeaderRow>
+            }
+          >
+            {organizations.map((org) => {
+              const isNavitronix =
+                org.name?.toLowerCase() === "navitronix" ||
+                (org as any).is_default ||
+                org.id === "6b679098-ef69-45f0-9fb1-b457dd882060";
+              const formattedDate = org.created_at
+                ? new Date(org.created_at).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })
+                : "—";
+
+              return (
+                <Table.Row key={org.id}>
+                  <Table.Cell>
+                    <div className="flex items-center gap-3">
+                      <Avatar
+                        size="small"
+                        image={org.logo || undefined}
+                      >
+                        {org.name ? org.name.slice(0, 2).toUpperCase() : "OG"}
+                      </Avatar>
+                      <span className="whitespace-nowrap text-body-bold font-body-bold text-default-font">
+                        {org.name}
+                      </span>
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="whitespace-nowrap text-body font-body text-subtext-color">
+                      {org.email || "No email provided"}
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    {org.active ? (
+                      <Badge variant="success">Active</Badge>
+                    ) : (
+                      <Badge variant="error">Suspended</Badge>
+                    )}
+                  </Table.Cell>
+                  <Table.Cell>
+                    <ButtonGroup pas={org.PAS} pis={org.PIS} itms={org.ITMS} />
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="whitespace-nowrap text-caption font-caption text-subtext-color">
+                      {formattedDate}
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell className="justify-end">
+                    <OptionsDropdown
+                      isDisabled={isNavitronix}
+                      onEdit={() => {
+                        setEditData(org);
+                        setOpen(true);
+                      }}
+                      onDelete={() => {
+                        if (
+                          confirm(
+                            "Are you sure you want to delete this organization? This action cannot be undone.",
+                          )
+                        ) {
+                          handleDelete(org.id);
+                        }
+                      }}
+                    />
+                  </Table.Cell>
+                </Table.Row>
+              );
+            })}
+          </Table>
+        </div>
+      )}
+      {!isLoading && !isError && organizations.length === 0 && (
+        <div className="flex w-full flex-col items-center justify-center p-12 gap-2 text-center">
+          <span className="text-heading-3 font-heading-3 text-default-font">No Organizations Found</span>
+          <span className="text-body font-body text-subtext-color">Start by adding your first organization.</span>
+        </div>
       )}
 
       <Drawer open={open} onOpenChange={setOpen}>

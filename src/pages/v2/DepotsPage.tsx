@@ -3,7 +3,7 @@ import { CreateDepotForm, Select } from "@/ui";
 import { Button } from "@/ui/components/Button";
 import { Dialog } from "@/ui/components/Dialog";
 import { OptionsDropdown } from "@/ui/components/OptionsDropdown";
-import { DepotCard } from "@/ui/components/DepotCard";
+import { Table } from "@/ui/components/Table";
 import {
   FeatherBusFront,
   FeatherMapPin,
@@ -184,32 +184,73 @@ export default function DepotsPage() {
         )}
       </div>
       {depots && depots.length > 0 ? (
-        <div className="w-full flex-col items-start gap-2 grid md:grid-cols-2 lg:grid-cols-3">
-          {depots.map((depot) => (
-            <DepotCard
-              key={depot.id}
-              icon={<FeatherBusFront />}
-              locationName={depot.name}
-              depotCount={
-                "Created on " + new Date(depot.created_at).toLocaleDateString()
-              }
-              actions={
-                <OptionsDropdown
-                  onDelete={() => {
-                    if (
-                      confirm("Are you sure you want to delete this depot?")
-                    ) {
-                      handleDeleteDepot(depot.id);
-                    }
-                  }}
-                  onEdit={() => {
-                    setEditData(depot);
-                    setOpen(true);
-                  }}
-                />
-              }
-            />
-          ))}
+        <div className="flex w-full flex-col items-start overflow-x-auto rounded-md border border-solid border-neutral-border bg-neutral-50">
+          <Table
+            header={
+              <Table.HeaderRow>
+                <Table.HeaderCell className="min-w-[240px]">Depot Name</Table.HeaderCell>
+                <Table.HeaderCell className="min-w-[200px]">Region</Table.HeaderCell>
+                <Table.HeaderCell className="min-w-[200px]">Organization</Table.HeaderCell>
+                <Table.HeaderCell className="min-w-[150px]">Created At</Table.HeaderCell>
+                <Table.HeaderCell className="w-12 justify-end" />
+              </Table.HeaderRow>
+            }
+          >
+            {depots.map((depot) => {
+              const formattedDate = depot.created_at
+                ? new Date(depot.created_at).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })
+                : "—";
+
+              return (
+                <Table.Row key={depot.id}>
+                  <Table.Cell>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-50 text-brand-primary border border-brand-primary/20">
+                        <FeatherBusFront className="h-4 w-4" />
+                      </div>
+                      <span className="whitespace-nowrap text-body-bold font-body-bold text-default-font">
+                        {depot.name}
+                      </span>
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="whitespace-nowrap text-body font-body text-subtext-color">
+                      {selectedRegion?.name || "—"}
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="whitespace-nowrap text-body font-body text-subtext-color">
+                      {selectedOrganization?.name || "—"}
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <span className="whitespace-nowrap text-caption font-caption text-subtext-color">
+                      {formattedDate}
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell className="justify-end">
+                    <OptionsDropdown
+                      onDelete={() => {
+                        if (
+                          confirm("Are you sure you want to delete this depot?")
+                        ) {
+                          handleDeleteDepot(depot.id);
+                        }
+                      }}
+                      onEdit={() => {
+                        setEditData(depot);
+                        setOpen(true);
+                      }}
+                    />
+                  </Table.Cell>
+                </Table.Row>
+              );
+            })}
+          </Table>
         </div>
       ) : (
         <div className="w-full h-full flex items-center justify-center bg-background">

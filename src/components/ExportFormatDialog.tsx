@@ -10,6 +10,8 @@ interface ExportFormatDialogProps {
   onOpenChange: (open: boolean) => void;
   selectedCount: number;
   onConfirmExport: (format: "v1" | "v2") => void;
+  hasV1?: boolean;
+  hasV2?: boolean;
 }
 
 export function ExportFormatDialog({
@@ -17,8 +19,18 @@ export function ExportFormatDialog({
   onOpenChange,
   selectedCount,
   onConfirmExport,
+  hasV1 = true,
+  hasV2 = true,
 }: ExportFormatDialogProps) {
-  const [selectedFormat, setSelectedFormat] = useState<"v1" | "v2">("v1");
+  const [selectedFormat, setSelectedFormat] = useState<"v1" | "v2">(
+    hasV1 ? "v1" : "v2"
+  );
+
+  React.useEffect(() => {
+    if (open) {
+      setSelectedFormat(hasV1 ? "v1" : "v2");
+    }
+  }, [open, hasV1, hasV2]);
 
   const handleExport = () => {
     onConfirmExport(selectedFormat);
@@ -57,38 +69,43 @@ export function ExportFormatDialog({
           </span>
 
           {/* Format Options */}
+          {/* Format Options */}
           <RadioCardGroup
             className="flex-col gap-3"
             value={selectedFormat}
             onValueChange={(val) => setSelectedFormat(val as "v1" | "v2")}
           >
-            <RadioCardGroup.RadioCard
-              value="v1"
-              checked={selectedFormat === "v1"}
-            >
-              <div className="flex flex-col gap-1">
-                <span className="text-body-bold font-body-bold text-default-font">
-                  V1 Portal Format (Legacy)
-                </span>
-                <span className="text-caption font-caption text-subtext-color">
-                  Converts route configs to V1 schema with language-nested display configurations (<code className="text-xs">v1.json</code>).
-                </span>
-              </div>
-            </RadioCardGroup.RadioCard>
+            {hasV1 && (
+              <RadioCardGroup.RadioCard
+                value="v1"
+                checked={selectedFormat === "v1"}
+              >
+                <div className="flex flex-col gap-1">
+                  <span className="text-body-bold font-body-bold text-default-font">
+                    V1 Portal Format (Legacy)
+                  </span>
+                  <span className="text-caption font-caption text-subtext-color">
+                    Converts route configs to V1 schema with language-nested display configurations (<code className="text-xs">v1.json</code>).
+                  </span>
+                </div>
+              </RadioCardGroup.RadioCard>
+            )}
 
-            <RadioCardGroup.RadioCard
-              value="v2"
-              checked={selectedFormat === "v2"}
-            >
-              <div className="flex flex-col gap-1">
-                <span className="text-body-bold font-body-bold text-default-font">
-                  V2 Portal Format (Current)
-                </span>
-                <span className="text-caption font-caption text-subtext-color">
-                  Exports route configs in standard V2 schema as stored (<code className="text-xs">v2.json</code>).
-                </span>
-              </div>
-            </RadioCardGroup.RadioCard>
+            {hasV2 && (
+              <RadioCardGroup.RadioCard
+                value="v2"
+                checked={selectedFormat === "v2"}
+              >
+                <div className="flex flex-col gap-1">
+                  <span className="text-body-bold font-body-bold text-default-font">
+                    V2 Portal Format (Current)
+                  </span>
+                  <span className="text-caption font-caption text-subtext-color">
+                    Exports route configs in standard V2 schema as stored (<code className="text-xs">v2.json</code>).
+                  </span>
+                </div>
+              </RadioCardGroup.RadioCard>
+            )}
           </RadioCardGroup>
 
           {/* Action Buttons */}

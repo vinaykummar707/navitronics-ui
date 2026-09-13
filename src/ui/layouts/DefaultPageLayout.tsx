@@ -47,81 +47,107 @@ const DefaultPageLayoutRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex h-screen items-start w-screen overflow-hidden",
+        "flex h-screen w-screen flex-col overflow-hidden bg-default-background",
         className
       )}
       ref={ref}
       {...otherProps}
     >
-      <SidebarWithSections
-        className={showSidebar ? "flex-shrink-0" : "hidden"}
-        header={
-          <>
-            <div className="space-y-2">
-              <img
-                className="h-24 rounded-full flex-none object-cover"
-                src="https://navitronix.in/assets/navitronix.jpeg"
-              />
+      {/* Global Top Bar */}
+      <header className="flex h-14 w-full flex-none items-center justify-between border-b border-solid border-neutral-border bg-sidebar-background px-4 z-20">
+        <div className="flex items-center gap-3">
+          <IconButton
+            variant="neutral-tertiary"
+            onClick={toggleSidebar}
+            icon={<FeatherPanelLeft className="text-default-font" />}
+          />
+          <div className="h-5 w-px bg-neutral-border" />
+          <div
+            className="flex items-center gap-2.5 cursor-pointer select-none"
+            onClick={() => navigate("/home/routes")}
+          >
+            <img
+              className="h-8 w-8 rounded-full object-cover ring-1 ring-neutral-border flex-none"
+              src="https://navitronix.in/assets/navitronix.jpeg"
+              alt="Navitronix"
+            />
+            <div className="flex items-center gap-2">
+              <span className="text-body-bold font-body-bold tracking-tight text-default-font font-bold">
+                NAVITRONIX
+              </span>
+              <span className="hidden sm:inline-flex rounded px-1.5 py-0.5 text-[10px] font-caption-bold text-brand-primary bg-brand-50 border border-brand-200/40">
+                RMS
+              </span>
             </div>
-            <SelectOrganizationComponent  className="shrink-0" />
-          </>
-        }
-        footer={<LoggedUser />}
-      >
-        <SidebarWithSections.NavSection className="no-scrollbar" label="Menu">
-          <RBAC roles={["master"]} features={[]}>
-            <SidebarWithSections.NavItem selected={path.startsWith("/home/organizations")} onClick={() => navigate("/home/organizations")} icon={<FeatherHotel />} >
-              Organizations
-            </SidebarWithSections.NavItem>
-          </RBAC>
-          <RBAC roles={[ROLES.MASTER, ROLES.ORGANIZATION_ADMIN, ROLES.REGION_ADMIN]} features={["PIS", "PAS", "ITMS"]}>
-            <SidebarWithSections.NavItem selected={path.startsWith("/home/regions")} onClick={() => navigate("/home/regions")} icon={<FeatherGlobe2 />}>
-              Regions
-            </SidebarWithSections.NavItem>
-          </RBAC>
-          <RBAC roles={[ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]} features={["PIS", "PAS", "ITMS"]}>
-            <SidebarWithSections.NavItem selected={path.startsWith("/home/depots")} onClick={() => navigate("/home/depots")} icon={<FeatherBusFront />}>
-              Depots
-            </SidebarWithSections.NavItem>
-          </RBAC>
-          <RBAC roles={[ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]} features={["PAS", "ITMS"]}>
-            <SidebarWithSections.NavItem selected={path.startsWith("/home/stops")} onClick={() => navigate("/home/stops")} icon={<FeatherMapPin />}>
-              Stops
-            </SidebarWithSections.NavItem>
-          </RBAC>
-         
-          <RBAC roles={[ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]} features={["PIS", "PAS", "ITMS"]}>
-            <SidebarWithSections.NavItem selected={path.startsWith("/home/routes")} onClick={() => navigate("/home/routes")} icon={<FeatherPlaneTakeoff />}>
-              Routes
-            </SidebarWithSections.NavItem>
-          </RBAC>
-          <RBAC roles={[ROLES.MASTER]} features={[]}>
-            <SidebarWithSections.NavItem selected={path.startsWith("/home/users")} onClick={() => navigate("/home/users")} icon={<FeatherUsers />}>
-              Users
-            </SidebarWithSections.NavItem>
-          </RBAC>
-        </SidebarWithSections.NavSection>
-
-        <RBAC roles={[ROLES.MASTER]} features={[]}>
-          <SidebarWithSections.NavSection label="Administrator">
-            {/* <SidebarWithSections.NavItem selected={path.startsWith("/home/utility")} onClick={() => navigate("/home/utility")} icon={<FeatherCpu />}>
-              Utility
-            </SidebarWithSections.NavItem> */}
-            <SidebarWithSections.NavItem selected={path.startsWith("/home/font-configuration")} onClick={() => navigate("/home/font-configuration")} icon={<FeatherType />}>
-              Font Configuration
-            </SidebarWithSections.NavItem>
-            {/* <SidebarWithSections.NavItem selected={path.startsWith("/home/settings")} onClick={() => navigate("/home/settings")} icon={<FeatherSettings />}>
-              Settings
-            </SidebarWithSections.NavItem> */}
-          </SidebarWithSections.NavSection>
-        </RBAC>
-      </SidebarWithSections>
-      {children ? (
-        <div className="flex grow shrink-0 basis-0 flex-col items-start gap-4 self-stretch overflow-y-auto bg-default-background px-8 py-8">
-          <IconButton className="shrink-0" variant="neutral-primary" onClick={toggleSidebar} icon={<FeatherPanelLeft />} />
-          {children}
+          </div>
         </div>
-      ) : null}
+
+        {/* Right side: Logged user avatar with dropdown */}
+        <div className="flex items-center">
+          <LoggedUser />
+        </div>
+      </header>
+
+      {/* Main App Workspace: Sidebar + Content */}
+      <div className="flex w-full grow shrink-0 basis-0 items-start overflow-hidden">
+        <SidebarWithSections
+          className={showSidebar ? "flex-shrink-0" : "hidden"}
+          header={<SelectOrganizationComponent className="shrink-0 w-full" />}
+        >
+          <SidebarWithSections.NavSection className="no-scrollbar" label="Menu">
+            <RBAC roles={["master"]} features={[]}>
+              <SidebarWithSections.NavItem selected={path.startsWith("/home/organizations")} onClick={() => navigate("/home/organizations")} icon={<FeatherHotel />} >
+                Organizations
+              </SidebarWithSections.NavItem>
+            </RBAC>
+            <RBAC roles={[ROLES.MASTER, ROLES.ORGANIZATION_ADMIN, ROLES.REGION_ADMIN]} features={["PIS", "PAS", "ITMS"]}>
+              <SidebarWithSections.NavItem selected={path.startsWith("/home/regions")} onClick={() => navigate("/home/regions")} icon={<FeatherGlobe2 />}>
+                Regions
+              </SidebarWithSections.NavItem>
+            </RBAC>
+            <RBAC roles={[ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]} features={["PIS", "PAS", "ITMS"]}>
+              <SidebarWithSections.NavItem selected={path.startsWith("/home/depots")} onClick={() => navigate("/home/depots")} icon={<FeatherBusFront />}>
+                Depots
+              </SidebarWithSections.NavItem>
+            </RBAC>
+            <RBAC roles={[ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]} features={["PAS", "ITMS"]}>
+              <SidebarWithSections.NavItem selected={path.startsWith("/home/stops")} onClick={() => navigate("/home/stops")} icon={<FeatherMapPin />}>
+                Stops
+              </SidebarWithSections.NavItem>
+            </RBAC>
+           
+            <RBAC roles={[ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]} features={["PIS", "PAS", "ITMS"]}>
+              <SidebarWithSections.NavItem selected={path.startsWith("/home/routes")} onClick={() => navigate("/home/routes")} icon={<FeatherPlaneTakeoff />}>
+                Routes
+              </SidebarWithSections.NavItem>
+            </RBAC>
+            <RBAC roles={[ROLES.MASTER]} features={[]}>
+              <SidebarWithSections.NavItem selected={path.startsWith("/home/users")} onClick={() => navigate("/home/users")} icon={<FeatherUsers />}>
+                Users
+              </SidebarWithSections.NavItem>
+            </RBAC>
+          </SidebarWithSections.NavSection>
+
+          <RBAC roles={[ROLES.MASTER]} features={[]}>
+            <SidebarWithSections.NavSection label="Administrator">
+              {/* <SidebarWithSections.NavItem selected={path.startsWith("/home/utility")} onClick={() => navigate("/home/utility")} icon={<FeatherCpu />}>
+                Utility
+              </SidebarWithSections.NavItem> */}
+              <SidebarWithSections.NavItem selected={path.startsWith("/home/font-configuration")} onClick={() => navigate("/home/font-configuration")} icon={<FeatherType />}>
+                Font Configuration
+              </SidebarWithSections.NavItem>
+              {/* <SidebarWithSections.NavItem selected={path.startsWith("/home/settings")} onClick={() => navigate("/home/settings")} icon={<FeatherSettings />}>
+                Settings
+              </SidebarWithSections.NavItem> */}
+            </SidebarWithSections.NavSection>
+          </RBAC>
+        </SidebarWithSections>
+        {children ? (
+          <div className="flex grow shrink-0 basis-0 flex-col items-start gap-4 self-stretch overflow-y-auto bg-default-background px-8 py-8">
+            {children}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 });

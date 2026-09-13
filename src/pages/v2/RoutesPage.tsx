@@ -29,6 +29,7 @@ import { AVAILABLE_LANGUAGES } from "@/constants/defaultRouteValues";
 import axios from "axios";
 import { convertV2ToV1 } from "@/utils/routeConfigMapper";
 import { ExportFormatDialog } from "@/components/ExportFormatDialog";
+import { getUserRouteAccess } from "@/utils/featureFlags";
 
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -130,6 +131,8 @@ export default function RoutesPage() {
     refetchRoutes,
   } = useRoutesPageData();
 
+  const routeAccess = getUserRouteAccess(user);
+
   const { mutate: deleteRoute } = routeCrud.useDelete();
   const { mutate: deleteSelectedRoutes } = routeCrud.useDeleteAll();
   const { mutate: createRoute } = routeCrud.useCreate();
@@ -142,11 +145,21 @@ export default function RoutesPage() {
 
   const handleEditRoute = (routeId: string) => {
     const route = routes?.find((r) => r.id === routeId);
-    if (route?.version === "1.0") {
+    const isV1 = route?.version === "1.0";
+
+    if (isV1) {
+      if (!routeAccess.hasV1Routes) {
+        toast.error("You do not have permission to edit V1 routes");
+        return;
+      }
       navigate(
         `/routes/create-v1/${selectedOrganization?.id}/${selectedDepot?.id}/${routeId}`,
       );
     } else {
+      if (!routeAccess.hasV2Routes) {
+        toast.error("You do not have permission to edit V2 routes");
+        return;
+      }
       navigate(
         `/routes/create/${selectedOrganization?.id}/${selectedDepot?.id}/${routeId}`,
       );
@@ -255,9 +268,29 @@ export default function RoutesPage() {
     );
   };
 
+  const [versionFilter, setVersionFilter] = React.useState<"all" | "v1" | "v2">("all");
+
+  const filteredRoutes = React.useMemo(() => {
+    if (!routes) return [];
+    if (routeAccess.isV1Only) {
+      return routes.filter((r) => r.version === "1.0");
+    }
+    if (routeAccess.isV2Only) {
+      return routes.filter((r) => r.version !== "1.0");
+    }
+    // Dual user or master
+    if (versionFilter === "v1") {
+      return routes.filter((r) => r.version === "1.0");
+    }
+    if (versionFilter === "v2") {
+      return routes.filter((r) => r.version !== "1.0");
+    }
+    return routes;
+  }, [routes, routeAccess.isV1Only, routeAccess.isV2Only, versionFilter]);
+
   const hasRegions = regions && regions.length > 0;
   const hasDepots = depots && depots.length > 0;
-  const hasRoutes = routes && routes.length > 0;
+  const hasRoutes = filteredRoutes && filteredRoutes.length > 0;
 
   const [selectedRouteIds, setSelectedRouteIds] = React.useState<string[]>([]);
 
@@ -267,9 +300,9 @@ export default function RoutesPage() {
   );
 
   const selectedRouteObjects = React.useMemo(() => {
-    if (!routes || selectedRouteIds.length === 0) return [];
-    return routes.filter((route) => selectedRouteIdsSet.has(route.id));
-  }, [routes, selectedRouteIdsSet]);
+    if (!filteredRoutes || selectedRouteIds.length === 0) return [];
+    return filteredRoutes.filter((route) => selectedRouteIdsSet.has(route.id));
+  }, [filteredRoutes, selectedRouteIdsSet]);
 
   const handleSelectedChange = (routeId: string, selected: boolean) => {
     setSelectedRouteIds((prev) => {
@@ -282,8 +315,8 @@ export default function RoutesPage() {
   };
 
   const handleSelectAllChange = (selected: boolean) => {
-    if (selected && routes) {
-      setSelectedRouteIds(routes.map((r) => r.id));
+    if (selected && filteredRoutes) {
+      setSelectedRouteIds(filteredRoutes.map((r) => r.id));
     } else {
       setSelectedRouteIds([]);
     }
@@ -359,6 +392,17 @@ export default function RoutesPage() {
       toast.warning("No routes selected for export");
       return;
     }
+
+    if (routeAccess.isV1Only) {
+      executeExport("v1");
+      return;
+    }
+
+    if (routeAccess.isV2Only) {
+      executeExport("v2");
+      return;
+    }
+
     setIsExportDialogOpen(true);
   };
 
@@ -458,9 +502,48 @@ export default function RoutesPage() {
 
       {/* Toolbar */}
       <div className="flex w-full items-center justify-between mobile:flex-col mobile:items-start gap-4">
-        <span className="text-caption font-caption text-subtext-color">
-          Showing records
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-caption font-caption text-subtext-color">
+            Showing {filteredRoutes.length} of {routes?.length || 0} records
+          </span>
+          {routeAccess.isDualUser && routes && routes.length > 0 && (
+            <div className="flex items-center rounded-md border border-neutral-border bg-neutral-100 p-0.5 text-xs">
+              <button
+                type="button"
+                className={`px-2.5 py-1 rounded font-medium transition-colors ${
+                  versionFilter === "all"
+                    ? "bg-brand-50 text-brand-primary border border-brand-primary/40 shadow-sm"
+                    : "text-subtext-color hover:text-default-font"
+                }`}
+                onClick={() => setVersionFilter("all")}
+              >
+                All ({routes.length})
+              </button>
+              <button
+                type="button"
+                className={`px-2.5 py-1 rounded font-medium transition-colors ${
+                  versionFilter === "v1"
+                    ? "bg-brand-50 text-brand-primary border border-brand-primary/40 shadow-sm"
+                    : "text-subtext-color hover:text-default-font"
+                }`}
+                onClick={() => setVersionFilter("v1")}
+              >
+                V1 ({routes.filter((r) => r.version === "1.0").length})
+              </button>
+              <button
+                type="button"
+                className={`px-2.5 py-1 rounded font-medium transition-colors ${
+                  versionFilter === "v2"
+                    ? "bg-brand-50 text-brand-primary border border-brand-primary/40 shadow-sm"
+                    : "text-subtext-color hover:text-default-font"
+                }`}
+                onClick={() => setVersionFilter("v2")}
+              >
+                V2 ({routes.filter((r) => r.version !== "1.0").length})
+              </button>
+            </div>
+          )}
+        </div>
 
         {hasRegions && (
           <div className="flex items-end gap-2 mobile:w-full mobile:grid mobile:grid-cols-2">
@@ -523,29 +606,33 @@ export default function RoutesPage() {
                 "depot_admin",
               ]}
             >
-              <Button
-                icon={<FeatherPlus />}
-                variant="brand-secondary-2"
-                disabled={!selectedDepot}
-                onClick={() =>
-                  navigate(
-                    `/routes/create-v1/${selectedOrganization?.id}/${selectedDepot?.id}`,
-                  )
-                }
-              >
-                V1 Add Route
-              </Button>
-              <Button
-                icon={<FeatherPlus />}
-                disabled={!selectedDepot}
-                onClick={() =>
-                  navigate(
-                    `/routes/create/${selectedOrganization?.id}/${selectedDepot?.id}`,
-                  )
-                }
-              >
-                V2 Add Route
-              </Button>
+              {routeAccess.hasV1Routes && (
+                <Button
+                  icon={<FeatherPlus />}
+                  variant="brand-secondary-2"
+                  disabled={!selectedDepot}
+                  onClick={() =>
+                    navigate(
+                      `/routes/create-v1/${selectedOrganization?.id}/${selectedDepot?.id}`,
+                    )
+                  }
+                >
+                  {routeAccess.isV1Only ? "Add Route" : "V1 Add Route"}
+                </Button>
+              )}
+              {routeAccess.hasV2Routes && (
+                <Button
+                  icon={<FeatherPlus />}
+                  disabled={!selectedDepot}
+                  onClick={() =>
+                    navigate(
+                      `/routes/create/${selectedOrganization?.id}/${selectedDepot?.id}`,
+                    )
+                  }
+                >
+                  {routeAccess.isV2Only ? "Add Route" : "V2 Add Route"}
+                </Button>
+              )}
             </RBAC>
             {selectedRouteIds.length > 0 && (
               <>
@@ -582,7 +669,7 @@ export default function RoutesPage() {
       {/* Content */}
       {hasRoutes ? (
         <RouteTable
-          routes={routes}
+          routes={filteredRoutes}
           onEdit={handleEditRoute}
           onDelete={(routeId: string) => {
             if (
@@ -608,6 +695,8 @@ export default function RoutesPage() {
         onOpenChange={setIsExportDialogOpen}
         selectedCount={selectedRouteIds.length}
         onConfirmExport={executeExport}
+        hasV1={routeAccess.hasV1Routes}
+        hasV2={routeAccess.hasV2Routes}
       />
     </div>
   );

@@ -9,14 +9,10 @@
 // @subframe/sync-disable
 import React from "react";
 import { FeatherLogOut } from "@subframe/core";
-import { FeatherMoreHorizontal } from "@subframe/core";
-import { FeatherSettings } from "@subframe/core";
-import { FeatherUser } from "@subframe/core";
 import * as SubframeCore from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { Avatar } from "./Avatar";
 import { DropdownMenu } from "./DropdownMenu";
-import { IconButton } from "./IconButton";
 import { useNavigate } from "react-router-dom";
 import { ROLES } from "@/constants/roles";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
@@ -56,40 +52,47 @@ const LoggedUserRoot = React.forwardRef<HTMLDivElement, LoggedUserRootProps>(
     return (
       <div
         className={SubframeUtils.twClassNames(
-          "flex w-full items-center gap-2",
+          "flex items-center",
           className
         )}
         ref={ref}
         {...otherProps}
       >
-        <div className="flex grow shrink-0 basis-0 items-start gap-2">
-          <Avatar image="">
-            {user?.email ? user.email.charAt(0).toUpperCase() : "U"}
-          </Avatar>
-          <div className="flex flex-col items-start">
-            <span className="text-caption-bold font-caption-bold text-default-font">
-              {user?.email || "User Name"}
-            </span>
-            <span className="text-[11px] capitalize font-caption text-subtext-color">
-              {user?.role?.name === "master"
-                ? "Super Admin"
-                : user?.role?.name?.split("_").join(" ") || "User Role"}
-            </span>
-          </div>
-        </div>
         <SubframeCore.DropdownMenu.Root>
           <SubframeCore.DropdownMenu.Trigger asChild={true}>
-            <IconButton size="small" icon={<FeatherMoreHorizontal />} />
+            <div className="cursor-pointer rounded-full transition-transform hover:scale-105 active:scale-95 ring-1 ring-neutral-border hover:ring-2 hover:ring-brand-primary/60 select-none">
+              <Avatar image="" size="medium">
+                {user?.email ? user.email.charAt(0).toUpperCase() : "U"}
+              </Avatar>
+            </div>
           </SubframeCore.DropdownMenu.Trigger>
           <SubframeCore.DropdownMenu.Portal>
             <SubframeCore.DropdownMenu.Content
               side="bottom"
-              align="start"
-              sideOffset={4}
+              align="end"
+              sideOffset={8}
               asChild={true}
             >
-              <DropdownMenu>
-                <DropdownMenu.DropdownItem icon={<FeatherLogOut />} onClick={() => {localStorage.clear();logout(); navigate("/login");}}>
+              <DropdownMenu className="min-w-[220px]">
+                <div className="flex flex-col px-3 py-2 border-b border-solid border-neutral-border">
+                  <span className="text-caption-bold font-caption-bold text-default-font truncate">
+                    {user?.email || "User Name"}
+                  </span>
+                  <span className="text-[11px] capitalize font-caption text-subtext-color">
+                    {user?.role?.name === "master"
+                      ? "Super Admin"
+                      : user?.role?.name?.split("_").join(" ") || "User Role"}
+                    {use ? ` • ${use}` : ""}
+                  </span>
+                </div>
+                <DropdownMenu.DropdownItem
+                  icon={<FeatherLogOut />}
+                  onClick={() => {
+                    localStorage.clear();
+                    logout();
+                    navigate("/login");
+                  }}
+                >
                   Log out
                 </DropdownMenu.DropdownItem>
               </DropdownMenu>

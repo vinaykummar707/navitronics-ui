@@ -23,6 +23,7 @@ import { Table } from "./Table";
 import { OptionsDropdown } from "./OptionsDropdown";
 import { ILoggedUser, IUser } from "@/types/IUser";
 import { toast } from "react-toastify";
+import { getUserRouteAccess } from "@/utils/featureFlags";
 
 interface UsersTableRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -36,14 +37,22 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
     { className, users, onEditUser, onDeleteUser, ...otherProps }: UsersTableRootProps,
     ref
   ) {
-
-
-
+    const formatCreatedAt = (dateStr?: string | null) => {
+      if (!dateStr) return "—";
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return "—";
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      return `${day}/${month}/${year}, ${hours}:${minutes}`;
+    };
 
     return (
       <div
         className={SubframeUtils.twClassNames(
-          "flex w-full flex-col items-start gap-2 overflow-auto   rounded-md border border-solid border-neutral-border bg-neutral-50 px-4 py-4",
+          "flex w-full flex-col items-start gap-2 overflow-auto rounded-md border border-solid border-neutral-border bg-neutral-50 px-4 py-4",
           className
         )}
         ref={ref}
@@ -54,62 +63,82 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
             <Table.HeaderRow>
               <Table.HeaderCell>Email</Table.HeaderCell>
               <Table.HeaderCell>Role</Table.HeaderCell>
+              <Table.HeaderCell>Route Access</Table.HeaderCell>
               <Table.HeaderCell>Region</Table.HeaderCell>
               <Table.HeaderCell>Organization</Table.HeaderCell>
               <Table.HeaderCell>Depot</Table.HeaderCell>
               <Table.HeaderCell>Active</Table.HeaderCell>
-              <Table.HeaderCell>Created At</Table.HeaderCell>
+              <Table.HeaderCell className="justify-center text-center">Created At</Table.HeaderCell>
               <Table.HeaderCell />
             </Table.HeaderRow>
           }
         >
-          {users.map((user: ILoggedUser) => <Table.Row key={user.id || user.user_id}>
-            <Table.Cell>
-              <span className="whitespace-nowrap text-body-bold flex gap-1.5 items-center font-body-bold text-default-font">
-                {user.email} <IconButton variant="neutral-tertiary" size="small" icon={<SubframeCore.FeatherCopy />} onClick={() => { navigator.clipboard.writeText(user.email);  toast.success(`Email copied to clipboard ${user.email}`)}} />
-              </span>
-            </Table.Cell>
-            <Table.Cell>
-              <Badge className="capitalize" variant="error" icon={<FeatherShieldCheck />}>
-                {user.role?.name === "master"
-                  ? "Super Admin"
-                  : user.role?.name
-                  ? user.role.name.split("_").join(" ")
-                  : "—"}
-              </Badge>
-            </Table.Cell>
-            <Table.Cell>
-              <span className="whitespace-nowrap text-body font-body text-default-font text-subtext-color">
-                {user.region?.name || "—"}
-              </span>
-            </Table.Cell>
-            <Table.Cell>
-              <div className="flex items-center gap-2">
-                <span className="whitespace-nowrap text-body font-body text-default-font text-subtext-color">
-                  {user.organization?.name || "—"}
-                </span>
-              </div>
-            </Table.Cell>
-            <Table.Cell>
-              <span className="whitespace-nowrap text-body font-body text-subtext-color ">
-                {user.depot?.name || "—"}
-              </span>
-            </Table.Cell>
-            <Table.Cell>
-              <Badge variant={user.active ? "success" : "error"} icon={<FeatherCheck />}>{user.active ? "Active" : "Inactive"}</Badge>
-            </Table.Cell>
-            <Table.Cell>
-              <span className="whitespace-nowrap text-body font-body text-subtext-color">
-                {user.created_at ? new Date(user.created_at).toLocaleDateString() : "—"}
-              </span>
-            </Table.Cell>
-            <Table.Cell>
-              <div className="flex grow shrink-0 basis-0 items-center justify-end">
-                
-                <OptionsDropdown isDisabled={user.role?.name === "master"} onDelete={() => onDeleteUser && onDeleteUser(user.id)} onEdit={() => onEditUser && onEditUser(user)} />
-              </div>
-            </Table.Cell>
-          </Table.Row>)}
+          {users.map((user: ILoggedUser) => {
+            const routeAccess = getUserRouteAccess(user);
+            const isSuper = user.role?.name === "master";
+
+            return (
+              <Table.Row key={user.id || user.user_id}>
+                <Table.Cell>
+                  <span className="whitespace-nowrap text-body-bold font-body-bold text-default-font">
+                    {user.email}
+                  </span>
+                </Table.Cell>
+                <Table.Cell>
+                  <Badge className="capitalize" variant="error" icon={<FeatherShieldCheck />}>
+                    {user.role?.name === "master"
+                      ? "Super Admin"
+                      : user.role?.name
+                      ? user.role.name.split("_").join(" ")
+                      : "—"}
+                  </Badge>
+                </Table.Cell>
+                <Table.Cell>
+                  {isSuper || routeAccess.isDualUser ? (
+                    <Badge variant="brand">V1 + V2</Badge>
+                  ) : routeAccess.isV1Only ? (
+                    <Badge variant="warning">V1 Only</Badge>
+                  ) : (
+                    <Badge variant="neutral">V2 Only</Badge>
+                  )}
+                </Table.Cell>
+                <Table.Cell>
+                  <span className="whitespace-nowrap text-body font-body text-default-font text-subtext-color">
+                    {user.region?.name || "—"}
+                  </span>
+                </Table.Cell>
+                <Table.Cell>
+                  <div className="flex items-center gap-2">
+                    <span className="whitespace-nowrap text-body font-body text-default-font text-subtext-color">
+                      {user.organization?.name || "—"}
+                    </span>
+                  </div>
+                </Table.Cell>
+                <Table.Cell>
+                  <span className="whitespace-nowrap text-body font-body text-subtext-color ">
+                    {user.depot?.name || "—"}
+                  </span>
+                </Table.Cell>
+                <Table.Cell>
+                  <Badge variant={user.active ? "success" : "error"} icon={<FeatherCheck />}>{user.active ? "Active" : "Inactive"}</Badge>
+                </Table.Cell>
+                <Table.Cell className="justify-center text-center">
+                  <span className="whitespace-nowrap text-body font-body text-subtext-color font-mono text-xs">
+                    {formatCreatedAt(user.created_at)}
+                  </span>
+                </Table.Cell>
+                <Table.Cell>
+                  <div className="flex grow shrink-0 basis-0 items-center justify-end">
+                    <OptionsDropdown
+                      isDisabled={user.role?.name === "master"}
+                      onDelete={() => onDeleteUser && onDeleteUser(user.id)}
+                      onEdit={() => onEditUser && onEditUser(user)}
+                    />
+                  </div>
+                </Table.Cell>
+              </Table.Row>
+            );
+          })}
         </Table>
       </div>
     );

@@ -132,7 +132,11 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
       <div className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-4">
         <TextField
           className="h-auto w-full flex-none"
-          label="Stop Name"
+          label={
+            <span>
+              Stop Name <span className="text-red-500">*</span>
+            </span>
+          }
           error={!!errors?.name}
           helpText={errors.name?.message || "Name of the stop"}
           icon={<FeatherMapPin />}
@@ -144,7 +148,11 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
         </TextField>
         <TextField
           className="h-auto w-full flex-none"
-          label="Up Latitude"
+          label={
+            <span>
+              Up Latitude <span className="text-red-500">*</span>
+            </span>
+          }
           error={!!errors.up_latitude}
           helpText={
             errors.up_latitude?.message || "Upward Latitude (-90 to 90)"
@@ -166,7 +174,11 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
         </TextField>
         <TextField
           className="h-auto w-full flex-none"
-          label="Up Longitude"
+          label={
+            <span>
+              Up Longitude <span className="text-red-500">*</span>
+            </span>
+          }
           error={!!errors.up_longitude}
           helpText={
             errors.up_longitude?.message || "Upward Longitude (-180 to 180)"
@@ -188,7 +200,11 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
         </TextField>
         <TextField
           className="h-auto w-full flex-none"
-          label="Down Latitude"
+          label={
+            <span>
+              Down Latitude <span className="text-red-500">*</span>
+            </span>
+          }
           error={!!errors.down_latitude}
           helpText={
             errors.down_latitude?.message || "Return Latitude (-90 to 90)"
@@ -210,7 +226,11 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
         </TextField>
         <TextField
           className="h-auto w-full flex-none"
-          label="Down Longitude"
+          label={
+            <span>
+              Down Longitude <span className="text-red-500">*</span>
+            </span>
+          }
           error={!!errors.down_longitude}
           helpText={
             errors.down_longitude?.message || "Return Longitude (-180 to 180)"

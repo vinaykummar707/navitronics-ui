@@ -140,7 +140,7 @@ function App() {
                       ROLES.REGION_ADMIN,
                       ROLES.DEPOT_ADMIN,
                     ]}
-                    features={["PIS", "PAS", "ITMS"]}
+                    features={["v2_routes"]}
                   >
                     <LanguageConfigProvider>
                       <RouteCreatePage />
@@ -160,7 +160,7 @@ function App() {
                       ROLES.REGION_ADMIN,
                       ROLES.DEPOT_ADMIN,
                     ]}
-                    features={["PIS", "PAS", "ITMS"]}
+                    features={["v1_routes"]}
                   >
                     <LanguageConfigProvider>
                       <CreateRoutePageV1 />
@@ -180,7 +180,7 @@ function App() {
                       ROLES.REGION_ADMIN,
                       ROLES.DEPOT_ADMIN,
                     ]}
-                    features={["PIS", "PAS", "ITMS"]}
+                    features={["v1_routes"]}
                   >
                     <LanguageConfigProvider>
                       <CreateRoutePageV1 />
@@ -200,7 +200,7 @@ function App() {
                       ROLES.REGION_ADMIN,
                       ROLES.DEPOT_ADMIN,
                     ]}
-                    features={["PIS", "PAS", "ITMS"]}
+                    features={["v2_routes"]}
                   >
                     <LanguageConfigProvider>
                       <RouteCreatePage />

@@ -552,7 +552,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
           onWheel={handleWheel}
           className="relative flex-1 min-h-0 w-full overflow-auto p-4 scrollbar-thin bg-neutral-100/60 rounded-xl border border-solid border-neutral-border shadow-inner"
           style={{
-            backgroundImage: "radial-gradient(#d4d4d8 1.2px, transparent 1.2px)",
+            backgroundImage: "radial-gradient(rgba(136, 153, 177, 0.18) 1px, transparent 1px)",
             backgroundSize: "20px 20px",
           }}
         >
@@ -564,7 +564,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
               transition: "transform 0.15s ease-out",
               width: zoom < 100 ? `${100 * (100 / zoom)}%` : "100%",
             }}
-            className="flex w-full flex-col items-start gap-4 transition-all pb-16"
+            className="flex w-full flex-col items-start gap-4 transition-all pb-6"
           >
             {simulations.map((simulation, index) => (
               <div key={(simulation as any)?.id || `${selectedTab}_${index}`} className="  shadow-sm rounded-xl overflow-hidden">
@@ -583,42 +583,6 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
                 </p>
               </div>
             )}
-          </div>
-
-          {/* Floating Canvas Zoom Controls Widget */}
-          <div className="sticky bottom-2 ml-auto w-fit z-20 flex items-center gap-1 rounded-full border border-neutral-border bg-default-background/95 p-1 shadow-lg backdrop-blur-sm">
-            <IconButton
-              variant="neutral-primary"
-              size="small"
-              icon={<FeatherMinus />}
-              title="Zoom Out"
-              onClick={handleZoomOut}
-              disabled={zoom <= 40}
-            />
-            <button
-              type="button"
-              onClick={handleResetZoom}
-              className="px-2 py-0.5 text-xs font-mono font-bold text-default-font hover:text-brand-primary cursor-pointer"
-              title="Reset to 100%"
-            >
-              {zoom}%
-            </button>
-            <IconButton
-              variant="neutral-primary"
-              size="small"
-              icon={<FeatherPlus />}
-              title="Zoom In"
-              onClick={handleZoomIn}
-              disabled={zoom >= 175}
-            />
-            <Button
-              variant="neutral-primary"
-              size="small"
-              onClick={handleFitToWidth}
-              className="rounded-full text-xs h-7 px-2.5"
-            >
-              Fit
-            </Button>
           </div>
         </div>
       </div>

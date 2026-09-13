@@ -16,9 +16,8 @@ export interface IUser {
     active: boolean;
     deleted: boolean;
     role_id: string;
-    PIS?: boolean | null;
-    PAS?: boolean | null;
-    ITMS?: boolean | null;
+    v1_routes?: boolean | null;
+    v2_routes?: boolean | null;
 }
 
 export interface ILoggedUser extends IUser {

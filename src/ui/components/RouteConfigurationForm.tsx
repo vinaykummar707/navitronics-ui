@@ -41,7 +41,11 @@ const RouteConfigurationFormRoot = React.forwardRef<
       {!isSplitRoute && (
         <TextField
           className="h-auto w-full flex-none"
-          label="Route Number *"
+          label={
+            <span>
+              Route Number <span className="text-red-500">*</span>
+            </span>
+          }
           variant="filled"
           error={!!errors.route_number}
           helpText={(errors.route_number?.message as string) || ""}
@@ -55,7 +59,11 @@ const RouteConfigurationFormRoot = React.forwardRef<
       </TextField> )}
       <TextField
         className="h-auto w-full flex-none"
-        label="Source *"
+        label={
+          <span>
+            Source <span className="text-red-500">*</span>
+          </span>
+        }
         variant="filled"
         error={!!errors.source}
         helpText={(errors.source?.message as string) || ""}
@@ -67,7 +75,11 @@ const RouteConfigurationFormRoot = React.forwardRef<
       </TextField>
       <TextField
         className="h-auto w-full flex-none"
-        label="Destination *"
+        label={
+          <span>
+            Destination <span className="text-red-500">*</span>
+          </span>
+        }
         variant="filled"
         error={!!errors.destination}
         helpText={(errors.destination?.message as string) || ""}
@@ -97,7 +109,11 @@ const RouteConfigurationFormRoot = React.forwardRef<
         <>
           <TextField
             className="h-auto w-full flex-none"
-            label="Route Number 1 *"
+            label={
+              <span>
+                Route Number 1 <span className="text-red-500">*</span>
+              </span>
+            }
             variant="filled"
             error={!!errors.route_number_1}
             helpText={(errors.route_number_1?.message as string) || ""}
@@ -111,7 +127,11 @@ const RouteConfigurationFormRoot = React.forwardRef<
           </TextField>
           <TextField
             className="h-auto w-full flex-none"
-            label="Route Number 2 *"
+            label={
+              <span>
+                Route Number 2 <span className="text-red-500">*</span>
+              </span>
+            }
             variant="filled"
             error={!!errors.route_number_2}
             helpText={(errors.route_number_2?.message as string) || ""}

@@ -28,8 +28,26 @@ import { toast } from "react-toastify";
 // ----------------------------------------------------------------------
 
 const organizationSchema = z.object({
-  name: z.string().trim().min(1, "Organization name is required"),
-  email: z.string().trim().min(1, "Email is required").email("Invalid email format"),
+  name: z
+    .string()
+    .trim()
+    .min(2, "Organization name must be at least 2 characters")
+    .regex(
+      /^[a-zA-Z0-9\s&.,'_-]+$/,
+      "Organization name must contain valid alphanumeric characters",
+    )
+    .refine(
+      (val) => /[a-zA-Z0-9]/.test(val),
+      "Organization name must contain alphanumeric characters",
+    ),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .regex(
+      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+      "Invalid email format",
+    ),
   phone: z.string().optional().or(z.literal("")),
   logo: z.string().optional().or(z.literal("")),
   PIS: z.boolean().optional(),
@@ -132,8 +150,18 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
             reset();
             if (onSuccess) onSuccess();
           },
-          onError: (error) => {
-            toast.error(`Failed to update organization: ${error.message}`);
+          onError: (error: any) => {
+            if (
+              error?.code === "23505" ||
+              error?.message?.includes("23505") ||
+              error?.details?.includes("already exists") ||
+              error?.message?.toLowerCase().includes("unique constraint") ||
+              error?.message?.toLowerCase().includes("already exists")
+            ) {
+              toast.error("The email address or name is already in use");
+            } else {
+              toast.error(`Failed to update organization: ${error.message}`);
+            }
             console.error("Update Error:", error);
           },
         },
@@ -156,8 +184,18 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
             reset();
             if (onSuccess) onSuccess();
           },
-          onError: (error) => {
-            toast.error("Failed to create organization");
+          onError: (error: any) => {
+            if (
+              error?.code === "23505" ||
+              error?.message?.includes("23505") ||
+              error?.details?.includes("already exists") ||
+              error?.message?.toLowerCase().includes("unique constraint") ||
+              error?.message?.toLowerCase().includes("already exists")
+            ) {
+              toast.error("The email address or name is already in use");
+            } else {
+              toast.error("Failed to create organization");
+            }
             console.error("Creation Error:", error);
           },
         },
@@ -192,9 +230,13 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
         {/* Organization Name */}
         <TextField
           className="h-auto w-full flex-none"
-          label="Organization Name *"
+          label={
+            <span>
+              Organization Name <span className="text-red-500">*</span>
+            </span>
+          }
           helpText={
-            errors.name?.message || "Enter organization name (min 1 character, e.g. QA)"
+            errors.name?.message || "Enter organization name (min 2 characters, e.g. QA)"
           }
           error={!!errors.name}
         >
@@ -207,7 +249,11 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
         {/* Email ID */}
         <TextField
           className="h-auto w-full flex-none"
-          label="Email ID *"
+          label={
+            <span>
+              Email ID <span className="text-red-500">*</span>
+            </span>
+          }
           helpText={errors.email?.message || "Primary work email address"}
           icon={<FeatherMail />}
           error={!!errors.email}

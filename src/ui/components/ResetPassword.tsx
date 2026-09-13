@@ -87,17 +87,24 @@ const ResetPasswordFormRoot = React.forwardRef<
         <div className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-4">
           <TextField
             className="h-auto w-full flex-none"
-            label="Email"
-            helpText="Enter your email address"
-            icon={<FeatherUser />}
-            error={
-              errors.email?.message ||
-              apiError
+            label={
+              <span>
+                Email <span className="text-red-500">*</span>
+              </span>
             }
+            helpText={errors.email?.message || apiError || "Enter your email address"}
+            icon={<FeatherUser />}
+            error={!!errors.email || !!apiError}
           >
             <TextField.Input
               placeholder="Ex: user@example.com"
-              {...register("email", { required: "Email is required" })}
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                  message: "Enter a valid email address",
+                },
+              })}
             />
           </TextField>
         </div>

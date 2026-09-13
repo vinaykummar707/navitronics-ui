@@ -117,13 +117,14 @@ const CreateRegionFormRoot = React.forwardRef<
         <div className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-4">
           <TextField
             className="h-auto w-full flex-none"
-            label="Region Name"
-            helpText="Name of the region"
-            icon={<FeatherUser />}
-            error={
-              errors.name?.message ||
-              apiError
+            label={
+              <span>
+                Region Name <span className="text-red-500">*</span>
+              </span>
             }
+            helpText={errors.name?.message || apiError || "Name of the region"}
+            icon={<FeatherUser />}
+            error={!!errors.name || !!apiError}
           >
             <TextField.Input
               placeholder="Ex: Mumbai"
@@ -144,8 +145,8 @@ const CreateRegionFormRoot = React.forwardRef<
                 ? "Updating..."
                 : "Creating..."
               : isEditMode
-              ? "Update"
-              : "Submit"}
+              ? "Update Region"
+              : "Create Region"}
           </Button>
           <Button
             className="h-9 w-full flex-none"
