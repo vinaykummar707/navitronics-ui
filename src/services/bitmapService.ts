@@ -5,7 +5,7 @@ const getInitialBitmapUrl = (): string => {
   const envUrl = (import.meta as any).env?.VITE_BITMAP_API_URL;
   if (envUrl) return envUrl;
   if (typeof window !== "undefined" && window.location.protocol === "https:") {
-    return "https://13.233.103.63:5288/api/bitmap";
+    return "http://13.233.103.63:5288/api/bitmap";
   }
   return "http://13.233.103.63:5288/api/bitmap";
 };
