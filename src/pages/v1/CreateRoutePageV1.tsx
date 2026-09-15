@@ -25,7 +25,7 @@ export const CreateRoutePageV1: React.FC = () => {
   // Determine V1 App URL: configurable via VITE_V1_APP_URL, defaulting to localhost:3090 in dev or navitronix.in in prod
   const defaultHost =
     window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-      ? "http://localhost:3090"
+      ? "http://31.97.228.29:9091"
       : "http://31.97.228.29:9091";
 
   const v1BaseUrl = (import.meta.env.VITE_V1_APP_URL || defaultHost).replace(/\/$/, "");

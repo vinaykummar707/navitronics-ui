@@ -65,7 +65,7 @@ export default function UsersPage() {
           Users
         </span>
         <span className="text-body font-body text-subtext-color">
-          Manage user accounts, roles, and module access permissions
+          Manage user accounts, roles, and route access permissions
         </span>
       </div>
       <div className="flex w-full items-center justify-between mobile:flex-col mobile:items-start gap-4">

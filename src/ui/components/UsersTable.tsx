@@ -64,7 +64,6 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
               <Table.HeaderCell>Email</Table.HeaderCell>
               <Table.HeaderCell>Role</Table.HeaderCell>
               <Table.HeaderCell>Route Access</Table.HeaderCell>
-              <Table.HeaderCell>Modules</Table.HeaderCell>
               <Table.HeaderCell>Region</Table.HeaderCell>
               <Table.HeaderCell>Organization</Table.HeaderCell>
               <Table.HeaderCell>Depot</Table.HeaderCell>
@@ -102,40 +101,6 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
                   ) : (
                     <Badge variant="neutral">V2 Only</Badge>
                   )}
-                </Table.Cell>
-                <Table.Cell>
-                  <div className="flex items-center gap-1">
-                    <span
-                      className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                        isSuper || (user as any).PIS !== false
-                          ? "bg-brand-50 text-brand-primary border border-brand-200"
-                          : "bg-neutral-100 text-neutral-400"
-                      }`}
-                      title={isSuper || (user as any).PIS !== false ? "PIS Enabled" : "PIS Disabled"}
-                    >
-                      PIS
-                    </span>
-                    <span
-                      className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                        isSuper || (user as any).PAS !== false
-                          ? "bg-brand-50 text-brand-primary border border-brand-200"
-                          : "bg-neutral-100 text-neutral-400"
-                      }`}
-                      title={isSuper || (user as any).PAS !== false ? "PAS Enabled" : "PAS Disabled"}
-                    >
-                      PAS
-                    </span>
-                    <span
-                      className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                        isSuper || (user as any).ITMS !== false
-                          ? "bg-brand-50 text-brand-primary border border-brand-200"
-                          : "bg-neutral-100 text-neutral-400"
-                      }`}
-                      title={isSuper || (user as any).ITMS !== false ? "ITMS Enabled" : "ITMS Disabled"}
-                    >
-                      ITMS
-                    </span>
-                  </div>
                 </Table.Cell>
                 <Table.Cell>
                   <span className="whitespace-nowrap text-body font-body text-default-font text-subtext-color">

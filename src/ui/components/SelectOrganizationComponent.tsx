@@ -8,6 +8,7 @@
 import React, { useEffect } from "react";
 import * as SubframeUtils from "../utils";
 import { Select } from "./Select";
+import { FeatherHotel } from "@subframe/core";
 import { useQuery } from "@tanstack/react-query";
 import { useOrganizationStore } from "../../store/useOrganizationStore";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
@@ -15,13 +16,15 @@ import { IOrganization, organizationCrud } from "@/types/organization";
 
 interface SelectOrganizationComponentRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
+  collapsed?: boolean;
+  onExpand?: () => void;
 }
 
 const SelectOrganizationComponentRoot = React.forwardRef<
   HTMLDivElement,
   SelectOrganizationComponentRootProps
 >(function SelectOrganizationComponentRoot(
-  { className, ...otherProps }: SelectOrganizationComponentRootProps,
+  { className, collapsed = false, onExpand, ...otherProps }: SelectOrganizationComponentRootProps,
   ref,
 ) {
   const { selectedOrganization, setSelectedOrganization } =
@@ -62,10 +65,56 @@ const SelectOrganizationComponentRoot = React.forwardRef<
   const orgsToShow = user && user.role?.name === "master" ? orgs : orgs?.filter(org => org.id === user.organization?.id);
 
   if (isLoading) {
-    return <div>Loading organizations...</div>;
+    return (
+      <div className={collapsed ? "h-11 w-11 animate-pulse rounded-lg bg-neutral-800" : "text-caption text-subtext-color"}>
+        {collapsed ? null : "Loading organizations..."}
+      </div>
+    );
   } else if (!orgsToShow || orgsToShow.length === 0) {
-    // Handling case where no organizations are available to show
-    return <div>No organizations available or you do not have permission to view any.</div>;
+    if (collapsed) {
+      return (
+        <div
+          className="flex h-11 w-11 items-center justify-center rounded-lg border border-neutral-border bg-neutral-900 text-subtext-color"
+          title="No organizations available"
+        >
+          <FeatherHotel className="w-5 h-5 text-neutral-500" />
+        </div>
+      );
+    }
+    return <div className="text-caption text-subtext-color">No organizations available</div>;
+  }
+
+  if (collapsed) {
+    const orgInitials = selectedOrganization?.name
+      ? selectedOrganization.name
+          .split(" ")
+          .filter(Boolean)
+          .map((w) => w[0])
+          .slice(0, 2)
+          .join("")
+          .toUpperCase()
+      : "NV";
+
+    return (
+      <div
+        className={SubframeUtils.twClassNames(
+          "flex w-full items-center justify-center py-0.5",
+          className
+        )}
+        ref={ref}
+        {...otherProps}
+      >
+        <button
+          type="button"
+          onClick={onExpand}
+          className="group relative flex h-11 w-11 items-center justify-center rounded-lg border border-neutral-border bg-neutral-900/90 text-brand-primary font-bold text-xs shadow-sm hover:border-brand-primary/60 hover:bg-neutral-800/80 transition-all cursor-pointer select-none active:scale-95"
+          title={selectedOrganization?.name ? `Organization: ${selectedOrganization.name} (Click to expand)` : "Select Organization"}
+        >
+          {orgInitials || <FeatherHotel className="w-5 h-5" />}
+          <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-sidebar-background ring-1 ring-emerald-500/40" />
+        </button>
+      </div>
+    );
   }
 
   return (

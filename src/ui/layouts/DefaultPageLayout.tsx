@@ -8,15 +8,20 @@
  */
 // @subframe/sync-disable
 import React from "react";
-import { FeatherBusFront, FeatherPanelLeft } from "@subframe/core";
-import { FeatherCpu } from "@subframe/core";
-import { FeatherGlobe2 } from "@subframe/core";
-import { FeatherHotel } from "@subframe/core";
-import { FeatherMapPin } from "@subframe/core";
-import { FeatherPlaneTakeoff } from "@subframe/core";
-import { FeatherSettings } from "@subframe/core";
-import { FeatherType } from "@subframe/core";
-import { FeatherUsers } from "@subframe/core";
+import {
+  FeatherBusFront,
+  FeatherPanelLeft,
+  FeatherPanelLeftClose,
+  FeatherPanelLeftOpen,
+  FeatherCpu,
+  FeatherGlobe2,
+  FeatherHotel,
+  FeatherMapPin,
+  FeatherPlaneTakeoff,
+  FeatherSettings,
+  FeatherType,
+  FeatherUsers,
+} from "@subframe/core";
 import { LoggedUser } from "../components/LoggedUser";
 import { SelectOrganizationComponent } from "../components/SelectOrganizationComponent";
 import { SidebarWithSections } from "../components/SidebarWithSections";
@@ -43,7 +48,9 @@ const DefaultPageLayoutRoot = React.forwardRef<
   const navigate = useNavigate();
   const location = useLocation();
   const path = location.pathname;
-  const {showSidebar,toggleSidebar} = useToggleStore()
+  const showSidebar = useToggleStore((state) => state.showSidebar);
+  const toggleSidebar = useToggleStore((state) => state.toggleSidebar);
+
   return (
     <div
       className={SubframeUtils.twClassNames(
@@ -59,7 +66,14 @@ const DefaultPageLayoutRoot = React.forwardRef<
           <IconButton
             variant="neutral-tertiary"
             onClick={toggleSidebar}
-            icon={<FeatherPanelLeft className="text-default-font" />}
+            icon={
+              showSidebar ? (
+                <FeatherPanelLeftClose className="text-default-font" />
+              ) : (
+                <FeatherPanelLeftOpen className="text-default-font" />
+              )
+            }
+            title={showSidebar ? "Collapse sidebar" : "Expand sidebar"}
           />
           <div className="h-5 w-px bg-neutral-border" />
           <div
@@ -91,8 +105,36 @@ const DefaultPageLayoutRoot = React.forwardRef<
       {/* Main App Workspace: Sidebar + Content */}
       <div className="flex w-full grow shrink-0 basis-0 items-start overflow-hidden">
         <SidebarWithSections
-          className={showSidebar ? "flex-shrink-0" : "hidden"}
-          header={<SelectOrganizationComponent className="shrink-0 w-full" />}
+          collapsed={!showSidebar}
+          header={
+            <SelectOrganizationComponent
+              className="shrink-0 w-full"
+              collapsed={!showSidebar}
+              onExpand={() => {
+                if (!showSidebar) toggleSidebar();
+              }}
+            />
+          }
+          footer={
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className={SubframeUtils.twClassNames(
+                "flex items-center gap-2.5 rounded-lg py-2 text-neutral-700 hover:text-white hover:bg-brand-500/20 transition-colors w-full cursor-pointer select-none",
+                showSidebar ? "px-3" : "justify-center px-0"
+              )}
+              title={showSidebar ? "Collapse sidebar" : "Expand sidebar"}
+            >
+              {showSidebar ? (
+                <>
+                  <FeatherPanelLeftClose className="w-4 h-4 flex-none" />
+                  <span className="text-caption font-caption">Collapse</span>
+                </>
+              ) : (
+                <FeatherPanelLeftOpen className="w-4 h-4 flex-none" />
+              )}
+            </button>
+          }
         >
           <SidebarWithSections.NavSection className="no-scrollbar" label="Menu">
             <RBAC roles={["master"]} features={[]}>
@@ -143,7 +185,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
           </RBAC>
         </SidebarWithSections>
         {children ? (
-          <div className="flex grow shrink-0 basis-0 flex-col items-start gap-4 self-stretch overflow-y-auto bg-default-background px-8 py-8">
+          <div className="flex grow shrink-0 basis-0 flex-col items-start gap-4 self-stretch overflow-y-auto bg-default-background px-8 py-8 transition-all duration-300">
             {children}
           </div>
         ) : null}

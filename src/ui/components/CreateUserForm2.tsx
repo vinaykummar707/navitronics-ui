@@ -87,12 +87,17 @@ const CreateUserForm2Root = React.forwardRef<
 
   // Fetch roles
   const { useList: useRoleList } = roleCrud;
-  const { data: rolesData } = useRoleList();
+  const { data: rolesData, isLoading: rolesLoading } = useRoleList();
   const roles = useMemo(() => {
-    if (!rolesData?.data) return [];
-    const list = isSuperAdmin
+    const listData = Array.isArray(rolesData)
+      ? rolesData
+      : Array.isArray(rolesData?.data)
       ? rolesData.data
-      : rolesData.data.filter((role) => role.name !== "master");
+      : [];
+    if (!listData.length) return [];
+    const list = isSuperAdmin
+      ? listData
+      : listData.filter((role: any) => role.name?.toLowerCase() !== "master");
     return list as IRole[];
   }, [rolesData, isSuperAdmin]);
 
@@ -122,9 +127,6 @@ const CreateUserForm2Root = React.forwardRef<
       active: initialData?.active ?? true,
       v1_routes: initialData?.v1_routes ?? selectedOrganization?.v1_routes ?? false,
       v2_routes: initialData?.v2_routes ?? selectedOrganization?.v2_routes ?? true,
-      PIS: (initialData as any)?.PIS ?? (selectedOrganization as any)?.PIS ?? true,
-      PAS: (initialData as any)?.PAS ?? (selectedOrganization as any)?.PAS ?? true,
-      ITMS: (initialData as any)?.ITMS ?? (selectedOrganization as any)?.ITMS ?? true,
     },
   });
 
@@ -164,6 +166,7 @@ const CreateUserForm2Root = React.forwardRef<
 
   // Reset region and depot if role doesn't require them
   React.useEffect(() => {
+    if (!selectedRoleId || roles.length === 0) return;
     if (
       selectedRole?.name !== "region_admin" &&
       selectedRole?.name !== "depot_admin"
@@ -173,7 +176,42 @@ const CreateUserForm2Root = React.forwardRef<
     } else if (selectedRole?.name === "region_admin") {
       setValue("depot_id", null);
     }
-  }, [selectedRole?.name, selectedRoleId, setValue]);
+  }, [selectedRole?.name, selectedRoleId, roles.length, setValue]);
+
+  // Sync form when initialData or defaultOrgId changes
+  React.useEffect(() => {
+    if (initialData) {
+      reset({
+        role_id: initialData.role?.id || initialData.role_id || "",
+        region_id: initialData.region?.id || initialData.region_id || null,
+        depot_id: initialData.depot?.id || initialData.depot_id || null,
+        email: initialData.email || "",
+        password: "",
+        organization_id:
+          initialData.organization?.id ||
+          initialData.organization_id ||
+          selectedOrganization?.id ||
+          "",
+        user_id: initialData.user_id || "",
+        active: initialData.active ?? true,
+        v1_routes: initialData.v1_routes ?? selectedOrganization?.v1_routes ?? false,
+        v2_routes: initialData.v2_routes ?? selectedOrganization?.v2_routes ?? true,
+      });
+    } else {
+      reset({
+        role_id: "",
+        region_id: null,
+        depot_id: null,
+        email: "",
+        password: "",
+        organization_id: defaultOrgId,
+        user_id: "",
+        active: true,
+        v1_routes: selectedOrganization?.v1_routes ?? false,
+        v2_routes: selectedOrganization?.v2_routes ?? true,
+      });
+    }
+  }, [initialData, reset, selectedOrganization, defaultOrgId]);
 
   // Handle form submit
   const onSubmit = async (data: ILoggedUser) => {
@@ -187,9 +225,6 @@ const CreateUserForm2Root = React.forwardRef<
       active: data.active,
       v1_routes: Boolean(data.v1_routes),
       v2_routes: Boolean(data.v2_routes),
-      PIS: Boolean(data.PIS),
-      PAS: Boolean(data.PAS),
-      ITMS: Boolean(data.ITMS),
     };
 
     if (isEditMode && initialData) {
@@ -242,6 +277,7 @@ const CreateUserForm2Root = React.forwardRef<
             .from("users")
             .update({
               deleted: false,
+              password: data.password,
               ...basePayload,
             })
             .eq("id", existingUser.id);
@@ -252,6 +288,7 @@ const CreateUserForm2Root = React.forwardRef<
                 .from("users")
                 .update({
                   deleted: false,
+                  password: data.password,
                   role_id: data.role_id,
                   region_id: data.region_id || null,
                   depot_id: data.depot_id || null,
@@ -293,12 +330,11 @@ const CreateUserForm2Root = React.forwardRef<
             data: {
               v1_routes: Boolean(data.v1_routes),
               v2_routes: Boolean(data.v2_routes),
-              PIS: Boolean(data.PIS),
-              PAS: Boolean(data.PAS),
-              ITMS: Boolean(data.ITMS),
             },
           },
         });
+
+      let userId = signUpData?.user?.id;
 
       if (signUpError) {
         const errorMsg = signUpError.message.toLowerCase();
@@ -314,58 +350,144 @@ const CreateUserForm2Root = React.forwardRef<
             .maybeSingle();
 
           if (dbUser) {
-            await supabase
-              .from("users")
-              .update({
-                deleted: false,
-                ...basePayload,
-              })
-              .eq("id", dbUser.id);
+            if (dbUser.deleted) {
+              await supabase
+                .from("users")
+                .update({
+                  deleted: false,
+                  password: data.password,
+                  ...basePayload,
+                })
+                .eq("id", dbUser.id);
 
-            try {
-              await supabase.auth.resetPasswordForEmail(data.email);
-            } catch (resetErr) {
-              console.error("Password reset trigger error:", resetErr);
+              try {
+                await supabase.auth.resetPasswordForEmail(data.email);
+              } catch (resetErr) {
+                console.error("Password reset trigger error:", resetErr);
+              }
+
+              toast.success(
+                `User account reactivated! A password reset link has been sent to ${data.email} to set their password.`
+              );
+              reset();
+              if (onUserCreated) onUserCreated();
+              return;
+            } else {
+              toast.error("A user with this email address already exists and is active.");
+              return;
             }
+          }
 
-            toast.success(
-              `User account reactivated! A password reset link has been sent to ${data.email} to set their password.`
+          // User exists in Supabase Auth but not in public.users (orphaned auth account from a failed insert)
+          // Authenticate with isolated auth helper to retrieve the auth user ID
+          const { data: signInData, error: signInErr } =
+            await supabaseAuthHelper.auth.signInWithPassword({
+              email: data.email,
+              password: data.password,
+            });
+
+          if (signInData?.user?.id) {
+            userId = signInData.user.id;
+          } else {
+            toast.error(
+              `User is already registered in authentication. ${signInErr?.message ? `(${signInErr.message})` : "Please verify password or use a different email."}`
             );
-            reset();
-            if (onUserCreated) onUserCreated();
             return;
           }
+        } else {
+          toast.error(`Signup failed: ${signUpError.message}`);
+          return;
+        }
+      } else if (
+        signUpData?.user &&
+        (!signUpData.user.identities || signUpData.user.identities.length === 0)
+      ) {
+        // Supabase email enumeration protection (returns user with empty identities when user already exists)
+        const { data: dbUser } = await supabase
+          .from("users")
+          .select("*")
+          .eq("email", data.email)
+          .maybeSingle();
+
+        if (dbUser && !dbUser.deleted) {
+          toast.error("A user with this email address already exists and is active.");
+          return;
         }
 
-        toast.error(`Signup failed: ${signUpError.message}`);
-        return;
+        const { data: signInData, error: signInErr } =
+          await supabaseAuthHelper.auth.signInWithPassword({
+            email: data.email,
+            password: data.password,
+          });
+
+        if (signInData?.user?.id) {
+          userId = signInData.user.id;
+        } else {
+          toast.error(
+            `User is already registered in authentication. ${signInErr?.message ? `(${signInErr.message})` : "Please verify password or use a different email."}`
+          );
+          return;
+        }
       }
 
-      const userId = signUpData?.user?.id;
       if (!userId) {
         toast.error("No user ID returned from authentication provider");
         return;
       }
 
       try {
-        const { error: insertError } = await supabase.from("users").insert({
-          email: data.email,
-          user_id: userId,
-          ...basePayload,
-        });
+        const { data: existingInDb } = await supabase
+          .from("users")
+          .select("id")
+          .eq("email", data.email)
+          .maybeSingle();
+
+        let insertError: any = null;
+        if (existingInDb) {
+          const { error: updErr } = await supabase
+            .from("users")
+            .update({
+              deleted: false,
+              user_id: userId,
+              password: data.password,
+              ...basePayload,
+            })
+            .eq("id", existingInDb.id);
+          insertError = updErr;
+        } else {
+          const { error: insErr } = await supabase.from("users").insert({
+            email: data.email,
+            user_id: userId,
+            password: data.password,
+            ...basePayload,
+          });
+          insertError = insErr;
+        }
 
         if (insertError) {
           if (insertError.code === "42703") {
-            const { error: fbErr } = await supabase.from("users").insert({
+            const fallbackPayload = {
               email: data.email,
               user_id: userId,
+              password: data.password,
               role_id: data.role_id,
               region_id: data.region_id || null,
               depot_id: data.depot_id || null,
               organization_id: targetOrgId,
               active: data.active,
-            });
-            if (fbErr) throw fbErr;
+            };
+            if (existingInDb) {
+              const { error: fbErr } = await supabase
+                .from("users")
+                .update({ deleted: false, ...fallbackPayload })
+                .eq("id", existingInDb.id);
+              if (fbErr) throw fbErr;
+            } else {
+              const { error: fbErr } = await supabase
+                .from("users")
+                .insert(fallbackPayload);
+              if (fbErr) throw fbErr;
+            }
           } else {
             throw insertError;
           }
@@ -431,8 +553,7 @@ const CreateUserForm2Root = React.forwardRef<
                   </span>
                 }
                 placeholder="Select Organization"
-                {...field}
-                value={field.value || ""}
+                value={field.value || undefined}
                 onValueChange={(val) => {
                   field.onChange(val);
                   setValue("region_id", null);
@@ -461,18 +582,21 @@ const CreateUserForm2Root = React.forwardRef<
                   Select Role <span className="text-red-500">*</span>
                 </span>
               }
-              placeholder="Select Role"
+              placeholder={rolesLoading ? "Loading roles..." : "Select Role"}
+              disabled={rolesLoading}
               error={!!fieldState.error}
               helpText={fieldState.error?.message}
-              {...field}
-              value={field.value || ""}
+              value={field.value || undefined}
               onValueChange={field.onChange}
             >
-              {roles.map((role) => (
-                <Select.Item key={role.id} value={role.id}>
-                  {getRoleLabel(role.name)}
-                </Select.Item>
-              ))}
+              {roles.map((role) => {
+                const roleName = role.name || (role as any).roleName || "";
+                return (
+                  <Select.Item key={role.id} value={role.id}>
+                    {getRoleLabel(roleName)}
+                  </Select.Item>
+                );
+              })}
             </Select>
           )}
         />
@@ -494,8 +618,7 @@ const CreateUserForm2Root = React.forwardRef<
                 placeholder="Select Region"
                 error={!!fieldState.error}
                 helpText={fieldState.error?.message}
-                {...field}
-                value={field.value || ""}
+                value={field.value || undefined}
                 onValueChange={(val) => {
                   field.onChange(val);
                   setValue("depot_id", null);
@@ -528,8 +651,7 @@ const CreateUserForm2Root = React.forwardRef<
                   placeholder="Select Depot"
                   error={!!fieldState.error}
                   helpText={fieldState.error?.message}
-                  {...field}
-                  value={field.value || ""}
+                  value={field.value || undefined}
                   onValueChange={field.onChange}
                 >
                   {depots.map((depot) => (
@@ -658,45 +780,6 @@ const CreateUserForm2Root = React.forwardRef<
             />
           </>
         )}
-
-        {/* Module Access Permissions */}
-        <div className="flex flex-col gap-3 w-full border-t border-neutral-border py-3">
-          <span className="text-caption-bold font-caption-bold text-default-font">
-            Module Access Permissions
-          </span>
-          <div className="flex flex-col gap-2 w-full">
-            <FeatureToggle
-              label="PIS"
-              description="Passenger Information System (Routes & Signboard Displays)"
-              toggle={
-                <Switch
-                  checked={Boolean(watch("PIS"))}
-                  onCheckedChange={(checked) => setValue("PIS", checked)}
-                />
-              }
-            />
-            <FeatureToggle
-              label="PAS"
-              description="Public Address System (Routes, Stops & Audio Announcements)"
-              toggle={
-                <Switch
-                  checked={Boolean(watch("PAS"))}
-                  onCheckedChange={(checked) => setValue("PAS", checked)}
-                />
-              }
-            />
-            <FeatureToggle
-              label="ITMS"
-              description="Intelligent Transit Management System (Routes, Stops & Fleet Scheduling)"
-              toggle={
-                <Switch
-                  checked={Boolean(watch("ITMS"))}
-                  onCheckedChange={(checked) => setValue("ITMS", checked)}
-                />
-              }
-            />
-          </div>
-        </div>
 
         {/* Route Version Capabilities */}
         <div className="flex flex-col gap-3 w-full border-t border-b border-neutral-border py-3">

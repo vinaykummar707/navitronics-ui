@@ -9,8 +9,12 @@
  */
 
 import React, { useEffect, useState } from "react";
-import { FeatherEye, FeatherEyeOff, FeatherKeyRound } from "@subframe/core";
-import { FeatherUser } from "@subframe/core";
+import {
+  FeatherEye,
+  FeatherEyeOff,
+  FeatherKeyRound,
+  FeatherUser,
+} from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { Avatar } from "./Avatar";
 import { Button } from "./Button";
@@ -171,74 +175,76 @@ const UserLoginFormRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex h-full w-full flex-wrap items-start",
+        "flex min-h-screen w-full flex-col bg-default-background select-none",
         className,
       )}
       ref={ref}
       {...otherProps}
     >
-      <div className="relative flex grow justify-center shrink-0 bg-[url('https://images.pexels.com/photos/9980493/pexels-photo-9980493.jpeg')] bg-no-repeat bg-cover bg-center basis-0 flex-col items-center justify-center gap-8 self-stretch p-12 mobile:hidden overflow-hidden">
-        {/* Dark gradient overlay for crystal clear contrast (BUG-004) */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-black/85 via-neutral-900/75 to-black/80 backdrop-blur-[1px]" />
-
-        {/* Premium glassmorphic branding card (BUG-004, BUG-013) */}
-        <div className="relative z-10 flex max-w-[420px] w-full flex-col items-center justify-center gap-6 rounded-2xl border border-white/15 bg-white/10 p-8 backdrop-blur-md shadow-2xl">
-          <div className="relative flex items-center justify-center">
-            <div className="absolute -inset-1 rounded-full bg-brand-500/30 blur-sm" />
-            <Avatar
-              size="x-large"
-              className="relative ring-2 ring-white/30 shadow-lg"
-              image="https://navitronix.in/assets/navitronix.jpeg"
-            >
-              NX
-            </Avatar>
-          </div>
-
-          <div className="flex w-full flex-col items-center gap-2 text-center">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold tracking-tight text-white drop-shadow-md">
-                NAVITRONIX
-              </span>
-              <span className="rounded-full bg-brand-500/20 px-2 py-0.5 text-[10px] font-semibold text-brand-300 border border-brand-500/30 tracking-wider uppercase">
-                RMS v2
-              </span>
-            </div>
-            <p className="text-sm text-neutral-200 leading-relaxed drop-shadow-sm font-medium">
-              Intelligent Passenger Information & Transit Management System
-            </p>
-          </div>
-
-          <div className="flex w-full flex-col gap-2.5 pt-3 border-t border-white/10">
-            <div className="flex items-center gap-2 text-xs text-neutral-300 font-medium">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
-              <span>Real-Time LED Signboard & Route Studio</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-neutral-300 font-medium">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
-              <span>Multilingual Audio & Public Address System</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-neutral-300 font-medium">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
-              <span>Hierarchical Organization, Region & Depot Control</span>
-            </div>
+      {/* Top Bar */}
+      <header className="flex h-14 w-full flex-none items-center justify-between border-b border-solid border-neutral-border bg-sidebar-background/90 px-4 sm:px-6 backdrop-blur-md z-20">
+        <div className="flex items-center gap-3">
+          <img
+            className="h-8 w-8 rounded-full object-cover ring-1 ring-neutral-border flex-none"
+            src="https://navitronix.in/assets/navitronix.jpeg"
+            alt="Navitronix"
+          />
+          <div className="flex items-center gap-2">
+            <span className="text-body-bold font-body-bold tracking-tight text-default-font font-bold">
+              NAVITRONIX
+            </span>
+            <span className="rounded px-1.5 py-0.5 text-[10px] font-caption-bold text-brand-primary bg-brand-50 border border-brand-200/40">
+              RMS v2
+            </span>
           </div>
         </div>
-      </div>
-      <div className="flex w-[520px] max-w-full flex-none flex-col items-center justify-center gap-8 self-stretch p-8 md:p-12 lg:p-16 bg-default-background shadow-xl">
-        <div className="flex w-full flex-col items-start gap-8">
-          <div className="flex flex-col items-start gap-2 w-full">
-            <div className="flex items-center gap-2">
-              <span className="rounded bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-primary border border-brand-200">
-                Enterprise Portal
-              </span>
-            </div>
-            <span className="text-heading-1 font-heading-1 text-default-font tracking-tight text-2xl font-bold">
-              Sign In
+
+        <div className="flex items-center gap-2">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
             </span>
-            <span className="text-body font-body text-subtext-color text-sm">
-              Welcome back! Please enter your credentials to access your account.
+            <span className="text-[10px] font-mono font-semibold text-emerald-300 uppercase tracking-wider">
+              Systems Online
             </span>
           </div>
+        </div>
+      </header>
+
+      {/* Main Centered Content Area */}
+      <main className="relative flex flex-1 w-full items-center justify-center p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        {/* Ambient atmospheric glows & subtle grid */}
+        <div
+          className="absolute inset-0 opacity-[0.025] pointer-events-none"
+          style={{
+            backgroundImage: `linear-gradient(to right, #00F0FF 1px, transparent 1px), linear-gradient(to bottom, #00F0FF 1px, transparent 1px)`,
+            backgroundSize: "36px 36px",
+          }}
+        />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[320px] rounded-full bg-brand-500/[0.08] blur-[120px] pointer-events-none" />
+
+        {/* Centered Login Card */}
+        <div className="relative z-10 w-full max-w-[440px] rounded-2xl border border-neutral-border bg-sidebar-background/95 p-6 sm:p-8 shadow-2xl backdrop-blur-xl ring-1 ring-white/5 my-auto">
+          <div className="flex flex-col items-center text-center gap-2 mb-6">
+            <div className="relative flex items-center justify-center mb-1">
+              <div className="absolute -inset-1 rounded-2xl bg-brand-primary/20 blur-sm" />
+              <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 border border-brand-primary/30 shadow-md">
+                <img
+                  src="https://navitronix.in/assets/navitronix.jpeg"
+                  alt="Navitronix"
+                  className="h-8 w-8 rounded-xl object-cover"
+                />
+              </div>
+            </div>
+            <span className="text-xl sm:text-2xl font-bold tracking-tight text-default-font">
+              Sign In
+            </span>
+            <span className="text-xs sm:text-sm text-subtext-color max-w-[320px]">
+              Enter your credentials to access the Navitronix RMS portal.
+            </span>
+          </div>
+
           <form onSubmit={handleSubmit} className="flex w-full flex-col items-start justify-center gap-4">
             <TextField
               className="h-auto w-full flex-none"
@@ -328,7 +334,13 @@ const UserLoginFormRoot = React.forwardRef<
             </Button>
           </form>
         </div>
-      </div>
+      </main>
+
+      {/* Clean Minimalist Footer */}
+      <footer className="w-full py-3.5 px-4 text-center text-xs text-subtext-color border-t border-neutral-border/50 bg-sidebar-background/40 backdrop-blur-sm z-10">
+        <span>© 2026 Navitronix Technologies Pvt Ltd. All rights reserved.</span>
+      </footer>
+
       <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
         <Dialog.Content>
           <ResetPasswordForm

@@ -117,38 +117,38 @@
   --color-success-900: rgb(209 250 229);
 
   /* Fonts */
-  --text-caption: 12px;
+  --text-caption: 14px;
   --text-caption--font-weight: 400;
   --text-caption--letter-spacing: 0em;
-  --text-caption--line-height: 16px;
-  --text-caption-bold: 12px;
+  --text-caption--line-height: 20px;
+  --text-caption-bold: 14px;
   --text-caption-bold--font-weight: 500;
   --text-caption-bold--letter-spacing: 0em;
-  --text-caption-bold--line-height: 16px;
-  --text-body: 14px;
+  --text-caption-bold--line-height: 20px;
+  --text-body: 16px;
   --text-body--font-weight: 400;
   --text-body--letter-spacing: 0em;
-  --text-body--line-height: 20px;
-  --text-body-bold: 14px;
+  --text-body--line-height: 24px;
+  --text-body-bold: 16px;
   --text-body-bold--font-weight: 500;
   --text-body-bold--letter-spacing: 0em;
-  --text-body-bold--line-height: 20px;
-  --text-heading-3: 16px;
-  --text-heading-3--font-weight: 500;
+  --text-body-bold--line-height: 24px;
+  --text-heading-3: 18px;
+  --text-heading-3--font-weight: 600;
   --text-heading-3--letter-spacing: 0em;
-  --text-heading-3--line-height: 20px;
-  --text-heading-2: 20px;
-  --text-heading-2--font-weight: 500;
+  --text-heading-3--line-height: 24px;
+  --text-heading-2: 22px;
+  --text-heading-2--font-weight: 600;
   --text-heading-2--letter-spacing: 0em;
-  --text-heading-2--line-height: 24px;
-  --text-heading-1: 30px;
-  --text-heading-1--font-weight: 500;
+  --text-heading-2--line-height: 28px;
+  --text-heading-1: 32px;
+  --text-heading-1--font-weight: 600;
   --text-heading-1--letter-spacing: 0em;
-  --text-heading-1--line-height: 36px;
-  --text-monospace-body: 14px;
+  --text-heading-1--line-height: 38px;
+  --text-monospace-body: 15px;
   --text-monospace-body--font-weight: 400;
   --text-monospace-body--letter-spacing: 0em;
-  --text-monospace-body--line-height: 20px;
+  --text-monospace-body--line-height: 22px;
 
   /* Font families */
   --font-caption: "Host Grotesk";

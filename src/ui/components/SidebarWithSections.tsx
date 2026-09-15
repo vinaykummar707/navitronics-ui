@@ -17,6 +17,14 @@ interface NavItemProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
 }
 
+interface SidebarContextType {
+  collapsed: boolean;
+}
+
+const SidebarContext = React.createContext<SidebarContextType>({
+  collapsed: false,
+});
+
 const NavItem = React.forwardRef<HTMLDivElement, NavItemProps>(function NavItem(
   {
     icon = <FeatherCircleDashed />,
@@ -28,37 +36,52 @@ const NavItem = React.forwardRef<HTMLDivElement, NavItemProps>(function NavItem(
   }: NavItemProps,
   ref
 ) {
+  const { collapsed } = React.useContext(SidebarContext);
+  const titleText = typeof children === "string" ? children : undefined;
+
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "group/2713e17b flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 hover:bg-neutral-50 active:bg-neutral-100",
-        { "bg-brand-600 hover:bg-brand-500 active:bg-brand-100": selected },
+        "group/2713e17b relative flex cursor-pointer items-center rounded-lg transition-all duration-150 select-none",
+        collapsed
+          ? "h-11 w-11 justify-center p-0 mx-auto"
+          : "w-full gap-2.5 px-3 py-2",
+        selected
+          ? "bg-brand-600 text-white shadow-sm font-semibold"
+          : "text-neutral-700 hover:bg-brand-500/20 hover:text-white",
         className
       )}
       ref={ref}
+      title={collapsed ? titleText : undefined}
       {...otherProps}
     >
       {icon ? (
         <SubframeCore.IconWrapper
           className={SubframeUtils.twClassNames(
-            "text-heading-3 font-heading-3 text-neutral-700",
-            { "text-white-default": selected }
+            "text-[18px] transition-transform duration-150 group-hover/2713e17b:scale-110 flex-none",
+            selected
+              ? "text-white"
+              : "text-neutral-600 group-hover/2713e17b:text-white"
           )}
         >
           {icon}
         </SubframeCore.IconWrapper>
       ) : null}
-      {children ? (
+      {!collapsed && children ? (
         <span
           className={SubframeUtils.twClassNames(
-            "line-clamp-1 grow shrink-0 basis-0 text-body-bold font-body-bold text-neutral-700",
-            { "text-white-default": selected }
+            "line-clamp-1 grow shrink-0 basis-0 text-body font-body font-medium transition-colors",
+            selected
+              ? "text-white"
+              : "text-neutral-700 group-hover/2713e17b:text-white"
           )}
         >
           {children}
         </span>
       ) : null}
-      {rightSlot ? <div className="flex items-center">{rightSlot}</div> : null}
+      {!collapsed && rightSlot ? (
+        <div className="flex items-center">{rightSlot}</div>
+      ) : null}
     </div>
   );
 });
@@ -74,24 +97,36 @@ const NavSection = React.forwardRef<HTMLDivElement, NavSectionProps>(
     { children, label, className, ...otherProps }: NavSectionProps,
     ref
   ) {
+    const { collapsed } = React.useContext(SidebarContext);
+
     return (
       <div
         className={SubframeUtils.twClassNames(
-          "flex w-full flex-col items-start gap-1",
+          "flex w-full flex-col",
+          collapsed ? "items-center gap-1.5" : "items-start gap-1",
           className
         )}
         ref={ref}
         {...otherProps}
       >
-        <div className="flex w-full flex-col items-start gap-4 pl-1 pr-3 py-1">
-          {label ? (
-            <span className="w-full text-caption font-caption text-subtext-color">
-              {label}
-            </span>
-          ) : null}
-        </div>
+        {label ? (
+          collapsed ? (
+            <div className="w-6 h-px bg-neutral-border my-2 self-center opacity-60" />
+          ) : (
+            <div className="flex w-full flex-col items-start px-3 pt-3 pb-1">
+              <span className="w-full text-caption font-caption text-subtext-color uppercase tracking-wider text-[11px] font-semibold">
+                {label}
+              </span>
+            </div>
+          )
+        ) : null}
         {children ? (
-          <div className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-1">
+          <div
+            className={SubframeUtils.twClassNames(
+              "flex w-full flex-col",
+              collapsed ? "items-center gap-1" : "items-start gap-1"
+            )}
+          >
             {children}
           </div>
         ) : null}
@@ -106,6 +141,7 @@ interface SidebarWithSectionsRootProps
   footer?: React.ReactNode;
   children?: React.ReactNode;
   className?: string;
+  collapsed?: boolean;
 }
 
 const SidebarWithSectionsRoot = React.forwardRef<
@@ -117,35 +153,52 @@ const SidebarWithSectionsRoot = React.forwardRef<
     footer,
     children,
     className,
+    collapsed = false,
     ...otherProps
   }: SidebarWithSectionsRootProps,
   ref
 ) {
   return (
-    <nav
-      className={SubframeUtils.twClassNames(
-        "flex h-full w-60 flex-col items-start border-r border-solid border-neutral-border bg-sidebar-background",
-        className
-      )}
-      ref={ref}
-      {...otherProps}
-    >
-      {header ? (
-        <div className="flex w-full flex-col items-start gap-4 px-5 pt-6 pb-4">
-          {header}
-        </div>
-      ) : null}
-      {children ? (
-        <div className="flex w-full grow shrink-0 basis-0 flex-col items-start gap-2 px-5 pb-6 overflow-auto">
+    <SidebarContext.Provider value={{ collapsed }}>
+      <nav
+        className={SubframeUtils.twClassNames(
+          "flex h-full flex-col items-start border-r border-solid border-neutral-border bg-sidebar-background transition-[width] duration-300 ease-in-out flex-shrink-0 select-none overflow-hidden",
+          collapsed ? "w-[68px]" : "w-60",
+          className
+        )}
+        ref={ref}
+        {...otherProps}
+      >
+        {header ? (
+          <div
+            className={SubframeUtils.twClassNames(
+              "flex w-full flex-col items-start transition-[padding] duration-300 ease-in-out border-b border-neutral-border/40",
+              collapsed ? "px-2 pt-3 pb-3 items-center" : "px-4 pt-4 pb-3"
+            )}
+          >
+            {header}
+          </div>
+        ) : null}
+        <div
+          className={SubframeUtils.twClassNames(
+            "flex w-full grow shrink-0 basis-0 flex-col overflow-y-auto overflow-x-hidden no-scrollbar transition-[padding] duration-300 ease-in-out",
+            collapsed ? "px-2 py-3 items-center gap-1.5" : "px-3 py-3 gap-2"
+          )}
+        >
           {children}
         </div>
-      ) : null}
-      {footer ? (
-        <div className="flex w-full items-center gap-4 border-t border-solid border-neutral-border px-5 py-4">
-          {footer}
-        </div>
-      ) : null}
-    </nav>
+        {footer ? (
+          <div
+            className={SubframeUtils.twClassNames(
+              "flex w-full items-center border-t border-solid border-neutral-border transition-[padding] duration-300 ease-in-out",
+              collapsed ? "px-2 py-3 justify-center" : "px-4 py-3 gap-3"
+            )}
+          >
+            {footer}
+          </div>
+        ) : null}
+      </nav>
+    </SidebarContext.Provider>
   );
 });
 

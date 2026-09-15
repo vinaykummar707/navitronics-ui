@@ -21,10 +21,10 @@ const Content = React.forwardRef<HTMLDivElement, ContentProps>(function Content(
   ref
 ) {
   return children ? (
-    <SubframeCore.Select.Content asChild={true} {...otherProps}>
+    <SubframeCore.Select.Content asChild={true} className="z-[100]" {...otherProps}>
       <div
         className={SubframeUtils.twClassNames(
-          "flex w-full flex-col items-start overflow-hidden rounded-md border border-solid border-neutral-border bg-default-background  px-1 py-1 shadow-lg",
+          "flex w-full flex-col items-start overflow-hidden rounded-md border border-solid border-neutral-border bg-default-background px-1 py-1 shadow-lg z-[100]",
           className
         )}
         ref={ref}
@@ -113,6 +113,7 @@ const Trigger = React.forwardRef<HTMLButtonElement, TriggerProps>(
     return (
       <SubframeCore.Select.Trigger asChild={true} {...otherProps}>
         <button
+          type="button"
           className={SubframeUtils.twClassNames(
             "flex w-full items-center gap-2 px-3 py-2 text-left",
             className
@@ -205,7 +206,7 @@ const SelectRoot = React.forwardRef<HTMLDivElement, SelectRootProps>(
     return (
       <SubframeCore.Select.Root
         disabled={disabled}
-        value={value}
+        value={value || undefined}
         defaultValue={defaultValue}
         onValueChange={onValueChange}
         open={open}

@@ -86,73 +86,73 @@ module.exports = {
       },
       fontSize: {
         caption: [
-          "12px",
+          "14px",
           {
-            lineHeight: "16px",
+            lineHeight: "20px",
             fontWeight: "400",
             letterSpacing: "0em",
           },
         ],
         "caption-bold": [
-          "12px",
+          "14px",
           {
-            lineHeight: "16px",
+            lineHeight: "20px",
             fontWeight: "500",
             letterSpacing: "0em",
           },
         ],
         body: [
-          "14px",
+          "16px",
           {
-            lineHeight: "20px",
+            lineHeight: "24px",
             fontWeight: "400",
             letterSpacing: "0em",
           },
         ],
         "body-bold": [
-          "14px",
+          "16px",
           {
-            lineHeight: "20px",
+            lineHeight: "24px",
             fontWeight: "500",
             letterSpacing: "0em",
           },
         ],
         "heading-3": [
-          "16px",
-          {
-            lineHeight: "20px",
-            fontWeight: "600",
-            letterSpacing: "0em",
-          },
-        ],
-        "heading-2": [
-          "20px",
+          "18px",
           {
             lineHeight: "24px",
             fontWeight: "600",
             letterSpacing: "0em",
           },
         ],
-        "heading-1": [
-          "30px",
+        "heading-2": [
+          "22px",
           {
-            lineHeight: "36px",
+            lineHeight: "28px",
+            fontWeight: "600",
+            letterSpacing: "0em",
+          },
+        ],
+        "heading-1": [
+          "32px",
+          {
+            lineHeight: "38px",
             fontWeight: "600",
             letterSpacing: "0em",
           },
         ],
         "monospace-body": [
-          "14px",
+          "15px",
           {
-            lineHeight: "20px",
+            lineHeight: "22px",
             fontWeight: "400",
             letterSpacing: "0em",
           },
         ],
         heading: [
-          "30px",
+          "32px",
           {
-            lineHeight: "36px",
+            lineHeight: "38px",
             fontWeight: "700",
             letterSpacing: "0em",
           },

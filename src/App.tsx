@@ -250,7 +250,7 @@ function App() {
               path="/login"
               element={
                 <PublicRoute>
-                  <div className="flex h-screen w-screen flex-col items-start bg-default-background">
+                  <div className="flex min-h-screen w-screen flex-col items-start bg-default-background overflow-y-auto">
                     <UserLoginForm />
                   </div>
                 </PublicRoute>
