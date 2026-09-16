@@ -161,8 +161,8 @@ const SimulationPlayerCardRoot = React.forwardRef<
         className={SubframeUtils.twClassNames(
           "flex w-full flex-col items-start rounded-xl border border-solid transition-all overflow-hidden",
           isSelected
-            ? "border-brand-primary ring-1 ring-brand-primary/50 shadow-md bg-neutral-0/40"
-            : "border-neutral-border bg-sidebar-background hover:border-neutral-300/40",
+            ? "border-brand-primary ring-1 ring-brand-primary/50 shadow-md bg-brand-50/40"
+            : "border-neutral-border bg-sidebar-background hover:border-brand-primary/40",
         )}
       >
         <Accordion
@@ -171,7 +171,7 @@ const SimulationPlayerCardRoot = React.forwardRef<
           }}
           trigger={
             <div className="flex w-full items-center gap-3 px-4 py-3">
-              <span className="px-2 py-0.5 rounded text-xs font-mono font-bold bg-brand-500/10 text-brand-primary border border-brand-500/20">
+              <span className="px-2 py-0.5 rounded text-micro font-micro-bold font-mono bg-brand-500/10 text-brand-primary border border-brand-500/20">
                 #{String(listIndex + 1).padStart(2, "0")}
               </span>
               <IconWithBackground
@@ -183,13 +183,13 @@ const SimulationPlayerCardRoot = React.forwardRef<
                 {getSimulationCardText() || "Untitled Slide"}
               </span>
               <div className="flex items-center gap-1.5 flex-wrap">
-                <Badge className="capitalize text-[10px]" variant="warning">
+                <Badge className="capitalize text-micro" variant="warning">
                   {watch(`${selectedTab}[${listIndex}].type`)}
                 </Badge>
-                <Badge className="capitalize text-[10px]" variant="success">
+                <Badge className="capitalize text-micro" variant="success">
                   {watch(`${selectedTab}[${listIndex}].format`)} Text
                 </Badge>
-                <span className="px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-400 font-mono text-[10px] font-bold border border-neutral-border">
+                <span className="px-1.5 py-0.5 rounded bg-neutral-100 text-subtext-color font-mono text-micro font-bold border border-neutral-border">
                   {watch(`${selectedTab}[${listIndex}].width`)}×{watch(`${selectedTab}[${listIndex}].height`)}
                 </span>
               </div>

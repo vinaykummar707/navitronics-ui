@@ -607,7 +607,7 @@ export default function RoutesPage() {
 
         {hasRegions && (
           <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2 w-full lg:w-auto">
-            <div className="flex items-center gap-2 flex-1 sm:flex-none">
+            <div className="flex items-end gap-2 flex-1 sm:flex-none">
               {/* Region Select — restricted roles */}
               <RBAC features={[]} roles={["depot_admin", "region_admin"]}>
                 <RegionSelect
@@ -631,7 +631,7 @@ export default function RoutesPage() {
                 <RBAC features={[]} roles={["master", "organization_admin", "region_admin"]}>
                   <Select
                     className="h-auto flex-none"
-                    variant="outline"
+                    variant="filled"
                     label="Select Depot"
                     placeholder="Select Depot"
                     value={selectedDepot?.id ?? ""}
@@ -647,10 +647,10 @@ export default function RoutesPage() {
               )}
             </div>
 
-            <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+            <div className="flex items-end gap-2 flex-wrap w-full sm:w-auto">
               <Button
-                variant="neutral-secondary"
-                className="h-9 sm:h-8 flex-1 sm:flex-none"
+                variant="neutral-primary"
+                className="h-9 flex-1 sm:flex-none"
                 icon={<FeatherRefreshCw />}
                 onClick={() => {
                   toast.success("Routes refreshed successfully");
@@ -673,7 +673,7 @@ export default function RoutesPage() {
                   <Button
                     icon={<FeatherPlus />}
                     variant="brand-secondary-2"
-                    className="h-9 sm:h-8 flex-1 sm:flex-none"
+                    className="h-9 flex-1 sm:flex-none"
                     disabled={!selectedDepot}
                     onClick={() =>
                       navigate(
@@ -687,7 +687,7 @@ export default function RoutesPage() {
                 {routeAccess.hasV2Routes && (
                   <Button
                     icon={<FeatherPlus />}
-                    className="h-9 sm:h-8 flex-1 sm:flex-none"
+                    className="h-9 flex-1 sm:flex-none"
                     disabled={!selectedDepot}
                     onClick={() =>
                       navigate(
@@ -704,7 +704,7 @@ export default function RoutesPage() {
                   <Button
                     icon={<FeatherDownload />}
                     variant="brand-secondary-2"
-                    className="h-9 sm:h-8 flex-1 sm:flex-none"
+                    className="h-9 flex-1 sm:flex-none"
                     disabled={!selectedDepot || selectedRouteIds.length === 0}
                     onClick={handleExportSelectedRoutes}
                   >
@@ -713,7 +713,7 @@ export default function RoutesPage() {
                   <Button
                     icon={<FeatherTrash />}
                     variant="destructive-secondary"
-                    className="h-9 sm:h-8 flex-1 sm:flex-none"
+                    className="h-9 flex-1 sm:flex-none"
                     disabled={!selectedDepot || selectedRouteIds.length === 0}
                     onClick={() => {
                       if (

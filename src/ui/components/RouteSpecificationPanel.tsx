@@ -115,19 +115,19 @@ export const RouteSpecificationPanel = React.forwardRef<
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="flex h-9 items-center justify-between px-2.5 rounded-lg bg-neutral-100/50 border border-neutral-border/60">
+            <div className="flex h-9 items-center justify-between px-2.5 rounded-lg bg-neutral-100/50 border border-neutral-border">
               <span className="text-subtext-color truncate font-medium">Front</span>
               <span className="font-mono font-bold text-default-font whitespace-nowrap ml-1">{front.length} slides</span>
             </div>
-            <div className="flex h-9 items-center justify-between px-2.5 rounded-lg bg-neutral-100/50 border border-neutral-border/60">
+            <div className="flex h-9 items-center justify-between px-2.5 rounded-lg bg-neutral-100/50 border border-neutral-border">
               <span className="text-subtext-color truncate font-medium">Side</span>
               <span className="font-mono font-bold text-default-font whitespace-nowrap ml-1">{side.length} slides</span>
             </div>
-            <div className="flex h-9 items-center justify-between px-2.5 rounded-lg bg-neutral-100/50 border border-neutral-border/60">
+            <div className="flex h-9 items-center justify-between px-2.5 rounded-lg bg-neutral-100/50 border border-neutral-border">
               <span className="text-subtext-color truncate font-medium">Rear</span>
               <span className="font-mono font-bold text-default-font whitespace-nowrap ml-1">{rear.length} slides</span>
             </div>
-            <div className="flex h-9 items-center justify-between px-2.5 rounded-lg bg-neutral-100/50 border border-neutral-border/60">
+            <div className="flex h-9 items-center justify-between px-2.5 rounded-lg bg-neutral-100/50 border border-neutral-border">
               <span className="text-subtext-color truncate font-medium">Internal</span>
               <span className="font-mono font-bold text-default-font whitespace-nowrap ml-1">{internal.length} slides</span>
             </div>

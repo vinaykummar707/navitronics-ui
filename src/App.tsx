@@ -15,6 +15,7 @@ import RBACPage from "./components/RBACPage";
 import { ROLES } from "./constants/roles";
 import useLoggedUserStore from "./store/useLoggedUserStore";
 import { LanguageConfigProvider } from "./context/LanguageConfigContext";
+import { useTheme } from "next-themes";
 
 // Lazy-loaded page components for route-level code splitting
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -122,6 +123,7 @@ function App() {
   };
 
   const user = useLoggedUserStore((state) => state.user);
+  const { resolvedTheme } = useTheme();
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -269,7 +271,7 @@ function App() {
           pauseOnFocusLoss
           draggable
           pauseOnHover
-          theme="dark"
+          theme={resolvedTheme === "dark" ? "dark" : "light"}
         />
       </Router>
       {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}

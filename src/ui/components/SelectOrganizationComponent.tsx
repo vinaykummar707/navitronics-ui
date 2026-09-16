@@ -66,7 +66,7 @@ const SelectOrganizationComponentRoot = React.forwardRef<
 
   if (isLoading) {
     return (
-      <div className={collapsed ? "h-11 w-11 animate-pulse rounded-lg bg-neutral-800" : "text-caption text-subtext-color"}>
+      <div className={collapsed ? "h-11 w-11 animate-pulse rounded-lg bg-neutral-200" : "text-caption text-subtext-color"}>
         {collapsed ? null : "Loading organizations..."}
       </div>
     );
@@ -74,7 +74,7 @@ const SelectOrganizationComponentRoot = React.forwardRef<
     if (collapsed) {
       return (
         <div
-          className="flex h-11 w-11 items-center justify-center rounded-lg border border-neutral-border bg-neutral-900 text-subtext-color"
+          className="flex h-11 w-11 items-center justify-center rounded-lg border border-neutral-border bg-neutral-100 text-subtext-color"
           title="No organizations available"
         >
           <FeatherHotel className="w-5 h-5 text-neutral-500" />
@@ -107,7 +107,7 @@ const SelectOrganizationComponentRoot = React.forwardRef<
         <button
           type="button"
           onClick={onExpand}
-          className="group relative flex h-11 w-11 items-center justify-center rounded-lg border border-neutral-border bg-neutral-900/90 text-brand-primary font-bold text-xs shadow-sm hover:border-brand-primary/60 hover:bg-neutral-800/80 transition-all cursor-pointer select-none active:scale-95"
+          className="group relative flex h-11 w-11 items-center justify-center rounded-lg border border-neutral-border bg-sidebar-background text-brand-primary font-bold text-xs shadow-sm hover:border-brand-primary/60 hover:bg-neutral-100 transition-all cursor-pointer select-none active:scale-95"
           title={selectedOrganization?.name ? `Organization: ${selectedOrganization.name} (Click to expand)` : "Select Organization"}
         >
           {orgInitials || <FeatherHotel className="w-5 h-5" />}
@@ -130,6 +130,7 @@ const SelectOrganizationComponentRoot = React.forwardRef<
         className="h-auto w-full "
         label="Select Organization"
         placeholder="Select"
+        variant="filled"
         helpText=""
         value={selectedOrganization?.id || ""}
         onValueChange={handleChange}

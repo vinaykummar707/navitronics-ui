@@ -11,7 +11,7 @@ export function RegionSelect({ regions, selectedRegionId, onValueChange }: Regio
   return (
     <Select
       className="h-auto flex-none"
-      variant="outline"
+      variant="filled"
       label="Select Region"
       placeholder="Select Region"
       value={selectedRegionId}

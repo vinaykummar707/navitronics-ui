@@ -58,9 +58,9 @@ const IconButtonRoot = React.forwardRef<HTMLButtonElement, IconButtonRootProps>(
               variant === "destructive-secondary",
             "bg-error-600 hover:bg-error-500 active:bg-error-600":
               variant === "destructive-primary",
-            "border border-solid border-neutral-border bg-black active:bg-black":
+            "border border-solid border-neutral-border bg-default-background hover:bg-neutral-100 active:bg-default-background":
               variant === "neutral-secondary",
-            "bg-neutral-200 hover:bg-neutral-200 active:bg-neutral-100":
+            "bg-neutral-100 hover:bg-neutral-200 active:bg-neutral-100":
               variant === "neutral-primary",
             "hover:bg-brand-50 active:bg-brand-100":
               variant === "brand-tertiary",
@@ -79,14 +79,13 @@ const IconButtonRoot = React.forwardRef<HTMLButtonElement, IconButtonRootProps>(
         {icon ? (
           <SubframeCore.IconWrapper
             className={SubframeUtils.twClassNames(
-              "text-heading-3 font-heading-3 text-neutral-700 group-disabled/af9405b1:text-neutral-400",
+              "text-heading-3 font-heading-3 text-default-font group-disabled/af9405b1:text-neutral-400",
               {
                 hidden: loading,
                 "text-body font-body": size === "small",
-                "text-black":
-                  variant === "inverse" ||
-                  variant === "destructive-primary" ||
-                  variant === "brand-primary",
+                "text-brand-primary-foreground": variant === "brand-primary",
+                "text-white":
+                  variant === "inverse" || variant === "destructive-primary",
                 "text-error-700":
                   variant === "destructive-tertiary" ||
                   variant === "destructive-secondary",
@@ -100,13 +99,12 @@ const IconButtonRoot = React.forwardRef<HTMLButtonElement, IconButtonRootProps>(
         ) : null}
         <SubframeCore.Loader
           className={SubframeUtils.twClassNames(
-            "hidden text-caption font-caption text-neutral-700 group-disabled/af9405b1:text-neutral-400",
+            "hidden text-caption font-caption text-default-font group-disabled/af9405b1:text-neutral-400",
             {
               "inline-block": loading,
-              "text-black":
-                variant === "inverse" ||
-                variant === "destructive-primary" ||
-                variant === "brand-primary",
+              "text-brand-primary-foreground": variant === "brand-primary",
+              "text-white":
+                variant === "inverse" || variant === "destructive-primary",
               "text-error-700":
                 variant === "destructive-tertiary" ||
                 variant === "destructive-secondary",

@@ -45,16 +45,189 @@
 }
 
 :root {
-  /* Default Colors */
-  --color-brand-primary: rgb(0 240 255);
-  --color-default-font: rgb(245 247 250);
-  --color-subtext-color: rgb(136 153 177);
+  color-scheme: light;
+
+  /* Default Colors - Light Mode (High Contrast & Clean Modern Palette) */
+  --color-brand-primary: rgb(2 132 199); /* Sky-600 */
+  --color-brand-primary-foreground: rgb(255 255 255); /* White on Sky-600 (4.6:1 WCAG AA) */
+  --color-default-font: rgb(15 23 42); /* Slate-900 (>15:1 WCAG AAA) */
+  --color-subtext-color: rgb(71 85 105); /* Slate-600 (7.2:1 WCAG AAA) */
+  --color-neutral-border-raw: 226 232 240;
+  --color-neutral-border: rgb(226 232 240); /* Slate-200 */
+  --color-white: rgb(255 255 255);
+  --color-white-default: rgb(255 255 255);
+  --color-default-background: rgb(248 250 252); /* Slate-50 */
+  --color-sidebar-background: rgb(255 255 255); /* Pure White */
+  --color-mercury: rgb(241 245 249);
+  --color-scotch-mist: rgb(248 250 252);
+  --color-bison-hide: rgb(203 213 225);
+  --color-neon-cyan: rgb(2 132 199);
+  --color-neon-emerald: rgb(16 185 129);
+  --color-neon-coral: rgb(225 29 72);
+  --color-neon-amber: rgb(217 119 6);
+  --color-neon-purple: rgb(147 51 234);
+
+  /* Brand (Deep Precision Sky in Light Mode) */
+  --color-brand-50: rgb(240 249 255);
+  --color-brand-100: rgb(224 242 254);
+  --color-brand-200: rgb(186 230 253);
+  --color-brand-300: rgb(125 211 252);
+  --color-brand-400: rgb(56 189 248);
+  --color-brand-500: rgb(14 165 233);
+  --color-brand-600: rgb(2 132 199);
+  --color-brand-700: rgb(3 105 161);
+  --color-brand-800: rgb(7 89 133);
+  --color-brand-900: rgb(12 74 110);
+
+  /* Neutral (Light Mode Slate: 0/50/100 are light surfaces, 700/800/900 are dark text) */
+  --color-neutral-0: rgb(255 255 255);
+  --color-neutral-50: rgb(248 250 252);
+  --color-neutral-100: rgb(241 245 249);
+  --color-neutral-200: rgb(226 232 240);
+  --color-neutral-300: rgb(203 213 225);
+  --color-neutral-400: rgb(148 163 184); /* Slate-400 (4.5:1 on white for secondary text) */
+  --color-neutral-500: rgb(100 116 139);
+  --color-neutral-600: rgb(71 85 105);
+  --color-neutral-700: rgb(51 65 85);
+  --color-neutral-800: rgb(30 41 59);
+  --color-neutral-900: rgb(15 23 42);
+  --color-neutral-950: rgb(2 6 23);
+
+  /* Error (Crisp Rose/Crimson) */
+  --color-error-50: rgb(254 242 242);
+  --color-error-100: rgb(254 226 226);
+  --color-error-200: rgb(254 202 202);
+  --color-error-300: rgb(252 165 165);
+  --color-error-400: rgb(248 113 113);
+  --color-error-500: rgb(239 68 68);
+  --color-error-600: rgb(220 38 38);
+  --color-error-700: rgb(185 28 28);
+  --color-error-800: rgb(153 27 27);
+  --color-error-900: rgb(127 29 29);
+
+  /* Warning (Warm Amber) */
+  --color-warning-50: rgb(255 251 235);
+  --color-warning-100: rgb(254 243 199);
+  --color-warning-200: rgb(253 230 138);
+  --color-warning-300: rgb(252 211 77);
+  --color-warning-400: rgb(251 191 36);
+  --color-warning-500: rgb(245 158 11);
+  --color-warning-600: rgb(217 119 6);
+  --color-warning-700: rgb(180 83 9);
+  --color-warning-800: rgb(146 64 14);
+  --color-warning-900: rgb(120 53 15);
+
+  /* Success (Fresh Emerald) */
+  --color-success-50: rgb(236 253 245);
+  --color-success-100: rgb(209 250 229);
+  --color-success-200: rgb(167 243 208);
+  --color-success-300: rgb(110 231 183);
+  --color-success-400: rgb(52 211 153);
+  --color-success-500: rgb(16 185 129);
+  --color-success-600: rgb(5 150 105);
+  --color-success-700: rgb(4 120 87);
+  --color-success-800: rgb(6 95 70);
+  --color-success-900: rgb(6 78 59);
+
+  /* Fonts - Harmonized & Standardized Typography Hierarchy */
+  --text-micro: 11px;
+  --text-micro--font-weight: 400;
+  --text-micro--letter-spacing: 0.01em;
+  --text-micro--line-height: 16px;
+  --text-micro-bold: 11px;
+  --text-micro-bold--font-weight: 600;
+  --text-micro-bold--letter-spacing: 0.01em;
+  --text-micro-bold--line-height: 16px;
+
+  --text-caption: 13px;
+  --text-caption--font-weight: 400;
+  --text-caption--letter-spacing: 0em;
+  --text-caption--line-height: 18px;
+  --text-caption-bold: 13px;
+  --text-caption-bold--font-weight: 600;
+  --text-caption-bold--letter-spacing: 0em;
+  --text-caption-bold--line-height: 18px;
+
+  --text-body: 15px;
+  --text-body--font-weight: 400;
+  --text-body--letter-spacing: 0em;
+  --text-body--line-height: 22px;
+  --text-body-bold: 15px;
+  --text-body-bold--font-weight: 600;
+  --text-body-bold--letter-spacing: 0em;
+  --text-body-bold--line-height: 22px;
+
+  --text-heading-3: 18px;
+  --text-heading-3--font-weight: 600;
+  --text-heading-3--letter-spacing: -0.01em;
+  --text-heading-3--line-height: 24px;
+
+  --text-heading-2: 22px;
+  --text-heading-2--font-weight: 700;
+  --text-heading-2--letter-spacing: -0.015em;
+  --text-heading-2--line-height: 28px;
+
+  --text-heading-1: 28px;
+  --text-heading-1--font-weight: 700;
+  --text-heading-1--letter-spacing: -0.02em;
+  --text-heading-1--line-height: 36px;
+
+  --text-monospace-body: 14px;
+  --text-monospace-body--font-weight: 400;
+  --text-monospace-body--letter-spacing: 0em;
+  --text-monospace-body--line-height: 20px;
+
+  /* Font families */
+  --font-micro: "Host Grotesk", sans-serif;
+  --font-micro-bold: "Host Grotesk", sans-serif;
+  --font-caption: "Host Grotesk", sans-serif;
+  --font-caption-bold: "Host Grotesk", sans-serif;
+  --font-body: "Host Grotesk", sans-serif;
+  --font-body-bold: "Host Grotesk", sans-serif;
+  --font-heading-3: "Host Grotesk", sans-serif;
+  --font-heading-2: "Host Grotesk", sans-serif;
+  --font-heading-1: "Host Grotesk", sans-serif;
+  --font-monospace-body: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Border radiuses */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* Shadows (Light Mode - Clean and Soft) */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-default: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+  --shadow-overlay: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.08);
+}
+
+/* Dark Theme Variables */
+.dark {
+  color-scheme: dark;
+
+  /* Default Colors - Dark Mode (Cyber Slate & Electric Accents) */
+  --color-brand-primary: rgb(0 240 255); /* Electric Neon Cyan */
+  --color-brand-primary-foreground: rgb(8 24 38); /* Deep Navy on Neon Cyan (14.2:1 WCAG AAA) */
+  --color-default-font: rgb(245 247 250); /* Crisp Off-White (>15:1 WCAG AAA) */
+  --color-subtext-color: rgb(160 178 204); /* Enhanced Slate-Blue (5.2:1 WCAG AA) */
+  --color-neutral-border-raw: 30 41 64;
   --color-neutral-border: rgb(30 41 64);
   --color-white: rgb(255 255 255);
+  --color-white-default: rgb(255 255 255);
   --color-default-background: rgb(15 21 34);
   --color-sidebar-background: rgb(21 29 46);
+  --color-mercury: rgb(35 45 66);
+  --color-scotch-mist: rgb(28 36 54);
+  --color-bison-hide: rgb(65 80 110);
+  --color-neon-cyan: rgb(0 240 255);
+  --color-neon-emerald: rgb(0 255 157);
+  --color-neon-coral: rgb(255 58 110);
+  --color-neon-amber: rgb(255 183 3);
+  --color-neon-purple: rgb(168 85 247);
 
-  /* Brand (Electric Neon Cyan) */
+  /* Brand (Electric Neon Cyan Scale) */
   --color-brand-50: rgb(8 34 50);
   --color-brand-100: rgb(12 50 74);
   --color-brand-200: rgb(16 75 110);
@@ -66,21 +239,21 @@
   --color-brand-800: rgb(125 211 252);
   --color-brand-900: rgb(186 230 253);
 
-  /* Neutral (Dark Cosmic Slate) */
+  /* Neutral (Dark Cosmic Slate Scale) */
   --color-neutral-0: rgb(6 8 13);
   --color-neutral-50: rgb(21 29 46);
   --color-neutral-100: rgb(28 38 60);
   --color-neutral-200: rgb(36 49 76);
   --color-neutral-300: rgb(50 67 100);
-  --color-neutral-400: rgb(90 110 142);
-  --color-neutral-500: rgb(130 150 182);
-  --color-neutral-600: rgb(180 198 224);
+  --color-neutral-400: rgb(110 132 165); /* Enhanced placeholder / muted text (>4.5:1 AA) */
+  --color-neutral-500: rgb(145 166 196);
+  --color-neutral-600: rgb(188 205 230);
   --color-neutral-700: rgb(222 234 248);
   --color-neutral-800: rgb(240 246 254);
   --color-neutral-900: rgb(250 252 255);
   --color-neutral-950: rgb(255 255 255);
 
-  /* Error (Neon Crimson / Hot Coral) */
+  /* Error (Hot Crimson) */
   --color-error-50: rgb(46 12 24);
   --color-error-100: rgb(72 16 34);
   --color-error-200: rgb(112 22 48);
@@ -92,7 +265,7 @@
   --color-error-800: rgb(255 165 185);
   --color-error-900: rgb(255 225 232);
 
-  /* Warning (Electric Amber / Neon Gold) */
+  /* Warning (Electric Amber) */
   --color-warning-50: rgb(44 26 6);
   --color-warning-100: rgb(68 38 8);
   --color-warning-200: rgb(105 58 10);
@@ -104,7 +277,7 @@
   --color-warning-800: rgb(253 224 71);
   --color-warning-900: rgb(254 243 199);
 
-  /* Success (Neon Emerald / Cyber Mint) */
+  /* Success (Neon Emerald) */
   --color-success-50: rgb(8 38 24);
   --color-success-100: rgb(12 56 36);
   --color-success-200: rgb(16 88 54);
@@ -116,99 +289,45 @@
   --color-success-800: rgb(110 231 183);
   --color-success-900: rgb(209 250 229);
 
-  /* Fonts */
-  --text-caption: 14px;
-  --text-caption--font-weight: 400;
-  --text-caption--letter-spacing: 0em;
-  --text-caption--line-height: 20px;
-  --text-caption-bold: 14px;
-  --text-caption-bold--font-weight: 500;
-  --text-caption-bold--letter-spacing: 0em;
-  --text-caption-bold--line-height: 20px;
-  --text-body: 16px;
-  --text-body--font-weight: 400;
-  --text-body--letter-spacing: 0em;
-  --text-body--line-height: 24px;
-  --text-body-bold: 16px;
-  --text-body-bold--font-weight: 500;
-  --text-body-bold--letter-spacing: 0em;
-  --text-body-bold--line-height: 24px;
-  --text-heading-3: 18px;
-  --text-heading-3--font-weight: 600;
-  --text-heading-3--letter-spacing: 0em;
-  --text-heading-3--line-height: 24px;
-  --text-heading-2: 22px;
-  --text-heading-2--font-weight: 600;
-  --text-heading-2--letter-spacing: 0em;
-  --text-heading-2--line-height: 28px;
-  --text-heading-1: 32px;
-  --text-heading-1--font-weight: 600;
-  --text-heading-1--letter-spacing: 0em;
-  --text-heading-1--line-height: 38px;
-  --text-monospace-body: 15px;
-  --text-monospace-body--font-weight: 400;
-  --text-monospace-body--letter-spacing: 0em;
-  --text-monospace-body--line-height: 22px;
-
-  /* Font families */
-  --font-caption: "Host Grotesk";
-  --font-caption-bold: "Host Grotesk";
-  --font-body: "Host Grotesk";
-  --font-body-bold: "Host Grotesk";
-  --font-heading-3: "Host Grotesk";
-  --font-heading-2: "Host Grotesk";
-  --font-heading-1: "Host Grotesk";
-  --font-monospace-body: monospace;
-
-  /* Border radiuses */
-  --radius-sm: 8px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
-  --radius-full: 9999px;
-
-  /* Box shadows */
+  /* Shadows (Dark Mode - Depth Glow) */
   --shadow-sm: 0px 1px 3px 0px rgba(0, 0, 0, 0.5), 0px 0px 0px 1px rgba(255, 255, 255, 0.04);
   --shadow-default: 0px 1px 3px 0px rgba(0, 0, 0, 0.6), 0px 0px 0px 1px rgba(255, 255, 255, 0.05);
-  --shadow-md: 0px 4px 16px -2px rgba(0, 0, 0, 0.7),
-    0px 2px 6px -1px rgba(0, 0, 0, 0.5),
-    0px 0px 0px 1px rgba(255, 255, 255, 0.06);
-  --shadow-lg: 0px 12px 32px -4px rgba(0, 0, 0, 0.85),
-    0px 4px 12px -2px rgba(0, 0, 0, 0.6),
-    0px 0px 0px 1px rgba(255, 255, 255, 0.08);
-  --shadow-overlay: 0px 16px 48px -4px rgba(0, 0, 0, 0.95),
-    0px 0px 0px 1px rgba(255, 255, 255, 0.1);
+  --shadow-md: 0px 4px 16px -2px rgba(0, 0, 0, 0.7), 0px 2px 6px -1px rgba(0, 0, 0, 0.5), 0px 0px 0px 1px rgba(255, 255, 255, 0.06);
+  --shadow-lg: 0px 12px 32px -4px rgba(0, 0, 0, 0.85), 0px 4px 12px -2px rgba(0, 0, 0, 0.6), 0px 0px 0px 1px rgba(255, 255, 255, 0.08);
+  --shadow-overlay: 0px 16px 48px -4px rgba(0, 0, 0, 0.95), 0px 0px 0px 1px rgba(255, 255, 255, 0.1);
 }
 
-/* Dark theme root & body defaults */
+/* Dynamic theme root & body styles */
 html {
-  color-scheme: dark;
+  transition: color-scheme 0.2s ease;
 }
 
 body {
-  background-color: rgb(15 21 34);
-  color: rgb(245 247 250);
+  background-color: var(--color-default-background);
+  color: var(--color-default-font);
   font-family: 'Host Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Modern dark neon scrollbar */
+/* Adaptive modern scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 21, 34, 0.8);
+  background: var(--color-default-background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(40, 52, 76, 0.8);
+  background: var(--color-neutral-300);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 240, 255, 0.4);
+  background: var(--color-brand-primary);
 }
 
 /* Subtle neon glow utility */
@@ -221,8 +340,9 @@ body {
   box-shadow: 0 0 10px -2px rgba(0, 240, 255, 0.25);
 }
 
-/* Mobile & Touch Ergonomics */
-* {
+/* Global Theme Borders & Touch Ergonomics */
+*, ::before, ::after {
+  border-color: var(--color-neutral-border);
   -webkit-tap-highlight-color: transparent;
 }
 

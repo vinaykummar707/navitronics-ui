@@ -8,7 +8,7 @@
  */
 // @subframe/sync-disable
 import React from "react";
-import { FeatherLogOut } from "@subframe/core";
+import { FeatherLogOut, FeatherSettings } from "@subframe/core";
 import * as SubframeCore from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { Avatar } from "./Avatar";
@@ -77,31 +77,44 @@ const LoggedUserRoot = React.forwardRef<HTMLDivElement, LoggedUserRootProps>(
       >
         <SubframeCore.DropdownMenu.Root>
           <SubframeCore.DropdownMenu.Trigger asChild={true}>
-            <div className="cursor-pointer rounded-full transition-transform hover:scale-105 active:scale-95 ring-1 ring-neutral-border hover:ring-2 hover:ring-brand-primary/60 select-none">
+            <button
+              type="button"
+              className="flex items-center justify-center cursor-pointer rounded-full transition-transform hover:scale-105 active:scale-95 ring-1 ring-neutral-border hover:ring-2 hover:ring-brand-primary/60 select-none outline-none border-none bg-transparent p-0"
+              aria-label="User profile menu"
+            >
               <Avatar image="" size="medium">
                 {user?.email ? user.email.charAt(0).toUpperCase() : "U"}
               </Avatar>
-            </div>
+            </button>
           </SubframeCore.DropdownMenu.Trigger>
           <SubframeCore.DropdownMenu.Portal>
             <SubframeCore.DropdownMenu.Content
               side="bottom"
               align="end"
               sideOffset={8}
+              alignOffset={0}
+              collisionPadding={16}
+              className="z-50"
               asChild={true}
             >
-              <DropdownMenu className="min-w-[220px]">
+              <DropdownMenu className="min-w-[230px]">
                 <div className="flex flex-col px-3 py-2 border-b border-solid border-neutral-border">
                   <span className="text-caption-bold font-caption-bold text-default-font truncate">
                     {user?.email || "User Name"}
                   </span>
-                  <span className="text-[11px] capitalize font-caption text-subtext-color">
+                  <span className="text-micro font-micro capitalize text-subtext-color">
                     {user?.role?.name === "master"
                       ? "Super Admin"
                       : user?.role?.name?.split("_").join(" ") || "User Role"}
                     {use ? ` • ${use}` : ""}
                   </span>
                 </div>
+                <DropdownMenu.DropdownItem
+                  icon={<FeatherSettings />}
+                  onClick={() => navigate("/home/settings")}
+                >
+                  Settings & Appearance
+                </DropdownMenu.DropdownItem>
                 <DropdownMenu.DropdownItem
                   icon={<FeatherLogOut />}
                   onClick={handleLogout}

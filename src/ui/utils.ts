@@ -1,6 +1,8 @@
 import * as SubframeCore from "@subframe/core";
 
 export const twClassNames = SubframeCore.createTwClassNames([
+  "text-micro",
+  "text-micro-bold",
   "text-caption",
   "text-caption-bold",
   "text-body",

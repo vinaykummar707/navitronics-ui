@@ -10,8 +10,14 @@ import * as SubframeUtils from "../utils";
 import { Table } from "./Table";
 import { Badge } from "./Badge";
 import { IconButton } from "./IconButton";
-import { FeatherEdit2, FeatherMoreHorizontal } from "@subframe/core";
 import { DropdownMenu } from "./DropdownMenu";
+import {
+  FeatherCheck,
+  FeatherEdit2,
+  FeatherMoreHorizontal,
+  FeatherTag,
+  FeatherX,
+} from "@subframe/core";
 import { DisplayConfigGetRequest } from "@/types/routeConfigV2";
 import { IRoute } from "@/types/IRoute";
 import { Checkbox } from "./Checkbox";
@@ -55,7 +61,7 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
     return (
       <div
         className={SubframeUtils.twClassNames(
-          "flex flex-col overflow-auto w-full items-start gap-6 rounded-md border border-solid border-neutral-border bg-neutral-50 px-4 py-4",
+          "flex flex-col overflow-auto w-full items-start gap-6 rounded-md border border-solid border-neutral-border bg-sidebar-background px-4 py-4 shadow-xs",
           className,
         )}
         ref={ref}
@@ -87,9 +93,9 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
               <Table.HeaderCell className="min-w-[100px]">Route No</Table.HeaderCell>
               <Table.HeaderCell className="min-w-[120px]">Source</Table.HeaderCell>
               <Table.HeaderCell className="min-w-[120px]">Destination</Table.HeaderCell>
-              <Table.HeaderCell className="hidden md:table-cell min-w-[90px]">Split Route</Table.HeaderCell>
-              <Table.HeaderCell className="hidden md:table-cell min-w-[80px]">Return</Table.HeaderCell>
-              <Table.HeaderCell className="hidden sm:table-cell min-w-[70px]">Version</Table.HeaderCell>
+              <Table.HeaderCell className="hidden md:table-cell min-w-[110px] justify-center text-center">Split Route</Table.HeaderCell>
+              <Table.HeaderCell className="hidden md:table-cell min-w-[90px] justify-center text-center">Return</Table.HeaderCell>
+              <Table.HeaderCell className="hidden sm:table-cell min-w-[90px] justify-center text-center">Version</Table.HeaderCell>
               <Table.HeaderCell className="hidden lg:table-cell min-w-[110px]">Created At</Table.HeaderCell>
               <Table.HeaderCell className="hidden xl:table-cell min-w-[140px]">Created By</Table.HeaderCell>
               <Table.HeaderCell className="w-12 justify-end" />
@@ -124,22 +130,30 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
                   {route.destination}
                 </span>
               </Table.Cell>
-              <Table.Cell className="hidden md:table-cell min-w-[90px]">
-                <Badge variant={route.is_split_route ? "brand" : "error"}>
-                  {" "}
-                  {route.is_split_route ? "Yes" : "No"}{" "}
+              <Table.Cell className="hidden md:table-cell min-w-[110px] justify-center text-center">
+                <Badge
+                  variant={route.is_split_route ? "brand" : "neutral"}
+                  icon={route.is_split_route ? <FeatherCheck className="h-3 w-3" /> : <FeatherX className="h-3 w-3" />}
+                >
+                  {route.is_split_route ? "Yes" : "No"}
                 </Badge>
               </Table.Cell>
 
-              <Table.Cell className="hidden md:table-cell min-w-[80px]">
-                <Badge variant={route.return ? "brand" : "error"}>
+              <Table.Cell className="hidden md:table-cell min-w-[90px] justify-center text-center">
+                <Badge
+                  variant={route.return ? "brand" : "neutral"}
+                  icon={route.return ? <FeatherCheck className="h-3 w-3" /> : <FeatherX className="h-3 w-3" />}
+                >
                   {route.return ? "Yes" : "No"}
                 </Badge>
               </Table.Cell>
-              <Table.Cell className="hidden sm:table-cell min-w-[70px]">
-                <span className="whitespace-nowrap text-body font-body text-default-font">
-                  {route.version}
-                </span>
+              <Table.Cell className="hidden sm:table-cell min-w-[90px] justify-center text-center">
+                <Badge
+                  variant={route.version === "1.0" ? "warning" : "brand"}
+                  icon={<FeatherTag className="h-3 w-3" />}
+                >
+                  {route.version || "2.0"}
+                </Badge>
               </Table.Cell>
               <Table.Cell className="hidden lg:table-cell min-w-[110px]">
                 <span className="whitespace-nowrap text-body font-body text-neutral-500">

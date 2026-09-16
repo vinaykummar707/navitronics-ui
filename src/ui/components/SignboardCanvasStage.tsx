@@ -360,7 +360,7 @@ export const SignboardCanvasStage = React.forwardRef<
         </div>
 
         {/* Zoom Controls */}
-        <div className="flex items-center gap-1 rounded-lg border border-neutral-border bg-neutral-0/40 p-1 shadow-2xs">
+        <div className="flex items-center gap-1 rounded-lg border border-neutral-border bg-sidebar-background p-1 shadow-xs">
           <IconButton
             variant="neutral-secondary"
             size="small"
@@ -385,7 +385,7 @@ export const SignboardCanvasStage = React.forwardRef<
             onClick={handleZoomIn}
             disabled={zoom >= 175}
           />
-          <div className="h-3.5 w-[1px] bg-neutral-300/30 mx-0.5" />
+          <div className="h-3.5 w-[1px] bg-neutral-border mx-0.5" />
           <Button
             variant="neutral-secondary"
             size="small"
@@ -417,10 +417,10 @@ export const SignboardCanvasStage = React.forwardRef<
             }}
             className="flex flex-col items-center justify-center w-fit max-w-none transition-all my-auto"
           >
-            {/* Real Hardware Chassis Frame - Dark Transit Equipment Styling (Adapts to LED Width) */}
-            <div className="flex flex-col items-center w-fit max-w-none min-w-[520px] rounded-2xl border border-neutral-border bg-[#070a13] p-5 shadow-2xl ring-1 ring-white/5">
+            {/* Real Hardware Chassis Frame - Adapts to Theme (Outer Card) with Dark Dot Matrix Bezel */}
+            <div className="flex flex-col items-center w-fit max-w-none min-w-[520px] rounded-2xl border border-neutral-border bg-sidebar-background p-5 shadow-xl">
               {/* Hardware Top Bar */}
-              <div className="flex w-full items-center justify-between pb-3 mb-3 border-b border-neutral-border/70 text-xs text-subtext-color gap-4">
+              <div className="flex w-full items-center justify-between pb-3 mb-3 border-b border-neutral-border text-xs text-subtext-color gap-4">
                 <div className="flex items-center gap-2.5">
                   <span className="flex h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
                   <span className="font-mono font-bold text-default-font uppercase tracking-wider text-[11px] whitespace-nowrap">
@@ -447,8 +447,8 @@ export const SignboardCanvasStage = React.forwardRef<
                 </div>
               </div>
 
-              {/* Centered LED Dot Matrix Screen with Dark Recessed Bezel Housing */}
-              <div className="flex items-center justify-center w-fit max-w-none p-3 rounded-xl bg-[#04060a] border border-neutral-border/50 shadow-inner">
+              {/* Centered LED Dot Matrix Screen with Hardware Recessed Bezel Housing */}
+              <div className="flex items-center justify-center w-fit max-w-none p-3 rounded-xl bg-black border border-neutral-border shadow-inner ring-1 ring-black/50">
                 <DisplayEditor stopScroll={isPaused} listIndex={selectedSimulationIndex} />
               </div>
             </div>
@@ -497,7 +497,7 @@ export const SignboardCanvasStage = React.forwardRef<
         {/* 4. SLIDE LOOP PLAYLIST (Bottom Filmstrip) */}
         {simulations.length > 0 && (
           <div className="w-full flex-none flex flex-col rounded-xl border border-neutral-border bg-sidebar-background/90 p-3 shadow-lg backdrop-blur-md">
-            <div className="flex items-center justify-between pb-2 mb-2 border-b border-neutral-border/60">
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-neutral-border">
               <div className="flex items-center gap-2">
                 <span className="text-caption-bold font-caption-bold text-default-font">
                   Signboard Loop Sequence
@@ -534,20 +534,20 @@ export const SignboardCanvasStage = React.forwardRef<
                     className={SubframeUtils.twClassNames(
                       "flex flex-col flex-none w-48 sm:w-56 p-2.5 rounded-xl border transition-all cursor-pointer shadow-xs select-none",
                       isSelected
-                        ? "border-brand-primary ring-2 ring-brand-primary/50 bg-neutral-0/60 shadow-md"
-                        : "border-neutral-border bg-neutral-100/60 hover:border-neutral-300/40 hover:bg-neutral-100/90"
+                        ? "border-brand-primary ring-2 ring-brand-primary/50 bg-brand-50/50 shadow-md"
+                        : "border-neutral-border bg-sidebar-background hover:border-brand-primary/40 hover:bg-neutral-100/60"
                     )}
                   >
                     {/* Card Header */}
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-brand-500/10 text-brand-primary border border-brand-500/20">
+                      <span className="px-1.5 py-0.5 rounded text-micro font-micro-bold font-mono bg-brand-500/10 text-brand-primary border border-brand-500/20">
                         #{String(index + 1).padStart(2, "0")}
                       </span>
                       <div className="flex items-center gap-1">
-                        <span className="px-1.5 py-0.2 rounded bg-neutral-200/50 text-[9px] font-medium uppercase text-subtext-color">
+                        <span className="px-1.5 py-0.2 rounded bg-neutral-100 text-micro font-micro uppercase text-subtext-color border border-neutral-border">
                           {sim.format}
                         </span>
-                        <span className="px-1.5 py-0.2 rounded bg-neutral-200/50 text-[9px] font-mono text-subtext-color">
+                        <span className="px-1.5 py-0.2 rounded bg-neutral-100 text-micro font-micro font-mono text-subtext-color border border-neutral-border">
                           {sim.width}×{sim.height}
                         </span>
                       </div>
@@ -559,7 +559,7 @@ export const SignboardCanvasStage = React.forwardRef<
                     </p>
 
                     {/* Mini Actions Bar */}
-                    <div className="flex items-center justify-between pt-1.5 border-t border-neutral-border/50">
+                    <div className="flex items-center justify-between pt-1.5 border-t border-neutral-border">
                       <div className="flex items-center gap-0.5">
                         <IconButton
                           variant="neutral-tertiary"

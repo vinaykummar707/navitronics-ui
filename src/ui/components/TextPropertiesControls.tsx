@@ -106,6 +106,7 @@ const TextPropertiesControlsRoot = React.forwardRef<
     >
       <ControlItem label="Choose Language">
         <Select
+          variant="filled"
           value={watch(`${pathBase}.language`) || "en"}
           onValueChange={(value) => {
             const defaultFontHeight = getDefaultFontHeightForLanguage(value, textProperty);
@@ -194,7 +195,7 @@ const TextPropertiesControlsRoot = React.forwardRef<
       {watch(`${pathBase}.icon`) && (
         <>
           <ControlItem label="Icon Placement">
-            <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-neutral-100/60 border border-neutral-border/60 w-full">
+            <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-neutral-100/60 border border-neutral-border w-full">
               {[
                 { value: "start", label: "Start" },
                 { value: "center", label: "Center" },
@@ -343,7 +344,7 @@ const TextPropertiesControlsRoot = React.forwardRef<
       </ControlItem>
 
       <ControlItem label="Text Scroll Direction">
-        <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-neutral-100/60 border border-neutral-border/60 w-full">
+        <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-neutral-100/60 border border-neutral-border w-full">
           {[
             { value: "Right To Left", label: "Left", icon: <FeatherChevronsLeft className="h-3.5 w-3.5" /> },
             { value: "Fixed", label: "Static", icon: <FeatherAlignHCenter className="h-3.5 w-3.5" /> },
@@ -371,7 +372,7 @@ const TextPropertiesControlsRoot = React.forwardRef<
       </ControlItem>
 
       <ControlItem label="Text Position">
-        <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-neutral-100/60 border border-neutral-border/60 w-full">
+        <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-neutral-100/60 border border-neutral-border w-full">
           {[
             { value: "Left", label: "Left", icon: <FeatherAlignLeft className="h-3.5 w-3.5" /> },
             { value: "Center", label: "Center", icon: <FeatherAlignCenter className="h-3.5 w-3.5" /> },
@@ -399,7 +400,7 @@ const TextPropertiesControlsRoot = React.forwardRef<
       </ControlItem>
 
       <ControlItem label="Text Weight">
-        <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-neutral-100/60 border border-neutral-border/60 w-full">
+        <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-neutral-100/60 border border-neutral-border w-full">
           {[
             { value: "Regular", label: "Regular" },
             { value: "Bold", label: "Bold" },
@@ -453,7 +454,7 @@ const TextPropertiesControlsRoot = React.forwardRef<
 
       <ControlItem label="Scroll Speed">
         <div className="flex flex-col gap-1.5 w-full">
-          <div className="grid grid-cols-5 gap-1 p-1 rounded-lg bg-neutral-100/60 border border-neutral-border/60">
+          <div className="grid grid-cols-5 gap-1 p-1 rounded-lg bg-neutral-100/60 border border-neutral-border">
             {[
               { label: "V.Fast", speed: 1 },
               { label: "Fast", speed: 3 },

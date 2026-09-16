@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import { Button } from "@/ui/components/Button";
 import { DefaultPageLayout } from "@/ui/layouts/DefaultPageLayout";
 import {
+  FeatherCheck,
   FeatherChevronLeft,
   FeatherChevronRight,
   FeatherMusic,
@@ -332,7 +333,7 @@ export default function StopsPage() {
 
         {hasRegions && (
           <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2 w-full lg:w-auto">
-            <div className="flex items-center gap-2 flex-1 sm:flex-none">
+            <div className="flex items-end gap-2 flex-1 sm:flex-none">
               {/* Region Select — restricted roles */}
               <RBAC features={[]} roles={["depot_admin", "region_admin"]}>
                 <RegionSelect
@@ -356,7 +357,7 @@ export default function StopsPage() {
                 <RBAC features={[]} roles={["master", "organization_admin", "region_admin"]}>
                   <Select
                     className="h-auto flex-none"
-                    variant="outline"
+                    variant="filled"
                     label="Select Depot"
                     placeholder="Select Depot"
                     value={selectedDepot?.id ?? ""}
@@ -372,10 +373,10 @@ export default function StopsPage() {
               )}
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-end gap-2 w-full sm:w-auto">
               <Button
-                variant="neutral-secondary"
-                className="h-9 sm:h-8 flex-1 sm:flex-none"
+                variant="neutral-primary"
+                className="h-9 flex-1 sm:flex-none"
                 icon={<FeatherRefreshCw />}
                 onClick={() => {
                   toast.success("Stops refreshed successfully");
@@ -396,7 +397,7 @@ export default function StopsPage() {
                 ]}
               >
                 <Button
-                  className="h-9 sm:h-8 flex-1 sm:flex-none"
+                  className="h-9 flex-1 sm:flex-none"
                   icon={<FeatherPlus />}
                   disabled={!selectedDepot}
                   onClick={() => setOpen(true)}
@@ -415,7 +416,7 @@ export default function StopsPage() {
       {/* Content */}
       {hasStops ? (
         <div className="flex w-full flex-col gap-4">
-          <div className="flex w-full flex-col items-start overflow-x-auto touch-scroll-x rounded-md border border-solid border-neutral-border bg-neutral-50">
+          <div className="flex w-full flex-col items-start overflow-x-auto touch-scroll-x rounded-md border border-solid border-neutral-border bg-sidebar-background shadow-xs">
             <Table
               header={
                 <Table.HeaderRow>
@@ -423,7 +424,7 @@ export default function StopsPage() {
                   <Table.HeaderCell className="min-w-[160px]">Stop Name</Table.HeaderCell>
                   <Table.HeaderCell className="hidden md:table-cell min-w-[160px]">Downward (Lat, Long)</Table.HeaderCell>
                   <Table.HeaderCell className="hidden lg:table-cell min-w-[160px]">Upward (Lat, Long)</Table.HeaderCell>
-                  <Table.HeaderCell className="min-w-[180px]">Audio Announcement</Table.HeaderCell>
+                  <Table.HeaderCell className="min-w-[180px] justify-center text-center">Audio Announcement</Table.HeaderCell>
                   <Table.HeaderCell className="w-12 justify-end" />
                 </Table.HeaderRow>
               }
@@ -465,7 +466,7 @@ export default function StopsPage() {
                           : "—"}
                       </span>
                     </Table.Cell>
-                    <Table.Cell>
+                    <Table.Cell className="min-w-[180px] justify-center text-center">
                       {hasAudio ? (
                         <div className="flex items-center gap-2">
                           <Button
@@ -476,7 +477,7 @@ export default function StopsPage() {
                           >
                             Play
                           </Button>
-                          <Badge variant="success">Audio Ready</Badge>
+                          <Badge variant="success" icon={<FeatherCheck className="h-3 w-3" />}>Audio Ready</Badge>
                           <IconButton
                             size="small"
                             variant="destructive-tertiary"

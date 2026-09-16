@@ -141,7 +141,7 @@ export default function DepotsPage() {
               <RBAC features={[]} roles={["master", "organization_admin"]}>
                 <Select
                   className="h-auto w-full flex-none"
-                  variant="outline"
+                  variant="filled"
                   label="Select Region"
                   placeholder="Select Region"
                   value={selectedRegion ? selectedRegion.id : ""}
@@ -160,10 +160,10 @@ export default function DepotsPage() {
               </RBAC>
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-end gap-2 w-full sm:w-auto">
               <Button
-                variant="neutral-secondary"
-                className="h-9 sm:h-8 flex-1 sm:flex-none"
+                variant="neutral-primary"
+                className="h-9 flex-1 sm:flex-none"
                 icon={<FeatherRefreshCw />}
                 onClick={() => {
                   toast.success("Depots refreshed successfully");
@@ -178,7 +178,7 @@ export default function DepotsPage() {
                 roles={["region_admin", "organization_admin", "master"]}
               >
                 <Button
-                  className="h-9 sm:h-8 flex-1 sm:flex-none"
+                  className="h-9 flex-1 sm:flex-none"
                   icon={<FeatherPlus />}
                   disabled={!selectedRegion}
                   onClick={() => {
@@ -194,7 +194,7 @@ export default function DepotsPage() {
         )}
       </div>
       {depots && depots.length > 0 ? (
-        <div className="flex w-full flex-col items-start overflow-x-auto touch-scroll-x rounded-md border border-solid border-neutral-border bg-neutral-50">
+        <div className="flex w-full flex-col items-start overflow-x-auto touch-scroll-x rounded-md border border-solid border-neutral-border bg-sidebar-background shadow-xs">
           <Table
             header={
               <Table.HeaderRow>

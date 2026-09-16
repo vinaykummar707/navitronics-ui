@@ -3,7 +3,11 @@ module.exports = {
   content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
   darkMode: "class",
   theme: {
-    extend: {},
+    extend: {
+      borderColor: {
+        DEFAULT: "var(--color-neutral-border)",
+      },
+    },
   },
   plugins: [],
   presets: [require("./src/ui/tailwind.config")],

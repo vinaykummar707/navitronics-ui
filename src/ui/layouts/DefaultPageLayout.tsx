@@ -28,6 +28,7 @@ import * as SubframeUtils from "../utils";
 import { useLocation, useNavigate } from "react-router-dom";
 import RBAC from "@/components/RBAC";
 import { ROLES } from "@/constants/roles";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import useToggleStore from "@/store/useToggleStore";
 import { IconButton } from "../components/IconButton";
 
@@ -205,15 +206,16 @@ const DefaultPageLayoutRoot = React.forwardRef<
               <span className="text-body-bold font-body-bold tracking-tight text-default-font font-bold truncate">
                 NAVITRONIX
               </span>
-              <span className="inline-flex rounded px-1.5 py-0.5 text-[10px] font-caption-bold text-brand-primary bg-brand-50 border border-brand-200/40 flex-none">
+              <span className="inline-flex rounded px-1.5 py-0.5 text-micro font-micro-bold text-brand-primary bg-brand-50 border border-brand-200/40 flex-none">
                 RMS
               </span>
             </div>
           </div>
         </div>
 
-        {/* Right side: Logged user avatar with dropdown */}
-        <div className="flex items-center flex-none">
+        {/* Right side: Theme Switcher & Logged user avatar */}
+        <div className="flex items-center gap-2.5 flex-none">
+          <ThemeToggle />
           <LoggedUser />
         </div>
       </header>
@@ -292,11 +294,11 @@ const DefaultPageLayoutRoot = React.forwardRef<
             />
           </div>
 
-          <div className="p-3 border-b border-neutral-border/60 flex-none">
+          <div className="pt-3 px-3 border-neutral-border/60 flex-none">
             <SelectOrganizationComponent className="w-full" collapsed={false} />
           </div>
 
-          <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-2 no-scrollbar">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden px-3  no-scrollbar">
             {renderNavItems()}
           </div>
         </div>

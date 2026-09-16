@@ -203,6 +203,7 @@ const AutoTextGenerator: React.FC<AutoTextGeneratorProps> = ({
 
   return (
     <Select
+      variant="filled"
       aria-label="Auto Text Generator"
       placeholder={loading ? "Transliterating..." : "Auto Text Suggestions..."}
       onValueChange={(val) => {

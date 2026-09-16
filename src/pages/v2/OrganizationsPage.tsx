@@ -7,9 +7,11 @@ import { Button } from "@/ui/components/Button";
 import { Table } from "@/ui/components/Table";
 import { DefaultPageLayout } from "@/ui/layouts/DefaultPageLayout";
 import {
+  FeatherCheck,
   FeatherMoreHorizontal,
   FeatherPlus,
   FeatherRefreshCw,
+  FeatherX,
 } from "@subframe/core";
 import { useQuery } from "@tanstack/react-query";
 import { OptionsDropdown } from "@/ui/components/OptionsDropdown";
@@ -74,13 +76,13 @@ function OrganizationsPage() {
         </div>
       )}
       {!isLoading && !isError && organizations.length > 0 && (
-        <div className="flex w-full flex-col items-start overflow-x-auto rounded-md border border-solid border-neutral-border bg-neutral-50 touch-scroll-x">
+        <div className="flex w-full flex-col items-start overflow-x-auto rounded-md border border-solid border-neutral-border bg-sidebar-background shadow-xs touch-scroll-x">
           <Table
             header={
               <Table.HeaderRow>
                 <Table.HeaderCell className="min-w-[220px]">Organization</Table.HeaderCell>
                 <Table.HeaderCell className="min-w-[180px]">Contact Email</Table.HeaderCell>
-                <Table.HeaderCell className="min-w-[120px]">Status</Table.HeaderCell>
+                <Table.HeaderCell className="min-w-[120px] justify-center text-center">Status</Table.HeaderCell>
                 <Table.HeaderCell className="min-w-[200px]">Active Modules</Table.HeaderCell>
                 <Table.HeaderCell className="min-w-[150px]">Created At</Table.HeaderCell>
                 <Table.HeaderCell className="w-12 justify-end" />
@@ -120,11 +122,11 @@ function OrganizationsPage() {
                       {org.email || "No email provided"}
                     </span>
                   </Table.Cell>
-                  <Table.Cell>
+                  <Table.Cell className="min-w-[120px] justify-center text-center">
                     {org.active ? (
-                      <Badge variant="success">Active</Badge>
+                      <Badge variant="success" icon={<FeatherCheck className="h-3 w-3" />}>Active</Badge>
                     ) : (
-                      <Badge variant="error">Suspended</Badge>
+                      <Badge variant="error" icon={<FeatherX className="h-3 w-3" />}>Suspended</Badge>
                     )}
                   </Table.Cell>
                   <Table.Cell>

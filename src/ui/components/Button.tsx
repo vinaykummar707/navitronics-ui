@@ -93,10 +93,11 @@ const ButtonRoot = React.forwardRef<HTMLButtonElement, ButtonRootProps>(
         {icon ? (
           <SubframeCore.IconWrapper
             className={SubframeUtils.twClassNames(
-              "text-body font-body text-white group-disabled/3b777358:text-neutral-400",
+              "text-body font-body text-brand-primary-foreground group-disabled/3b777358:text-neutral-400",
               {
                 hidden: loading,
                 "text-heading-3 font-heading-3": size === "large",
+                "text-white": variant === "destructive-primary",
                 "text-neutral-700":
                   variant === "neutral-primary-2" ||
                   variant === "neutral-secondary-2" ||
@@ -124,9 +125,10 @@ const ButtonRoot = React.forwardRef<HTMLButtonElement, ButtonRootProps>(
         >
           <SubframeCore.Loader
             className={SubframeUtils.twClassNames(
-              "font-['Inter'] text-[12px] font-[400] leading-[20px] text-white group-disabled/3b777358:text-neutral-400",
+              "font-['Inter'] text-[12px] font-[400] leading-[20px] text-brand-primary-foreground group-disabled/3b777358:text-neutral-400",
               {
                 "text-caption font-caption": size === "small",
+                "text-white": variant === "destructive-primary",
                 "text-neutral-700":
                   variant === "neutral-primary-2" ||
                   variant === "neutral-secondary-2" ||
@@ -147,10 +149,11 @@ const ButtonRoot = React.forwardRef<HTMLButtonElement, ButtonRootProps>(
         {children ? (
           <span
             className={SubframeUtils.twClassNames(
-              "whitespace-nowrap text-body-bold font-body-bold text-white group-disabled/3b777358:text-neutral-400",
+              "whitespace-nowrap text-body-bold font-body-bold text-brand-primary-foreground group-disabled/3b777358:text-neutral-400",
               {
                 hidden: loading,
                 "text-caption-bold font-caption-bold": size === "small",
+                "text-white": variant === "destructive-primary",
                 "text-neutral-700":
                   variant === "neutral-primary-2" ||
                   variant === "neutral-secondary-2" ||
@@ -173,9 +176,10 @@ const ButtonRoot = React.forwardRef<HTMLButtonElement, ButtonRootProps>(
         {iconRight ? (
           <SubframeCore.IconWrapper
             className={SubframeUtils.twClassNames(
-              "text-body font-body text-white group-disabled/3b777358:text-neutral-400",
+              "text-body font-body text-brand-primary-foreground group-disabled/3b777358:text-neutral-400",
               {
                 "text-heading-3 font-heading-3": size === "large",
+                "text-white": variant === "destructive-primary",
                 "text-neutral-700":
                   variant === "neutral-primary-2" ||
                   variant === "neutral-secondary-2" ||

@@ -259,7 +259,7 @@ export const SlidePropertyInspector = React.forwardRef<
               <span className="text-caption-bold font-caption-bold text-default-font block">
                 Slide Format & Layout
               </span>
-              <div className="grid grid-cols-3 gap-1 rounded-lg bg-neutral-100/70 p-1 border border-neutral-border/60">
+              <div className="grid grid-cols-3 gap-1 rounded-lg bg-neutral-100/70 p-1 border border-neutral-border">
                 {(["single", "two", "three"] as const).map((fmt) => (
                   <button
                     key={fmt}
@@ -359,7 +359,7 @@ export const SlidePropertyInspector = React.forwardRef<
                 <span className="text-[11px] font-semibold text-subtext-color block px-1 mb-1.5 uppercase tracking-wider">
                   Select Text Zone to Edit:
                 </span>
-                <div className="flex items-center gap-1 rounded-lg bg-neutral-100/70 p-1 border border-neutral-border/60">
+                <div className="flex items-center gap-1 rounded-lg bg-neutral-100/70 p-1 border border-neutral-border">
                   <button
                     type="button"
                     onClick={() => setActiveTextZone("routeNumber")}

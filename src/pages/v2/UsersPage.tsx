@@ -74,8 +74,8 @@ export default function UsersPage() {
         </span>
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <Button
-            variant="neutral-secondary"
-            className="h-9 sm:h-8 flex-1 sm:flex-none"
+            variant="neutral-primary"
+            className="h-9 flex-1 sm:flex-none"
             icon={<FeatherRefreshCw />}
             onClick={() => {
               toast.success("Users refreshed successfully");
@@ -85,7 +85,7 @@ export default function UsersPage() {
             Refresh
           </Button>
           <Button
-            className="h-9 sm:h-8 flex-1 sm:flex-none"
+            className="h-9 flex-1 sm:flex-none"
             icon={<FeatherPlus />}
             onClick={() => {
               setOpen(true);

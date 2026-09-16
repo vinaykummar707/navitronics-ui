@@ -517,7 +517,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
           </div>
 
           {/* Canvas Zoom Toolbar */}
-          <div className="flex items-center gap-1 rounded-lg border border-neutral-border bg-neutral-50 p-1 shadow-2xs">
+          <div className="flex items-center gap-1 rounded-lg border border-neutral-border bg-sidebar-background p-1 shadow-xs">
             <IconButton
               variant="neutral-primary"
               size="small"

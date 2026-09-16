@@ -115,18 +115,18 @@ const Trigger = React.forwardRef<HTMLButtonElement, TriggerProps>(
         <button
           type="button"
           className={SubframeUtils.twClassNames(
-            "flex w-full items-center gap-2 px-3 py-2 text-left",
+            "flex h-full w-full items-center gap-2 px-3 py-0 text-left outline-none",
             className
           )}
           ref={ref}
         >
           {icon ? (
-            <SubframeCore.IconWrapper className="text-body font-body text-neutral-400">
+            <SubframeCore.IconWrapper className="text-body font-body text-neutral-400 flex-none">
               {icon}
             </SubframeCore.IconWrapper>
           ) : null}
           <Select.TriggerValue placeholder={placeholder as string} />
-          <FeatherChevronDown className="text-body font-body text-subtext-color" />
+          <FeatherChevronDown className="text-body font-body text-subtext-color flex-none ml-auto" />
         </button>
       </SubframeCore.Select.Trigger>
     );
@@ -166,6 +166,7 @@ interface SelectRootProps
   disabled?: boolean;
   error?: boolean;
   variant?: "outline" | "filled";
+  size?: "small" | "medium" | "large";
   label?: React.ReactNode;
   placeholder?: React.ReactNode;
   helpText?: React.ReactNode;
@@ -182,6 +183,7 @@ const SelectRoot = React.forwardRef<HTMLDivElement, SelectRootProps>(
       disabled = false,
       error = false,
       variant = "outline",
+      size = "medium",
       label,
       placeholder,
       helpText,
@@ -233,9 +235,11 @@ const SelectRoot = React.forwardRef<HTMLDivElement, SelectRootProps>(
           ) : null}
           <div
             className={SubframeUtils.twClassNames(
-              "flex w-full flex-col items-start rounded-md border border-solid border-neutral-border bg-default-background group-focus-within/bb88f90b:border group-focus-within/bb88f90b:border-solid group-focus-within/bb88f90b:border-brand-primary",
+              "flex h-9 min-h-[36px] w-full flex-col items-start justify-center rounded-md border border-solid border-neutral-border bg-default-background group-focus-within/bb88f90b:border group-focus-within/bb88f90b:border-solid group-focus-within/bb88f90b:border-brand-primary",
               {
-                "border border-solid border-neutral-100 bg-neutral-100":
+                "h-8 min-h-[32px]": size === "small",
+                "h-10 min-h-[40px]": size === "large",
+                "border border-solid border-neutral-border bg-neutral-100":
                   variant === "filled",
                 "border border-solid border-error-600": error,
                 "bg-neutral-200": disabled,

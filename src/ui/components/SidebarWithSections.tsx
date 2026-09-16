@@ -47,8 +47,8 @@ const NavItem = React.forwardRef<HTMLDivElement, NavItemProps>(function NavItem(
           ? "h-11 w-11 justify-center p-0 mx-auto"
           : "w-full gap-2.5 px-3 py-2",
         selected
-          ? "bg-brand-600 text-white shadow-sm font-semibold"
-          : "text-neutral-700 hover:bg-brand-500/20 hover:text-white",
+          ? "bg-brand-primary text-brand-primary-foreground shadow-xs font-semibold"
+          : "text-subtext-color hover:bg-neutral-100 hover:text-default-font",
         className
       )}
       ref={ref}
@@ -60,8 +60,8 @@ const NavItem = React.forwardRef<HTMLDivElement, NavItemProps>(function NavItem(
           className={SubframeUtils.twClassNames(
             "text-[18px] transition-transform duration-150 group-hover/2713e17b:scale-110 flex-none",
             selected
-              ? "text-white"
-              : "text-neutral-600 group-hover/2713e17b:text-white"
+              ? "text-brand-primary-foreground"
+              : "text-subtext-color group-hover/2713e17b:text-default-font"
           )}
         >
           {icon}
@@ -72,8 +72,8 @@ const NavItem = React.forwardRef<HTMLDivElement, NavItemProps>(function NavItem(
           className={SubframeUtils.twClassNames(
             "line-clamp-1 grow shrink-0 basis-0 text-body font-body font-medium transition-colors",
             selected
-              ? "text-white"
-              : "text-neutral-700 group-hover/2713e17b:text-white"
+              ? "text-brand-primary-foreground"
+              : "text-subtext-color group-hover/2713e17b:text-default-font"
           )}
         >
           {children}
@@ -114,7 +114,7 @@ const NavSection = React.forwardRef<HTMLDivElement, NavSectionProps>(
             <div className="w-6 h-px bg-neutral-border my-2 self-center opacity-60" />
           ) : (
             <div className="flex w-full flex-col items-start px-3 pt-3 pb-1">
-              <span className="w-full text-caption font-caption text-subtext-color uppercase tracking-wider text-[11px] font-semibold">
+              <span className="w-full text-micro font-micro-bold text-subtext-color uppercase tracking-wider">
                 {label}
               </span>
             </div>
@@ -172,8 +172,8 @@ const SidebarWithSectionsRoot = React.forwardRef<
         {header ? (
           <div
             className={SubframeUtils.twClassNames(
-              "flex w-full flex-col items-start transition-[padding] duration-300 ease-in-out border-b border-neutral-border/40",
-              collapsed ? "px-2 pt-3 pb-3 items-center" : "px-4 pt-4 pb-3"
+              "flex w-full flex-col items-start transition-[padding] duration-300 ease-in-out  border-neutral-border/40",
+              collapsed ? "px-2 pt-3 items-center" : "px-4 pt-4 "
             )}
           >
             {header}

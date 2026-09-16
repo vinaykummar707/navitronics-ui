@@ -213,9 +213,10 @@ export const V1DisplayEditor: React.FC<V1DisplayEditorProps> = ({ language }) =>
   };
 
   return (
-    <div className="flex flex-col items-start gap-3 rounded-lg border border-neutral-border bg-neutral-900 p-4 shadow-sm w-fit max-w-full overflow-x-auto">
+    <div className="flex flex-col items-start gap-3 rounded-lg border border-neutral-border bg-black p-4 shadow-sm w-fit max-w-full overflow-x-auto">
       {renderPlaybackControls()}
-      <div className="rounded border-2 border-neutral-700 bg-black p-1 shadow-inner overflow-x-auto max-w-full">
+      {/* Simulation Display Frame with dark bezel */}
+      <div className="rounded border border-neutral-border bg-black p-1 shadow-inner overflow-x-auto max-w-full">
         {screenConfig.format === "single" ? (
           <LEDWrapper
             {...commonProps}

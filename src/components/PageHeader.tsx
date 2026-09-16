@@ -35,8 +35,8 @@ const PageHeader: React.FC<PageHeaderProps> = ({
         </span>
         <div className="flex items-center gap-2 w-full sm:w-auto justify-start sm:justify-end flex-wrap">
           <Button
-            variant="neutral-secondary"
-            className="h-9 sm:h-8 flex-1 sm:flex-none"
+            variant="neutral-primary"
+            className="h-9 flex-1 sm:flex-none"
             icon={<FeatherRefreshCw />}
             onClick={() => {
               toast.success(`${title} refreshed successfully`);
@@ -48,7 +48,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
           <RBAC features={[]} roles={roles}>
             <Button
               variant="brand-primary"
-              className="h-9 sm:h-8 flex-1 sm:flex-none"
+              className="h-9 flex-1 sm:flex-none"
               icon={<FeatherPlus />}
               onClick={onAdd}
             >

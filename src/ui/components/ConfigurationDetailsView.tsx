@@ -60,7 +60,7 @@ const ConfigurationDetailsViewRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex h-full w-full flex-col md:flex-row items-start rounded-md border border-solid border-neutral-border bg-neutral-50 overflow-hidden",
+        "flex h-full w-full flex-col md:flex-row items-start rounded-md border border-solid border-neutral-border bg-sidebar-background overflow-hidden",
         className
       )}
       ref={ref}

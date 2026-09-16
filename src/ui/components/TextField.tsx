@@ -83,7 +83,7 @@ const TextFieldRoot = React.forwardRef<HTMLLabelElement, TextFieldRootProps>(
             "flex h-10 w-full flex-none items-center gap-1 rounded-md border border-solid border-neutral-border bg-default-background px-2 group-focus-within/be48ca43:border group-focus-within/be48ca43:border-solid group-focus-within/be48ca43:border-brand-primary",
             {
               "h-9": size === "small",
-              "border border-solid border-neutral-200 bg-neutral-100 group-hover/be48ca43:border group-hover/be48ca43:border-solid group-hover/be48ca43:border-neutral-border group-focus-within/be48ca43:bg-default-background":
+              "border border-solid border-neutral-border bg-neutral-100 group-focus-within/be48ca43:bg-default-background":
                 variant === "filled",
               "border border-solid border-error-600": error,
               "border border-solid border-neutral-200 bg-neutral-200": disabled,

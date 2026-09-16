@@ -53,7 +53,7 @@ const CheckboxCardRoot = React.forwardRef<
             { hidden: hideCheckbox }
           )}
         >
-          <FeatherCheck className="hidden font-['Inter'] text-[16px] font-[400] leading-[16px] text-black group-aria-[checked=true]/de0b4dfb:inline-flex group-disabled/de0b4dfb:text-neutral-400" />
+          <FeatherCheck className="hidden font-['Inter'] text-[16px] font-[400] leading-[16px] text-brand-primary-foreground group-aria-[checked=true]/de0b4dfb:inline-flex group-disabled/de0b4dfb:text-neutral-400" />
         </div>
         {children ? (
           <div className="flex grow shrink-0 basis-0 items-center gap-4">

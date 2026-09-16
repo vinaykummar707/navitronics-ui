@@ -204,7 +204,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
             onClick={handleExportRoute}
             title="Export route configuration as JSON"
           >
-            Export
+            Export JSON
           </Button>
         </div>
 

@@ -45,7 +45,7 @@ export default function LedCanvas({
 	const canvasHeight = ledMatrix.length * (ledSize + rowSpacing);
 
 	return (
-		<div className="bg-neutral-900 inline-block">
+		<div className="bg-black inline-block">
 			<canvas
 				ref={canvasRef}
 				width={canvasWidth}

@@ -61,7 +61,7 @@ export default function FontConfigurationPage() {
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button
               variant="neutral-secondary"
-              className="h-9 sm:h-8 flex-1 sm:flex-none"
+              className="h-9 flex-1 sm:flex-none"
               icon={<FeatherRefreshCw />}
               onClick={() => {
                 toast.success("Refreshed font settings");
@@ -71,7 +71,7 @@ export default function FontConfigurationPage() {
               Refresh
             </Button>
             <Button
-              className="h-9 sm:h-8 flex-1 sm:flex-none"
+              className="h-9 flex-1 sm:flex-none"
               icon={<FeatherPlus />}
               onClick={() => {
                 setShowDrawer(true);

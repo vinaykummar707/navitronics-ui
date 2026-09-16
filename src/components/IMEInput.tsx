@@ -343,8 +343,8 @@ const IMEInput = forwardRef<HTMLInputElement, IMEInputProps>(
                 e.preventDefault();
                 handleSuggestionClick(suggestion);
               }}
-              className={`p-2   cursor-pointer  ${
-                selectedSuggestionIndex === index ? "bg-gray-700" : ""
+              className={`p-2 cursor-pointer rounded text-default-font ${
+                selectedSuggestionIndex === index ? "bg-brand-50 text-brand-primary font-semibold" : "hover:bg-neutral-100"
               }`}
             >
               {suggestion}

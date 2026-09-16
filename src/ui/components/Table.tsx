@@ -13,18 +13,31 @@ interface CellProps extends React.TdHTMLAttributes<HTMLTableDataCellElement> {
   className?: string;
 }
 
-const Cell = React.forwardRef<HTMLDivElement, CellProps>(function Cell(
+const Cell = React.forwardRef<HTMLTableCellElement, CellProps>(function Cell(
   { children, className, ...otherProps }: CellProps,
   ref
 ) {
+  const isCentered = className?.includes("justify-center") || className?.includes("text-center");
+  const isEnd = className?.includes("justify-end") || className?.includes("text-right");
+
   return (
-    <td {...otherProps}>
+    <td
+      className={SubframeUtils.twClassNames(
+        className,
+        isCentered && "text-center",
+        isEnd && "text-right"
+      )}
+      ref={ref}
+      {...otherProps}
+    >
       <div
         className={SubframeUtils.twClassNames(
           "flex h-12 w-full items-center gap-1 px-3",
-          className
+          className,
+          "!flex",
+          isCentered && "!justify-center !text-center mx-auto",
+          isEnd && "!justify-end !text-right ml-auto"
         )}
-        ref={ref}
       >
         {children}
       </div>
@@ -39,19 +52,32 @@ interface HeaderCellProps
   className?: string;
 }
 
-const HeaderCell = React.forwardRef<HTMLDivElement, HeaderCellProps>(
+const HeaderCell = React.forwardRef<HTMLTableCellElement, HeaderCellProps>(
   function HeaderCell(
     { children, icon = null, className, ...otherProps }: HeaderCellProps,
     ref
   ) {
+    const isCentered = className?.includes("justify-center") || className?.includes("text-center");
+    const isEnd = className?.includes("justify-end") || className?.includes("text-right");
+
     return (
-      <th {...otherProps}>
+      <th
+        className={SubframeUtils.twClassNames(
+          className,
+          isCentered && "text-center",
+          isEnd && "text-right"
+        )}
+        ref={ref}
+        {...otherProps}
+      >
         <div
           className={SubframeUtils.twClassNames(
             "flex h-8 w-full items-center gap-1 px-3 text-left",
-            className
+            className,
+            "!flex",
+            isCentered && "!justify-center !text-center mx-auto",
+            isEnd && "!justify-end !text-right ml-auto"
           )}
-          ref={ref}
         >
           {children ? (
             <span className="whitespace-nowrap text-caption-bold font-caption-bold text-subtext-color">
@@ -100,8 +126,8 @@ const Row = React.forwardRef<HTMLTableRowElement, RowProps>(function Row(
   return (
     <tr
       className={SubframeUtils.twClassNames(
-        "group/5d119f8d border-t border-solid border-neutral-border",
-        { "hover:bg-neutral-50": clickable },
+        "group/5d119f8d border-t border-solid border-neutral-border bg-sidebar-background transition-colors",
+        { "hover:bg-neutral-100/60": clickable },
         className
       )}
       ref={ref}
@@ -125,12 +151,12 @@ const TableRoot = React.forwardRef<HTMLTableElement, TableRootProps>(
   ) {
     return (
       <table
-        className={SubframeUtils.twClassNames("w-full", className)}
+        className={SubframeUtils.twClassNames("w-full bg-sidebar-background", className)}
         ref={ref}
         {...otherProps}
       >
-        <thead>{header}</thead>
-        <tbody className="border-b border-solid border-neutral-border">
+        <thead className="bg-sidebar-background">{header}</thead>
+        <tbody className="border-b border-solid border-neutral-border bg-sidebar-background">
           {children}
         </tbody>
       </table>

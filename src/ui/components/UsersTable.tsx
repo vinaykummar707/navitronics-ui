@@ -9,11 +9,16 @@
  */
 
 import React from "react";
-import { FeatherCheck } from "@subframe/core";
-import { FeatherEdit2 } from "@subframe/core";
-import { FeatherMoreHorizontal } from "@subframe/core";
-import { FeatherShieldCheck } from "@subframe/core";
-import { FeatherTrash } from "@subframe/core";
+import {
+  FeatherCheck,
+  FeatherEdit2,
+  FeatherLayers,
+  FeatherMoreHorizontal,
+  FeatherShieldCheck,
+  FeatherTag,
+  FeatherTrash,
+  FeatherX,
+} from "@subframe/core";
 import * as SubframeCore from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { Badge } from "./Badge";
@@ -52,7 +57,7 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
     return (
       <div
         className={SubframeUtils.twClassNames(
-          "flex w-full flex-col items-start gap-2 overflow-x-auto touch-scroll-x rounded-md border border-solid border-neutral-border bg-neutral-50 px-3 sm:px-4 py-4",
+          "flex w-full flex-col items-start gap-2 overflow-x-auto touch-scroll-x rounded-md border border-solid border-neutral-border bg-sidebar-background shadow-xs px-3 sm:px-4 py-4",
           className
         )}
         ref={ref}
@@ -63,12 +68,12 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
           header={
             <Table.HeaderRow>
               <Table.HeaderCell className="min-w-[140px]">Email</Table.HeaderCell>
-              <Table.HeaderCell className="min-w-[100px]">Role</Table.HeaderCell>
-              <Table.HeaderCell className="hidden sm:table-cell min-w-[90px]">Route Access</Table.HeaderCell>
+              <Table.HeaderCell className="min-w-[130px] justify-center text-center">Role</Table.HeaderCell>
+              <Table.HeaderCell className="hidden sm:table-cell min-w-[110px] justify-center text-center">Route Access</Table.HeaderCell>
               <Table.HeaderCell className="hidden md:table-cell min-w-[100px]">Region</Table.HeaderCell>
               <Table.HeaderCell className="hidden lg:table-cell min-w-[120px]">Organization</Table.HeaderCell>
               <Table.HeaderCell className="hidden md:table-cell min-w-[100px]">Depot</Table.HeaderCell>
-              <Table.HeaderCell className="min-w-[80px]">Active</Table.HeaderCell>
+              <Table.HeaderCell className="min-w-[90px] justify-center text-center">Active</Table.HeaderCell>
               <Table.HeaderCell className="hidden xl:table-cell justify-center text-center min-w-[120px]">Created At</Table.HeaderCell>
               <Table.HeaderCell className="w-12 justify-end" />
             </Table.HeaderRow>
@@ -85,8 +90,8 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
                     {user.email}
                   </span>
                 </Table.Cell>
-                <Table.Cell className="min-w-[100px]">
-                  <Badge className="capitalize" variant="error" icon={<FeatherShieldCheck />}>
+                <Table.Cell className="min-w-[130px] justify-center text-center">
+                  <Badge className="capitalize" variant="brand" icon={<FeatherShieldCheck className="h-3 w-3" />}>
                     {user.role?.name === "master"
                       ? "Super Admin"
                       : user.role?.name
@@ -94,13 +99,13 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
                       : "—"}
                   </Badge>
                 </Table.Cell>
-                <Table.Cell className="hidden sm:table-cell min-w-[90px]">
+                <Table.Cell className="hidden sm:table-cell min-w-[110px] justify-center text-center">
                   {isSuper || routeAccess.isDualUser ? (
-                    <Badge variant="brand">V1 + V2</Badge>
+                    <Badge variant="brand" icon={<FeatherLayers className="h-3 w-3" />}>V1 + V2</Badge>
                   ) : routeAccess.isV1Only ? (
-                    <Badge variant="warning">V1 Only</Badge>
+                    <Badge variant="warning" icon={<FeatherTag className="h-3 w-3" />}>V1 Only</Badge>
                   ) : (
-                    <Badge variant="neutral">V2 Only</Badge>
+                    <Badge variant="neutral" icon={<FeatherTag className="h-3 w-3" />}>V2 Only</Badge>
                   )}
                 </Table.Cell>
                 <Table.Cell className="hidden md:table-cell min-w-[100px]">
@@ -120,8 +125,13 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
                     {user.depot?.name || "—"}
                   </span>
                 </Table.Cell>
-                <Table.Cell className="min-w-[80px]">
-                  <Badge variant={user.active ? "success" : "error"} icon={<FeatherCheck />}>{user.active ? "Active" : "Inactive"}</Badge>
+                <Table.Cell className="min-w-[90px] justify-center text-center">
+                  <Badge
+                    variant={user.active ? "success" : "error"}
+                    icon={user.active ? <FeatherCheck className="h-3 w-3" /> : <FeatherX className="h-3 w-3" />}
+                  >
+                    {user.active ? "Active" : "Inactive"}
+                  </Badge>
                 </Table.Cell>
                 <Table.Cell className="hidden xl:table-cell justify-center text-center min-w-[120px]">
                   <span className="whitespace-nowrap text-body font-body text-subtext-color font-mono text-xs">

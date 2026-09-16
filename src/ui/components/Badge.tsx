@@ -31,7 +31,7 @@ const BadgeRoot = React.forwardRef<HTMLDivElement, BadgeRootProps>(
     return (
       <div
         className={SubframeUtils.twClassNames(
-          "group/97bdb082 flex h-6 items-center gap-1 rounded-md border border-solid border-brand-100 bg-brand-100 px-2",
+          "group/97bdb082 inline-flex w-fit flex-none h-6 items-center justify-center gap-1 rounded-md border border-solid border-brand-100 bg-brand-100 px-2",
           {
             "border border-solid border-success-100 bg-success-100":
               variant === "success",
