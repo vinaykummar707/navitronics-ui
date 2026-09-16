@@ -74,7 +74,7 @@ function OrganizationsPage() {
         </div>
       )}
       {!isLoading && !isError && organizations.length > 0 && (
-        <div className="flex w-full flex-col items-start overflow-x-auto rounded-md border border-solid border-neutral-border bg-neutral-50">
+        <div className="flex w-full flex-col items-start overflow-x-auto rounded-md border border-solid border-neutral-border bg-neutral-50 touch-scroll-x">
           <Table
             header={
               <Table.HeaderRow>

@@ -214,7 +214,7 @@ export const SlidePropertyInspector = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex h-full w-[360px] min-w-[360px] max-w-[360px] flex-none flex-col border-l border-solid border-neutral-border bg-sidebar-background shadow-md overflow-hidden select-none",
+        "fixed xl:relative inset-y-0 right-0 z-40 xl:z-auto flex h-full w-[360px] max-w-[90vw] sm:max-w-[360px] flex-none flex-col border-l border-solid border-neutral-border bg-sidebar-background shadow-2xl xl:shadow-md overflow-hidden select-none pb-safe",
         className
       )}
       ref={ref}

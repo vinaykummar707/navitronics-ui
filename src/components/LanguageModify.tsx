@@ -144,25 +144,17 @@ const LanguageManagement = () => {
 
 
 	return (
-		<div className=" gap-4 w-full flex p-4 h-full overflow-hidden">
-			{/* {error && (
-				<div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-					Error: {error}
-				</div>
-			)} */}
-
-			
-
+		<div className="gap-4 w-full flex flex-col lg:flex-row p-2 sm:p-4 h-full overflow-y-auto lg:overflow-hidden">
 			<DisplaySettings
 				isEdit={isEditing}
 				initialData={selectedLanguage}
 				onOperationComplete={onOperationComplete}
 			/>
 
-			<div className="flex-1 flex flex-col   gap-4">
+			<div className="flex-1 flex flex-col gap-4 min-w-0">
 				{/* Languages List */}
-				<div className="">
-					<div className="bg-white overflow-y-auto rounded-lg shadow overflow-hidden">
+				<div>
+					<div className="bg-white overflow-hidden rounded-lg shadow">
 						<div className="flex justify-between items-center p-4 border-b">
 			
 							<h2 className="text-xl font-semibold">Languages</h2>

@@ -52,24 +52,25 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
     return (
       <div
         className={SubframeUtils.twClassNames(
-          "flex w-full flex-col items-start gap-2 overflow-auto rounded-md border border-solid border-neutral-border bg-neutral-50 px-4 py-4",
+          "flex w-full flex-col items-start gap-2 overflow-x-auto touch-scroll-x rounded-md border border-solid border-neutral-border bg-neutral-50 px-3 sm:px-4 py-4",
           className
         )}
         ref={ref}
         {...otherProps}
       >
         <Table
+          className="touch-scroll-x"
           header={
             <Table.HeaderRow>
-              <Table.HeaderCell>Email</Table.HeaderCell>
-              <Table.HeaderCell>Role</Table.HeaderCell>
-              <Table.HeaderCell>Route Access</Table.HeaderCell>
-              <Table.HeaderCell>Region</Table.HeaderCell>
-              <Table.HeaderCell>Organization</Table.HeaderCell>
-              <Table.HeaderCell>Depot</Table.HeaderCell>
-              <Table.HeaderCell>Active</Table.HeaderCell>
-              <Table.HeaderCell className="justify-center text-center">Created At</Table.HeaderCell>
-              <Table.HeaderCell />
+              <Table.HeaderCell className="min-w-[140px]">Email</Table.HeaderCell>
+              <Table.HeaderCell className="min-w-[100px]">Role</Table.HeaderCell>
+              <Table.HeaderCell className="hidden sm:table-cell min-w-[90px]">Route Access</Table.HeaderCell>
+              <Table.HeaderCell className="hidden md:table-cell min-w-[100px]">Region</Table.HeaderCell>
+              <Table.HeaderCell className="hidden lg:table-cell min-w-[120px]">Organization</Table.HeaderCell>
+              <Table.HeaderCell className="hidden md:table-cell min-w-[100px]">Depot</Table.HeaderCell>
+              <Table.HeaderCell className="min-w-[80px]">Active</Table.HeaderCell>
+              <Table.HeaderCell className="hidden xl:table-cell justify-center text-center min-w-[120px]">Created At</Table.HeaderCell>
+              <Table.HeaderCell className="w-12 justify-end" />
             </Table.HeaderRow>
           }
         >
@@ -79,12 +80,12 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
 
             return (
               <Table.Row key={user.id || user.user_id}>
-                <Table.Cell>
+                <Table.Cell className="min-w-[140px]">
                   <span className="whitespace-nowrap text-body-bold font-body-bold text-default-font">
                     {user.email}
                   </span>
                 </Table.Cell>
-                <Table.Cell>
+                <Table.Cell className="min-w-[100px]">
                   <Badge className="capitalize" variant="error" icon={<FeatherShieldCheck />}>
                     {user.role?.name === "master"
                       ? "Super Admin"
@@ -93,7 +94,7 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
                       : "—"}
                   </Badge>
                 </Table.Cell>
-                <Table.Cell>
+                <Table.Cell className="hidden sm:table-cell min-w-[90px]">
                   {isSuper || routeAccess.isDualUser ? (
                     <Badge variant="brand">V1 + V2</Badge>
                   ) : routeAccess.isV1Only ? (
@@ -102,32 +103,32 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
                     <Badge variant="neutral">V2 Only</Badge>
                   )}
                 </Table.Cell>
-                <Table.Cell>
+                <Table.Cell className="hidden md:table-cell min-w-[100px]">
                   <span className="whitespace-nowrap text-body font-body text-default-font text-subtext-color">
                     {user.region?.name || "—"}
                   </span>
                 </Table.Cell>
-                <Table.Cell>
+                <Table.Cell className="hidden lg:table-cell min-w-[120px]">
                   <div className="flex items-center gap-2">
                     <span className="whitespace-nowrap text-body font-body text-default-font text-subtext-color">
                       {user.organization?.name || "—"}
                     </span>
                   </div>
                 </Table.Cell>
-                <Table.Cell>
+                <Table.Cell className="hidden md:table-cell min-w-[100px]">
                   <span className="whitespace-nowrap text-body font-body text-subtext-color ">
                     {user.depot?.name || "—"}
                   </span>
                 </Table.Cell>
-                <Table.Cell>
+                <Table.Cell className="min-w-[80px]">
                   <Badge variant={user.active ? "success" : "error"} icon={<FeatherCheck />}>{user.active ? "Active" : "Inactive"}</Badge>
                 </Table.Cell>
-                <Table.Cell className="justify-center text-center">
+                <Table.Cell className="hidden xl:table-cell justify-center text-center min-w-[120px]">
                   <span className="whitespace-nowrap text-body font-body text-subtext-color font-mono text-xs">
                     {formatCreatedAt(user.created_at)}
                   </span>
                 </Table.Cell>
-                <Table.Cell>
+                <Table.Cell className="w-12 justify-end">
                   <div className="flex grow shrink-0 basis-0 items-center justify-end">
                     <OptionsDropdown
                       isDisabled={user.role?.name === "master"}

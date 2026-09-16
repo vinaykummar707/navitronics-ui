@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { Button } from "@/ui/components/Button";
-import { FeatherExternalLink } from "@subframe/core";
+import { FeatherChevronLeft, FeatherExternalLink } from "@subframe/core";
 import { toast } from "react-toastify";
 
 interface RouteParams extends Record<string, string> {
@@ -59,26 +59,39 @@ export const CreateRoutePageV1: React.FC = () => {
   }, [navigate, queryClient, isEdit]);
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-default-background">
+    <div className="flex h-[100dvh] min-h-[100dvh] w-full flex-col overflow-hidden bg-default-background pt-safe pb-safe">
       {/* Top Header Bar */}
-      <div className="flex h-12 w-full items-center justify-between border-b border-solid border-neutral-border bg-default-background px-4 py-2 flex-none z-10 shadow-sm">
-        <div className="flex items-center gap-2">
-          <span className="text-body-bold font-body-bold text-default-font">
-            {isEdit ? "Edit Route (V1 Live Simulator)" : "Route Creation (V1 Live Simulator)"}
+      <div className="flex min-h-[48px] w-full items-center justify-between border-b border-solid border-neutral-border bg-default-background px-2.5 sm:px-4 py-2 flex-none z-10 shadow-sm gap-2 flex-wrap sm:flex-nowrap">
+        <div className="flex items-center gap-2 min-w-0">
+          <Button
+            variant="neutral-secondary"
+            size="small"
+            className="h-8 text-xs font-medium px-2.5 sm:px-3 shrink-0"
+            icon={<FeatherChevronLeft className="h-3.5 w-3.5" />}
+            onClick={() => navigate("/home/routes")}
+            title="Return to Routes list"
+          >
+            <span className="hidden sm:inline">Back</span>
+          </Button>
+          <span className="text-body-bold font-body-bold text-default-font truncate text-xs sm:text-sm">
+            {isEdit ? "Edit Route (V1 Simulator)" : "Create Route (V1 Simulator)"}
           </span>
-          <span className="inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-700 border border-brand-200">
-            V1 Live App (Supabase)
+          <span className="hidden md:inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-700 border border-brand-200 shrink-0">
+            V1 Live App
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <Button
             variant="neutral-secondary"
-            icon={<FeatherExternalLink />}
+            size="small"
+            className="h-8 text-xs px-2 sm:px-3"
+            icon={<FeatherExternalLink className="h-3.5 w-3.5" />}
             onClick={() => window.open(iframeSrc, "_blank")}
             title="Open in new window"
           >
-            Open Standalone
+            <span className="hidden sm:inline">Open Standalone</span>
+            <span className="sm:hidden">External</span>
           </Button>
         </div>
       </div>

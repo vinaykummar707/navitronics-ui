@@ -29,14 +29,14 @@ const PageHeader: React.FC<PageHeaderProps> = ({
         {title}
       </span>
       <span className="text-body font-body text-subtext-color">{subtitle}</span>
-      <div className="grid grid-cols-1 items-end justify-between gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 w-full">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full mt-1">
         <span className="text-caption font-caption text-subtext-color">
           Showing {count} records
         </span>
-        <div className="flex justify-end items-center col-span-4 gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-start sm:justify-end flex-wrap">
           <Button
             variant="neutral-secondary"
-            className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
+            className="h-9 sm:h-8 flex-1 sm:flex-none"
             icon={<FeatherRefreshCw />}
             onClick={() => {
               toast.success(`${title} refreshed successfully`);
@@ -47,8 +47,8 @@ const PageHeader: React.FC<PageHeaderProps> = ({
           </Button>
           <RBAC features={[]} roles={roles}>
             <Button
-            variant="brand-primary"
-              className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
+              variant="brand-primary"
+              className="h-9 sm:h-8 flex-1 sm:flex-none"
               icon={<FeatherPlus />}
               onClick={onAdd}
             >

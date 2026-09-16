@@ -112,7 +112,7 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
   return (
     <form
       className={SubframeUtils.twClassNames(
-        "flex h-full w-full flex-col items-start gap-4 bg-default-background px-6 py-6",
+        "flex h-full w-full flex-col items-start gap-4 bg-default-background px-4 py-4 sm:px-6 sm:py-6 overflow-y-auto",
         className,
       )}
       ref={ref}

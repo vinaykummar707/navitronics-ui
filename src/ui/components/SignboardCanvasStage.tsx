@@ -87,7 +87,7 @@ export const SignboardCanvasStage = React.forwardRef<
 
   // Zoom handlers
   const handleZoomIn = () => setZoom((prev) => Math.min(175, prev + 15));
-  const handleZoomOut = () => setZoom((prev) => Math.max(40, prev - 15));
+  const handleZoomOut = () => setZoom((prev) => Math.max(10, prev - 15));
   const handleResetZoom = () => setZoom(100);
   const handleFitToScreen = () => {
     if (stageRef.current && currentSimulation) {
@@ -258,7 +258,7 @@ export const SignboardCanvasStage = React.forwardRef<
       <TabsPanel />
 
       {/* 2. Stage Action Header */}
-      <div className="flex w-full flex-none items-center justify-between border-b border-solid border-neutral-border bg-sidebar-background/60 px-4 py-2">
+      <div className="flex w-full flex-none items-center justify-between border-b border-solid border-neutral-border bg-sidebar-background/60 px-3 sm:px-4 py-2 gap-2 flex-wrap sm:flex-nowrap">
         <div className="flex items-center gap-2 flex-wrap">
           {selectedTab !== Tab.STOPS && (
             <SubframeCore.DropdownMenu.Root>
@@ -367,7 +367,7 @@ export const SignboardCanvasStage = React.forwardRef<
             icon={<FeatherMinus className="h-3.5 w-3.5" />}
             title="Zoom Out"
             onClick={handleZoomOut}
-            disabled={zoom <= 50}
+            disabled={zoom <= 10}
           />
           <button
             type="button"
@@ -401,7 +401,7 @@ export const SignboardCanvasStage = React.forwardRef<
       {/* 3. Main Stage Canvas (Centered Stage + Slide Loop Strip) */}
       <div
         ref={stageRef}
-        className="relative flex-1 min-h-0 w-full overflow-auto p-6 flex flex-col items-center justify-between gap-6"
+        className="relative flex-1 min-h-0 w-full overflow-auto p-3 sm:p-6 flex flex-col items-center justify-between gap-4 sm:gap-6"
         style={{
           backgroundImage: "radial-gradient(rgba(136, 153, 177, 0.15) 1px, transparent 1px)",
           backgroundSize: "24px 24px",
@@ -517,7 +517,7 @@ export const SignboardCanvasStage = React.forwardRef<
             </div>
 
             {/* Slide Cards Filmstrip */}
-            <div className="flex items-center gap-3 overflow-x-auto pb-1 pt-1 no-scrollbar">
+            <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-1 pt-1 no-scrollbar touch-scroll-x">
               {simulations.map((sim, index) => {
                 const isSelected = index === selectedSimulationIndex;
                 const text =
@@ -532,7 +532,7 @@ export const SignboardCanvasStage = React.forwardRef<
                     key={`${selectedTab}_${index}`}
                     onClick={() => setSelectedSimulationIndex(index)}
                     className={SubframeUtils.twClassNames(
-                      "flex flex-col flex-none w-56 p-2.5 rounded-xl border transition-all cursor-pointer shadow-xs select-none",
+                      "flex flex-col flex-none w-48 sm:w-56 p-2.5 rounded-xl border transition-all cursor-pointer shadow-xs select-none",
                       isSelected
                         ? "border-brand-primary ring-2 ring-brand-primary/50 bg-neutral-0/60 shadow-md"
                         : "border-neutral-border bg-neutral-100/60 hover:border-neutral-300/40 hover:bg-neutral-100/90"

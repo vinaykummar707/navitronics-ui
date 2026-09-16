@@ -143,97 +143,103 @@ const RouteCreationHeaderRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex h-13 w-full items-center justify-between border-b border-solid border-neutral-border bg-sidebar-background px-3 py-2 select-none",
+        "flex min-h-[52px] w-full items-center justify-between border-b border-solid border-neutral-border bg-sidebar-background px-2.5 sm:px-4 py-1.5 sm:py-2 select-none gap-2 shrink-0 pt-safe",
         className,
       )}
       ref={ref}
       {...otherProps}
     >
       {/* Left: Back Action & Live Route Identity */}
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <Button
           variant="neutral-secondary"
           size="small"
-          className="h-8 text-xs font-medium px-3"
+          className="h-8 text-xs font-medium px-2 sm:px-3"
           icon={<FeatherChevronLeft className="h-3.5 w-3.5" />}
           onClick={handleBackClick}
           title="Return to Routes list"
         >
-          Back
+          <span className="hidden sm:inline">Back</span>
         </Button>
 
         {formState.isDirty && !hasBeenSaved && (
           <span
-            className="flex h-2 w-2 rounded-full bg-amber-400 animate-pulse"
+            className="flex h-2 w-2 rounded-full bg-amber-400 animate-pulse shrink-0"
             title="Unsaved changes"
           />
         )}
 
-        <div className="hidden sm:flex items-center gap-2 border-l border-neutral-border pl-3">
-          <span className="px-2 py-0.5 rounded bg-brand-500/10 border border-brand-500/20 text-brand-primary font-mono font-bold text-xs tracking-wider">
+        <div className="flex items-center gap-1.5 sm:gap-2 border-l border-neutral-border pl-2 sm:pl-3 min-w-0">
+          <span className="px-2 py-0.5 rounded bg-brand-500/10 border border-brand-500/20 text-brand-primary font-mono font-bold text-xs tracking-wider shrink-0">
             {displayRouteNum}
           </span>
-          <div className="flex items-center gap-1.5 text-xs text-default-font font-medium truncate max-w-[280px]">
+          <div className="hidden md:flex items-center gap-1.5 text-xs text-default-font font-medium truncate max-w-[180px] lg:max-w-[280px]">
             <span className="truncate">{source || "Origin"}</span>
             <span className="text-brand-primary font-bold">➔</span>
             <span className="truncate">{destination || "Terminus"}</span>
           </div>
           {isReturn && (
-            <span className="px-1.5 py-0.5 rounded bg-warning-500/10 text-warning-400 text-[10px] uppercase font-bold tracking-wider">
+            <span className="hidden sm:inline-flex px-1.5 py-0.5 rounded bg-warning-500/10 text-warning-400 text-[10px] uppercase font-bold tracking-wider shrink-0">
               Return
             </span>
           )}
         </div>
       </div>
 
-      {/* Center Studio Title */}
-      <div className="flex items-center gap-2 px-2">
+      {/* Center Studio Title (Hidden on smaller displays to prevent button collision) */}
+      <div className="hidden xl:flex items-center gap-2 px-2 shrink-0">
         <span className="text-caption-bold font-caption-bold text-default-font uppercase tracking-wider text-[11px] text-subtext-color">
           {mode === "edit" ? "Route Editor Studio" : "Route Creation Studio"}
         </span>
       </div>
 
       {/* Right: Actions */}
-      <div className="flex items-center justify-end gap-2 flex-wrap">
-        <Button
-          variant="neutral-secondary"
-          size="small"
-          className="h-8 text-xs font-medium px-3"
-          icon={<FeatherDownload className="h-3.5 w-3.5" />}
-          onClick={handleExportRoute}
-          title="Export route configuration as JSON"
-        >
-          Export
-        </Button>
+      <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
+        <div className="hidden md:inline-flex">
+          <Button
+            variant="neutral-secondary"
+            size="small"
+            className="h-8 text-xs font-medium px-2.5 sm:px-3"
+            icon={<FeatherDownload className="h-3.5 w-3.5" />}
+            onClick={handleExportRoute}
+            title="Export route configuration as JSON"
+          >
+            Export
+          </Button>
+        </div>
 
-        <RBAC roles={["master"]} features={[]}>
-          <JsonViewerDialog
-            dialogTitle="Route Configuration JSON"
-            buttonLabel="JSON"
-            getJsonData={() => getValues()}
-          />
-        </RBAC>
+        <div className="hidden lg:inline-flex">
+          <RBAC roles={["master"]} features={[]}>
+            <JsonViewerDialog
+              dialogTitle="Route Configuration JSON"
+              buttonLabel="JSON"
+              getJsonData={() => getValues()}
+            />
+          </RBAC>
+        </div>
 
         <Button
           variant={isRoutePanelOpen ? "brand-secondary" : "neutral-secondary"}
           size="small"
-          className="h-8 text-xs font-medium px-3"
+          className="h-8 text-xs font-medium px-2 sm:px-3"
           icon={<FeatherRoute className="h-3.5 w-3.5" />}
           onClick={toggleRoutePanel}
           title={isRoutePanelOpen ? "Hide Route Info Panel" : "Show Route Info Panel"}
         >
-          Route Info
+          <span className="hidden sm:inline">Route Info</span>
+          <span className="sm:hidden">Info</span>
         </Button>
 
         <Button
           variant={isInspectorOpen ? "brand-secondary" : "neutral-secondary"}
           size="small"
-          className="h-8 text-xs font-medium px-3"
+          className="h-8 text-xs font-medium px-2 sm:px-3"
           icon={<FeatherSliders className="h-3.5 w-3.5" />}
           onClick={toggleInspector}
           title={isInspectorOpen ? "Hide Slide Inspector" : "Show Slide Inspector"}
         >
-          Slide Inspector
+          <span className="hidden sm:inline">Slide Inspector</span>
+          <span className="sm:hidden">Inspector</span>
         </Button>
 
         <Button
@@ -241,41 +247,52 @@ const RouteCreationHeaderRoot = React.forwardRef<
           onClick={handleSubmit(onSubmit)}
           variant="brand-primary"
           size="small"
-          className="h-8 text-xs font-medium px-3 shadow-xs"
+          className="h-8 text-xs font-medium px-2.5 sm:px-3 shadow-xs shrink-0"
           icon={<FeatherCloud className="h-3.5 w-3.5" />}
           disabled={isCreatingRoute || isUpdatingRoute}
           loading={isCreatingRoute || isUpdatingRoute}
         >
-          {mode === "create"
-            ? isCreatingRoute
-              ? "Saving..."
-              : "Save Route"
-            : isUpdatingRoute
-              ? "Updating..."
-              : "Update Route"}
+          <span>
+            {mode === "create"
+              ? isCreatingRoute
+                ? "Saving..."
+                : "Save Route"
+              : isUpdatingRoute
+                ? "Updating..."
+                : "Update Route"}
+          </span>
         </Button>
       </div>
 
       {/* Confirmation Dialog */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <Dialog.Content className="flex p-4 max-w-[300px] font-sans gap-4 flex-col">
-          <h1 className="text-lg font-sans">Unsaved Changes</h1>
-          <p>
+        <Dialog.Content className="flex p-4 sm:p-6 w-[90vw] max-w-[340px] font-sans gap-4 flex-col">
+          <h1 className="text-lg font-sans font-bold text-default-font">Unsaved Changes</h1>
+          <p className="text-sm text-subtext-color">
             You have unsaved changes. Are you sure you want to go back without
             saving?
           </p>
           <div className="flex flex-col gap-2 w-full">
             <Button
-              variant="neutral-secondary" className="w-full"
+              variant="neutral-secondary"
+              className="w-full"
               onClick={() => setShowConfirmDialog(false)}
             >
               Keep Editing
-          </Button>
-          <Button variant="neutral-secondary" className="w-full" onClick={handleConfirmGoBack}>
-            Go Back Without Saving
-          </Button>
-          <Button variant="brand-primary" className="w-full" onClick={handleConfirmSaveAndExit}>
-            Save and Exit
+            </Button>
+            <Button
+              variant="neutral-secondary"
+              className="w-full"
+              onClick={handleConfirmGoBack}
+            >
+              Go Back Without Saving
+            </Button>
+            <Button
+              variant="brand-primary"
+              className="w-full"
+              onClick={handleConfirmSaveAndExit}
+            >
+              Save and Exit
             </Button>
           </div>
         </Dialog.Content>

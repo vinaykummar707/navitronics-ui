@@ -1,0 +1,24 @@
+{
+  "name": "Navitronix Route Management System",
+  "short_name": "Navitronix RMS",
+  "description": "Navitronix Passenger Information & Route Management System",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f1522",
+  "theme_color": "#0f1522",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/assets/navitronix.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/navitronix.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

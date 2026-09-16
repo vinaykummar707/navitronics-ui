@@ -175,15 +175,15 @@ const UserLoginFormRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex min-h-screen w-full flex-col bg-default-background select-none",
+        "flex min-h-[100dvh] h-[100dvh] w-full max-w-full flex-col bg-default-background select-none overflow-hidden",
         className,
       )}
       ref={ref}
       {...otherProps}
     >
-      {/* Top Bar */}
-      <header className="flex h-14 w-full flex-none items-center justify-between border-b border-solid border-neutral-border bg-sidebar-background/90 px-4 sm:px-6 backdrop-blur-md z-20">
-        <div className="flex items-center gap-3">
+      {/* Top Bar with safe area */}
+      <header className="flex h-14 w-full flex-none items-center justify-between border-b border-solid border-neutral-border bg-sidebar-background/90 px-3 sm:px-6 backdrop-blur-md z-20 pt-safe">
+        <div className="flex items-center gap-2 sm:gap-3">
           <img
             className="h-8 w-8 rounded-full object-cover ring-1 ring-neutral-border flex-none"
             src="https://navitronix.in/assets/navitronix.jpeg"
@@ -225,7 +225,7 @@ const UserLoginFormRoot = React.forwardRef<
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[320px] rounded-full bg-brand-500/[0.08] blur-[120px] pointer-events-none" />
 
         {/* Centered Login Card */}
-        <div className="relative z-10 w-full max-w-[440px] rounded-2xl border border-neutral-border bg-sidebar-background/95 p-6 sm:p-8 shadow-2xl backdrop-blur-xl ring-1 ring-white/5 my-auto">
+        <div className="relative z-10 w-full max-w-[440px] rounded-2xl border border-neutral-border bg-sidebar-background/95 p-5 sm:p-8 shadow-2xl backdrop-blur-xl ring-1 ring-white/5 my-auto pb-safe">
           <div className="flex flex-col items-center text-center gap-2 mb-6">
             <div className="relative flex items-center justify-center mb-1">
               <div className="absolute -inset-1 rounded-2xl bg-brand-primary/20 blur-sm" />

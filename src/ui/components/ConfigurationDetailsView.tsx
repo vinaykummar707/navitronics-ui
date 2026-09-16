@@ -60,16 +60,16 @@ const ConfigurationDetailsViewRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex h-full w-full items-start rounded-md border border-solid border-neutral-border bg-neutral-50 overflow-hidden mobile:flex-col",
+        "flex h-full w-full flex-col md:flex-row items-start rounded-md border border-solid border-neutral-border bg-neutral-50 overflow-hidden",
         className
       )}
       ref={ref}
       {...otherProps}
     >
-      <div className="flex w-64 mobile:w-full flex-none flex-col items-start gap-4 self-stretch border-r border-solid border-neutral-border px-4 py-4 overflow-hidden">
+      <div className="flex w-full md:w-64 flex-none flex-col items-start gap-4 self-stretch border-b md:border-b-0 md:border-r border-solid border-neutral-border px-4 py-4 overflow-hidden">
         <div className="flex w-full flex-col items-start gap-2">
           {sidebarTitle ? (
-            <span className="text-heading-2 font-heading-2 text-default-font">
+            <span className="text-heading-3 md:text-heading-2 font-heading-2 text-default-font">
               {sidebarTitle}
             </span>
           ) : null}
@@ -80,14 +80,15 @@ const ConfigurationDetailsViewRoot = React.forwardRef<
           ) : null}
         </div>
        
-          <div className="flex w-full flex-col items-start  overflow-y-auto">
+          <div className="flex w-full flex-row md:flex-col items-start gap-1 overflow-x-auto md:overflow-y-auto touch-scroll-x py-1">
             {fontSettings && fontSettings.map((setting) => (
-            <LanguageItem className={`${selectedConfig?.id !== setting.id && "bg-neutral-50"} cursor-pointer`} onClick={() => setSelectedConfig(setting)} key={setting.id} language={setting.name} code={setting.code} />
+            <LanguageItem className={`${selectedConfig?.id !== setting.id && "bg-neutral-50"} cursor-pointer flex-none md:w-full`} onClick={() => setSelectedConfig(setting)} key={setting.id} language={setting.name} code={setting.code} />
           ))}
           </div>
         
       </div>
        {selectedConfig && <LanguageDetailsPanel
+        className="w-full flex-1 overflow-y-auto p-3 sm:p-4"
         languageName={languageName}
         optionsMenu={<OptionsDropdown onEdit={() => onEditConfig && onEditConfig(selectedConfig)} onDelete={() => {
           setSelectedConfig(null);

@@ -68,14 +68,14 @@ export default function UsersPage() {
           Manage user accounts, roles, and route access permissions
         </span>
       </div>
-      <div className="flex w-full items-center justify-between mobile:flex-col mobile:items-start gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
         <span className="text-caption font-caption text-subtext-color">
           Showing {usersData?.length || 0} records
         </span>
-        <div className="flex justify-end items-center col-span-4 gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <Button
             variant="neutral-secondary"
-            className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
+            className="h-9 sm:h-8 flex-1 sm:flex-none"
             icon={<FeatherRefreshCw />}
             onClick={() => {
               toast.success("Users refreshed successfully");
@@ -85,6 +85,7 @@ export default function UsersPage() {
             Refresh
           </Button>
           <Button
+            className="h-9 sm:h-8 flex-1 sm:flex-none"
             icon={<FeatherPlus />}
             onClick={() => {
               setOpen(true);

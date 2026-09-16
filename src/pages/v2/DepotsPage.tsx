@@ -108,60 +108,62 @@ export default function DepotsPage() {
           Manage transit depots and operational facilities for your regions
         </span>
       </div>
-      <div className="flex w-full items-center justify-between mobile:flex-col mobile:items-start gap-4">
+      <div className="flex w-full flex-col sm:flex-row sm:items-center justify-between gap-3">
         <span className="text-caption font-caption text-subtext-color">
           Showing {depots?.length ?? 0} records
         </span>
         {regions && regions.length > 0 && (
-          <div className="flex items-end gap-2">
-            <RBAC features={[]} roles={["depot_admin", "region_admin"]}>
-              <Select
-                className="h-auto  flex-none"
-                variant="outline"
-                label="Select Region"
-                placeholder="Select Region"
-                value={selectedRegion ? selectedRegion.id : ""}
-                onValueChange={(val) =>
-                  setDepotsPageRegion(
-                    regions.find((r) => r.id === val) || null,
-                  )
-                }
-              >
-                {regions
-                  .filter((region) => user?.region?.id === region.id)
-                  .map((region) => (
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2 w-full sm:w-auto">
+            <div className="w-full sm:w-56 flex-none">
+              <RBAC features={[]} roles={["depot_admin", "region_admin"]}>
+                <Select
+                  className="h-auto w-full flex-none"
+                  variant="outline"
+                  label="Select Region"
+                  placeholder="Select Region"
+                  value={selectedRegion ? selectedRegion.id : ""}
+                  onValueChange={(val) =>
+                    setDepotsPageRegion(
+                      regions.find((r) => r.id === val) || null,
+                    )
+                  }
+                >
+                  {regions
+                    .filter((region) => user?.region?.id === region.id)
+                    .map((region) => (
+                      <Select.Item key={region.id} value={region.id}>
+                        {region.name}
+                      </Select.Item>
+                    ))}
+                </Select>
+              </RBAC>
+
+              <RBAC features={[]} roles={["master", "organization_admin"]}>
+                <Select
+                  className="h-auto w-full flex-none"
+                  variant="outline"
+                  label="Select Region"
+                  placeholder="Select Region"
+                  value={selectedRegion ? selectedRegion.id : ""}
+                  onValueChange={(val) =>
+                    setDepotsPageRegion(
+                      regions.find((r) => r.id === val) || null,
+                    )
+                  }
+                >
+                  {regions.map((region) => (
                     <Select.Item key={region.id} value={region.id}>
                       {region.name}
                     </Select.Item>
                   ))}
-              </Select>
-            </RBAC>
+                </Select>
+              </RBAC>
+            </div>
 
-            <RBAC features={[]} roles={["master", "organization_admin"]}>
-              <Select
-                className="h-auto  flex-none"
-                variant="outline"
-                label="Select Region"
-                placeholder="Select Region"
-                value={selectedRegion ? selectedRegion.id : ""}
-                onValueChange={(val) =>
-                  setDepotsPageRegion(
-                    regions.find((r) => r.id === val) || null,
-                  )
-                }
-              >
-                {regions.map((region) => (
-                  <Select.Item key={region.id} value={region.id}>
-                    {region.name}
-                  </Select.Item>
-                ))}
-              </Select>
-            </RBAC>
-
-            <div className="flex justify-end items-center col-span-4 gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <Button
                 variant="neutral-secondary"
-                className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
+                className="h-9 sm:h-8 flex-1 sm:flex-none"
                 icon={<FeatherRefreshCw />}
                 onClick={() => {
                   toast.success("Depots refreshed successfully");
@@ -176,6 +178,7 @@ export default function DepotsPage() {
                 roles={["region_admin", "organization_admin", "master"]}
               >
                 <Button
+                  className="h-9 sm:h-8 flex-1 sm:flex-none"
                   icon={<FeatherPlus />}
                   disabled={!selectedRegion}
                   onClick={() => {
@@ -191,7 +194,7 @@ export default function DepotsPage() {
         )}
       </div>
       {depots && depots.length > 0 ? (
-        <div className="flex w-full flex-col items-start overflow-x-auto rounded-md border border-solid border-neutral-border bg-neutral-50">
+        <div className="flex w-full flex-col items-start overflow-x-auto touch-scroll-x rounded-md border border-solid border-neutral-border bg-neutral-50">
           <Table
             header={
               <Table.HeaderRow>

@@ -56,13 +56,13 @@ const TabsPanelRoot = React.forwardRef<HTMLDivElement, TabsPanelRootProps>(
     return (
       <div
         className={SubframeUtils.twClassNames(
-          "flex h-12 w-full items-center justify-between border-b border-solid border-neutral-border bg-sidebar-background px-2 select-none",
+          "flex h-12 w-full items-center justify-between border-b border-solid border-neutral-border bg-sidebar-background px-2 select-none overflow-x-auto no-scrollbar touch-scroll-x gap-2",
           className,
         )}
         ref={ref}
         {...otherProps}
       >
-        <Tabs className="h-12 w-auto flex-none">
+        <Tabs className="h-12 w-auto flex-none flex-nowrap shrink-0">
           <Tabs.Item
             active={selectedTab === Tab.FRONT}
             onClick={() => setSelectedTab(Tab.FRONT)}

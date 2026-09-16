@@ -66,7 +66,7 @@ export const RouteSpecificationPanel = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex h-full w-[320px] min-w-[320px] max-w-[320px] flex-none flex-col border-r border-solid border-neutral-border bg-sidebar-background shadow-md overflow-hidden select-none",
+        "fixed xl:relative inset-y-0 left-0 z-40 xl:z-auto flex h-full w-[320px] max-w-[85vw] sm:max-w-[320px] flex-none flex-col border-r border-solid border-neutral-border bg-sidebar-background shadow-2xl xl:shadow-md overflow-hidden select-none pb-safe",
         className
       )}
       ref={ref}

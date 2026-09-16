@@ -4,8 +4,10 @@ import { create } from "zustand";
 interface ToggleState {
     isRoutePanelOpen: boolean;
     toggleRoutePanel: () => void;
+    setRoutePanelOpen: (open: boolean) => void;
     isInspectorOpen: boolean;
     toggleInspector: () => void;
+    setInspectorOpen: (open: boolean) => void;
     isSimulationSettingsPanelOpen: boolean;
     isTextSettingsPanelOpen: boolean;
     isRouteSettingsPanelOpen: boolean;
@@ -14,13 +16,19 @@ interface ToggleState {
     toggleRouteSettingsPanel: () => void;
     showSidebar: boolean;
     toggleSidebar: () => void;
+    setSidebarOpen: (open: boolean) => void;
+    isMobileMenuOpen: boolean;
+    toggleMobileMenu: () => void;
+    setMobileMenuOpen: (open: boolean) => void;
 }
 
 const useToggleStore = create<ToggleState>((set) => ({
     isRoutePanelOpen: true,
     toggleRoutePanel: () => set((state) => ({ isRoutePanelOpen: !state.isRoutePanelOpen })),
+    setRoutePanelOpen: (open: boolean) => set({ isRoutePanelOpen: open }),
     isInspectorOpen: true,
     toggleInspector: () => set((state) => ({ isInspectorOpen: !state.isInspectorOpen })),
+    setInspectorOpen: (open: boolean) => set({ isInspectorOpen: open }),
     isSimulationSettingsPanelOpen: true,
     isTextSettingsPanelOpen: true,
     isRouteSettingsPanelOpen: true,
@@ -29,6 +37,10 @@ const useToggleStore = create<ToggleState>((set) => ({
     toggleRouteSettingsPanel: () => set((state) => ({ isRouteSettingsPanelOpen: !state.isRouteSettingsPanelOpen })),
     showSidebar: true,
     toggleSidebar: () => set((state) => ({ showSidebar: !state.showSidebar })),
+    setSidebarOpen: (open: boolean) => set({ showSidebar: open }),
+    isMobileMenuOpen: false,
+    toggleMobileMenu: () => set((state) => ({ isMobileMenuOpen: !state.isMobileMenuOpen })),
+    setMobileMenuOpen: (open: boolean) => set({ isMobileMenuOpen: open }),
 }));
 
 export default useToggleStore;

@@ -1,6 +1,7 @@
 import { defaultDisplayConfigPostRequest } from "@/constants/defaultRouteValues";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
 import useSimulationStore from "@/store/useSimulationStore";
+import useToggleStore from "@/store/useToggleStore";
 import { supabase } from "@/supabaseClient";
 import { IRouteCreate } from "@/types/IRoute";
 import { DisplayConfigPostRequest } from "@/types/routeConfigV2";
@@ -36,6 +37,14 @@ const RouteCreatePage: React.FC = ({ initialData }) => {
   });
 
   const reset = methods.reset;
+
+  // On mount: If screen width < 1280px (mobile/tablet), collapse overlay panels so canvas is immediately visible
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 1280) {
+      useToggleStore.getState().setRoutePanelOpen(false);
+      useToggleStore.getState().setInspectorOpen(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (routeId) {
@@ -88,7 +97,7 @@ const RouteCreatePage: React.FC = ({ initialData }) => {
 
   return (
     <FormProvider {...methods}>
-      <div className=" bg-default-background h-screen w-screen overflow-hidden">
+      <div className="bg-default-background h-[100dvh] min-h-[100dvh] w-full overflow-hidden">
         <RouteCreationLayout mode={mode} />
       </div>
     </FormProvider>

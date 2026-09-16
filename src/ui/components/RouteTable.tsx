@@ -62,10 +62,10 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
         {...otherProps}
       >
         <Table
-          className="overflow-auto"
+          className="overflow-auto touch-scroll-x"
           header={
             <Table.HeaderRow>
-              <Table.HeaderCell >
+              <Table.HeaderCell className="w-10">
                 <Checkbox
                   label=""
                   checked={
@@ -84,21 +84,21 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
                   }}
                 />
               </Table.HeaderCell>
-              <Table.HeaderCell>Route No</Table.HeaderCell>
-              <Table.HeaderCell>Source</Table.HeaderCell>
-              <Table.HeaderCell>Destination</Table.HeaderCell>
-              <Table.HeaderCell>Split Route</Table.HeaderCell>
-              <Table.HeaderCell>Return</Table.HeaderCell>
-              <Table.HeaderCell>Version</Table.HeaderCell>
-              <Table.HeaderCell>Created At</Table.HeaderCell>
-              <Table.HeaderCell>Created By</Table.HeaderCell>
-              <Table.HeaderCell />
+              <Table.HeaderCell className="min-w-[100px]">Route No</Table.HeaderCell>
+              <Table.HeaderCell className="min-w-[120px]">Source</Table.HeaderCell>
+              <Table.HeaderCell className="min-w-[120px]">Destination</Table.HeaderCell>
+              <Table.HeaderCell className="hidden md:table-cell min-w-[90px]">Split Route</Table.HeaderCell>
+              <Table.HeaderCell className="hidden md:table-cell min-w-[80px]">Return</Table.HeaderCell>
+              <Table.HeaderCell className="hidden sm:table-cell min-w-[70px]">Version</Table.HeaderCell>
+              <Table.HeaderCell className="hidden lg:table-cell min-w-[110px]">Created At</Table.HeaderCell>
+              <Table.HeaderCell className="hidden xl:table-cell min-w-[140px]">Created By</Table.HeaderCell>
+              <Table.HeaderCell className="w-12 justify-end" />
             </Table.HeaderRow>
           }
         >
           {routes?.map((route: IRoute) => (
             <Table.Row key={route.id}>
-              <Table.Cell>
+              <Table.Cell className="w-10">
                 <Checkbox
                   label=""
                   checked={selectedSet.has(route.id)}
@@ -107,41 +107,41 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
                   }}
                 />
               </Table.Cell>
-              <Table.Cell>
+              <Table.Cell className="min-w-[100px]">
                 <span className="whitespace-nowrap text-body-bold font-body-bold text-default-font">
                   {!route.is_split_route
                     ? `${route.route_number}`
                     : `${route.route_number_1} - ${route.route_number_2}`}
                 </span>
               </Table.Cell>
-              <Table.Cell>
+              <Table.Cell className="min-w-[120px]">
                 <span className="whitespace-nowrap text-body font-body text-neutral-500">
                   {route.source}
                 </span>
               </Table.Cell>
-              <Table.Cell>
+              <Table.Cell className="min-w-[120px]">
                 <span className="whitespace-nowrap text-body font-body text-neutral-500">
                   {route.destination}
                 </span>
               </Table.Cell>
-              <Table.Cell>
+              <Table.Cell className="hidden md:table-cell min-w-[90px]">
                 <Badge variant={route.is_split_route ? "brand" : "error"}>
                   {" "}
                   {route.is_split_route ? "Yes" : "No"}{" "}
                 </Badge>
               </Table.Cell>
 
-              <Table.Cell>
+              <Table.Cell className="hidden md:table-cell min-w-[80px]">
                 <Badge variant={route.return ? "brand" : "error"}>
                   {route.return ? "Yes" : "No"}
                 </Badge>
               </Table.Cell>
-              <Table.Cell>
+              <Table.Cell className="hidden sm:table-cell min-w-[70px]">
                 <span className="whitespace-nowrap text-body font-body text-default-font">
                   {route.version}
                 </span>
               </Table.Cell>
-              <Table.Cell>
+              <Table.Cell className="hidden lg:table-cell min-w-[110px]">
                 <span className="whitespace-nowrap text-body font-body text-neutral-500">
                   {new Date(route.created_at).toLocaleDateString("en-US", {
                     year: "numeric",
@@ -150,13 +150,13 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
                   })}
                 </span>
               </Table.Cell>
-              <Table.Cell>
+              <Table.Cell className="hidden xl:table-cell min-w-[140px]">
                 <span className="whitespace-nowrap text-body font-body flex items-center gap-1.5 text-default-font">
                   <Avvvatars value={route.created_by_user?.email || "Unknown"} size={20} style="shape" />
                   {route.created_by_user?.email || "Unknown"}
                 </span>
               </Table.Cell>
-              <Table.Cell>
+              <Table.Cell className="w-12 justify-end">
                 <div className="flex grow shrink-0 basis-0 items-center justify-end">
                   <SubframeCore.DropdownMenu.Root>
                     <SubframeCore.DropdownMenu.Trigger asChild={true}>

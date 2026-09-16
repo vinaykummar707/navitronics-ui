@@ -310,14 +310,14 @@ export default function StopsPage() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex w-full items-center justify-between mobile:flex-col mobile:items-start gap-4">
-        <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-caption font-caption text-subtext-color">
+      <div className="flex w-full flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+          <span className="text-caption font-caption text-subtext-color whitespace-nowrap">
             Showing {filteredStops.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} -{" "}
             {Math.min(currentPage * pageSize, filteredStops.length)} of {filteredStops.length} records
           </span>
           <TextField
-            className="h-9 w-64"
+            className="h-9 w-full sm:w-64 flex-none"
             variant="filled"
             icon={<FeatherSearch />}
             helpText=""
@@ -331,75 +331,80 @@ export default function StopsPage() {
         </div>
 
         {hasRegions && (
-          <div className="flex items-end gap-2 mobile:grid mobile:grid-cols-2 mobile:w-full">
-            {/* Region Select — restricted roles */}
-            <RBAC features={[]} roles={["depot_admin", "region_admin"]}>
-              <RegionSelect
-                regions={regions.filter((r) => user?.region?.id === r.id)}
-                selectedRegionId={selectedRegion?.id ?? ""}
-                onValueChange={handleRegionChange}
-              />
-            </RBAC>
-
-            {/* Region Select — admin roles */}
-            <RBAC features={[]} roles={["master", "organization_admin"]}>
-              <RegionSelect
-                regions={regions}
-                selectedRegionId={selectedRegion?.id ?? ""}
-                onValueChange={handleRegionChange}
-              />
-            </RBAC>
-
-            {/* Depot Select */}
-            {hasDepots && (
-              <RBAC features={[]} roles={["master", "organization_admin", "region_admin"]}>
-                <Select
-                  className="h-auto flex-none"
-                  variant="outline"
-                  label="Select Depot"
-                  placeholder="Select Depot"
-                  value={selectedDepot?.id ?? ""}
-                  onValueChange={handleDepotChange}
-                >
-                  {depots.map((depot) => (
-                    <Select.Item key={depot.id} value={depot.id}>
-                      {depot.name}
-                    </Select.Item>
-                  ))}
-                </Select>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2 w-full lg:w-auto">
+            <div className="flex items-center gap-2 flex-1 sm:flex-none">
+              {/* Region Select — restricted roles */}
+              <RBAC features={[]} roles={["depot_admin", "region_admin"]}>
+                <RegionSelect
+                  regions={regions.filter((r) => user?.region?.id === r.id)}
+                  selectedRegionId={selectedRegion?.id ?? ""}
+                  onValueChange={handleRegionChange}
+                />
               </RBAC>
-            )}
 
-            <Button
-              variant="neutral-secondary"
-              className="mobile:h-8 mobile:grow mobile:shrink-0 mobile:basis-0"
-              icon={<FeatherRefreshCw />}
-              onClick={() => {
-                toast.success("Stops refreshed successfully");
-                refetchStops();
-              }}
-            >
-              Refresh
-            </Button>
+              {/* Region Select — admin roles */}
+              <RBAC features={[]} roles={["master", "organization_admin"]}>
+                <RegionSelect
+                  regions={regions}
+                  selectedRegionId={selectedRegion?.id ?? ""}
+                  onValueChange={handleRegionChange}
+                />
+              </RBAC>
 
-            <RBAC
-              features={["PAS", "ITMS"]}
-              roles={[
-                "region_admin",
-                "organization_admin",
-                "master",
-                "depot_admin",
-                "user",
-              ]}
-            >
+              {/* Depot Select */}
+              {hasDepots && (
+                <RBAC features={[]} roles={["master", "organization_admin", "region_admin"]}>
+                  <Select
+                    className="h-auto flex-none"
+                    variant="outline"
+                    label="Select Depot"
+                    placeholder="Select Depot"
+                    value={selectedDepot?.id ?? ""}
+                    onValueChange={handleDepotChange}
+                  >
+                    {depots.map((depot) => (
+                      <Select.Item key={depot.id} value={depot.id}>
+                        {depot.name}
+                      </Select.Item>
+                    ))}
+                  </Select>
+                </RBAC>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <Button
-                icon={<FeatherPlus />}
-                disabled={!selectedDepot}
-                onClick={() => setOpen(true)}
+                variant="neutral-secondary"
+                className="h-9 sm:h-8 flex-1 sm:flex-none"
+                icon={<FeatherRefreshCw />}
+                onClick={() => {
+                  toast.success("Stops refreshed successfully");
+                  refetchStops();
+                }}
               >
-                Add Stop
+                Refresh
               </Button>
-            </RBAC>
+
+              <RBAC
+                features={["PAS", "ITMS"]}
+                roles={[
+                  "region_admin",
+                  "organization_admin",
+                  "master",
+                  "depot_admin",
+                  "user",
+                ]}
+              >
+                <Button
+                  className="h-9 sm:h-8 flex-1 sm:flex-none"
+                  icon={<FeatherPlus />}
+                  disabled={!selectedDepot}
+                  onClick={() => setOpen(true)}
+                >
+                  Add Stop
+                </Button>
+              </RBAC>
+            </div>
           </div>
         )}
       </div>
@@ -410,15 +415,15 @@ export default function StopsPage() {
       {/* Content */}
       {hasStops ? (
         <div className="flex w-full flex-col gap-4">
-          <div className="flex w-full flex-col items-start overflow-x-auto rounded-md border border-solid border-neutral-border bg-neutral-50">
+          <div className="flex w-full flex-col items-start overflow-x-auto touch-scroll-x rounded-md border border-solid border-neutral-border bg-neutral-50">
             <Table
               header={
                 <Table.HeaderRow>
                   <Table.HeaderCell className="w-16">#</Table.HeaderCell>
-                  <Table.HeaderCell className="min-w-[200px]">Stop Name</Table.HeaderCell>
-                  <Table.HeaderCell className="min-w-[180px]">Downward (Lat, Long)</Table.HeaderCell>
-                  <Table.HeaderCell className="min-w-[180px]">Upward (Lat, Long)</Table.HeaderCell>
-                  <Table.HeaderCell className="min-w-[220px]">Audio Announcement</Table.HeaderCell>
+                  <Table.HeaderCell className="min-w-[160px]">Stop Name</Table.HeaderCell>
+                  <Table.HeaderCell className="hidden md:table-cell min-w-[160px]">Downward (Lat, Long)</Table.HeaderCell>
+                  <Table.HeaderCell className="hidden lg:table-cell min-w-[160px]">Upward (Lat, Long)</Table.HeaderCell>
+                  <Table.HeaderCell className="min-w-[180px]">Audio Announcement</Table.HeaderCell>
                   <Table.HeaderCell className="w-12 justify-end" />
                 </Table.HeaderRow>
               }
@@ -446,14 +451,14 @@ export default function StopsPage() {
                         ) : null}
                       </div>
                     </Table.Cell>
-                    <Table.Cell>
+                    <Table.Cell className="hidden md:table-cell">
                       <span className="whitespace-nowrap text-caption font-mono text-default-font">
                         {stop.down_latitude != null && stop.down_longitude != null
                           ? `${stop.down_latitude}, ${stop.down_longitude}`
                           : "—"}
                       </span>
                     </Table.Cell>
-                    <Table.Cell>
+                    <Table.Cell className="hidden lg:table-cell">
                       <span className="whitespace-nowrap text-caption font-mono text-default-font">
                         {stop.up_latitude != null && stop.up_longitude != null
                           ? `${stop.up_latitude}, ${stop.up_longitude}`
