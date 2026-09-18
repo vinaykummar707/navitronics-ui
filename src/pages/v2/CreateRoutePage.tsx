@@ -12,9 +12,9 @@ import { useParams } from "react-router-dom";
 // @subframe/sync-disable
 
 // Define the type for expected route params
-interface RouteParams extends Record<string, string> {
-  areaId: string;
-  depotId: string;
+interface RouteParams extends Record<string, string | undefined> {
+  areaId?: string;
+  depotId?: string;
   routeId?: string; // Optional routeId
 }
 
@@ -30,8 +30,8 @@ const RouteCreatePage: React.FC = ({ initialData }) => {
   const methods = useForm<IRouteCreate>({
     defaultValues: {
       ...defaultDisplayConfigPostRequest,
-      organization_id: areaId,
-      depot_id: depotId,
+      organization_id: areaId || null,
+      depot_id: depotId || null,
       created_by: user?.id || "",
     },
   });

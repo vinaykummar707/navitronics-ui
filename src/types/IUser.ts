@@ -9,7 +9,7 @@ export interface IUser {
     user_id: string;
     email: string | null;
     password?: string | null;
-    organization_id: string;
+    organization_id: string | null;
     region_id: string | null;
     depot_id: string | null;
     created_at: string;
@@ -18,6 +18,7 @@ export interface IUser {
     role_id: string;
     v1_routes?: boolean | null;
     v2_routes?: boolean | null;
+    customer_type?: "regular" | "stu" | null;
 }
 
 export interface ILoggedUser extends IUser {

@@ -163,7 +163,7 @@ export default function DepotsPage() {
             <div className="flex items-end gap-2 w-full sm:w-auto">
               <Button
                 variant="neutral-primary"
-                className="h-9 flex-1 sm:flex-none"
+                className="flex-1 sm:flex-none"
                 icon={<FeatherRefreshCw />}
                 onClick={() => {
                   toast.success("Depots refreshed successfully");
@@ -178,7 +178,7 @@ export default function DepotsPage() {
                 roles={["region_admin", "organization_admin", "master"]}
               >
                 <Button
-                  className="h-9 flex-1 sm:flex-none"
+                  className="flex-1 sm:flex-none"
                   icon={<FeatherPlus />}
                   disabled={!selectedRegion}
                   onClick={() => {
@@ -194,7 +194,7 @@ export default function DepotsPage() {
         )}
       </div>
       {depots && depots.length > 0 ? (
-        <div className="flex w-full flex-col items-start overflow-x-auto touch-scroll-x rounded-md border border-solid border-neutral-border bg-sidebar-background shadow-xs">
+        <div className="flex w-full flex-col items-start overflow-x-auto touch-scroll-x rounded-md border border-solid border-neutral-border bg-default-background">
           <Table
             header={
               <Table.HeaderRow>

@@ -14,6 +14,7 @@ import { DropdownMenu } from "./DropdownMenu";
 import {
   FeatherCheck,
   FeatherEdit2,
+  FeatherLayers,
   FeatherMoreHorizontal,
   FeatherTag,
   FeatherX,
@@ -147,12 +148,18 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
                   {route.return ? "Yes" : "No"}
                 </Badge>
               </Table.Cell>
-              <Table.Cell className="hidden sm:table-cell min-w-[90px] justify-center text-center">
+              <Table.Cell className="hidden sm:table-cell min-w-[100px] justify-center text-center">
                 <Badge
                   variant={route.version === "1.0" ? "warning" : "brand"}
-                  icon={<FeatherTag className="h-3 w-3" />}
+                  icon={
+                    route.version === "1.0" ? (
+                      <FeatherTag className="h-3 w-3" />
+                    ) : (
+                      <FeatherLayers className="h-3 w-3" />
+                    )
+                  }
                 >
-                  {route.version || "2.0"}
+                  {route.version === "1.0" ? "V1 LED" : "V2 Screen"}
                 </Badge>
               </Table.Cell>
               <Table.Cell className="hidden lg:table-cell min-w-[110px]">

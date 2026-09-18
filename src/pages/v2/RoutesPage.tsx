@@ -22,7 +22,7 @@ import RBAC from "@/components/RBAC";
 import { RouteTable } from "@/ui/components/RouteTable";
 import { supabase } from "@/supabaseClient";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { RegionSelect } from "@/components/RegionSelect";
 import { EmptyState } from "@/components/EmptyState";
 import JSZip from "jszip";
@@ -32,6 +32,7 @@ import axios from "axios";
 import { convertV2ToV1 } from "@/utils/routeConfigMapper";
 import { Dialog } from "@/ui/components/Dialog";
 import { getUserRouteAccess } from "@/utils/featureFlags";
+import { isRegularCustomer } from "@/utils/customerType";
 import { pickTargetDirectory, writeZipToDirectoryOrFallback } from "@/utils/fileSystemExport";
 
 
@@ -53,6 +54,7 @@ function useRoutesPageData() {
     (state) => state.setRoutesPageDepot,
   );
   const user = useLoggedUserStore((state) => state.user);
+  const isRegular = isRegularCustomer(user);
 
   const { data: regionData, refetch: refetchRegions } = regionCrud.useList({
     filters: {
@@ -103,7 +105,7 @@ function useRoutesPageData() {
     );
 
     if (!isSelectedRegionValid) {
-      setRoutesPageRegion(regions[0]);
+      setRoutesPageRegion(regions[0] || null);
     }
   }, [regions, selectedRegion, setRoutesPageRegion]);
 
@@ -124,7 +126,7 @@ function useRoutesPageData() {
     );
 
     if (!isSelectedDepotValid) {
-      setRoutesPageDepot(depots[0]);
+      setRoutesPageDepot(depots[0] || null);
     }
   }, [depots, selectedDepot, setRoutesPageDepot]);
 
@@ -146,8 +148,10 @@ function useRoutesPageData() {
 
 export default function RoutesPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     user,
+    isRegular,
     regions,
     depots,
     routes,
@@ -161,6 +165,18 @@ export default function RoutesPage() {
 
   const routeAccess = getUserRouteAccess(user);
 
+  // Auto-open route creator for regular customer if routed with ?create=true
+  useEffect(() => {
+    if (isRegular && searchParams.get("create") === "true") {
+      setSearchParams({}, { replace: true });
+      if (routeAccess.isV1Only) {
+        navigate("/routes/create-v1");
+      } else {
+        navigate("/routes/create");
+      }
+    }
+  }, [isRegular, searchParams, routeAccess, navigate, setSearchParams]);
+
   const { mutate: deleteRoute } = routeCrud.useDelete();
   const { mutate: deleteSelectedRoutes } = routeCrud.useDeleteAll();
   const { mutate: createRoute } = routeCrud.useCreate();
@@ -173,6 +189,18 @@ export default function RoutesPage() {
   const handleDepotChange = (val: string) => {
     const nextDepot = depots?.find((d) => d.id === val) || null;
     setRoutesPageDepot(nextDepot);
+  };
+
+  const handleAddV1Route = () => {
+    navigate(
+      `/routes/create-v1/${selectedOrganization?.id}/${selectedDepot?.id}`,
+    );
+  };
+
+  const handleAddV2Route = () => {
+    navigate(
+      `/routes/create/${selectedOrganization?.id}/${selectedDepot?.id}`,
+    );
   };
 
   const handleEditRoute = (routeId: string) => {
@@ -394,28 +422,28 @@ export default function RoutesPage() {
   };
 
   type FileItem = {
-  name: string;
-  url: string;
-};
+    name: string;
+    url: string;
+  };
 
-   const downloadZip = async (
-  files: FileItem[],
-  zipName: string
-) => {
-  const zip = new JSZip();
+  const downloadZip = async (
+    files: FileItem[],
+    zipName: string
+  ) => {
+    const zip = new JSZip();
 
-  await Promise.all(
-    files.map(async (file) => {
-      const response = await fetch(file.url);
-      const blob = await response.blob();
-      zip.file(file.name, blob);
-    })
-  );
+    await Promise.all(
+      files.map(async (file) => {
+        const response = await fetch(file.url);
+        const blob = await response.blob();
+        zip.file(file.name, blob);
+      })
+    );
 
-  const content = await zip.generateAsync({ type: "blob" });
+    const content = await zip.generateAsync({ type: "blob" });
 
-  saveAs(content, `${zipName}.zip`);
-};
+    saveAs(content, `${zipName}.zip`);
+  };
 
   const [isMixedVersionDialogOpen, setIsMixedVersionDialogOpen] = React.useState(false);
 
@@ -570,43 +598,40 @@ export default function RoutesPage() {
             <div className="flex items-center rounded-md border border-neutral-border bg-neutral-100 p-0.5 text-xs flex-wrap">
               <button
                 type="button"
-                className={`px-2.5 py-1 rounded font-medium transition-colors ${
-                  versionFilter === "all"
+                className={`px-2.5 py-1 rounded font-medium transition-colors ${versionFilter === "all"
                     ? "bg-brand-50 text-brand-primary border border-brand-primary/40 shadow-sm"
                     : "text-subtext-color hover:text-default-font"
-                }`}
+                  }`}
                 onClick={() => setVersionFilter("all")}
               >
                 All ({routes.length})
               </button>
               <button
                 type="button"
-                className={`px-2.5 py-1 rounded font-medium transition-colors ${
-                  versionFilter === "v1"
+                className={`px-2.5 py-1 rounded font-medium transition-colors ${versionFilter === "v1"
                     ? "bg-brand-50 text-brand-primary border border-brand-primary/40 shadow-sm"
                     : "text-subtext-color hover:text-default-font"
-                }`}
+                  }`}
                 onClick={() => setVersionFilter("v1")}
               >
-                V1 ({routes.filter((r) => r.version === "1.0").length})
+                V1 LED ({routes.filter((r) => r.version === "1.0").length})
               </button>
               <button
                 type="button"
-                className={`px-2.5 py-1 rounded font-medium transition-colors ${
-                  versionFilter === "v2"
+                className={`px-2.5 py-1 rounded font-medium transition-colors ${versionFilter === "v2"
                     ? "bg-brand-50 text-brand-primary border border-brand-primary/40 shadow-sm"
                     : "text-subtext-color hover:text-default-font"
-                }`}
+                  }`}
                 onClick={() => setVersionFilter("v2")}
               >
-                V2 ({routes.filter((r) => r.version !== "1.0").length})
+                V2 Screen ({routes.filter((r) => r.version !== "1.0").length})
               </button>
             </div>
           )}
         </div>
 
-        {hasRegions && (
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2 w-full lg:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2 w-full lg:w-auto">
+          {hasRegions && (
             <div className="flex items-end gap-2 flex-1 sm:flex-none">
               {/* Region Select — restricted roles */}
               <RBAC features={[]} roles={["depot_admin", "region_admin"]}>
@@ -646,92 +671,84 @@ export default function RoutesPage() {
                 </RBAC>
               )}
             </div>
+          )}
 
-            <div className="flex items-end gap-2 flex-wrap w-full sm:w-auto">
-              <Button
-                variant="neutral-primary"
-                className="h-9 flex-1 sm:flex-none"
-                icon={<FeatherRefreshCw />}
-                onClick={() => {
-                  toast.success("Routes refreshed successfully");
-                  refetchRoutes();
-                }}
-              >
-                Refresh
-              </Button>
+          <div className="flex items-end gap-2 flex-wrap w-full sm:w-auto">
+            <Button
+              variant="neutral-primary"
+              className="h-9 flex-1 sm:flex-none"
+              icon={<FeatherRefreshCw />}
+              onClick={() => {
+                toast.success("Routes refreshed successfully");
+                refetchRoutes();
+              }}
+            >
+              Refresh
+            </Button>
 
-              <RBAC
-                features={[]}
-                roles={[
-                  "region_admin",
-                  "organization_admin",
-                  "master",
-                  "depot_admin",
-                ]}
-              >
-                {routeAccess.hasV1Routes && (
-                  <Button
-                    icon={<FeatherPlus />}
-                    variant="brand-secondary-2"
-                    className="h-9 flex-1 sm:flex-none"
-                    disabled={!selectedDepot}
-                    onClick={() =>
-                      navigate(
-                        `/routes/create-v1/${selectedOrganization?.id}/${selectedDepot?.id}`,
-                      )
-                    }
-                  >
-                    {routeAccess.isV1Only ? "Add Route" : "V1 Add Route"}
-                  </Button>
-                )}
-                {routeAccess.hasV2Routes && (
-                  <Button
-                    icon={<FeatherPlus />}
-                    className="h-9 flex-1 sm:flex-none"
-                    disabled={!selectedDepot}
-                    onClick={() =>
-                      navigate(
-                        `/routes/create/${selectedOrganization?.id}/${selectedDepot?.id}`,
-                      )
-                    }
-                  >
-                    {routeAccess.isV2Only ? "Add Route" : "V2 Add Route"}
-                  </Button>
-                )}
-              </RBAC>
-              {selectedRouteIds.length > 0 && (
-                <>
-                  <Button
-                    icon={<FeatherDownload />}
-                    variant="brand-secondary-2"
-                    className="h-9 flex-1 sm:flex-none"
-                    disabled={!selectedDepot || selectedRouteIds.length === 0}
-                    onClick={handleExportSelectedRoutes}
-                  >
-                    Export ({selectedRouteIds.length})
-                  </Button>
-                  <Button
-                    icon={<FeatherTrash />}
-                    variant="destructive-secondary"
-                    className="h-9 flex-1 sm:flex-none"
-                    disabled={!selectedDepot || selectedRouteIds.length === 0}
-                    onClick={() => {
-                      if (
-                        confirm(
-                          `Are you sure you want to delete ${selectedRouteIds.length} selected route(s)?`,
-                        )
-                      ) {
-                        handleDeleteSelectedRoutes();
-                      }
-                    }}
-                  >
-                    Delete ({selectedRouteIds.length})
-                  </Button>
-                </>
+            <RBAC
+              features={[]}
+              roles={[
+                "region_admin",
+                "organization_admin",
+                "master",
+                "depot_admin",
+              ]}
+            >
+              {routeAccess.hasV1Routes && (
+                <Button
+                  icon={<FeatherPlus />}
+                  variant="brand-secondary-2"
+                  className="h-9 flex-1 sm:flex-none"
+                  disabled={!selectedDepot}
+                  onClick={handleAddV1Route}
+                >
+                  {routeAccess.isV1Only ? "Add Route" : "V1 Add Route"}
+                </Button>
               )}
-            </div>
+              {routeAccess.hasV2Routes && (
+                <Button
+                  icon={<FeatherPlus />}
+                  className="h-9 flex-1 sm:flex-none"
+                  disabled={!selectedDepot}
+                  onClick={handleAddV2Route}
+                >
+                  {routeAccess.isV2Only ? "Add Route" : "V2 Add Route"}
+                </Button>
+              )}
+            </RBAC>
+            {selectedRouteIds.length > 0 && (
+              <>
+                <Button
+                  icon={<FeatherDownload />}
+                  variant="brand-secondary-2"
+                  className="h-9 flex-1 sm:flex-none"
+                  disabled={!selectedDepot || selectedRouteIds.length === 0}
+                  onClick={handleExportSelectedRoutes}
+                >
+                  Export ({selectedRouteIds.length})
+                </Button>
+                <Button
+                  icon={<FeatherTrash />}
+                  variant="destructive-secondary"
+                  className="h-9 flex-1 sm:flex-none"
+                  disabled={!selectedDepot || selectedRouteIds.length === 0}
+                  onClick={() => {
+                    if (
+                      confirm(
+                        `Are you sure you want to delete ${selectedRouteIds.length} selected route(s)?`,
+                      )
+                    ) {
+                      handleDeleteSelectedRoutes();
+                    }
+                  }}
+                >
+                  Delete ({selectedRouteIds.length})
+                </Button>
+              </>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Content */}

@@ -1,20 +1,28 @@
 import { useOrganizationStore } from "@/store/useOrganizationStore";
+import useLoggedUserStore from "@/store/useLoggedUserStore";
+import { isSuperAdmin } from "@/utils/customerType";
 import { supabase } from "@/supabaseClient";
 import { ILoggedUser, userCrud } from "@/types/IUser";
 import { Button } from "@/ui/components/Button";
 import { CreateUserForm2 } from "@/ui/components/CreateUserForm2";
 import { Drawer } from "@/ui/components/Drawer";
 import { UsersTable } from "@/ui/components/UsersTable";
-import { FeatherPlus, FeatherRefreshCw } from "@subframe/core";
-import { useState } from "react";
+import { FeatherPlus, FeatherRefreshCw, FeatherUsers } from "@subframe/core";
+import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
 
 export default function UsersPage() {
   const [open, setOpen] = useState(false);
   const { selectedOrganization } = useOrganizationStore();
-  const [editData, setEditData] = useState<ILoggedUser>(null);
+  const loggedInUser = useLoggedUserStore((state) => state.user);
+  const isSuper = isSuperAdmin(loggedInUser);
+  const [editData, setEditData] = useState<ILoggedUser | null>(null);
 
   const { useList, useDelete } = userCrud;
+
+  const targetOrgId = isSuper
+    ? selectedOrganization?.id
+    : loggedInUser?.organization?.id || loggedInUser?.organization_id;
 
   const {
     data,
@@ -22,8 +30,10 @@ export default function UsersPage() {
     error: usersError,
     refetch,
   } = useList({
-    filters: { organization_id: selectedOrganization?.id, deleted: false },
-    skip: !selectedOrganization?.id,
+    filters: targetOrgId
+      ? { organization_id: targetOrgId, deleted: false }
+      : { deleted: false },
+    skip: !targetOrgId,
     custom(query) {
       return query.select(
         ` *,
@@ -31,14 +41,23 @@ export default function UsersPage() {
         organization:organization_id (*),
         depot:depot_id (*),
         role:role_id (*)
-      `,
+      `
       );
     },
   });
 
   const { mutate: deleteMutate } = useDelete();
 
-  const usersData = data ? (data.data as ILoggedUser[]) : ([] as ILoggedUser[]);
+  const rawUsers = data ? (data.data as ILoggedUser[]) : ([] as ILoggedUser[]);
+
+  // Filter strictly to STU users in this organization
+  const stuUsers = useMemo(() => {
+    return rawUsers.filter(
+      (u) =>
+        u.customer_type !== "regular" &&
+        u.role?.name?.toLowerCase() !== "user"
+    );
+  }, [rawUsers]);
 
   // Soft delete a user by setting deleted to true and active to false
   const handleDeleteUser = async (userId: string) => {
@@ -59,23 +78,27 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="flex h-full  overflow-hidden w-full flex-col items-start gap-4 ">
+    <div className="flex h-full overflow-hidden w-full flex-col items-start gap-4">
       <div className="flex w-full flex-col items-start gap-1">
-        <span className="text-heading-2 font-heading-2 text-default-font text-center">
-          Users
+        <span className="text-heading-2 font-heading-2 text-default-font">
+          STU Users
         </span>
         <span className="text-body font-body text-subtext-color">
-          Manage user accounts, roles, and route access permissions
+          {selectedOrganization?.name
+            ? `Manage staff accounts, roles, and depot permissions for ${selectedOrganization.name}`
+            : "Manage organization staff accounts, roles, and depot permissions"}
         </span>
       </div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
-        <span className="text-caption font-caption text-subtext-color">
-          Showing {usersData?.length || 0} records
-        </span>
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-caption font-caption text-subtext-color">
+            Showing {stuUsers.length} staff member{stuUsers.length === 1 ? "" : "s"}
+          </span>
+        </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <Button
             variant="neutral-primary"
-            className="h-9 flex-1 sm:flex-none"
+            className="flex-1 sm:flex-none"
             icon={<FeatherRefreshCw />}
             onClick={() => {
               toast.success("Users refreshed successfully");
@@ -85,20 +108,20 @@ export default function UsersPage() {
             Refresh
           </Button>
           <Button
-            className="h-9 flex-1 sm:flex-none"
+            className="flex-1 sm:flex-none"
             icon={<FeatherPlus />}
             onClick={() => {
               setOpen(true);
               setEditData(null);
             }}
           >
-            Add User
+            Add STU User
           </Button>
         </div>
       </div>
-      {usersData && usersData.length > 0 ? (
+      {stuUsers && stuUsers.length > 0 ? (
         <UsersTable
-          users={usersData || []}
+          users={stuUsers}
           onDeleteUser={(id) => {
             if (
               confirm(
@@ -120,7 +143,9 @@ export default function UsersPage() {
               No Users Found
             </h2>
             <p className="text-body font-body text-subtext-color">
-              You do not have any users added yet. Start by adding a new user.
+              {selectedOrganization?.name
+                ? `No STU staff members found for "${selectedOrganization.name}". Start by adding an STU user.`
+                : "No organization selected or no users found. Start by adding an STU user."}
             </p>
           </div>
         </div>
@@ -144,6 +169,7 @@ export default function UsersPage() {
           }}
         >
           <CreateUserForm2
+            fixedTier="stu"
             onCancel={() => setOpen(false)}
             initialData={editData}
             onUserCreated={() => {

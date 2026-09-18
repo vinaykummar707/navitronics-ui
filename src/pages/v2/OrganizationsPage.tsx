@@ -17,6 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import { OptionsDropdown } from "@/ui/components/OptionsDropdown";
 import { Drawer } from "@/ui/components/Drawer";
 import { CreateOrganizationDrawer, IconButton } from "@/ui";
+import { STUOnboardingWizard } from "@/ui/components/STUOnboardingWizard";
 import { ButtonGroup } from "@/ui/components/ButtonGroup";
 import RBAC from "@/components/RBAC";
 import { supabase } from "@/supabaseClient";
@@ -37,6 +38,7 @@ function OrganizationsPage() {
     : ([] as IOrganization[]);
   const [editData, setEditData] = React.useState<IOrganization | null>(null);
   const [open, setOpen] = React.useState(false);
+  const [wizardOpen, setWizardOpen] = React.useState(false);
 
   const handleDelete = (id: string) => {
     deleteOrganization(id, {
@@ -64,6 +66,16 @@ function OrganizationsPage() {
         }}
         buttonLabel="Add Organization"
         roles={["master"]}
+        extraActions={
+          <Button
+            variant="brand-secondary-2"
+            className="flex-1 sm:flex-none"
+            icon={<FeatherPlus />}
+            onClick={() => setWizardOpen(true)}
+          >
+            Onboard STU Customer
+          </Button>
+        }
       />
       {isLoading && (
         <div className="flex w-full items-center justify-center p-8">
@@ -76,11 +88,12 @@ function OrganizationsPage() {
         </div>
       )}
       {!isLoading && !isError && organizations.length > 0 && (
-        <div className="flex w-full flex-col items-start overflow-x-auto rounded-md border border-solid border-neutral-border bg-sidebar-background shadow-xs touch-scroll-x">
+        <div className="flex w-full flex-col items-start overflow-x-auto rounded-md border border-solid border-neutral-border bg-default-background touch-scroll-x">
           <Table
             header={
               <Table.HeaderRow>
                 <Table.HeaderCell className="min-w-[220px]">Organization</Table.HeaderCell>
+                <Table.HeaderCell className="min-w-[130px] justify-center text-center">Customer Tier</Table.HeaderCell>
                 <Table.HeaderCell className="min-w-[180px]">Contact Email</Table.HeaderCell>
                 <Table.HeaderCell className="min-w-[120px] justify-center text-center">Status</Table.HeaderCell>
                 <Table.HeaderCell className="min-w-[200px]">Active Modules</Table.HeaderCell>
@@ -116,6 +129,17 @@ function OrganizationsPage() {
                         {org.name}
                       </span>
                     </div>
+                  </Table.Cell>
+                  <Table.Cell className="justify-center text-center">
+                    <Badge
+                      variant={isNavitronix ? "neutral" : "brand"}
+                    >
+                      {isNavitronix
+                        ? "System Org"
+                        : org.customer_type === "regular"
+                        ? "Regular"
+                        : "STU Enterprise"}
+                    </Badge>
                   </Table.Cell>
                   <Table.Cell>
                     <span className="whitespace-nowrap text-body font-body text-subtext-color">
@@ -180,6 +204,15 @@ function OrganizationsPage() {
           />
         </Drawer.Content>
       </Drawer>
+
+      <STUOnboardingWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onSuccess={() => {
+          refetch();
+          toast.success("Organization list refreshed");
+        }}
+      />
     </div>
   );
 }

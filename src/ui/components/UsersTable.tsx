@@ -29,6 +29,9 @@ import { OptionsDropdown } from "./OptionsDropdown";
 import { ILoggedUser, IUser } from "@/types/IUser";
 import { toast } from "react-toastify";
 import { getUserRouteAccess } from "@/utils/featureFlags";
+import useLoggedUserStore from "@/store/useLoggedUserStore";
+import { isSuperAdmin } from "@/utils/customerType";
+import { PasswordViewerCell } from "./PasswordViewerCell";
 
 interface UsersTableRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -42,6 +45,8 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
     { className, users, onEditUser, onDeleteUser, ...otherProps }: UsersTableRootProps,
     ref
   ) {
+    const loggedInUser = useLoggedUserStore((state) => state.user);
+    const isSuperAdminUser = isSuperAdmin(loggedInUser);
     const formatCreatedAt = (dateStr?: string | null) => {
       if (!dateStr) return "—";
       const date = new Date(dateStr);
@@ -68,6 +73,9 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
           header={
             <Table.HeaderRow>
               <Table.HeaderCell className="min-w-[140px]">Email</Table.HeaderCell>
+              {isSuperAdminUser && (
+                <Table.HeaderCell className="min-w-[140px]">Password</Table.HeaderCell>
+              )}
               <Table.HeaderCell className="min-w-[130px] justify-center text-center">Role</Table.HeaderCell>
               <Table.HeaderCell className="hidden sm:table-cell min-w-[110px] justify-center text-center">Route Access</Table.HeaderCell>
               <Table.HeaderCell className="hidden md:table-cell min-w-[100px]">Region</Table.HeaderCell>
@@ -81,7 +89,7 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
         >
           {users.map((user: ILoggedUser) => {
             const routeAccess = getUserRouteAccess(user);
-            const isSuper = user.role?.name === "master";
+            const isRowMaster = user.role?.name === "master";
 
             return (
               <Table.Row key={user.id || user.user_id}>
@@ -90,6 +98,11 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
                     {user.email}
                   </span>
                 </Table.Cell>
+                {isSuperAdminUser && (
+                  <Table.Cell className="min-w-[140px]">
+                    <PasswordViewerCell password={user.password} />
+                  </Table.Cell>
+                )}
                 <Table.Cell className="min-w-[130px] justify-center text-center">
                   <Badge className="capitalize" variant="brand" icon={<FeatherShieldCheck className="h-3 w-3" />}>
                     {user.role?.name === "master"
@@ -100,7 +113,7 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
                   </Badge>
                 </Table.Cell>
                 <Table.Cell className="hidden sm:table-cell min-w-[110px] justify-center text-center">
-                  {isSuper || routeAccess.isDualUser ? (
+                  {isRowMaster || routeAccess.isDualUser ? (
                     <Badge variant="brand" icon={<FeatherLayers className="h-3 w-3" />}>V1 + V2</Badge>
                   ) : routeAccess.isV1Only ? (
                     <Badge variant="warning" icon={<FeatherTag className="h-3 w-3" />}>V1 Only</Badge>

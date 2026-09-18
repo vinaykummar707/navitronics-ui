@@ -2,13 +2,14 @@ import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
+import { isRegularCustomer } from "@/utils/customerType";
 import { Button } from "@/ui/components/Button";
 import { FeatherChevronLeft, FeatherExternalLink } from "@subframe/core";
 import { toast } from "react-toastify";
 
-interface RouteParams extends Record<string, string> {
-  areaId: string;
-  depotId: string;
+interface RouteParams extends Record<string, string | undefined> {
+  areaId?: string;
+  depotId?: string;
   routeId?: string;
 }
 
@@ -16,6 +17,8 @@ export const CreateRoutePageV1: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const user = useLoggedUserStore((state) => state.user);
+  const isRegular = isRegularCustomer(user);
+  const targetRoutesPage = isRegular ? "/home/regular-routes" : "/home/routes";
   const { areaId, depotId, routeId } = useParams<RouteParams>();
   const isEdit = Boolean(routeId);
 
@@ -48,15 +51,15 @@ export const CreateRoutePageV1: React.FC = () => {
             : "V1 Route created successfully in Supabase"
         );
         queryClient.invalidateQueries({ queryKey: ["routes"] });
-        navigate("/home/routes");
+        navigate(targetRoutesPage);
       } else if (data.type === "NAVITRONIX_V1_ROUTE_BACK") {
-        navigate("/home/routes");
+        navigate(targetRoutesPage);
       }
     };
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [navigate, queryClient, isEdit]);
+  }, [navigate, queryClient, isEdit, targetRoutesPage]);
 
   return (
     <div className="flex h-[100dvh] min-h-[100dvh] w-full flex-col overflow-hidden bg-default-background pt-safe pb-safe">
@@ -68,7 +71,7 @@ export const CreateRoutePageV1: React.FC = () => {
             size="small"
             className="h-8 text-xs font-medium px-2.5 sm:px-3 shrink-0"
             icon={<FeatherChevronLeft className="h-3.5 w-3.5" />}
-            onClick={() => navigate("/home/routes")}
+            onClick={() => navigate(targetRoutesPage)}
             title="Return to Routes list"
           >
             <span className="hidden sm:inline">Back</span>

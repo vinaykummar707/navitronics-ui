@@ -12,6 +12,7 @@ interface PageHeaderProps {
   onAdd: () => void;
   buttonLabel?: string;
   roles?: string[]; // Optional roles for RBAC
+  extraActions?: React.ReactNode;
 }
 
 const PageHeader: React.FC<PageHeaderProps> = ({
@@ -22,6 +23,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   onAdd,
   buttonLabel = "Add Organization",
   roles = [],
+  extraActions,
 }) => {
   return (
     <div className="flex w-full flex-col items-start gap-1">
@@ -45,6 +47,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
           >
             Refresh
           </Button>
+          {extraActions}
           <RBAC features={[]} roles={roles}>
             <Button
               variant="brand-primary"

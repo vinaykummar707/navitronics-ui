@@ -16,9 +16,9 @@ export interface IRoute {
   internal: string;
   stops: string;
   deleted: boolean;
-  created_at: string; 
-  organization_id: string;
-  depot_id: string;
+  created_at: string;
+  organization_id?: string | null;
+  depot_id?: string | null;
   version: string;
   return: boolean;
   created_by: string;

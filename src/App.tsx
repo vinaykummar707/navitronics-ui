@@ -16,9 +16,11 @@ import { ROLES } from "./constants/roles";
 import useLoggedUserStore from "./store/useLoggedUserStore";
 import { LanguageConfigProvider } from "./context/LanguageConfigContext";
 import { useTheme } from "next-themes";
+import { isRegularCustomer, isSuperAdmin } from "./utils/customerType";
 
 // Lazy-loaded page components for route-level code splitting
 const HomePage = lazy(() => import("./pages/HomePage"));
+const DashboardPage = lazy(() => import("./pages/v2/DashboardPage"));
 const OrganizationsPage = lazy(() => import("./pages/v2/OrganizationsPage"));
 const AreasPage = lazy(() => import("./pages/v2/RegionsPage"));
 const DepotsPage = lazy(() => import("./pages/v2/DepotsPage"));
@@ -32,6 +34,8 @@ const UtilityPage = lazy(() => import("./pages/v2/UtilityPage"));
 const FontConfigurationPage = lazy(() => import("./pages/v2/FontConfigurationPage"));
 const RouteCreatePage = lazy(() => import("./pages/v2/CreateRoutePage"));
 const CreateRoutePageV1 = lazy(() => import("./pages/v1/CreateRoutePageV1"));
+const RegularRoutesPage = lazy(() => import("./pages/v2/RegularRoutesPage"));
+const RegularCustomersPage = lazy(() => import("./pages/v2/RegularCustomersPage"));
 const UserLoginForm = lazy(() =>
   import("./ui/components/UserLoginForm").then((module) => ({
     default: module.UserLoginForm,
@@ -58,6 +62,17 @@ const queryClient = new QueryClient({
 
 const protectedRoutes = [
   {
+    path: "dashboard",
+    roles: [
+      ROLES.MASTER,
+      ROLES.ORGANIZATION_ADMIN,
+      ROLES.REGION_ADMIN,
+      ROLES.DEPOT_ADMIN,
+    ],
+    features: [],
+    element: <DashboardPage />,
+  },
+  {
     path: "organizations",
     roles: [ROLES.MASTER],
     features: [],
@@ -81,7 +96,7 @@ const protectedRoutes = [
   },
   {
     path: "users",
-    roles: [ROLES.MASTER],
+    roles: [ROLES.MASTER, ROLES.ORGANIZATION_ADMIN],
     features: [],
     element: <UsersPage />,
   },
@@ -97,7 +112,29 @@ const protectedRoutes = [
     features: [],
     element: <LanguageModify />,
   },
-  { path: "routes", element: <RoutesPage />, features: ["PIS", "PAS", "ITMS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
+  {
+    path: "regular-routes",
+    roles: [ROLES.MASTER, ROLES.USER],
+    features: [],
+    element: <RegularRoutesPage />,
+  },
+  {
+    path: "regular-customers",
+    roles: [ROLES.MASTER],
+    features: [],
+    element: <RegularCustomersPage />,
+  },
+  {
+    path: "routes",
+    element: <RoutesPage />,
+    features: ["PIS", "PAS", "ITMS"],
+    roles: [
+      ROLES.DEPOT_ADMIN,
+      ROLES.REGION_ADMIN,
+      ROLES.ORGANIZATION_ADMIN,
+      ROLES.MASTER,
+    ],
+  },
   { path: "stops", element: <StopsPage />, features: ["PAS", "ITMS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
   { path: "settings", element: <Settings /> },
   { path: "utility", element: <UtilityPage /> },
@@ -105,20 +142,18 @@ const protectedRoutes = [
 ] as const;
 
 function App() {
-  const getDefaultRouteForRole = (role: string) => {
+  const getDefaultRouteForUser = (currentUser: any) => {
+    if (!currentUser) return "/login";
+    if (isSuperAdmin(currentUser)) return "/home/organizations";
+    if (isRegularCustomer(currentUser)) return "/home/regular-routes";
+    const role = currentUser.role?.name?.toLowerCase();
     switch (role) {
-      case ROLES.MASTER:
-        return "/home/organizations";
       case ROLES.ORGANIZATION_ADMIN:
-        return "/home/regions";
       case ROLES.REGION_ADMIN:
-        return "/home/depots";
       case ROLES.DEPOT_ADMIN:
-        return "/home/routes";
-      case ROLES.USER:
-        return "/home/routes";
+        return "/home/dashboard";
       default:
-        return "/home";
+        return "/home/routes";
     }
   };
 
@@ -131,6 +166,93 @@ function App() {
         <Suspense fallback={<PageLoadingFallback />}>
           <Routes>
             <Route path="/" element={<Navigate to="/home" replace />} />
+            {/* Standalone V2 Route Creation (for Regular Customer) */}
+            <Route
+              path="routes/create"
+              element={
+                <ProtectedRoute>
+                  <RBACPage
+                    roles={[
+                      ROLES.MASTER,
+                      ROLES.ORGANIZATION_ADMIN,
+                      ROLES.REGION_ADMIN,
+                      ROLES.DEPOT_ADMIN,
+                      ROLES.USER,
+                    ]}
+                    features={["v2_routes"]}
+                  >
+                    <LanguageConfigProvider>
+                      <RouteCreatePage />
+                    </LanguageConfigProvider>
+                  </RBACPage>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="routes/create/:routeId"
+              element={
+                <ProtectedRoute>
+                  <RBACPage
+                    roles={[
+                      ROLES.MASTER,
+                      ROLES.ORGANIZATION_ADMIN,
+                      ROLES.REGION_ADMIN,
+                      ROLES.DEPOT_ADMIN,
+                      ROLES.USER,
+                    ]}
+                    features={["v2_routes"]}
+                  >
+                    <LanguageConfigProvider>
+                      <RouteCreatePage />
+                    </LanguageConfigProvider>
+                  </RBACPage>
+                </ProtectedRoute>
+              }
+            />
+            {/* Standalone V1 Route Creation (for Regular Customer) */}
+            <Route
+              path="routes/create-v1"
+              element={
+                <ProtectedRoute>
+                  <RBACPage
+                    roles={[
+                      ROLES.MASTER,
+                      ROLES.ORGANIZATION_ADMIN,
+                      ROLES.REGION_ADMIN,
+                      ROLES.DEPOT_ADMIN,
+                      ROLES.USER,
+                    ]}
+                    features={["v1_routes"]}
+                  >
+                    <LanguageConfigProvider>
+                      <CreateRoutePageV1 />
+                    </LanguageConfigProvider>
+                  </RBACPage>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="routes/create-v1/:routeId"
+              element={
+                <ProtectedRoute>
+                  <RBACPage
+                    roles={[
+                      ROLES.MASTER,
+                      ROLES.ORGANIZATION_ADMIN,
+                      ROLES.REGION_ADMIN,
+                      ROLES.DEPOT_ADMIN,
+                      ROLES.USER,
+                    ]}
+                    features={["v1_routes"]}
+                  >
+                    <LanguageConfigProvider>
+                      <CreateRoutePageV1 />
+                    </LanguageConfigProvider>
+                  </RBACPage>
+                </ProtectedRoute>
+              }
+            />
+            {/* Parameterized Route Creation (for STU Customer with Area & Depot) */}
             <Route
               path="routes/create/:areaId/:depotId"
               element={
@@ -141,6 +263,7 @@ function App() {
                       ROLES.ORGANIZATION_ADMIN,
                       ROLES.REGION_ADMIN,
                       ROLES.DEPOT_ADMIN,
+                      ROLES.USER,
                     ]}
                     features={["v2_routes"]}
                   >
@@ -161,6 +284,7 @@ function App() {
                       ROLES.ORGANIZATION_ADMIN,
                       ROLES.REGION_ADMIN,
                       ROLES.DEPOT_ADMIN,
+                      ROLES.USER,
                     ]}
                     features={["v1_routes"]}
                   >
@@ -181,6 +305,7 @@ function App() {
                       ROLES.ORGANIZATION_ADMIN,
                       ROLES.REGION_ADMIN,
                       ROLES.DEPOT_ADMIN,
+                      ROLES.USER,
                     ]}
                     features={["v1_routes"]}
                   >
@@ -201,6 +326,7 @@ function App() {
                       ROLES.ORGANIZATION_ADMIN,
                       ROLES.REGION_ADMIN,
                       ROLES.DEPOT_ADMIN,
+                      ROLES.USER,
                     ]}
                     features={["v2_routes"]}
                   >
@@ -224,7 +350,7 @@ function App() {
                 index
                 element={
                   <Navigate
-                    to={getDefaultRouteForRole(user?.role?.name?.toLowerCase() || "")}
+                    to={getDefaultRouteForUser(user)}
                     replace
                   />
                 }

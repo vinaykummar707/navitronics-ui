@@ -5,6 +5,7 @@ import { supabase } from "@/supabaseClient";
 import { ILoggedUser, loggedUserCrud } from "@/types/IUser";
 import { DefaultPageLayout } from "@/ui";
 import { toast } from "react-toastify";
+import { isRegularCustomer, isSuperAdmin } from "@/utils/customerType";
 
 const HomePage = () => {
     const navigate = useNavigate();
@@ -25,20 +26,21 @@ const HomePage = () => {
     });
 
     useEffect(() => {
-        console.log("User metadata fetched:", userMetadata);
         if (userMetadata && !loading && !error) {
             const userData = userMetadata.data as ILoggedUser;
-            if (userData.organization?.active === false) {
-                handleError("Your organization is not active. Please contact support.");
-                return;
-            }
 
             if (userData.active === false || userData.deleted) {
                 handleError("Your account is not active or has been deleted. Please contact support.");
                 return;
             }
-            
-            // Redirect to a specific internal page if everything is okay
+
+            // STU customers require an active organization; Regular Customers and Super Admin do not
+            if (!isRegularCustomer(userData) && !isSuperAdmin(userData)) {
+                if (!userData.organization || userData.organization.active === false) {
+                    handleError("Your organization is not active. Please contact support.");
+                    return;
+                }
+            }
         }
     }, [user, userMetadata, navigate]);
 

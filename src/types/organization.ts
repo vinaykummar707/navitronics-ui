@@ -14,6 +14,7 @@ export interface IOrganization {
     ITMS: boolean;
     v1_routes?: boolean | null;
     v2_routes?: boolean | null;
+    customer_type?: "regular" | "stu" | null;
 }
 
 // Create: everything but id, deleted, created_at; all optional except name

@@ -29,6 +29,8 @@ import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { Dialog } from "./Dialog";
 import { ResetPasswordForm } from "./ResetPassword";
 import { Checkbox } from "./Checkbox";
+import { isRegularCustomer, isSuperAdmin } from "@/utils/customerType";
+
 interface UserLoginFormRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
 }
@@ -44,7 +46,9 @@ const UserLoginFormRoot = React.forwardRef<
   const logout = useLoggedUserStore((state) => state.logout); // Zustand store
   const rememberMe = useLoggedUserStore((state) => state.rememberMe);
   const setRememberMe = useLoggedUserStore((state) => state.setRememberMe);
-  const { setSelectedOrganization } = useOrganizationStore((state) => state); // Access organization store if needed
+  const setSelectedOrganization = useOrganizationStore(
+    (state) => state.setSelectedOrganization,
+  );
   const navigate = useNavigate(); // React Router navigation
 
   const [email, setEmail] = useState("");
@@ -122,45 +126,76 @@ const UserLoginFormRoot = React.forwardRef<
   useEffect(() => {
     if (!userId || !loggedUserDetails?.data) return;
 
-    const userData = { ...(loggedUserDetails.data as ILoggedUser) };
+    const processLogin = async () => {
+      const userData = { ...(loggedUserDetails.data as ILoggedUser) };
 
-    // Hydrate feature flags from user_metadata if not present on DB row
-    supabase.auth.getUser().then(({ data: authUser }) => {
-      const meta = authUser?.user?.user_metadata;
-      if (meta) {
-        if (meta.v1_routes !== undefined && userData.v1_routes === undefined) {
-          userData.v1_routes = meta.v1_routes;
-        }
-        if (meta.v2_routes !== undefined && userData.v2_routes === undefined) {
-          userData.v2_routes = meta.v2_routes;
-        }
-        login(userData);
-      }
-    }).catch(() => {});
-
-    try {
-      login(userData);
-      if (userData.organization?.active) {
-        if (userData.active && !userData.deleted) {
-          toast.success("Login successful!");
-          setSelectedOrganization(userData.organization);
-          navigate("/home");
-        } else {
+      try {
+        // 1. Account status validation
+        if (!userData.active || userData.deleted) {
           throw new Error(
             "Your account is inactive or has been deactivated. Please contact support at support@navitronix.in or reach your administrator.",
           );
         }
-      } else {
-        throw new Error(
-          "Your organization account is inactive. Please contact support at support@navitronix.in.",
-        );
+
+        // 2. Hydrate auth user metadata feature flags
+        try {
+          const { data: authUser } = await supabase.auth.getUser();
+          const meta = authUser?.user?.user_metadata;
+          if (meta) {
+            if (meta.v1_routes !== undefined && (userData.v1_routes === undefined || userData.v1_routes === null)) {
+              userData.v1_routes = meta.v1_routes;
+            }
+            if (meta.v2_routes !== undefined && (userData.v2_routes === undefined || userData.v2_routes === null)) {
+              userData.v2_routes = meta.v2_routes;
+            }
+            if (meta.customer_type && !userData.customer_type) {
+              userData.customer_type = meta.customer_type;
+            }
+          }
+        } catch (metaErr) {
+          console.warn("Could not fetch auth metadata:", metaErr);
+        }
+
+        // 3. Regular Customer: standalone (no organization required or permitted)
+        if (isRegularCustomer(userData)) {
+          login(userData);
+          setSelectedOrganization(null);
+          toast.success("Login successful!");
+          navigate("/home/regular-routes");
+          return;
+        }
+
+        // 4. Super Admin: full access (organization optional)
+        if (isSuperAdmin(userData)) {
+          login(userData);
+          if (userData.organization) {
+            setSelectedOrganization(userData.organization);
+          }
+          toast.success("Login successful!");
+          navigate("/home");
+          return;
+        }
+
+        // 5. STU Enterprise Users: must belong to an active organization
+        if (!userData.organization || userData.organization.active === false) {
+          throw new Error(
+            "Your organization account is inactive. Please contact support at support@navitronix.in.",
+          );
+        }
+
+        login(userData);
+        setSelectedOrganization(userData.organization);
+        toast.success("Login successful!");
+        navigate("/home");
+      } catch (error: any) {
+        toast.error(error.message);
+        logout();
+        supabase.auth.signOut();
+        setUserId("");
       }
-    } catch (error: any) {
-      toast.error(error.message);
-      logout();
-      supabase.auth.signOut();
-      setUserId("");
-    }
+    };
+
+    processLogin();
   }, [
     userId,
     loggedUserDetails,

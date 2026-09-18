@@ -18,6 +18,7 @@ import {
   FeatherPanelLeftOpen,
   FeatherPlaneTakeoff,
   FeatherType,
+  FeatherUser,
   FeatherUsers,
   FeatherX,
 } from "@subframe/core";
@@ -30,6 +31,8 @@ import RBAC from "@/components/RBAC";
 import { ROLES } from "@/constants/roles";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import useToggleStore from "@/store/useToggleStore";
+import useLoggedUserStore from "@/store/useLoggedUserStore";
+import { isRegularCustomer, isSuperAdmin } from "@/utils/customerType";
 import { IconButton } from "../components/IconButton";
 
 interface DefaultPageLayoutRootProps
@@ -72,20 +75,139 @@ const DefaultPageLayoutRoot = React.forwardRef<
     }
   };
 
-  const renderNavItems = () => (
-    <>
-      <SidebarWithSections.NavSection className="no-scrollbar" label="Menu">
-        <RBAC roles={["master"]} features={[]}>
+  const user = useLoggedUserStore((state) => state.user);
+  const isRegular = isRegularCustomer(user);
+  const isSuper = isSuperAdmin(user);
+
+  const renderNavItems = () => {
+    if (isRegular) {
+      return (
+        <SidebarWithSections.NavSection className="no-scrollbar" label="Menu">
           <SidebarWithSections.NavItem
-            selected={path.startsWith("/home/organizations")}
-            onClick={() => handleNavClick("/home/organizations")}
+            selected={path.startsWith("/home/regular-routes")}
+            onClick={() => handleNavClick("/home/regular-routes")}
+            icon={<FeatherPlaneTakeoff />}
+          >
+            My Routes
+          </SidebarWithSections.NavItem>
+        </SidebarWithSections.NavSection>
+      );
+    }
+
+    if (isSuper) {
+      return (
+        <>
+          <SidebarWithSections.NavSection className="no-scrollbar" label="STU Operations">
+            <SidebarWithSections.NavItem
+              selected={path.startsWith("/home/dashboard")}
+              onClick={() => handleNavClick("/home/dashboard")}
+              icon={<FeatherHotel />}
+            >
+              Dashboard
+            </SidebarWithSections.NavItem>
+
+            <SidebarWithSections.NavItem
+              selected={path.startsWith("/home/organizations")}
+              onClick={() => handleNavClick("/home/organizations")}
+              icon={<FeatherHotel />}
+            >
+              Organizations
+            </SidebarWithSections.NavItem>
+
+            <SidebarWithSections.NavItem
+              selected={path.startsWith("/home/regions")}
+              onClick={() => handleNavClick("/home/regions")}
+              icon={<FeatherGlobe2 />}
+            >
+              Regions
+            </SidebarWithSections.NavItem>
+
+            <SidebarWithSections.NavItem
+              selected={path.startsWith("/home/depots")}
+              onClick={() => handleNavClick("/home/depots")}
+              icon={<FeatherBusFront />}
+            >
+              Depots
+            </SidebarWithSections.NavItem>
+
+            <SidebarWithSections.NavItem
+              selected={path.startsWith("/home/stops")}
+              onClick={() => handleNavClick("/home/stops")}
+              icon={<FeatherMapPin />}
+            >
+              Stops
+            </SidebarWithSections.NavItem>
+
+            <SidebarWithSections.NavItem
+              selected={path.startsWith("/home/routes")}
+              onClick={() => handleNavClick("/home/routes")}
+              icon={<FeatherPlaneTakeoff />}
+            >
+              STU Routes
+            </SidebarWithSections.NavItem>
+
+            <SidebarWithSections.NavItem
+              selected={path.startsWith("/home/users")}
+              onClick={() => handleNavClick("/home/users")}
+              icon={<FeatherUsers />}
+            >
+              STU Users
+            </SidebarWithSections.NavItem>
+          </SidebarWithSections.NavSection>
+
+          <SidebarWithSections.NavSection className="no-scrollbar" label="Regular Customers">
+            <SidebarWithSections.NavItem
+              selected={path.startsWith("/home/regular-routes")}
+              onClick={() => handleNavClick("/home/regular-routes")}
+              icon={<FeatherPlaneTakeoff />}
+            >
+              Regular Routes
+            </SidebarWithSections.NavItem>
+
+            <SidebarWithSections.NavItem
+              selected={path.startsWith("/home/regular-customers")}
+              onClick={() => handleNavClick("/home/regular-customers")}
+              icon={<FeatherUser />}
+            >
+              Regular Customers
+            </SidebarWithSections.NavItem>
+          </SidebarWithSections.NavSection>
+
+          <SidebarWithSections.NavSection label="Administrator">
+            <SidebarWithSections.NavItem
+              selected={path.startsWith("/home/font-configuration")}
+              onClick={() => handleNavClick("/home/font-configuration")}
+              icon={<FeatherType />}
+            >
+              Font Configuration
+            </SidebarWithSections.NavItem>
+          </SidebarWithSections.NavSection>
+        </>
+      );
+    }
+
+    // STU Enterprise Users
+    return (
+      <SidebarWithSections.NavSection className="no-scrollbar" label="Menu">
+        <RBAC
+          roles={[
+            ROLES.ORGANIZATION_ADMIN,
+            ROLES.REGION_ADMIN,
+            ROLES.DEPOT_ADMIN,
+          ]}
+          features={[]}
+        >
+          <SidebarWithSections.NavItem
+            selected={path.startsWith("/home/dashboard")}
+            onClick={() => handleNavClick("/home/dashboard")}
             icon={<FeatherHotel />}
           >
-            Organizations
+            Dashboard
           </SidebarWithSections.NavItem>
         </RBAC>
+
         <RBAC
-          roles={[ROLES.MASTER, ROLES.ORGANIZATION_ADMIN, ROLES.REGION_ADMIN]}
+          roles={[ROLES.ORGANIZATION_ADMIN, ROLES.REGION_ADMIN]}
           features={["PIS", "PAS", "ITMS"]}
         >
           <SidebarWithSections.NavItem
@@ -96,8 +218,9 @@ const DefaultPageLayoutRoot = React.forwardRef<
             Regions
           </SidebarWithSections.NavItem>
         </RBAC>
+
         <RBAC
-          roles={[ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER]}
+          roles={[ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.DEPOT_ADMIN]}
           features={["PIS", "PAS", "ITMS"]}
         >
           <SidebarWithSections.NavItem
@@ -108,12 +231,12 @@ const DefaultPageLayoutRoot = React.forwardRef<
             Depots
           </SidebarWithSections.NavItem>
         </RBAC>
+
         <RBAC
           roles={[
             ROLES.DEPOT_ADMIN,
             ROLES.REGION_ADMIN,
             ROLES.ORGANIZATION_ADMIN,
-            ROLES.MASTER,
           ]}
           features={["PAS", "ITMS"]}
         >
@@ -131,7 +254,6 @@ const DefaultPageLayoutRoot = React.forwardRef<
             ROLES.DEPOT_ADMIN,
             ROLES.REGION_ADMIN,
             ROLES.ORGANIZATION_ADMIN,
-            ROLES.MASTER,
           ]}
           features={["PIS", "PAS", "ITMS"]}
         >
@@ -143,7 +265,8 @@ const DefaultPageLayoutRoot = React.forwardRef<
             Routes
           </SidebarWithSections.NavItem>
         </RBAC>
-        <RBAC roles={[ROLES.MASTER]} features={[]}>
+
+        <RBAC roles={[ROLES.ORGANIZATION_ADMIN]} features={[]}>
           <SidebarWithSections.NavItem
             selected={path.startsWith("/home/users")}
             onClick={() => handleNavClick("/home/users")}
@@ -153,20 +276,8 @@ const DefaultPageLayoutRoot = React.forwardRef<
           </SidebarWithSections.NavItem>
         </RBAC>
       </SidebarWithSections.NavSection>
-
-      <RBAC roles={[ROLES.MASTER]} features={[]}>
-        <SidebarWithSections.NavSection label="Administrator">
-          <SidebarWithSections.NavItem
-            selected={path.startsWith("/home/font-configuration")}
-            onClick={() => handleNavClick("/home/font-configuration")}
-            icon={<FeatherType />}
-          >
-            Font Configuration
-          </SidebarWithSections.NavItem>
-        </SidebarWithSections.NavSection>
-      </RBAC>
-    </>
-  );
+    );
+  };
 
   return (
     <div
@@ -195,7 +306,15 @@ const DefaultPageLayoutRoot = React.forwardRef<
           <div className="h-5 w-px bg-neutral-border flex-none" />
           <div
             className="flex items-center gap-2 sm:gap-2.5 cursor-pointer select-none min-w-0"
-            onClick={() => navigate("/home/routes")}
+            onClick={() => {
+              if (isRegular) {
+                navigate("/home/regular-routes");
+              } else if (isSuper) {
+                navigate("/home/organizations");
+              } else {
+                navigate("/home/dashboard");
+              }
+            }}
           >
             <img
               className="h-8 w-8 rounded-full object-cover ring-1 ring-neutral-border flex-none"
@@ -227,13 +346,15 @@ const DefaultPageLayoutRoot = React.forwardRef<
           <SidebarWithSections
             collapsed={!showSidebar}
             header={
-              <SelectOrganizationComponent
-                className="shrink-0 w-full"
-                collapsed={!showSidebar}
-                onExpand={() => {
-                  if (!showSidebar) toggleSidebar();
-                }}
-              />
+              !isRegular ? (
+                <SelectOrganizationComponent
+                  className="shrink-0 w-full"
+                  collapsed={!showSidebar}
+                  onExpand={() => {
+                    if (!showSidebar) toggleSidebar();
+                  }}
+                />
+              ) : null
             }
             footer={
               <button
@@ -294,9 +415,11 @@ const DefaultPageLayoutRoot = React.forwardRef<
             />
           </div>
 
-          <div className="pt-3 px-3 border-neutral-border/60 flex-none">
-            <SelectOrganizationComponent className="w-full" collapsed={false} />
-          </div>
+          {!isRegular && (
+            <div className="pt-3 px-3 border-neutral-border/60 flex-none">
+              <SelectOrganizationComponent className="w-full" collapsed={false} />
+            </div>
+          )}
 
           <div className="flex-1 overflow-y-auto overflow-x-hidden px-3  no-scrollbar">
             {renderNavItems()}

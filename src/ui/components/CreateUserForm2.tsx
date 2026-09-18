@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   FeatherAlertTriangle,
   FeatherCheck,
@@ -38,13 +38,14 @@ interface CreateUserForm2RootProps extends React.HTMLAttributes<HTMLDivElement> 
   onUserCreated?: () => void;
   initialData?: ILoggedUser | null;
   onCancel?: () => void;
+  fixedTier?: "stu" | "regular";
 }
 
 const CreateUserForm2Root = React.forwardRef<
   HTMLDivElement,
   CreateUserForm2RootProps
 >(function CreateUserForm2Root(
-  { className, onUserCreated, initialData, onCancel, ...otherProps },
+  { className, onUserCreated, initialData, onCancel, fixedTier, ...otherProps },
   ref,
 ) {
   const { selectedOrganization } = useOrganizationStore();
@@ -88,18 +89,42 @@ const CreateUserForm2Root = React.forwardRef<
   // Fetch roles
   const { useList: useRoleList } = roleCrud;
   const { data: rolesData, isLoading: rolesLoading } = useRoleList();
-  const roles = useMemo(() => {
+
+  const allRoles = useMemo(() => {
     const listData = Array.isArray(rolesData)
       ? rolesData
       : Array.isArray(rolesData?.data)
       ? rolesData.data
       : [];
-    if (!listData.length) return [];
-    const list = isSuperAdmin
-      ? listData
-      : listData.filter((role: any) => role.name?.toLowerCase() !== "master");
-    return list as IRole[];
-  }, [rolesData, isSuperAdmin]);
+    return listData as IRole[];
+  }, [rolesData]);
+
+  const regularRole = useMemo(
+    () => allRoles.find((r) => r.name?.toLowerCase() === "user"),
+    [allRoles]
+  );
+  const regularRoleId = regularRole?.id || "fd72d0e0-831e-494c-96a5-3e153ab3e2db";
+
+  // STU roles: only organization staff roles (never master, never regular user)
+  const roles = useMemo(() => {
+    return allRoles.filter((role: any) => {
+      const name = role.name?.toLowerCase();
+      return (
+        name !== "master" &&
+        name !== "user" &&
+        name !== "regular" &&
+        name !== "regular_customer"
+      );
+    });
+  }, [allRoles]);
+
+  const initialTier = fixedTier
+    ? fixedTier
+    : initialData
+    ? (!initialData.organization_id || initialData.customer_type === "regular" || initialData.role?.name === "user" ? "regular" : "stu")
+    : (isSuperAdmin ? "regular" : "stu");
+
+  const [customerTier, setCustomerTier] = useState<"regular" | "stu">(initialTier);
 
   const defaultOrgId =
     initialData?.organization?.id ||
@@ -117,18 +142,28 @@ const CreateUserForm2Root = React.forwardRef<
     formState: { isSubmitting },
   } = useForm<ILoggedUser>({
     defaultValues: {
-      role_id: initialData?.role?.id || initialData?.role_id || "",
+      role_id: initialData?.role?.id || initialData?.role_id || (initialTier === "regular" ? regularRoleId : ""),
       region_id: initialData?.region?.id || initialData?.region_id || null,
       depot_id: initialData?.depot?.id || initialData?.depot_id || null,
       email: initialData?.email || "",
       password: initialData?.password || "",
-      organization_id: defaultOrgId,
+      organization_id: initialTier === "regular" ? null : defaultOrgId,
       user_id: initialData?.user_id || "",
       active: initialData?.active ?? true,
       v1_routes: initialData?.v1_routes ?? selectedOrganization?.v1_routes ?? false,
       v2_routes: initialData?.v2_routes ?? selectedOrganization?.v2_routes ?? true,
     },
   });
+
+  // Sync regular role when tier is regular
+  useEffect(() => {
+    if (!initialData && customerTier === "regular") {
+      setValue("role_id", regularRoleId);
+      setValue("organization_id", null);
+      setValue("region_id", null);
+      setValue("depot_id", null);
+    }
+  }, [customerTier, regularRoleId, initialData, setValue]);
 
   const selectedRoleId = useWatch({ control, name: "role_id" });
   const selectedOrgId = useWatch({ control, name: "organization_id" });
@@ -213,15 +248,35 @@ const CreateUserForm2Root = React.forwardRef<
     }
   }, [initialData, reset, selectedOrganization, defaultOrgId]);
 
+  // Helper to ensure valid UUID or null (never empty string "")
+  const toNullableUuid = (val?: string | null) => {
+    if (!val) return null;
+    const trimmed = String(val).trim();
+    return trimmed.length > 0 ? trimmed : null;
+  };
+
   // Handle form submit
   const onSubmit = async (data: ILoggedUser) => {
-    const targetOrgId = data.organization_id || selectedOrganization?.id || null;
+    const isRegular = customerTier === "regular";
+    const targetOrgId = isRegular ? null : toNullableUuid(data.organization_id || selectedOrganization?.id);
+    const targetRoleId = isRegular ? regularRoleId : toNullableUuid(data.role_id);
+    if (!targetRoleId) {
+      toast.error("Please select a role for this user.");
+      return;
+    }
+    if (!isRegular && targetRoleId === regularRoleId) {
+      toast.error("Regular Customer role cannot be assigned to an STU organization user.");
+      return;
+    }
+    const targetRegionId = isRegular ? null : toNullableUuid(data.region_id);
+    const targetDepotId = isRegular ? null : toNullableUuid(data.depot_id);
 
     const basePayload: any = {
-      role_id: data.role_id,
-      region_id: data.region_id || null,
-      depot_id: data.depot_id || null,
+      role_id: targetRoleId,
+      region_id: targetRegionId,
+      depot_id: targetDepotId,
       organization_id: targetOrgId,
+      customer_type: customerTier,
       active: data.active,
       v1_routes: Boolean(data.v1_routes),
       v2_routes: Boolean(data.v2_routes),
@@ -239,9 +294,9 @@ const CreateUserForm2Root = React.forwardRef<
           // If columns don't exist yet in public.users, fallback without them
           if (updateError.code === "42703") {
             const fallbackPayload = {
-              role_id: data.role_id,
-              region_id: data.region_id || null,
-              depot_id: data.depot_id || null,
+              role_id: targetRoleId,
+              region_id: targetRegionId,
+              depot_id: targetDepotId,
               organization_id: targetOrgId,
               active: data.active,
             };
@@ -470,11 +525,11 @@ const CreateUserForm2Root = React.forwardRef<
               email: data.email,
               user_id: userId,
               password: data.password,
-              role_id: data.role_id,
-              region_id: data.region_id || null,
-              depot_id: data.depot_id || null,
+              role_id: targetRoleId,
+              region_id: targetRegionId,
+              depot_id: targetDepotId,
               organization_id: targetOrgId,
-              active: data.active,
+              active: Boolean(data.active),
             };
             if (existingInDb) {
               const { error: fbErr } = await supabase
@@ -540,134 +595,197 @@ const CreateUserForm2Root = React.forwardRef<
 
       {/* Scrollable Center Form Fields */}
       <div className="flex flex-1 min-h-0 w-full flex-col items-start gap-4 overflow-y-auto px-6 py-5">
-        {isSuperAdmin && (
-          <Controller
-            control={control}
-            name="organization_id"
-            render={({ field }) => (
-              <Select
-                className="h-auto w-full flex-none"
-                label={
-                  <span>
-                    Organization <span className="text-red-500">*</span>
-                  </span>
-                }
-                placeholder="Select Organization"
-                value={field.value || undefined}
-                onValueChange={(val) => {
-                  field.onChange(val);
+        {!fixedTier && isSuperAdmin && (
+          <div className="flex w-full flex-col items-start gap-1.5 pb-1">
+            <span className="text-caption-bold font-caption-bold text-default-font">
+              Customer Tier
+            </span>
+            <div className="flex w-full rounded-md border border-neutral-border bg-neutral-100 p-1">
+              <button
+                type="button"
+                className={`flex-1 py-1.5 text-xs font-medium rounded transition-all ${
+                  customerTier === "regular"
+                    ? "bg-white text-brand-primary shadow-xs font-semibold"
+                    : "text-subtext-color hover:text-default-font"
+                }`}
+                onClick={() => {
+                  setCustomerTier("regular");
+                  if (regularRole) setValue("role_id", regularRole.id);
+                  setValue("organization_id", null);
                   setValue("region_id", null);
                   setValue("depot_id", null);
                 }}
               >
-                {organizations.map((org) => (
-                  <Select.Item key={org.id} value={org.id}>
-                    {org.name}
-                  </Select.Item>
-                ))}
-              </Select>
-            )}
-          />
-        )}
-
-        <Controller
-          control={control}
-          name="role_id"
-          rules={{ required: "Role is required" }}
-          render={({ field, fieldState }) => (
-            <Select
-              className="h-auto w-full flex-none"
-              label={
-                <span>
-                  Select Role <span className="text-red-500">*</span>
-                </span>
-              }
-              placeholder={rolesLoading ? "Loading roles..." : "Select Role"}
-              disabled={rolesLoading}
-              error={!!fieldState.error}
-              helpText={fieldState.error?.message}
-              value={field.value || undefined}
-              onValueChange={field.onChange}
-            >
-              {roles.map((role) => {
-                const roleName = role.name || (role as any).roleName || "";
-                return (
-                  <Select.Item key={role.id} value={role.id}>
-                    {getRoleLabel(roleName)}
-                  </Select.Item>
-                );
-              })}
-            </Select>
-          )}
-        />
-
-        {(selectedRole?.name === "region_admin" ||
-          selectedRole?.name === "depot_admin") && (
-          <Controller
-            control={control}
-            name="region_id"
-            rules={{ required: "Region is required" }}
-            render={({ field, fieldState }) => (
-              <Select
-                className="h-auto w-full flex-none"
-                label={
-                  <span>
-                    Select Region <span className="text-red-500">*</span>
-                  </span>
-                }
-                placeholder="Select Region"
-                error={!!fieldState.error}
-                helpText={fieldState.error?.message}
-                value={field.value || undefined}
-                onValueChange={(val) => {
-                  field.onChange(val);
-                  setValue("depot_id", null);
+                Regular Customer (Standalone)
+              </button>
+              <button
+                type="button"
+                className={`flex-1 py-1.5 text-xs font-medium rounded transition-all ${
+                  customerTier === "stu"
+                    ? "bg-white text-brand-primary shadow-xs font-semibold"
+                    : "text-subtext-color hover:text-default-font"
+                }`}
+                onClick={() => {
+                  setCustomerTier("stu");
+                  setValue("organization_id", defaultOrgId || "");
                 }}
               >
-                {regions.map((region) => (
-                  <Select.Item key={region.id} value={region.id}>
-                    {region.name}
-                  </Select.Item>
-                ))}
-              </Select>
-            )}
-          />
+                STU Organization User
+              </button>
+            </div>
+            <span className="text-micro text-subtext-color">
+              {customerTier === "regular"
+                ? "Standalone freelancer or body builder. No organization, regions, or depots required."
+                : "STU enterprise customer with structured regions, depots, and assigned roles."}
+            </span>
+          </div>
         )}
 
-        {selectedRole?.name === "depot_admin" && (
+        {customerTier === "regular" ? (
+          <div className="flex w-full items-start gap-3 rounded-md border border-brand-200 bg-brand-50/60 p-3 text-xs text-brand-900">
+            <div className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-brand-200 text-brand-primary font-bold text-micro">
+              ✓
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="font-semibold text-brand-900">Direct Route Creator Role</span>
+              <span className="text-brand-700 text-micro">
+                This user can immediately add and manage their own routes without needing any organizations, regions, or depots.
+              </span>
+            </div>
+          </div>
+        ) : (
           <>
+            {isSuperAdmin && (
+              <Controller
+                control={control}
+                name="organization_id"
+                rules={{ required: customerTier === "stu" ? "Organization is required" : false }}
+                render={({ field }) => (
+                  <Select
+                    className="h-auto w-full flex-none"
+                    label={
+                      <span>
+                        Organization <span className="text-red-500">*</span>
+                      </span>
+                    }
+                    placeholder="Select Organization"
+                    value={field.value || undefined}
+                    onValueChange={(val) => {
+                      field.onChange(val);
+                      setValue("region_id", null);
+                      setValue("depot_id", null);
+                    }}
+                  >
+                    {organizations.map((org) => (
+                      <Select.Item key={org.id} value={org.id}>
+                        {org.name}
+                      </Select.Item>
+                    ))}
+                  </Select>
+                )}
+              />
+            )}
+
             <Controller
               control={control}
-              name="depot_id"
-              rules={{ required: "Depot is required" }}
+              name="role_id"
+              rules={{ required: "Role is required" }}
               render={({ field, fieldState }) => (
                 <Select
                   className="h-auto w-full flex-none"
                   label={
                     <span>
-                      Select Depot <span className="text-red-500">*</span>
+                      Select Role <span className="text-red-500">*</span>
                     </span>
                   }
-                  placeholder="Select Depot"
+                  placeholder={rolesLoading ? "Loading roles..." : "Select Role"}
+                  disabled={rolesLoading}
                   error={!!fieldState.error}
                   helpText={fieldState.error?.message}
                   value={field.value || undefined}
                   onValueChange={field.onChange}
                 >
-                  {depots.map((depot) => (
-                    <Select.Item key={depot.id} value={depot.id}>
-                      {depot.name}
-                    </Select.Item>
-                  ))}
+                  {roles.map((role) => {
+                    const roleName = role.name || (role as any).roleName || "";
+                    return (
+                      <Select.Item key={role.id} value={role.id}>
+                        {getRoleLabel(roleName)}
+                      </Select.Item>
+                    );
+                  })}
                 </Select>
               )}
             />
-            {selectedRegionId && depots.length === 0 && (
-              <Alert
-                variant="warning"
-                icon={<FeatherAlertTriangle className="h-5 w-5" />}
-                description="No depots found in this region"
+
+            {(selectedRole?.name === "region_admin" ||
+              selectedRole?.name === "depot_admin") && (
+              <Controller
+                control={control}
+                name="region_id"
+                rules={{ required: "Region is required" }}
+                render={({ field, fieldState }) => (
+                  <Select
+                    className="h-auto w-full flex-none"
+                    label={
+                      <span>
+                        Select Region <span className="text-red-500">*</span>
+                      </span>
+                    }
+                    placeholder="Select Region"
+                    error={!!fieldState.error}
+                    helpText={fieldState.error?.message}
+                    value={field.value || undefined}
+                    onValueChange={(val) => {
+                      field.onChange(val);
+                      setValue("depot_id", null);
+                    }}
+                  >
+                    {regions.map((region) => (
+                      <Select.Item key={region.id} value={region.id}>
+                        {region.name}
+                      </Select.Item>
+                    ))}
+                  </Select>
+                )}
               />
+            )}
+
+            {selectedRole?.name === "depot_admin" && (
+              <>
+                <Controller
+                  control={control}
+                  name="depot_id"
+                  rules={{ required: "Depot is required" }}
+                  render={({ field, fieldState }) => (
+                    <Select
+                      className="h-auto w-full flex-none"
+                      label={
+                        <span>
+                          Select Depot <span className="text-red-500">*</span>
+                        </span>
+                      }
+                      placeholder="Select Depot"
+                      error={!!fieldState.error}
+                      helpText={fieldState.error?.message}
+                      value={field.value || undefined}
+                      onValueChange={field.onChange}
+                    >
+                      {depots.map((depot) => (
+                        <Select.Item key={depot.id} value={depot.id}>
+                          {depot.name}
+                        </Select.Item>
+                      ))}
+                    </Select>
+                  )}
+                />
+                {selectedRegionId && depots.length === 0 && (
+                  <Alert
+                    variant="warning"
+                    icon={<FeatherAlertTriangle className="h-5 w-5" />}
+                    description="No depots found in this region"
+                  />
+                )}
+              </>
             )}
           </>
         )}
