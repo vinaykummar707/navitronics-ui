@@ -130,14 +130,43 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
 
   // -- Submit Handler --
   const onSubmit = async (data: OrganizationFormValues) => {
+    const trimmedName = data.name.trim();
+    const trimmedEmail = data.email?.trim() || null;
+
+    // Check for duplicate name or email before creating/updating
+    try {
+      let checkQuery = supabase
+        .from("organizations")
+        .select("id, name, email")
+        .eq("deleted", false);
+
+      if (isEditMode && initialData?.id) {
+        checkQuery = checkQuery.neq("id", initialData.id);
+      }
+
+      const conditions: string[] = [`name.ilike."${trimmedName}"`];
+      if (trimmedEmail) {
+        conditions.push(`email.ilike."${trimmedEmail}"`);
+      }
+
+      const { data: existingOrgs } = await checkQuery.or(conditions.join(","));
+
+      if (existingOrgs && existingOrgs.length > 0) {
+        toast.error("The email address or name is already in use");
+        return;
+      }
+    } catch (checkErr) {
+      console.warn("Pre-submission uniqueness check warning:", checkErr);
+    }
+
     if (isEditMode && initialData) {
       updateOrganization(
         {
           id: initialData.id,
           payload: {
             id: initialData.id,
-            name: data.name.trim(),
-            email: data.email?.trim() || null,
+            name: trimmedName,
+            email: trimmedEmail,
             phone: data.phone?.trim() || null,
             logo: data.logo?.trim() || null,
             PIS: Boolean(data.PIS),

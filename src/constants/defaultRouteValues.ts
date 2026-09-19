@@ -20,7 +20,7 @@ import {
 export const DEFAULT_SCROLL_TYPE: ScrollType = "Fixed";
 export const DEFAULT_POSITION: Position = "Center";
 export const DEFAULT_FONT_WEIGHT: FontWeight = "Bold";
-export const DEFAULT_SCROLL_SPEED = 9;
+export const DEFAULT_SCROLL_SPEED = 4;
 export const DEFAULT_FONT_HEIGHT = 14;
 export const DEFAULT_FONT_WIDTH = 12;
 export const DEFAULT_SIMULATION_HEIGHT = DEFAULT_SIMULATION_HEIGHTS[0];

@@ -2,9 +2,10 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { FeatherCheck, FeatherMapPin, FeatherPin } from "@subframe/core";
+import { FeatherCheck, FeatherMapPin, FeatherPin, FeatherVolume2 } from "@subframe/core";
 import { Button } from "./Button";
 import { TextField } from "./TextField";
+import { Select } from "./Select";
 import * as SubframeUtils from "../utils";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { IStop, IStopCreate, stopCrud } from "@/types/IStop";
@@ -16,7 +17,7 @@ interface CreateStopFormProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   depotId: string;
   initialData?: any;
-  onSuccess?: (stop?: IStop) => void;
+  onSuccess?: (stop?: IStop, nameChanged?: boolean, voice?: string) => void;
   onCancel?: () => void;
 }
 
@@ -65,6 +66,7 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
   }, [initialData, reset]);
 
   const mode = !!initialData;
+  const [selectedVoice, setSelectedVoice] = React.useState<string>("meera");
 
   const onSubmit = async (data) => {
     const payload = {
@@ -81,11 +83,13 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
           payload: payload,
         },
         {
-          onSuccess: () => {
+          onSuccess: (updatedResponse) => {
             console.log("Stop updated successfully:", payload);
             toast.success("Stop updated successfully");
             reset();
-            onSuccess?.();
+            const result = updatedResponse || payload;
+            const nameChanged = initialData.name?.trim().toLowerCase() !== payload.name?.trim().toLowerCase();
+            onSuccess?.(result, nameChanged, selectedVoice);
           },
           onError: (error) => {
             console.error("Error updating Stop:", error);
@@ -99,7 +103,7 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
           console.log("Stop created successfully:", successResponse);
           toast.success("Stop created successfully");
           reset();
-          onSuccess?.(successResponse);
+          onSuccess?.(successResponse, false, selectedVoice);
         },
         onError: (error) => {
           console.error("Error creating Stop:", error);
@@ -146,6 +150,21 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
             placeholder="Gachibowli"
           />
         </TextField>
+
+        <Select
+          className="h-auto w-full flex-none"
+          label={
+            <span className="flex items-center gap-1.5">
+              <FeatherVolume2 className="h-3.5 w-3.5 text-neutral-500" />
+              Announcement Voice
+            </span>
+          }
+          value={selectedVoice}
+          onValueChange={(val) => setSelectedVoice(val)}
+        >
+          <Select.Item value="meera">Female Voice (Meera - Natural)</Select.Item>
+          <Select.Item value="arvind">Male Voice (Arvind - Clear)</Select.Item>
+        </Select>
         <TextField
           className="h-auto w-full flex-none"
           label={

@@ -33,7 +33,7 @@ const SelectOrganizationComponentRoot = React.forwardRef<
   const { useList } = organizationCrud;
   const { data, isLoading } = useList({
     filters: { deleted: false },
-    orderBy: { column: "created_at", ascending: true },
+    orderBy: { column: "created_at", ascending: false },
   });
 
   // Safe access to organization data
@@ -62,7 +62,8 @@ const SelectOrganizationComponentRoot = React.forwardRef<
   };
 
   // Only shown organizations based on role or if they are assigned to one
-  const orgsToShow = user && user.role?.name === "master" ? orgs : orgs?.filter(org => org.id === user.organization?.id);
+  const isSuper = user?.role?.name === "master";
+  const orgsToShow = isSuper ? orgs : orgs?.filter(org => org.id === user.organization?.id);
 
   if (isLoading) {
     return (
@@ -113,6 +114,30 @@ const SelectOrganizationComponentRoot = React.forwardRef<
           {orgInitials || <FeatherHotel className="w-5 h-5" />}
           <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-sidebar-background ring-1 ring-emerald-500/40" />
         </button>
+      </div>
+    );
+  }
+
+  // Non-super-admin users belong to a fixed organization; render as a static badge
+  if (!isSuper) {
+    return (
+      <div
+        className={SubframeUtils.twClassNames(
+          "flex w-full flex-col items-start gap-1 p-2.5 rounded-lg border border-neutral-border bg-neutral-50/80 select-none",
+          className
+        )}
+        ref={ref}
+        {...otherProps}
+      >
+        <span className="text-[10px] font-caption text-subtext-color font-semibold uppercase tracking-wider">
+          Organization
+        </span>
+        <div className="flex items-center gap-2 min-w-0 w-full">
+          <FeatherHotel className="w-4 h-4 text-brand-primary flex-none" />
+          <span className="text-body-bold font-body-bold text-default-font truncate text-sm font-semibold">
+            {selectedOrganization?.name || user?.organization?.name || "Organization"}
+          </span>
+        </div>
       </div>
     );
   }

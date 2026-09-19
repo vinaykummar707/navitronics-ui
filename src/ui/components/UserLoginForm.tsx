@@ -69,6 +69,7 @@ const UserLoginFormRoot = React.forwardRef<
     refetch: usersRefetch,
   } = useList({
     filters: { user_id: userId },
+    includeDeleted: true,
     custom(query) {
       return query
         .select(
@@ -79,7 +80,7 @@ const UserLoginFormRoot = React.forwardRef<
         role:role_id (*)
       `,
         )
-        .single();
+        .maybeSingle();
     },
     skip: !userId, // Skip the query until we have a userId
   });
@@ -124,12 +125,18 @@ const UserLoginFormRoot = React.forwardRef<
 
   // Handle post-login navigation when user details are retrieved
   useEffect(() => {
-    if (!userId || !loggedUserDetails?.data) return;
+    if (!userId || usersLoading) return;
 
     const processLogin = async () => {
-      const userData = { ...(loggedUserDetails.data as ILoggedUser) };
-
       try {
+        if (usersError || !loggedUserDetails?.data) {
+          throw new Error(
+            "Your account is inactive or has been deactivated. Please contact support at support@navitronix.in or reach your administrator.",
+          );
+        }
+
+        const userData = { ...(loggedUserDetails.data as ILoggedUser) };
+
         // 1. Account status validation
         if (!userData.active || userData.deleted) {
           throw new Error(
@@ -147,6 +154,15 @@ const UserLoginFormRoot = React.forwardRef<
             }
             if (meta.v2_routes !== undefined && (userData.v2_routes === undefined || userData.v2_routes === null)) {
               userData.v2_routes = meta.v2_routes;
+            }
+            if (meta.PIS !== undefined && (userData.PIS === undefined || userData.PIS === null)) {
+              userData.PIS = meta.PIS;
+            }
+            if (meta.PAS !== undefined && (userData.PAS === undefined || userData.PAS === null)) {
+              userData.PAS = meta.PAS;
+            }
+            if (meta.ITMS !== undefined && (userData.ITMS === undefined || userData.ITMS === null)) {
+              userData.ITMS = meta.ITMS;
             }
             if (meta.customer_type && !userData.customer_type) {
               userData.customer_type = meta.customer_type;

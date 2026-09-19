@@ -114,7 +114,7 @@ const LEDBitmapSimulator = ({
       iconWordIndex: (safeText as any)?.iconWordIndex || undefined,
       iconSpacing: (safeText as any)?.iconSpacing !== undefined ? (safeText as any).iconSpacing : undefined,
       iconWidthScale: (safeText as any)?.iconWidthScale !== undefined ? (safeText as any).iconWidthScale : undefined,
-      height: safeText?.fontHeight || rows,
+      height: Math.min(safeText?.fontHeight || rows, rows),
       weight: safeText?.fontWeight === "Bold" ? "Bold" : "Regular",
       family: fontFamily,
       vAlign: (safeText as any)?.vAlign || undefined,

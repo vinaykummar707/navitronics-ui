@@ -86,6 +86,45 @@ const RouteCreationHeaderRoot = React.forwardRef<
 
   const onSubmit: SubmitHandler<IRoute> = async (data) => {
     if (isCreatingRoute || isUpdatingRoute) return;
+
+    // BUG-051: Auto-sync intermediate stops entered in 'via' field to depot stops
+    if (data.via && data.depot_id) {
+      try {
+        const viaStops = data.via
+          .split(/[,;]/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+
+        if (viaStops.length > 0) {
+          const { data: existingStops } = await supabase
+            .from("stops")
+            .select("name")
+            .eq("depot_id", data.depot_id)
+            .eq("deleted", false);
+
+          const existingSet = new Set(
+            (existingStops || []).map((s) => s.name?.toLowerCase().trim())
+          );
+
+          const newStopsToCreate = viaStops
+            .filter((sName) => !existingSet.has(sName.toLowerCase()))
+            .map((sName) => ({
+              name: sName,
+              depot_id: data.depot_id,
+              organization_id: data.organization_id || null,
+              deleted: false,
+            }));
+
+          if (newStopsToCreate.length > 0) {
+            await supabase.from("stops").insert(newStopsToCreate);
+            console.log(`Auto-created ${newStopsToCreate.length} intermediate stops from via field`);
+          }
+        }
+      } catch (viaErr) {
+        console.warn("Could not auto-sync via stops:", viaErr);
+      }
+    }
+
     if (mode === "edit") {
       updateRoute(
         {

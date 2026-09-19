@@ -111,6 +111,9 @@ const CreateUserForm2Root = React.forwardRef<
       const name = role.name?.toLowerCase();
       return (
         name !== "master" &&
+        name !== "super_admin" &&
+        name !== "super admin" &&
+        name !== "superadmin" &&
         name !== "user" &&
         name !== "regular" &&
         name !== "regular_customer"
@@ -125,6 +128,7 @@ const CreateUserForm2Root = React.forwardRef<
     : (isSuperAdmin ? "regular" : "stu");
 
   const [customerTier, setCustomerTier] = useState<"regular" | "stu">(initialTier);
+  const isRegular = customerTier === "regular";
 
   const defaultOrgId =
     initialData?.organization?.id ||
@@ -152,7 +156,10 @@ const CreateUserForm2Root = React.forwardRef<
       active: initialData?.active ?? true,
       v1_routes: initialData?.v1_routes ?? selectedOrganization?.v1_routes ?? false,
       v2_routes: initialData?.v2_routes ?? selectedOrganization?.v2_routes ?? true,
-    },
+      PIS: (initialData as any)?.PIS ?? selectedOrganization?.PIS ?? true,
+      PAS: (initialData as any)?.PAS ?? selectedOrganization?.PAS ?? true,
+      ITMS: (initialData as any)?.ITMS ?? selectedOrganization?.ITMS ?? false,
+    } as any,
   });
 
   // Sync regular role when tier is regular
@@ -231,7 +238,10 @@ const CreateUserForm2Root = React.forwardRef<
         active: initialData.active ?? true,
         v1_routes: initialData.v1_routes ?? selectedOrganization?.v1_routes ?? false,
         v2_routes: initialData.v2_routes ?? selectedOrganization?.v2_routes ?? true,
-      });
+        PIS: (initialData as any).PIS ?? selectedOrganization?.PIS ?? true,
+        PAS: (initialData as any).PAS ?? selectedOrganization?.PAS ?? true,
+        ITMS: (initialData as any).ITMS ?? selectedOrganization?.ITMS ?? false,
+      } as any);
     } else {
       reset({
         role_id: "",
@@ -244,7 +254,10 @@ const CreateUserForm2Root = React.forwardRef<
         active: true,
         v1_routes: selectedOrganization?.v1_routes ?? false,
         v2_routes: selectedOrganization?.v2_routes ?? true,
-      });
+        PIS: selectedOrganization?.PIS ?? true,
+        PAS: selectedOrganization?.PAS ?? true,
+        ITMS: selectedOrganization?.ITMS ?? false,
+      } as any);
     }
   }, [initialData, reset, selectedOrganization, defaultOrgId]);
 
@@ -280,6 +293,9 @@ const CreateUserForm2Root = React.forwardRef<
       active: data.active,
       v1_routes: Boolean(data.v1_routes),
       v2_routes: Boolean(data.v2_routes),
+      PIS: Boolean((data as any).PIS),
+      PAS: Boolean((data as any).PAS),
+      ITMS: Boolean((data as any).ITMS),
     };
 
     if (isEditMode && initialData) {
@@ -385,6 +401,9 @@ const CreateUserForm2Root = React.forwardRef<
             data: {
               v1_routes: Boolean(data.v1_routes),
               v2_routes: Boolean(data.v2_routes),
+              PIS: Boolean((data as any).PIS),
+              PAS: Boolean((data as any).PAS),
+              ITMS: Boolean((data as any).ITMS),
             },
           },
         });
@@ -897,6 +916,47 @@ const CreateUserForm2Root = React.forwardRef<
               )}
             />
           </>
+        )}
+
+        {/* Module Access Permissions (STU Enterprise Users) */}
+        {!isRegular && (
+          <div className="flex flex-col gap-3 w-full border-t border-neutral-border pt-3">
+            <span className="text-caption-bold font-caption-bold text-default-font">
+              Module Access Permissions
+            </span>
+            <div className="flex flex-col gap-2 w-full">
+              <FeatureToggle
+                label="PIS (Passenger Information System)"
+                description="Allow user access to route creation and LED signboard simulator"
+                toggle={
+                  <Switch
+                    checked={Boolean(watch("PIS" as any))}
+                    onCheckedChange={(checked) => setValue("PIS" as any, checked)}
+                  />
+                }
+              />
+              <FeatureToggle
+                label="PAS (Public Address System)"
+                description="Allow user access to stop management and automated audio announcements"
+                toggle={
+                  <Switch
+                    checked={Boolean(watch("PAS" as any))}
+                    onCheckedChange={(checked) => setValue("PAS" as any, checked)}
+                  />
+                }
+              />
+              <FeatureToggle
+                label="ITMS (Intelligent Transit Management System)"
+                description="Enable intelligent fleet and transit management features"
+                toggle={
+                  <Switch
+                    checked={Boolean(watch("ITMS" as any))}
+                    onCheckedChange={(checked) => setValue("ITMS" as any, checked)}
+                  />
+                }
+              />
+            </div>
+          </div>
         )}
 
         {/* Route Version Capabilities */}

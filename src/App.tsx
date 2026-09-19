@@ -80,7 +80,7 @@ const protectedRoutes = [
   },
   {
     path: "regions",
-    roles: [ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER],
+    roles: [ROLES.ORGANIZATION_ADMIN, ROLES.MASTER],
     features: ["PIS", "PAS", "ITMS"],
     element: <AreasPage />,
   },

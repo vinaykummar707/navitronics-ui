@@ -66,22 +66,18 @@ const TextPropertiesControlsRoot = React.forwardRef<
   const handleSelection = (field: string, value: string | number) =>
     setValue(`${pathBase}.${field}`, value);
   const handleIncrement = () => {
-    const currentBitmapHeight = getBitmapHeight(
-      getValues(`${pathBase}.bitmap`),
-    );
+    const boardHeight = (getValues(`${selectedSimulationPath}.height`) as number) || 16;
+    const isSplit = textProperty === "upperHalfText" || textProperty === "lowerHalfText";
+    const maxAllowedHeight = isSplit ? Math.floor(boardHeight / 2) : boardHeight;
     const currentHeight = (getValues(`${pathBase}.fontHeight`) as number) || 16;
-    const targetFontHeight = (getValues(`${selectedSimulationPath}.height`) as number) === 16 ? 16 : 32;
-    if (currentBitmapHeight < targetFontHeight) {
+    if (currentHeight < maxAllowedHeight) {
       setValue(`${pathBase}.fontHeight`, currentHeight + 1);
     }
   };
 
   const handleDecrement = () => {
-    const currentBitmapHeight = getBitmapHeight(
-      getValues(`${pathBase}.bitmap`),
-    );
     const currentHeight = (getValues(`${pathBase}.fontHeight`) as number) || 16;
-    if (currentBitmapHeight > 6 && currentHeight > 6) {
+    if (currentHeight > 6) {
       setValue(`${pathBase}.fontHeight`, currentHeight - 1);
     }
   };

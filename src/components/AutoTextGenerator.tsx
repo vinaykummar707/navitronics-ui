@@ -3,11 +3,14 @@ import { Select } from "@/ui/components/Select";
 
 // Transliteration function using Google Input Tools API
 const fetchTransliteration = async (text: string, langCode: string = "hi"): Promise<string[]> => {
+  if (!text || !text.trim() || langCode === "en" || !langCode) {
+    return [];
+  }
   try {
     const baseLangCode = langCode.replace(/\d+$/, "");
     const response = await fetch(
       `https://inputtools.google.com/request?text=${encodeURIComponent(
-        text
+        text.trim()
       )}&itc=${baseLangCode}-t-i0-und&num=5&ie=utf-8&oe=utf-8&app=customApp`
     );
     const data = await response.json();

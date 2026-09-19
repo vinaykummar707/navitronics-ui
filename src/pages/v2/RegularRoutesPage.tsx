@@ -274,13 +274,44 @@ export default function RegularRoutesPage() {
       }
     }
 
+    const suffix = routeNumberSuffix === "(Return)" ? "R" : routeNumberSuffix;
+    const newRouteNumber = originalRoute.route_number?.endsWith("R")
+      ? `${originalRoute.route_number}-R`
+      : `${originalRoute.route_number}${suffix}`;
+
+    let swappedConfig = originalRoute.config;
+    if (originalRoute.config) {
+      try {
+        let configStr =
+          typeof originalRoute.config === "string"
+            ? originalRoute.config
+            : JSON.stringify(originalRoute.config);
+        const oldSrc = (originalRoute.source || "").trim();
+        const oldDest = (originalRoute.destination || "").trim();
+        if (oldSrc && oldDest && oldSrc !== oldDest) {
+          const PLACEHOLDER = "___TMP_SWAP_SRC_DEST___";
+          configStr = configStr
+            .split(oldSrc).join(PLACEHOLDER)
+            .split(oldDest).join(oldSrc)
+            .split(PLACEHOLDER).join(oldDest);
+          swappedConfig =
+            typeof originalRoute.config === "string"
+              ? configStr
+              : JSON.parse(configStr);
+        }
+      } catch (err) {
+        console.error("Error swapping source/destination in return route config:", err);
+      }
+    }
+
     createRoute(
       {
         ...routeWithoutId,
         source: originalRoute.destination || originalRoute.source,
         destination: originalRoute.source || originalRoute.destination,
         stops: reversedStops,
-        route_number: `${originalRoute.route_number}${routeNumberSuffix}`,
+        config: swappedConfig,
+        route_number: newRouteNumber,
         created_at: new Date().toISOString(),
         return: true,
         created_by: user?.id || "",

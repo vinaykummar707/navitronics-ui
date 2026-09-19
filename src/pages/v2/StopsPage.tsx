@@ -4,9 +4,11 @@ import React, { useEffect } from "react";
 import { Button } from "@/ui/components/Button";
 import { DefaultPageLayout } from "@/ui/layouts/DefaultPageLayout";
 import {
+  FeatherAlertTriangle,
   FeatherCheck,
   FeatherChevronLeft,
   FeatherChevronRight,
+  FeatherDownload,
   FeatherMusic,
   FeatherPin,
   FeatherPlay,
@@ -14,8 +16,11 @@ import {
   FeatherRefreshCw,
   FeatherSearch,
   FeatherTrash,
+  FeatherUpload,
+  FeatherVolume2,
 } from "@subframe/core";
 import { Drawer, Select } from "@/ui";
+import { Dialog } from "@/ui/components/Dialog";
 import { TextField } from "@/ui/components/TextField";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { useRegionStore } from "@/store/useRegionStore";
@@ -186,18 +191,41 @@ export default function StopsPage() {
   }, [filteredStops, currentPage, pageSize]);
 
   const audioRef = React.useRef<HTMLAudioElement>(null);
+  const [playingAudioUrl, setPlayingAudioUrl] = React.useState<string | null>(null);
+  const [isDeleteAllOpen, setIsDeleteAllOpen] = React.useState(false);
+  const [isDeletingAll, setIsDeletingAll] = React.useState(false);
+  const [isGeneratingAll, setIsGeneratingAll] = React.useState(false);
+  const [genProgress, setGenProgress] = React.useState<{ current: number; total: number } | null>(null);
+
+  const resetAudioPlayer = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.removeAttribute("src");
+      audioRef.current.load();
+    }
+    setPlayingAudioUrl(null);
+  };
 
   const handlePlayAudio = (url: string) => {
-    if (audioRef.current) {
-      audioRef.current.src = url;
-      audioRef.current.play().catch((err) => {
-        console.warn("Audio playback was prevented or failed:", err);
-      });
+    if (!audioRef.current || !url) return;
+    if (playingAudioUrl === url) {
+      audioRef.current.pause();
+      setPlayingAudioUrl(null);
+      return;
     }
+    audioRef.current.src = url;
+    audioRef.current
+      .play()
+      .then(() => setPlayingAudioUrl(url))
+      .catch((err) => {
+        console.warn("Audio playback was prevented or failed:", err);
+        setPlayingAudioUrl(null);
+      });
   };
 
   // function to delete stop from supabase stops table and also delete the audio file from supabase storage and then delete stop audio record from stop_audios table if exists
   async function handleDeleteStop(stopId: string) {
+    resetAudioPlayer();
     deleteStop(stopId, {
       onSuccess: () => {
         toast.success("Stop deleted successfully");
@@ -213,6 +241,7 @@ export default function StopsPage() {
 
   async function deleteStopAudio(stop_audio_id: string) {
     try {
+      resetAudioPlayer();
       // First, delete the stop_audio record from the stop_audios table
       const { data, error } = await supabase
         .from("stop_audios")
@@ -229,15 +258,15 @@ export default function StopsPage() {
   }
 
   async function deleteAudioFile(fileUrl: string, stopId: string) {
+    resetAudioPlayer();
     // Extract the path of the file from the URL
-    const path = fileUrl.split("/").pop(); // adjust this line according to how your URLs are structured
+    const path = fileUrl.split("/").pop();
     if (!path) {
       console.error("Invalid file path");
       return;
     }
     try {
       const { error: deleteError } = await supabase.storage
-
         .from("stops")
         .remove([`${stopId}/${path}`]);
       if (deleteError) {
@@ -255,6 +284,7 @@ export default function StopsPage() {
     stopId: string,
     stop_audio_id?: string,
   ) {
+    resetAudioPlayer();
     if (fileUrl) await deleteAudioFile(fileUrl, stopId);
     if (stop_audio_id) {
       await deleteStopAudio(stop_audio_id);
@@ -267,6 +297,7 @@ export default function StopsPage() {
     stopId: string,
     stop_audio_id?: string,
   ) {
+    resetAudioPlayer();
     if (fileUrl) await deleteAudioFile(fileUrl, stopId);
     if (stop_audio_id) await deleteStopAudio(stop_audio_id);
     deleteStop(stopId, {
@@ -282,19 +313,179 @@ export default function StopsPage() {
 
   const [generatingStopId, setGeneratingStopId] = React.useState<string | null>(null);
 
-  const genAudio = async (text: string, stopId: string) => {
+  const genAudio = async (text: string, stopId: string, voice: string = "meera") => {
     try {
       setGeneratingStopId(stopId);
       toast.info(`Generating audio for "${text}"...`);
-      const { fileUrl, size } = await handleStopAudioGeneration(text, stopId);
+      const { fileUrl, size } = await handleStopAudioGeneration(text, stopId, "en-IN", voice);
       console.log("Generated audio URL:", fileUrl, "Size:", size);
       toast.success(`Audio generated successfully for "${text}"`);
-      refetchStops(); // Refresh the stops data to reflect the new audio
+      refetchStops();
     } catch (err: any) {
       console.error("Error generating audio:", err);
       toast.error(`Audio generation failed: ${err.message || "Unknown error"}`);
     } finally {
       setGeneratingStopId(null);
+    }
+  };
+
+  const handleDeleteAllStops = async () => {
+    if (!selectedDepot?.id) return;
+    try {
+      setIsDeletingAll(true);
+      resetAudioPlayer();
+      const { error } = await supabase
+        .from("stops")
+        .update({ deleted: true })
+        .eq("depot_id", selectedDepot.id)
+        .eq("deleted", false);
+
+      if (error) throw error;
+
+      toast.success(`All stops deleted successfully for depot ${selectedDepot.name}`);
+      setIsDeleteAllOpen(false);
+      refetchStops();
+    } catch (err: any) {
+      toast.error(`Failed to delete all stops: ${err.message || err}`);
+    } finally {
+      setIsDeletingAll(false);
+    }
+  };
+
+  const handleGenerateAllAudio = async () => {
+    const stopsNeedingAudio = filteredStops.filter((stop) => {
+      const hasAud = Array.isArray(stop.stop_audios) ? stop.stop_audios.length > 0 : Boolean(stop.stop_audios?.url);
+      return !hasAud;
+    });
+
+    const targetList = stopsNeedingAudio.length > 0 ? stopsNeedingAudio : filteredStops;
+    if (targetList.length === 0) {
+      toast.info("No stops available to generate audio.");
+      return;
+    }
+
+    try {
+      setIsGeneratingAll(true);
+      setGenProgress({ current: 0, total: targetList.length });
+      let successCount = 0;
+
+      for (let i = 0; i < targetList.length; i++) {
+        const s = targetList[i];
+        setGenProgress({ current: i + 1, total: targetList.length });
+        try {
+          await handleStopAudioGeneration(s.name, s.id || "");
+          successCount++;
+        } catch (e) {
+          console.warn(`Failed audio generation for ${s.name}:`, e);
+        }
+      }
+
+      toast.success(`Generated audio for ${successCount} of ${targetList.length} stops.`);
+      refetchStops();
+    } catch (err: any) {
+      toast.error(`Bulk generation failed: ${err.message || err}`);
+    } finally {
+      setIsGeneratingAll(false);
+      setGenProgress(null);
+    }
+  };
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleExportCSV = () => {
+    if (filteredStops.length === 0) {
+      toast.info("No stops to export.");
+      return;
+    }
+    const headers = [
+      "Stop Name",
+      "Kannada Name",
+      "Down Latitude",
+      "Down Longitude",
+      "Up Latitude",
+      "Up Longitude",
+    ];
+    const rows = filteredStops.map((s) => [
+      `"${(s.name || "").replace(/"/g, '""')}"`,
+      `"${((s as any).name_kn || "").replace(/"/g, '""')}"`,
+      s.down_latitude ?? "",
+      s.down_longitude ?? "",
+      s.up_latitude ?? "",
+      s.up_longitude ?? "",
+    ]);
+
+    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `${selectedDepot?.name || "depot"}_stops.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success("Stops exported successfully");
+  };
+
+  const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedDepot?.id) return;
+
+    try {
+      const text = await file.text();
+      const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
+      if (lines.length < 2) {
+        toast.error("CSV file contains no records");
+        return;
+      }
+
+      const headers = lines[0].split(",").map((h) => h.trim().toLowerCase().replace(/"/g, ""));
+      const nameIndex = headers.findIndex((h) => h.includes("stop name") || h === "name");
+      const nameKnIndex = headers.findIndex((h) => h.includes("kannada"));
+      const downLatIndex = headers.findIndex((h) => h.includes("down latitude") || h === "down_lat");
+      const downLonIndex = headers.findIndex((h) => h.includes("down longitude") || h === "down_lon");
+      const upLatIndex = headers.findIndex((h) => h.includes("up latitude") || h === "up_lat");
+      const upLonIndex = headers.findIndex((h) => h.includes("up longitude") || h === "up_lon");
+
+      if (nameIndex === -1) {
+        toast.error("CSV must contain a 'Stop Name' column");
+        return;
+      }
+
+      const stopsToInsert: any[] = [];
+      for (let i = 1; i < lines.length; i++) {
+        const row = lines[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map((val) => val.replace(/^"|"$/g, "").trim()) || lines[i].split(",").map((v) => v.trim());
+        const name = row[nameIndex];
+        if (!name) continue;
+
+        stopsToInsert.push({
+          name: name,
+          name_kn: nameKnIndex !== -1 ? row[nameKnIndex] || null : null,
+          down_latitude: downLatIndex !== -1 && row[downLatIndex] ? parseFloat(row[downLatIndex]) : null,
+          down_longitude: downLonIndex !== -1 && row[downLonIndex] ? parseFloat(row[downLonIndex]) : null,
+          up_latitude: upLatIndex !== -1 && row[upLatIndex] ? parseFloat(row[upLatIndex]) : null,
+          up_longitude: upLonIndex !== -1 && row[upLonIndex] ? parseFloat(row[upLonIndex]) : null,
+          depot_id: selectedDepot.id,
+          organization_id: selectedOrganization?.id,
+          deleted: false,
+        });
+      }
+
+      if (stopsToInsert.length === 0) {
+        toast.error("No valid stops found in CSV");
+        return;
+      }
+
+      const { error } = await supabase.from("stops").insert(stopsToInsert);
+      if (error) throw error;
+
+      toast.success(`Imported ${stopsToInsert.length} stops successfully`);
+      refetchStops();
+    } catch (err: any) {
+      console.error("Import failed:", err);
+      toast.error(`CSV import failed: ${err.message || err}`);
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -373,7 +564,16 @@ export default function StopsPage() {
               )}
             </div>
 
-            <div className="flex items-end gap-2 w-full sm:w-auto">
+            <div className="flex flex-wrap items-end gap-2 w-full sm:w-auto">
+              {/* Hidden file input for CSV Import */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept=".csv"
+                className="hidden"
+                onChange={handleImportCSV}
+              />
+
               <Button
                 variant="neutral-primary"
                 className="h-9 flex-1 sm:flex-none"
@@ -385,6 +585,69 @@ export default function StopsPage() {
               >
                 Refresh
               </Button>
+
+              <Button
+                variant="neutral-secondary"
+                className="h-9 flex-1 sm:flex-none"
+                icon={<FeatherMusic className="h-3.5 w-3.5" />}
+                loading={isGeneratingAll}
+                disabled={isGeneratingAll || filteredStops.length === 0}
+                onClick={handleGenerateAllAudio}
+              >
+                {isGeneratingAll && genProgress
+                  ? `Generating (${genProgress.current}/${genProgress.total})...`
+                  : "Generate All Audio"}
+              </Button>
+
+              <Button
+                variant="neutral-secondary"
+                className="h-9 flex-1 sm:flex-none"
+                icon={<FeatherDownload className="h-3.5 w-3.5" />}
+                disabled={filteredStops.length === 0}
+                onClick={handleExportCSV}
+              >
+                Export CSV
+              </Button>
+
+              <RBAC
+                features={["PAS", "ITMS"]}
+                roles={[
+                  "region_admin",
+                  "organization_admin",
+                  "master",
+                  "depot_admin",
+                ]}
+              >
+                <Button
+                  variant="neutral-secondary"
+                  className="h-9 flex-1 sm:flex-none"
+                  icon={<FeatherUpload className="h-3.5 w-3.5" />}
+                  disabled={!selectedDepot}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Import CSV
+                </Button>
+              </RBAC>
+
+              <RBAC
+                features={["PAS", "ITMS"]}
+                roles={[
+                  "region_admin",
+                  "organization_admin",
+                  "master",
+                  "depot_admin",
+                ]}
+              >
+                <Button
+                  variant="destructive-secondary"
+                  className="h-9 flex-1 sm:flex-none"
+                  icon={<FeatherTrash className="h-3.5 w-3.5" />}
+                  disabled={!selectedDepot || filteredStops.length === 0}
+                  onClick={() => setIsDeleteAllOpen(true)}
+                >
+                  Delete All Stops
+                </Button>
+              </RBAC>
 
               <RBAC
                 features={["PAS", "ITMS"]}
@@ -400,7 +663,10 @@ export default function StopsPage() {
                   className="h-9 flex-1 sm:flex-none"
                   icon={<FeatherPlus />}
                   disabled={!selectedDepot}
-                  onClick={() => setOpen(true)}
+                  onClick={() => {
+                    setEditData(null);
+                    setOpen(true);
+                  }}
                 >
                   Add Stop
                 </Button>
@@ -412,6 +678,38 @@ export default function StopsPage() {
 
       {/* Shared audio player instance */}
       <audio ref={audioRef} className="hidden" />
+
+      {/* Delete All Confirmation Dialog */}
+      <Dialog open={isDeleteAllOpen} onOpenChange={setIsDeleteAllOpen}>
+        <Dialog.Content className="w-full max-w-md flex-none p-6">
+          <div className="flex flex-col gap-4 w-full">
+            <div className="flex items-center gap-3 text-red-600">
+              <FeatherAlertTriangle className="h-6 w-6 flex-none" />
+              <span className="text-heading-3 font-heading-3">Delete All Stops</span>
+            </div>
+            <span className="text-body font-body text-neutral-600">
+              Are you sure you want to delete all <strong>{filteredStops.length}</strong> stops for depot{" "}
+              <strong>{selectedDepot?.name || "selected"}</strong>? This action cannot be undone.
+            </span>
+            <div className="flex justify-end gap-2 pt-3 border-t border-neutral-border">
+              <Button
+                variant="neutral-secondary"
+                disabled={isDeletingAll}
+                onClick={() => setIsDeleteAllOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive-primary"
+                loading={isDeletingAll}
+                onClick={handleDeleteAllStops}
+              >
+                Delete All Stops
+              </Button>
+            </div>
+          </div>
+        </Dialog.Content>
+      </Dialog>
 
       {/* Content */}
       {hasStops ? (
@@ -431,7 +729,12 @@ export default function StopsPage() {
             >
               {paginatedStops.map((stop, index) => {
                 const serialNumber = (currentPage - 1) * pageSize + index + 1;
-                const hasAudio = !!(stop.stop_audios && stop.stop_audios.url);
+                const firstAudio = Array.isArray(stop.stop_audios)
+                  ? stop.stop_audios[0]
+                  : stop.stop_audios;
+                const hasAudio = Boolean(firstAudio?.url);
+                const audioUrl = firstAudio?.url || "";
+                const audioId = firstAudio?.id;
 
                 return (
                   <Table.Row key={stop.id}>
@@ -471,17 +774,25 @@ export default function StopsPage() {
                         <div className="flex items-center gap-2">
                           <Button
                             size="small"
-                            variant="brand-secondary"
-                            icon={<FeatherPlay className="h-3 w-3" />}
-                            onClick={() => handlePlayAudio(stop.stop_audios?.url || "")}
+                            variant={playingAudioUrl === audioUrl ? "brand-primary" : "brand-secondary"}
+                            icon={
+                              playingAudioUrl === audioUrl ? (
+                                <FeatherVolume2 className="h-3 w-3 animate-pulse" />
+                              ) : (
+                                <FeatherPlay className="h-3 w-3" />
+                              )
+                            }
+                            onClick={() => handlePlayAudio(audioUrl)}
                           >
-                            Play
+                            {playingAudioUrl === audioUrl ? "Playing" : "Play"}
                           </Button>
                           <Badge variant="success" icon={<FeatherCheck className="h-3 w-3" />}>Audio Ready</Badge>
                           <IconButton
                             size="small"
                             variant="destructive-tertiary"
                             icon={<FeatherTrash className="h-3.5 w-3.5" />}
+                            title="Delete Audio"
+                            aria-label="Delete Audio"
                             onClick={() => {
                               if (
                                 confirm(
@@ -489,9 +800,9 @@ export default function StopsPage() {
                                 )
                               ) {
                                 deleteAudioFileAndStopAudioRecord(
-                                  stop.stop_audios?.url || "",
+                                  audioUrl,
                                   stop.id || "",
-                                  stop.stop_audios?.id || undefined,
+                                  audioId || undefined,
                                 );
                               }
                             }}
@@ -524,11 +835,11 @@ export default function StopsPage() {
                               "Are you sure you want to delete this stop? This action cannot be undone.",
                             )
                           ) {
-                            if (stop.stop_audios && stop.stop_audios.url) {
+                            if (audioUrl) {
                               deleteAudioFileAndStopAudioRecordAndStop(
-                                stop.stop_audios.url,
+                                audioUrl,
                                 stop.id || "",
-                                stop.stop_audios.id || undefined,
+                                audioId || undefined,
                               );
                             } else {
                               handleDeleteStop(stop.id || "");
@@ -578,13 +889,35 @@ export default function StopsPage() {
           <CreateStopForm
             depotId={selectedDepot ? selectedDepot.id : undefined}
             initialData={editData}
-            onSuccess={(stop: IStop) => {
+            onSuccess={async (stop: IStop, nameChanged?: boolean, voice?: string) => {
               setOpen(false);
-              refetchStops();
+              const wasEdit = !!editData;
+              const prevData = editData;
               setEditData(null);
-              genAudio(stop.name, stop.id || "");
+              refetchStops();
+
+              if (!wasEdit) {
+                // New stop created - automatically generate audio (BUG-027)
+                await genAudio(stop.name, stop.id || "", voice);
+              } else if (nameChanged) {
+                // Stop name was updated - regenerate audio to match new name (BUG-029)
+                const firstAudio = Array.isArray(prevData?.stop_audios)
+                  ? prevData?.stop_audios[0]
+                  : prevData?.stop_audios;
+                if (firstAudio?.url) {
+                  await deleteAudioFileAndStopAudioRecord(
+                    firstAudio.url,
+                    stop.id || "",
+                    firstAudio.id,
+                  );
+                }
+                await genAudio(stop.name, stop.id || "", voice);
+              }
             }}
-            onCancel={() => setOpen(false)}
+            onCancel={() => {
+              setOpen(false);
+              setEditData(null);
+            }}
           />
         </Drawer.Content>
       </Drawer>

@@ -1,12 +1,32 @@
 import { useLanguageConfigs } from "@/context/LanguageConfigContext";
 
+const SCRIPT_FALLBACKS: Record<string, string> = {
+  hi: "Noto Sans Devanagari",
+  mr: "Noto Sans Devanagari",
+  kn: "Noto Sans Kannada",
+  te: "Noto Sans Telugu",
+  ta: "Noto Sans Tamil",
+  ml: "Noto Sans Malayalam",
+  bn: "Noto Sans Bengali",
+  gu: "Noto Sans Gujarati",
+  pa: "Noto Sans Gurmukhi",
+  en: "Arial",
+};
+
 const normalizeLang = (l?: string): string => {
   if (!l) return "en";
   const lower = l.toLowerCase().trim();
-  if (lower === "english" || lower === "en") return "en";
-  if (lower === "hindi" || lower === "hi") return "hi";
-  if (lower === "telugu" || lower === "te") return "te";
-  return lower;
+  const base = lower.replace(/\d+$/, "");
+  if (base === "english" || base === "en") return "en";
+  if (base === "hindi" || base === "hi") return "hi";
+  if (base === "telugu" || base === "te") return "te";
+  if (base === "kannada" || base === "kn") return "kn";
+  if (base === "tamil" || base === "ta") return "ta";
+  if (base === "marathi" || base === "mr") return "mr";
+  if (base === "malayalam" || base === "ml") return "ml";
+  if (base === "bengali" || base === "bn") return "bn";
+  if (base === "gujarati" || base === "gu") return "gu";
+  return base;
 };
 
 export function useFontFileByLanguage() {
@@ -14,25 +34,28 @@ export function useFontFileByLanguage() {
 
   return (lang: string, key: string, fontHeight?: number): string => {
     const targetLang = normalizeLang(lang);
-    const langObj = offsetConfigs.configs.find(
+    const fallbackFont = SCRIPT_FALLBACKS[targetLang] || "Arial";
+
+    const langObj = offsetConfigs?.configs?.find(
       (language) =>
         normalizeLang(language.code) === targetLang ||
         language.name?.toLowerCase() === targetLang
     );
-    if (!langObj || !langObj.config) return "Arial";
+    if (!langObj || !langObj.config) return fallbackFont;
 
     const configForSection = langObj.config[key] || langObj.config["text"] || langObj.config["sideText"];
-    if (!configForSection) return "Arial";
+    if (!configForSection) return fallbackFont;
 
     const use8 = typeof fontHeight === "number" ? fontHeight <= 8 : false;
     const use16 = typeof fontHeight === "number" ? fontHeight > 8 && fontHeight <= 16 : false;
 
     const fontFamily = use8
-      ? configForSection.fontFamily8 || "Arial"
+      ? configForSection.fontFamily8 || fallbackFont
       : use16
-      ? configForSection.fontFamily16 || "Arial"
-      : configForSection.fontFamily32 || configForSection.fontFamily16 || "Arial";
-    return fontFamily;
+      ? configForSection.fontFamily16 || fallbackFont
+      : configForSection.fontFamily32 || configForSection.fontFamily16 || fallbackFont;
+
+    return (fontFamily && fontFamily !== "Arial") ? fontFamily : fallbackFont;
   };
 }
 

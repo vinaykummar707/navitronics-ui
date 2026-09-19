@@ -157,23 +157,22 @@ import { TextField } from "@/ui/components/TextField";
 import React, { useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
 
 const fetchTransliteration = async (word: string, langCode: string) => {
+  if (!word || !word.trim() || langCode === "en" || !langCode) {
+    return [];
+  }
   try {
     const baseLangCode = langCode.replace(/\d+$/, "");
-    console.log("Original langCode:", langCode);
-    console.log("Base langCode used:", baseLangCode);
     const response = await fetch(
       `https://inputtools.google.com/request?text=${encodeURIComponent(
-        word
+        word.trim()
       )}&itc=${baseLangCode}-t-i0-und&num=5&ie=utf-8&oe=utf-8&app=customApp`
     );
     const data = await response.json();
 
-    if (data[0] === "SUCCESS") {
+    if (data[0] === "SUCCESS" && data[1]?.[0]?.[1]) {
       return data[1][0][1]; // Array of suggestions
-    } else {
-      console.error("Transliteration failed:", data);
-      return [];
     }
+    return [];
   } catch (error) {
     console.error("Error fetching transliteration:", error);
     return [];
@@ -220,14 +219,14 @@ const IMEInput = forwardRef<HTMLInputElement, IMEInputProps>(
       wordStart += words[i].length + 1;
     }
 
-    if (wordIndex === -1 || langCode === "en") {
+    if (wordIndex === -1 || langCode === "en" || !newValue.trim()) {
       setSuggestions([]);
       return;
     }
 
     const wordAtCursor = words[wordIndex];
 
-    if (wordAtCursor.trim()) {
+    if (wordAtCursor && wordAtCursor.trim()) {
       const results = await fetchTransliteration(wordAtCursor, langCode);
       setSuggestions([...results, wordAtCursor]);
     } else {
@@ -260,7 +259,9 @@ const IMEInput = forwardRef<HTMLInputElement, IMEInputProps>(
       const newText = words.join(" ");
       const newCursorPos = wordStart + suggestion.length + 1; // Move cursor to next position
 
-      onChange(newText);
+      if (onChange) {
+        onChange({ target: { value: newText } } as any);
+      }
       setCursorIndex(newCursorPos);
     }
 

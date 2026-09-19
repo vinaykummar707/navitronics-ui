@@ -16,26 +16,35 @@ export function hasUserFeature(
   feature: string
 ): boolean {
   if (!user) return false;
-  if (user.role?.name === "master") return true;
+  const roleName = user.role?.name?.toLowerCase();
+  if (roleName === "master" || roleName === "super_admin" || roleName === "super admin") return true;
 
   const userObj = user as any;
   const userOrg = user.organization as any;
 
+  const getFeatureValue = (target: any, feat: string) => {
+    if (!target) return undefined;
+    const lower = feat.toLowerCase();
+    const upper = feat.toUpperCase();
+    if (target[feat] !== undefined && target[feat] !== null) return Boolean(target[feat]);
+    if (target[lower] !== undefined && target[lower] !== null) return Boolean(target[lower]);
+    if (target[upper] !== undefined && target[upper] !== null) return Boolean(target[upper]);
+    return undefined;
+  };
+
   // 1. Explicit user-level flag
-  if (userObj && userObj[feature] !== undefined && userObj[feature] !== null) {
-    return Boolean(userObj[feature]);
-  }
+  const userVal = getFeatureValue(userObj, feature);
+  if (userVal !== undefined) return userVal;
 
   // 2. Explicit organization-level flag
-  if (userOrg && userOrg[feature] !== undefined && userOrg[feature] !== null) {
-    return Boolean(userOrg[feature]);
-  }
+  const orgVal = getFeatureValue(userOrg, feature);
+  if (orgVal !== undefined) return orgVal;
 
   // 3. Sensible defaults
-  if (feature === "v2_routes") {
+  if (feature.toLowerCase() === "v2_routes") {
     return true;
   }
-  if (feature === "v1_routes") {
+  if (feature.toLowerCase() === "v1_routes") {
     return false;
   }
 

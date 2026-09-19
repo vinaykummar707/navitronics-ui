@@ -30,7 +30,7 @@ function OrganizationsPage() {
   const { useList, useDelete } = organizationCrud;
   const { data, isLoading, isError, refetch } = useList({
     filters: { deleted: false },
-    orderBy: { column: "created_at", ascending: true },
+    orderBy: { column: "created_at", ascending: false },
   });
   const { mutate: deleteOrganization } = useDelete();
   const organizations = data
