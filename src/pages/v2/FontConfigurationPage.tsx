@@ -7,8 +7,12 @@ import { LanguageItem } from "@/ui/components/LanguageItem";
 import { FeatherPlus, FeatherRefreshCw } from "@subframe/core";
 import React from "react";
 import { toast } from "react-toastify";
+import { sortByLatestCreated } from "@/utils/dateUtils";
 
-const QUERY_OPTIONS = { filters: { deleted: false } };
+const QUERY_OPTIONS = {
+  filters: { deleted: false },
+  orderBy: { column: "created_at", ascending: false },
+};
 
 export default function FontConfigurationPage() {
   const [showDrawer, setShowDrawer] = React.useState(false);
@@ -18,13 +22,14 @@ export default function FontConfigurationPage() {
 
   const fontSettings = React.useMemo(() => {
     if (!data?.data) return [];
-    return (data.data as ITextConfig[]).map((item) => ({
+    const list = (data.data as ITextConfig[]).map((item) => ({
       ...item,
       config:
         typeof item.config === "string"
           ? JSON.parse(item.config)
           : item.config,
     }));
+    return sortByLatestCreated(list);
   }, [data]);
 
   const handleDelete = React.useCallback(

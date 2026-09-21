@@ -10,6 +10,7 @@ import { Table } from "@/ui/components/Table";
 import { FeatherMapPin, FeatherPlus } from "@subframe/core";
 import React from "react";
 import { toast } from "react-toastify";
+import { formatDate, sortByLatestCreated } from "@/utils/dateUtils";
 
 export default function AreasPage() {
   const [open, setOpen] = React.useState(false);
@@ -25,12 +26,15 @@ export default function AreasPage() {
       organization_id: selectedOrganization ? selectedOrganization.id : "",
       deleted: false,
     },
-    orderBy: { column: "created_at", ascending: true },
+    orderBy: { column: "created_at", ascending: false },
     skip: !selectedOrganization?.id,
   });
   const { mutate: deleteRegion } = useDelete();
   const [editData, setEditData] = React.useState<IRegion | null>(null);
-  const regions = data ? (data.data as IRegion[]) : ([] as IRegion[]);
+  const regions = React.useMemo(() => {
+    const list = data ? (data.data as IRegion[]) : [];
+    return sortByLatestCreated(list);
+  }, [data]);
   const { setSelectedRegion, selectedRegion } = useRegionStore();
 
   // Handler to call refetch after create/update
@@ -84,13 +88,7 @@ export default function AreasPage() {
             }
           >
             {regions.map((region) => {
-              const formattedDate = region.created_at
-                ? new Date(region.created_at).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })
-                : "—";
+              const formattedDate = formatDate(region.created_at);
 
               return (
                 <Table.Row key={region.id}>

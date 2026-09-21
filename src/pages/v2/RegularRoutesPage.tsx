@@ -28,6 +28,7 @@ import { Dialog } from "@/ui/components/Dialog";
 import { getUserRouteAccess } from "@/utils/featureFlags";
 import { isRegularCustomer, isSuperAdmin } from "@/utils/customerType";
 import { pickTargetDirectory, writeZipToDirectoryOrFallback } from "@/utils/fileSystemExport";
+import { sortByLatestCreated } from "@/utils/dateUtils";
 
 export default function RegularRoutesPage() {
   const navigate = useNavigate();
@@ -126,7 +127,7 @@ export default function RegularRoutesPage() {
       });
     }
 
-    return result;
+    return sortByLatestCreated(result);
   }, [routes, routeAccess.isV1Only, routeAccess.isV2Only, versionFilter, debouncedSearchQuery]);
 
   const [selectedRouteIds, setSelectedRouteIds] = useState<string[]>([]);
@@ -532,7 +533,7 @@ export default function RegularRoutesPage() {
                   }`}
                 onClick={() => setVersionFilter("v1")}
               >
-                V1 LED ({routes.filter((r) => r.version === "1.0").length})
+                V1 ({routes.filter((r) => r.version === "1.0").length})
               </button>
               <button
                 type="button"
@@ -542,7 +543,7 @@ export default function RegularRoutesPage() {
                   }`}
                 onClick={() => setVersionFilter("v2")}
               >
-                V2 Screen ({routes.filter((r) => r.version !== "1.0").length})
+                V2 ({routes.filter((r) => r.version !== "1.0").length})
               </button>
             </div>
           )}

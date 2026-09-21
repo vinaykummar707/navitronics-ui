@@ -43,6 +43,7 @@ import { Badge } from "@/ui/components/Badge";
 import { OptionsDropdown } from "@/ui/components/OptionsDropdown";
 import { IconButton } from "@/ui/components/IconButton";
 import { CreateStopForm } from "@/ui/components/CreateStopForm";
+import { formatDate, sortByLatestCreated } from "@/utils/dateUtils";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -93,7 +94,10 @@ function useStopsPageData() {
 
   const regions = regionData?.data as IRegion[];
   const depots = depotData?.data as IDepot[];
-  const stops = stopsData?.data as IStopWithAudio[];
+  const stops = React.useMemo(() => {
+    const list = (stopsData?.data as IStopWithAudio[]) || [];
+    return sortByLatestCreated(list);
+  }, [stopsData]);
 
   // Auto-select first region
   useEffect(() => {
@@ -723,6 +727,7 @@ export default function StopsPage() {
                   <Table.HeaderCell className="hidden md:table-cell min-w-[160px]">Downward (Lat, Long)</Table.HeaderCell>
                   <Table.HeaderCell className="hidden lg:table-cell min-w-[160px]">Upward (Lat, Long)</Table.HeaderCell>
                   <Table.HeaderCell className="min-w-[180px] justify-center text-center">Audio Announcement</Table.HeaderCell>
+                  <Table.HeaderCell className="hidden xl:table-cell min-w-[130px]">Created At</Table.HeaderCell>
                   <Table.HeaderCell className="w-12 justify-end" />
                 </Table.HeaderRow>
               }
@@ -822,6 +827,11 @@ export default function StopsPage() {
                           </Button>
                         </div>
                       )}
+                    </Table.Cell>
+                    <Table.Cell className="hidden xl:table-cell min-w-[130px]">
+                      <span className="whitespace-nowrap text-body font-body text-neutral-500">
+                        {formatDate(stop.created_at)}
+                      </span>
                     </Table.Cell>
                     <Table.Cell className="justify-end">
                       <OptionsDropdown

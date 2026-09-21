@@ -23,6 +23,7 @@ import { DisplayConfigGetRequest } from "@/types/routeConfigV2";
 import { IRoute } from "@/types/IRoute";
 import { Checkbox } from "./Checkbox";
 import Avvvatars from "avvvatars-react";
+import { formatDate } from "@/utils/dateUtils";
 
 interface RouteTableRootProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: React.ReactNode;
@@ -159,16 +160,12 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
                     )
                   }
                 >
-                  {route.version === "1.0" ? "V1 LED" : "V2 Screen"}
+                  {route.version === "1.0" ? "V1" : "V2"}
                 </Badge>
               </Table.Cell>
               <Table.Cell className="hidden lg:table-cell min-w-[110px]">
                 <span className="whitespace-nowrap text-body font-body text-neutral-500">
-                  {new Date(route.created_at).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
+                  {formatDate(route.created_at)}
                 </span>
               </Table.Cell>
               <Table.Cell className="hidden xl:table-cell min-w-[140px]">

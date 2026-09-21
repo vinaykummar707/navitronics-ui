@@ -25,6 +25,7 @@ import { toast } from "react-toastify";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { isSuperAdmin } from "@/utils/customerType";
 import { PasswordViewerCell } from "@/ui/components/PasswordViewerCell";
+import { formatDate, sortByLatestCreated } from "@/utils/dateUtils";
 
 export default function RegularCustomersPage() {
   const loggedInUser = useLoggedUserStore((state) => state.user);
@@ -50,14 +51,15 @@ export default function RegularCustomersPage() {
 
   const rawUsers = data ? (data.data as ILoggedUser[]) : ([] as ILoggedUser[]);
 
-  // Filter strictly to regular customers
+  // Filter strictly to regular customers (sorted by latest created date)
   const regularCustomers = useMemo(() => {
-    return rawUsers.filter(
+    const list = rawUsers.filter(
       (u) =>
         u.customer_type === "regular" ||
         u.role?.name?.toLowerCase() === "user" ||
         !u.organization_id
     );
+    return sortByLatestCreated(list);
   }, [rawUsers]);
 
   // Apply search query
@@ -94,17 +96,6 @@ export default function RegularCustomersPage() {
     } catch (err: any) {
       toast.error(`Failed to delete: ${err.message}`);
     }
-  };
-
-  const formatDate = (dateStr?: string | null) => {
-    if (!dateStr) return "—";
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return "—";
-    return d.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
   };
 
   return (
@@ -250,12 +241,12 @@ export default function RegularCustomersPage() {
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {customer.v1_routes && (
                       <Badge variant="warning" className="text-[11px]">
-                        V1 LED
+                        V1
                       </Badge>
                     )}
                     {customer.v2_routes && (
                       <Badge variant="neutral" className="text-[11px]">
-                        V2 Screen
+                        V2
                       </Badge>
                     )}
                     {!customer.v1_routes && !customer.v2_routes && (

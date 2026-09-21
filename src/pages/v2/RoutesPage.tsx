@@ -34,6 +34,7 @@ import { Dialog } from "@/ui/components/Dialog";
 import { getUserRouteAccess } from "@/utils/featureFlags";
 import { isRegularCustomer } from "@/utils/customerType";
 import { pickTargetDirectory, writeZipToDirectoryOrFallback } from "@/utils/fileSystemExport";
+import { sortByLatestCreated } from "@/utils/dateUtils";
 
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -86,7 +87,10 @@ function useRoutesPageData() {
 
   const regions = regionData?.data as IRegion[];
   const depots = depotData?.data as IDepot[];
-  const routes = routesData?.data as IRoute[];
+  const routes = React.useMemo(() => {
+    const list = (routesData?.data as IRoute[]) || [];
+    return sortByLatestCreated(list);
+  }, [routesData]);
 
   // Auto-select or validate region:
   // If regions are still loading, do not touch selection
@@ -645,7 +649,7 @@ export default function RoutesPage() {
                   }`}
                 onClick={() => setVersionFilter("v1")}
               >
-                V1 LED ({routes.filter((r) => r.version === "1.0").length})
+                V1 ({routes.filter((r) => r.version === "1.0").length})
               </button>
               <button
                 type="button"
@@ -655,7 +659,7 @@ export default function RoutesPage() {
                   }`}
                 onClick={() => setVersionFilter("v2")}
               >
-                V2 Screen ({routes.filter((r) => r.version !== "1.0").length})
+                V2 ({routes.filter((r) => r.version !== "1.0").length})
               </button>
             </div>
           )}

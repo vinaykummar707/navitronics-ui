@@ -18,6 +18,7 @@ import { useRegionStore } from "@/store/useRegionStore";
 import { IRegion, regionCrud } from "@/types/IRegion";
 import { depotCrud, IDepot } from "@/types/IDepot";
 import { toast } from "react-toastify";
+import { formatDate, sortByLatestCreated } from "@/utils/dateUtils";
 
 export default function DepotsPage() {
   const [open, setOpen] = useState(false);
@@ -53,11 +54,14 @@ export default function DepotsPage() {
       deleted: false,
       organization_id: selectedOrganization?.id || "",
     },
-    orderBy: { column: "created_at", ascending: true },
+    orderBy: { column: "created_at", ascending: false },
     skip: !selectedRegion?.id || !selectedOrganization?.id,
   });
 
-  const depots = depotData?.data as IDepot[];
+  const depots = React.useMemo(() => {
+    const list = (depotData?.data as IDepot[]) || [];
+    return sortByLatestCreated(list);
+  }, [depotData]);
   const { mutate: deleteDepot } = useDelete();
 
   useEffect(() => {
@@ -207,13 +211,7 @@ export default function DepotsPage() {
             }
           >
             {depots.map((depot) => {
-              const formattedDate = depot.created_at
-                ? new Date(depot.created_at).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })
-                : "—";
+              const formattedDate = formatDate(depot.created_at);
 
               return (
                 <Table.Row key={depot.id}>

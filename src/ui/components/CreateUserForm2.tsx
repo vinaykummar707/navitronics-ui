@@ -967,7 +967,7 @@ const CreateUserForm2Root = React.forwardRef<
           <div className="flex flex-col gap-2 w-full">
             <FeatureToggle
               label="V1 Routes (Legacy Format)"
-              description="Enable creation, editing, and export of V1 LED matrix route configurations"
+              description="Enable creation, editing, and export of V1 route configurations"
               toggle={
                 <Switch
                   checked={Boolean(watch("v1_routes"))}

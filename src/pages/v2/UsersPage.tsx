@@ -10,6 +10,7 @@ import { UsersTable } from "@/ui/components/UsersTable";
 import { FeatherPlus, FeatherRefreshCw, FeatherUsers } from "@subframe/core";
 import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
+import { sortByLatestCreated } from "@/utils/dateUtils";
 
 export default function UsersPage() {
   const [open, setOpen] = useState(false);
@@ -33,6 +34,7 @@ export default function UsersPage() {
     filters: targetOrgId
       ? { organization_id: targetOrgId, deleted: false }
       : { deleted: false },
+    orderBy: { column: "created_at", ascending: false },
     skip: !targetOrgId,
     custom(query) {
       return query.select(
@@ -50,13 +52,14 @@ export default function UsersPage() {
 
   const rawUsers = data ? (data.data as ILoggedUser[]) : ([] as ILoggedUser[]);
 
-  // Filter strictly to STU users in this organization
+  // Filter strictly to STU users in this organization (sorted by latest created date)
   const stuUsers = useMemo(() => {
-    return rawUsers.filter(
+    const list = rawUsers.filter(
       (u) =>
         u.customer_type !== "regular" &&
         u.role?.name?.toLowerCase() !== "user"
     );
+    return sortByLatestCreated(list);
   }, [rawUsers]);
 
   // Soft delete a user by setting deleted to true and active to false

@@ -24,6 +24,7 @@ import { supabase } from "@/supabaseClient";
 import { IOrganization, organizationCrud } from "@/types/organization";
 import PageHeader from "@/components/PageHeader";
 import { toast } from "react-toastify";
+import { formatDate, sortByLatestCreated } from "@/utils/dateUtils";
 
 function OrganizationsPage() {
   // Queries
@@ -33,9 +34,10 @@ function OrganizationsPage() {
     orderBy: { column: "created_at", ascending: false },
   });
   const { mutate: deleteOrganization } = useDelete();
-  const organizations = data
-    ? (data.data as IOrganization[])
-    : ([] as IOrganization[]);
+  const organizations = React.useMemo(() => {
+    const list = data ? (data.data as IOrganization[]) : [];
+    return sortByLatestCreated(list);
+  }, [data]);
   const [editData, setEditData] = React.useState<IOrganization | null>(null);
   const [open, setOpen] = React.useState(false);
   const [wizardOpen, setWizardOpen] = React.useState(false);
@@ -107,13 +109,7 @@ function OrganizationsPage() {
                 org.name?.toLowerCase() === "navitronix" ||
                 (org as any).is_default ||
                 org.id === "6b679098-ef69-45f0-9fb1-b457dd882060";
-              const formattedDate = org.created_at
-                ? new Date(org.created_at).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })
-                : "—";
+              const formattedDate = formatDate(org.created_at);
 
               return (
                 <Table.Row key={org.id}>
@@ -210,7 +206,6 @@ function OrganizationsPage() {
         onClose={() => setWizardOpen(false)}
         onSuccess={() => {
           refetch();
-          toast.success("Organization list refreshed");
         }}
       />
     </div>

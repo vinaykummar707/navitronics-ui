@@ -32,6 +32,7 @@ import { getUserRouteAccess } from "@/utils/featureFlags";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { isSuperAdmin } from "@/utils/customerType";
 import { PasswordViewerCell } from "./PasswordViewerCell";
+import { formatDate } from "@/utils/dateUtils";
 
 interface UsersTableRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -48,15 +49,7 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
     const loggedInUser = useLoggedUserStore((state) => state.user);
     const isSuperAdminUser = isSuperAdmin(loggedInUser);
     const formatCreatedAt = (dateStr?: string | null) => {
-      if (!dateStr) return "—";
-      const date = new Date(dateStr);
-      if (isNaN(date.getTime())) return "—";
-      const day = String(date.getDate()).padStart(2, "0");
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const year = date.getFullYear();
-      const hours = String(date.getHours()).padStart(2, "0");
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-      return `${day}/${month}/${year}, ${hours}:${minutes}`;
+      return formatDate(dateStr);
     };
 
     return (
@@ -147,7 +140,7 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
                   </Badge>
                 </Table.Cell>
                 <Table.Cell className="hidden xl:table-cell justify-center text-center min-w-[120px]">
-                  <span className="whitespace-nowrap text-body font-body text-subtext-color font-mono text-xs">
+                  <span className="whitespace-nowrap text-body font-body text-neutral-500">
                     {formatCreatedAt(user.created_at)}
                   </span>
                 </Table.Cell>

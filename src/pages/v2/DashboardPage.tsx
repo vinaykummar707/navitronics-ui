@@ -38,6 +38,7 @@ import { userCrud, ILoggedUser } from "@/types/IUser";
 import { isSuperAdmin } from "@/utils/customerType";
 import { supabase } from "@/supabaseClient";
 import { toast } from "react-toastify";
+import { formatDate, sortByLatestCreated } from "@/utils/dateUtils";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -182,7 +183,7 @@ export default function DashboardPage() {
         query = query.or(`organization_id.eq.${targetOrgId},depot_id.is.null`);
       }
 
-      query = query.order("route_number", { ascending: true }).limit(100);
+      query = query.order("created_at", { ascending: false }).limit(100);
 
       const { data, error } = await query;
       if (error) {
@@ -196,9 +197,9 @@ export default function DashboardPage() {
 
   const searchRoutes = searchResults || [];
 
-  // Filter returned routes by type, version, and depot
+  // Filter returned routes by type, version, and depot (sorted by latest created date)
   const filteredRoutes = useMemo(() => {
-    return searchRoutes.filter((r) => {
+    const list = searchRoutes.filter((r) => {
       const isRegular = !r.depot_id;
 
       // Customer Tier / Type filter
@@ -216,6 +217,8 @@ export default function DashboardPage() {
 
       return true;
     });
+
+    return sortByLatestCreated(list);
   }, [searchRoutes, selectedTypeFilter, selectedVersionFilter, selectedDepotFilter]);
 
   const stuCountInResults = useMemo(
@@ -278,13 +281,7 @@ export default function DashboardPage() {
   };
 
   const formatCreatedAt = (dateStr?: string | null) => {
-    if (!dateStr) return "—";
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return "—";
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    return formatDate(dateStr);
   };
 
   const isQueryActive = debouncedQuery.length > 0;
@@ -532,7 +529,7 @@ export default function DashboardPage() {
                   }`}
                 onClick={() => setSelectedVersionFilter("v2")}
               >
-                V2 Screen
+                V2
               </button>
               <button
                 type="button"
@@ -542,7 +539,7 @@ export default function DashboardPage() {
                   }`}
                 onClick={() => setSelectedVersionFilter("v1")}
               >
-                V1 LED
+                V1
               </button>
             </div>
 
@@ -759,7 +756,7 @@ export default function DashboardPage() {
                         variant={isV1 ? "warning" : "brand"}
                         icon={isV1 ? <FeatherTag className="h-3 w-3" /> : <FeatherLayers className="h-3 w-3" />}
                       >
-                        {isV1 ? "V1 LED" : "V2 Screen"}
+                        {isV1 ? "V1" : "V2"}
                       </Badge>
                     </Table.Cell>
 

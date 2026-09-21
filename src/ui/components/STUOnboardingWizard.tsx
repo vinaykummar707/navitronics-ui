@@ -65,7 +65,31 @@ export function STUOnboardingWizard({
   // Step 5: Initial Admin User
   const [adminEmail, setAdminEmail] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
-  const [adminUserId, setAdminUserId] = useState("");
+
+  const resetForm = () => {
+    setCurrentStep(1);
+    setOrgName("");
+    setOrgEmail("");
+    setOrgPhone("");
+    setOrgLogo("");
+    setEnablePIS(true);
+    setEnablePAS(true);
+    setEnableITMS(false);
+    setEnableV1Routes(false);
+    setEnableV2Routes(true);
+    setRegionsList([]);
+    setNewRegionInput("");
+    setDepotsList([]);
+    setNewDepotName("");
+    setNewDepotRegion("");
+    setAdminEmail("");
+    setAdminPassword("");
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
 
   if (!open) return null;
 
@@ -76,7 +100,8 @@ export function STUOnboardingWizard({
       toast.warning("This region already exists in your list");
       return;
     }
-    setRegionsList([...regionsList, trimmed]);
+    const updated = [...regionsList, trimmed];
+    setRegionsList(updated);
     setNewRegionInput("");
     if (!newDepotRegion) {
       setNewDepotRegion(trimmed);
@@ -85,9 +110,13 @@ export function STUOnboardingWizard({
 
   const handleRemoveRegion = (indexToRemove: number) => {
     const targetRegion = regionsList[indexToRemove];
-    setRegionsList(regionsList.filter((_, idx) => idx !== indexToRemove));
+    const updated = regionsList.filter((_, idx) => idx !== indexToRemove);
+    setRegionsList(updated);
     // Also remove any depots attached to this region
-    setDepotsList(depotsList.filter((d) => d.regionName !== targetRegion));
+    setDepotsList((prev) => prev.filter((d) => d.regionName !== targetRegion));
+    if (newDepotRegion === targetRegion) {
+      setNewDepotRegion(updated[0] || "");
+    }
   };
 
   const handleAddDepot = () => {
@@ -170,13 +199,44 @@ export function STUOnboardingWizard({
 
   const handleProvision = async () => {
     setIsSubmitting(true);
+    let createdOrgId: string | null = null;
     try {
+      const trimmedOrgName = orgName.trim();
+      const trimmedOrgEmail = orgEmail.trim();
+      const trimmedAdminEmail = adminEmail.trim();
+
+      // Check for duplicate organization name
+      const { data: existingOrgs } = await supabase
+        .from("organizations")
+        .select("id, name, email")
+        .eq("deleted", false)
+        .ilike("name", trimmedOrgName);
+
+      if (existingOrgs && existingOrgs.length > 0) {
+        throw new Error(
+          `An active organization named "${trimmedOrgName}" already exists.`
+        );
+      }
+
+      // Check if admin user is already assigned to an active organization
+      const { data: existingUser } = await supabase
+        .from("users")
+        .select("id, organization_id, deleted")
+        .eq("email", trimmedAdminEmail)
+        .maybeSingle();
+
+      if (existingUser && !existingUser.deleted && existingUser.organization_id) {
+        throw new Error(
+          `A user with email "${trimmedAdminEmail}" is already registered to another organization.`
+        );
+      }
+
       // 1. Insert Organization
       const { data: orgRecord, error: orgError } = await supabase
         .from("organizations")
         .insert({
-          name: orgName.trim(),
-          email: orgEmail.trim(),
+          name: trimmedOrgName,
+          email: trimmedOrgEmail,
           phone: orgPhone.trim() || null,
           logo: orgLogo.trim() || null,
           PIS: enablePIS,
@@ -195,9 +255,10 @@ export function STUOnboardingWizard({
         throw new Error(orgError?.message || "Failed to create organization");
       }
 
+      createdOrgId = orgRecord.id;
       const orgId = orgRecord.id;
 
-      // 2. Insert Regions
+      // 2. Insert Regions (regions table does not have active column)
       const regionIdMap: Record<string, string> = {};
       for (const regionName of regionsList) {
         const { data: regRecord, error: regError } = await supabase
@@ -205,31 +266,38 @@ export function STUOnboardingWizard({
           .insert({
             name: regionName.trim(),
             organization_id: orgId,
-            active: true,
             deleted: false,
           })
           .select()
           .single();
 
         if (regError || !regRecord) {
-          throw new Error(`Failed to create region ${regionName}: ${regError?.message}`);
+          throw new Error(
+            `Failed to create region "${regionName}": ${regError?.message || "Unknown error"}`
+          );
         }
         regionIdMap[regionName] = regRecord.id;
       }
 
-      // 3. Insert Depots
+      // 3. Insert Depots (depots table does not have active column)
       for (const depot of depotsList) {
         const targetRegionId = regionIdMap[depot.regionName];
+        if (!targetRegionId) {
+          throw new Error(
+            `Region "${depot.regionName}" could not be matched for depot "${depot.name}"`
+          );
+        }
         const { error: depotError } = await supabase.from("depots").insert({
           name: depot.name.trim(),
           region_id: targetRegionId,
           organization_id: orgId,
-          active: true,
           deleted: false,
         });
 
         if (depotError) {
-          throw new Error(`Failed to create depot ${depot.name}: ${depotError?.message}`);
+          throw new Error(
+            `Failed to create depot "${depot.name}": ${depotError?.message || "Unknown error"}`
+          );
         }
       }
 
@@ -240,13 +308,13 @@ export function STUOnboardingWizard({
         .ilike("name", "organization_admin")
         .maybeSingle();
 
-      const orgAdminRoleId = roleRecord?.id || "";
+      const orgAdminRoleId = roleRecord?.id || null;
 
       // 5. Create Org Admin User in Auth & Database
       let authUserId = "";
       const { data: signUpData, error: signUpError } =
         await supabaseAuthHelper.auth.signUp({
-          email: adminEmail.trim(),
+          email: trimmedAdminEmail,
           password: adminPassword,
           options: {
             data: {
@@ -259,10 +327,10 @@ export function STUOnboardingWizard({
         });
 
       if (signUpError) {
-        // If already registered in auth, attempt login
+        // If already registered in auth, attempt sign-in
         const { data: signInData, error: signInErr } =
           await supabaseAuthHelper.auth.signInWithPassword({
-            email: adminEmail.trim(),
+            email: trimmedAdminEmail,
             password: adminPassword,
           });
         if (signInData?.user?.id) {
@@ -272,37 +340,86 @@ export function STUOnboardingWizard({
             `Admin email is already registered: ${signInErr?.message || signUpError.message}`
           );
         }
+      } else if (
+        signUpData?.user &&
+        (!signUpData.user.identities || signUpData.user.identities.length === 0)
+      ) {
+        // Supabase email enumeration protection
+        const { data: signInData, error: signInErr } =
+          await supabaseAuthHelper.auth.signInWithPassword({
+            email: trimmedAdminEmail,
+            password: adminPassword,
+          });
+        if (signInData?.user?.id) {
+          authUserId = signInData.user.id;
+        } else {
+          throw new Error(
+            `Admin email is already registered in authentication. ${signInErr?.message ? `(${signInErr.message})` : "Please verify password or use a different email."}`
+          );
+        }
       } else if (signUpData?.user?.id) {
         authUserId = signUpData.user.id;
       }
 
       if (!authUserId) {
-        authUserId = adminUserId || `usr_${Date.now()}`;
+        throw new Error("Unable to obtain authenticated user ID for administrator");
       }
 
-      // Insert record into public.users
-      const { error: userInsertError } = await supabase.from("users").insert({
-        email: adminEmail.trim(),
-        user_id: authUserId,
-        password: adminPassword,
-        organization_id: orgId,
-        role_id: orgAdminRoleId || null,
-        customer_type: "stu",
-        active: true,
-        deleted: false,
-        v1_routes: enableV1Routes,
-        v2_routes: enableV2Routes,
-      });
+      // 6. Upsert record into public.users
+      if (existingUser) {
+        const { error: userUpdateError } = await supabase
+          .from("users")
+          .update({
+            user_id: authUserId,
+            password: adminPassword,
+            organization_id: orgId,
+            role_id: orgAdminRoleId,
+            customer_type: "stu",
+            active: true,
+            deleted: false,
+            v1_routes: enableV1Routes,
+            v2_routes: enableV2Routes,
+          })
+          .eq("id", existingUser.id);
 
-      if (userInsertError) {
-        console.warn("User DB record warning:", userInsertError);
+        if (userUpdateError) {
+          throw new Error(`Failed to assign user to organization: ${userUpdateError.message}`);
+        }
+      } else {
+        const { error: userInsertError } = await supabase.from("users").insert({
+          email: trimmedAdminEmail,
+          user_id: authUserId,
+          password: adminPassword,
+          organization_id: orgId,
+          role_id: orgAdminRoleId,
+          customer_type: "stu",
+          active: true,
+          deleted: false,
+          v1_routes: enableV1Routes,
+          v2_routes: enableV2Routes,
+        });
+
+        if (userInsertError) {
+          throw new Error(`Failed to create admin user record: ${userInsertError.message}`);
+        }
       }
 
       toast.success(`STU Organization "${orgName}" successfully provisioned!`);
+      resetForm();
       onSuccess();
       onClose();
     } catch (err: any) {
       console.error("STU Provisioning error:", err);
+      // Clean up orphaned organization if provisioning failed midway
+      if (createdOrgId) {
+        try {
+          await supabase.from("depots").delete().eq("organization_id", createdOrgId);
+          await supabase.from("regions").delete().eq("organization_id", createdOrgId);
+          await supabase.from("organizations").delete().eq("id", createdOrgId);
+        } catch (cleanupErr) {
+          console.warn("Rollback cleanup warning:", cleanupErr);
+        }
+      }
       toast.error(`Provisioning failed: ${err.message || "Unknown error"}`);
     } finally {
       setIsSubmitting(false);
@@ -331,7 +448,7 @@ export function STUOnboardingWizard({
             icon={<FeatherX className="h-4 w-4" />}
             size="small"
             variant="neutral-tertiary"
-            onClick={onClose}
+            onClick={handleClose}
             title="Cancel wizard"
           />
         </div>
@@ -344,26 +461,36 @@ export function STUOnboardingWizard({
               variant={currentStep === 1 ? "active" : currentStep > 1 ? "completed" : "default"}
               stepNumber="1"
               label="Organization"
+              className={currentStep > 1 ? "cursor-pointer" : undefined}
+              onClick={() => currentStep > 1 && setCurrentStep(1)}
             />
             <Stepper.Step
               variant={currentStep === 2 ? "active" : currentStep > 2 ? "completed" : "default"}
               stepNumber="2"
               label="Modules"
+              className={currentStep > 2 ? "cursor-pointer" : undefined}
+              onClick={() => currentStep > 2 && setCurrentStep(2)}
             />
             <Stepper.Step
               variant={currentStep === 3 ? "active" : currentStep > 3 ? "completed" : "default"}
               stepNumber="3"
               label="Regions"
+              className={currentStep > 3 ? "cursor-pointer" : undefined}
+              onClick={() => currentStep > 3 && setCurrentStep(3)}
             />
             <Stepper.Step
               variant={currentStep === 4 ? "active" : currentStep > 4 ? "completed" : "default"}
               stepNumber="4"
               label="Depots"
+              className={currentStep > 4 ? "cursor-pointer" : undefined}
+              onClick={() => currentStep > 4 && setCurrentStep(4)}
             />
             <Stepper.Step
               variant={currentStep === 5 ? "active" : currentStep > 5 ? "completed" : "default"}
               stepNumber="5"
               label="Admin User"
+              className={currentStep > 5 ? "cursor-pointer" : undefined}
+              onClick={() => currentStep > 5 && setCurrentStep(5)}
             />
             <Stepper.Step
               lastStep
@@ -490,14 +617,14 @@ export function STUOnboardingWizard({
                 </span>
                 <div className="flex items-center justify-between py-1 border-b border-neutral-border/60">
                   <div className="flex flex-col">
-                    <span className="text-body font-medium text-default-font">V1 LED Single-Board Routes</span>
-                    <span className="text-micro text-subtext-color">Legacy binary format export for mono/color LED signboards</span>
+                    <span className="text-body font-medium text-default-font">V1 Routes</span>
+                    <span className="text-micro text-subtext-color">Single-board binary format export for LED signboards</span>
                   </div>
                   <Switch checked={enableV1Routes} onCheckedChange={setEnableV1Routes} />
                 </div>
                 <div className="flex items-center justify-between py-1">
                   <div className="flex flex-col">
-                    <span className="text-body font-medium text-default-font">V2 Multi-Screen Full Signboard Routes</span>
+                    <span className="text-body font-medium text-default-font">V2 Routes</span>
                     <span className="text-micro text-subtext-color">Modern multi-display layout (Front, Side, Rear, Internal LCDs)</span>
                   </div>
                   <Switch checked={enableV2Routes} onCheckedChange={setEnableV2Routes} />
@@ -597,6 +724,12 @@ export function STUOnboardingWizard({
                   <TextField.Input
                     value={newDepotName}
                     onChange={(e) => setNewDepotName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddDepot();
+                      }
+                    }}
                   />
                 </TextField>
 
@@ -714,17 +847,6 @@ export function STUOnboardingWizard({
                   onChange={(e) => setAdminPassword(e.target.value)}
                 />
               </TextField>
-
-              <TextField
-                className="w-full"
-                label="Custom User Identifier (Optional)"
-                placeholder="e.g. STU-ADMIN-01"
-              >
-                <TextField.Input
-                  value={adminUserId}
-                  onChange={(e) => setAdminUserId(e.target.value)}
-                />
-              </TextField>
             </div>
           )}
 
@@ -800,7 +922,7 @@ export function STUOnboardingWizard({
           <div className="flex items-center gap-2">
             <Button
               variant="neutral-tertiary"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={isSubmitting}
             >
               Cancel
