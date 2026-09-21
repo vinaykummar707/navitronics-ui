@@ -32,9 +32,6 @@ export default defineConfig({
             ) {
               return "ui-vendor";
             }
-            if (id.includes("/ag-grid-community/") || id.includes("/ag-grid-react/")) {
-              return "ag-grid-vendor";
-            }
             if (id.includes("/jszip/") || id.includes("/file-saver/")) {
               return "export-vendor";
             }

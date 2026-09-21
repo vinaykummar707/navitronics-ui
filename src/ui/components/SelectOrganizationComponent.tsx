@@ -30,10 +30,21 @@ const SelectOrganizationComponentRoot = React.forwardRef<
   const { selectedOrganization, setSelectedOrganization } =
     useOrganizationStore();
   const user = useLoggedUserStore((state) => state.user); // Get user details
+  const isSuper = user?.role?.name === "master";
+
+  const orgFilters = React.useMemo(() => {
+    const base: Record<string, any> = { deleted: false };
+    if (!isSuper && user?.organization?.id) {
+      base.id = user.organization.id;
+    }
+    return base;
+  }, [isSuper, user?.organization?.id]);
+
   const { useList } = organizationCrud;
   const { data, isLoading } = useList({
-    filters: { deleted: false },
+    filters: orgFilters,
     orderBy: { column: "created_at", ascending: false },
+    skip: !isSuper && !user?.organization?.id,
   });
 
   // Safe access to organization data
@@ -62,8 +73,7 @@ const SelectOrganizationComponentRoot = React.forwardRef<
   };
 
   // Only shown organizations based on role or if they are assigned to one
-  const isSuper = user?.role?.name === "master";
-  const orgsToShow = isSuper ? orgs : orgs?.filter(org => org.id === user.organization?.id);
+  const orgsToShow = isSuper ? orgs : orgs?.filter(org => org.id === user?.organization?.id);
 
   if (isLoading) {
     return (

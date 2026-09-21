@@ -60,13 +60,24 @@ const RouteCreatePage: React.FC = ({ initialData }) => {
           return;
         }
 
+        const parseConfig = (val: any) => {
+          if (!val) return null;
+          if (typeof val === "object") return val;
+          try {
+            return JSON.parse(val);
+          } catch (e) {
+            console.warn("Could not parse route signboard config string:", e);
+            return null;
+          }
+        };
+
         methods.reset({
           ...data,
-          front: data.front ? JSON.parse(data.front) : null,
-          rear: data.rear ? JSON.parse(data.rear) : null,
-          side: data.side ? JSON.parse(data.side) : null,
-          internal: data.internal ? JSON.parse(data.internal) : null,
-          stops: data.stops ? JSON.parse(data.stops) : null,
+          front: parseConfig(data.front),
+          rear: parseConfig(data.rear),
+          side: parseConfig(data.side),
+          internal: parseConfig(data.internal),
+          stops: parseConfig(data.stops),
         });
         setMode("edit");
       };

@@ -3,10 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { ThemeProvider } from 'next-themes'
 import './index.css'
 import App from './App.tsx'
-import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 
-// ✅ Register AG Grid community modules
-ModuleRegistry.registerModules([AllCommunityModule]);
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

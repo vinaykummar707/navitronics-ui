@@ -53,6 +53,7 @@ const TextPropertiesControlsRoot = React.forwardRef<
     (state) => state.selectedSimulationIndex,
   );
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
+  const getDefaultFontHeightForLanguage = useFontHeightForLanguage();
 
   if (selectedSimulationIndex < 0) {
     return null;
@@ -88,8 +89,6 @@ const TextPropertiesControlsRoot = React.forwardRef<
   const maxWordIndex = Math.max(1, wordsCount > 1 ? wordsCount - 1 : 1);
   const rawWordIndex = Number(watch(`${pathBase}.iconWordIndex`)) || 1;
   const currentWordIndex = Math.min(Math.max(1, rawWordIndex), maxWordIndex);
-
-  const getDefaultFontHeightForLanguage = useFontHeightForLanguage();
 
   return (
     <div

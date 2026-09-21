@@ -32,15 +32,47 @@ export const CreateRoutePageV1: React.FC = () => {
       : "http://31.97.228.29:9091";
 
   const v1BaseUrl = (import.meta.env.VITE_V1_APP_URL || defaultHost).replace(/\/$/, "");
-  const userParam = user?.id ? `?userId=${encodeURIComponent(user.id)}` : "";
-  const iframeSrc = `${v1BaseUrl}/route-create/${areaId || ""}/${depotId || ""}${
-    routeId ? `/${routeId}` : ""
-  }${userParam}`;
+
+  // Sanitize route parameters
+  const cleanAreaId = areaId && areaId !== "undefined" && areaId !== "null" ? areaId.trim() : null;
+  const cleanDepotId = depotId && depotId !== "undefined" && depotId !== "null" ? depotId.trim() : null;
+  const cleanRouteId = routeId && routeId !== "undefined" && routeId !== "null" ? routeId.trim() : null;
+
+  // Construct clean route path (standalone /route-create for regular customers vs /route-create/:areaId/:depotId for STU)
+  let routePath = "";
+  if (isRegular || (!cleanAreaId && !cleanDepotId)) {
+    routePath = cleanRouteId ? `/route-create/${cleanRouteId}` : "/route-create";
+  } else {
+    routePath = `/route-create/${cleanAreaId}/${cleanDepotId}${cleanRouteId ? `/${cleanRouteId}` : ""}`;
+  }
+
+  const queryParams = new URLSearchParams();
+  if (user?.id) queryParams.set("userId", user.id);
+  if (isRegular) queryParams.set("customerType", "regular");
+
+  const queryString = queryParams.toString() ? `?${queryParams.toString()}` : "";
+  const iframeSrc = `${v1BaseUrl}${routePath}${queryString}`;
 
   // Listen to postMessage from the V1 embedded app
   useEffect(() => {
+    let expectedOrigin: string | null = null;
+    try {
+      expectedOrigin = new URL(v1BaseUrl).origin;
+    } catch {
+      expectedOrigin = null;
+    }
+
     const handleMessage = (event: MessageEvent) => {
-      // Validate origin if not in development
+      // Validate origin to prevent cross-origin message spoofing
+      const isLocalhost =
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1";
+
+      if (expectedOrigin && event.origin !== expectedOrigin && !isLocalhost) {
+        console.warn(`[Security] Blocked postMessage from unexpected origin: ${event.origin}`);
+        return;
+      }
+
       const data = event.data;
       if (!data || typeof data !== "object") return;
 
@@ -59,7 +91,7 @@ export const CreateRoutePageV1: React.FC = () => {
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [navigate, queryClient, isEdit, targetRoutesPage]);
+  }, [navigate, queryClient, isEdit, targetRoutesPage, v1BaseUrl]);
 
   return (
     <div className="flex h-[100dvh] min-h-[100dvh] w-full flex-col overflow-hidden bg-default-background pt-safe pb-safe">
