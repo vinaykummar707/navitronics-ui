@@ -9,6 +9,7 @@ import { Select } from "./Select";
 import * as SubframeUtils from "../utils";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { IStop, IStopCreate, stopCrud } from "@/types/IStop";
+import { checkActiveDuplicate } from "@/hooks/useCrud";
 import { toast } from "react-toastify";
 
 // @subframe/sync-disable
@@ -42,6 +43,7 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
+    setError,
   } = useForm<IStopCreate>({
     defaultValues: {
       depot_id: depotId,
@@ -68,9 +70,35 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
   const mode = !!initialData;
   const [selectedVoice, setSelectedVoice] = React.useState<string>("meera");
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: any) => {
+    const trimmedName = data.name?.trim();
+    if (!trimmedName) {
+      setError("name", { message: "Stop name is required" });
+      return;
+    }
+
+    // Pre-submission duplicate check for active stops within this depot
+    const isDup = await checkActiveDuplicate(
+      "stops",
+      "name",
+      trimmedName,
+      { depot_id: depotId },
+      initialData ? initialData.id : undefined
+    );
+
+    if (isDup) {
+      const msg = `A stop named "${trimmedName}" already exists in this depot.`;
+      toast.error(msg);
+      return;
+    }
+
     const payload = {
       ...data,
+      name: trimmedName,
+      down_latitude: data.down_latitude ? String(data.down_latitude).trim() : null,
+      down_longitude: data.down_longitude ? String(data.down_longitude).trim() : null,
+      up_latitude: data.up_latitude ? String(data.up_latitude).trim() : null,
+      up_longitude: data.up_longitude ? String(data.up_longitude).trim() : null,
       organization_id: data.organization_id || selectedOrganization?.id || "",
       depot_id: depotId,
     };
@@ -91,9 +119,15 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
             const nameChanged = initialData.name?.trim().toLowerCase() !== payload.name?.trim().toLowerCase();
             onSuccess?.(result, nameChanged, selectedVoice);
           },
-          onError: (error) => {
+          onError: (error: any) => {
             console.error("Error updating Stop:", error);
-            toast.error(`Error updating Stop: ${error.message || "Unknown error"}`);
+            if (error?.code === "23505" || error?.message?.includes("23505")) {
+              toast.error(`A stop named "${trimmedName}" already exists in this depot.`);
+            } else if (error?.message?.includes("deleted or is no longer accessible")) {
+              toast.error("This stop was deleted by another user and cannot be updated.");
+            } else {
+              toast.error(`Error updating Stop: ${error.message || "Unknown error"}`);
+            }
           },
         },
       );
@@ -105,9 +139,13 @@ const CreateStopFormRoot: React.FC<CreateStopFormProps> = React.forwardRef<
           reset();
           onSuccess?.(successResponse, false, selectedVoice);
         },
-        onError: (error) => {
+        onError: (error: any) => {
           console.error("Error creating Stop:", error);
-          toast.error(`Error creating Stop: ${error.message || "Unknown error"}`);
+          if (error?.code === "23505" || error?.message?.includes("23505")) {
+            toast.error(`A stop named "${trimmedName}" already exists in this depot.`);
+          } else {
+            toast.error(`Error creating Stop: ${error.message || "Unknown error"}`);
+          }
         },
       });
     }

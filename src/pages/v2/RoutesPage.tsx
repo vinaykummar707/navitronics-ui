@@ -104,6 +104,19 @@ function useRoutesPageData() {
       return;
     }
 
+    const userRole = user?.role?.name?.toLowerCase();
+    const isDepotAdmin = userRole === "depot_admin";
+    const isRegionAdmin = userRole === "region_admin";
+    const userRegionId = user?.region?.id || (user as any)?.region_id;
+
+    if ((isDepotAdmin || isRegionAdmin) && userRegionId) {
+      const assigned = regions.find((r) => r.id === userRegionId) || user.region || null;
+      if (selectedRegion?.id !== userRegionId && assigned) {
+        setRoutesPageRegion(assigned as any);
+        return;
+      }
+    }
+
     const isSelectedRegionValid = regions.some(
       (region) => region.id === selectedRegion?.id,
     );
@@ -111,7 +124,7 @@ function useRoutesPageData() {
     if (!isSelectedRegionValid) {
       setRoutesPageRegion(regions[0] || null);
     }
-  }, [regions, selectedRegion, setRoutesPageRegion]);
+  }, [regions, selectedRegion, setRoutesPageRegion, user]);
 
   // Auto-select or validate depot:
   // If depots are still loading, do not touch selection
@@ -125,6 +138,18 @@ function useRoutesPageData() {
       return;
     }
 
+    const userRole = user?.role?.name?.toLowerCase();
+    const isDepotAdmin = userRole === "depot_admin";
+    const userDepotId = user?.depot?.id || (user as any)?.depot_id;
+
+    if (isDepotAdmin && userDepotId) {
+      const assigned = depots.find((d) => d.id === userDepotId) || user.depot || null;
+      if (selectedDepot?.id !== userDepotId && assigned) {
+        setRoutesPageDepot(assigned as any);
+        return;
+      }
+    }
+
     const isSelectedDepotValid = depots.some(
       (depot) => depot.id === selectedDepot?.id,
     );
@@ -132,7 +157,7 @@ function useRoutesPageData() {
     if (!isSelectedDepotValid) {
       setRoutesPageDepot(depots[0] || null);
     }
-  }, [depots, selectedDepot, setRoutesPageDepot]);
+  }, [depots, selectedDepot, setRoutesPageDepot, user]);
 
   return {
     user,
@@ -153,6 +178,8 @@ function useRoutesPageData() {
 export default function RoutesPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const highlightRouteId =
+    searchParams.get("highlightRouteId") || searchParams.get("routeId");
   const {
     user,
     isRegular,
@@ -334,30 +361,54 @@ export default function RoutesPage() {
       .from("routes")
       .select("*")
       .eq("id", routeId)
+      .eq("deleted", false)
       .single();
 
     if (fetchError || !originalRoute) {
-      toast.error("Error fetching route to duplicate");
+      toast.error("Error fetching active route to duplicate");
       return;
     }
 
-    const { id, ...routeWithoutId } = originalRoute;
+    const { id, deleted, ...routeWithoutId } = originalRoute;
+    const baseNumber = (originalRoute.route_number || "").trim();
+    const suffix = routeNumberSuffix === " (Copy)" ? "D" : (routeNumberSuffix || "D");
+    let candidateNumber = `${baseNumber}${suffix}`;
+
+    if (originalRoute.depot_id) {
+      const { data: existing } = await supabase
+        .from("routes")
+        .select("id")
+        .eq("depot_id", originalRoute.depot_id)
+        .ilike("route_number", candidateNumber)
+        .eq("deleted", false)
+        .maybeSingle();
+
+      if (existing) {
+        candidateNumber = `${baseNumber}${suffix}1`;
+      }
+    }
+
     createRoute(
       {
         ...routeWithoutId,
-        route_number: `${originalRoute.route_number}${routeNumberSuffix}`,
+        deleted: false,
+        route_number: candidateNumber,
         created_at: new Date().toISOString(),
         created_by: user?.id || "",
       },
       {
         onSuccess: () => {
-          toast.success("Route duplicated successfully");
+          toast.success(`Route duplicated as "${candidateNumber}"`);
           refetchRoutes();
         },
-        onError: (error) => {
-          toast.error(
-            `Error duplicating route: ${error.message || "Unknown error"}`,
-          );
+        onError: (error: any) => {
+          if (error?.code === "23505" || error?.message?.includes("23505")) {
+            toast.error(`Route "${candidateNumber}" already exists in this depot.`);
+          } else {
+            toast.error(
+              `Error duplicating route: ${error.message || "Unknown error"}`,
+            );
+          }
         },
       },
     );
@@ -431,6 +482,35 @@ export default function RoutesPage() {
       },
     });
   };
+
+  // Auto-focus, select, and scroll to highlighted route from navigation
+  React.useEffect(() => {
+    if (!highlightRouteId || !routes || routes.length === 0) return;
+    const target = routes.find((r) => r.id === highlightRouteId);
+    if (target) {
+      // 1. Auto-select the route
+      setSelectedRouteIds((prev) =>
+        prev.includes(highlightRouteId) ? prev : [highlightRouteId, ...prev]
+      );
+
+      // 2. Adjust version filter if target would be filtered out
+      if (target.version === "1.0" && versionFilter === "v2") {
+        setVersionFilter("all");
+      } else if (target.version !== "1.0" && versionFilter === "v1") {
+        setVersionFilter("all");
+      }
+
+      // 3. Smoothly scroll target into view
+      const timer = setTimeout(() => {
+        const rowElement = document.getElementById(`route-row-${highlightRouteId}`);
+        if (rowElement) {
+          rowElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 300);
+
+      return () => clearTimeout(timer);
+    }
+  }, [highlightRouteId, routes]);
 
   //function to parse a field value with key in a json
   const parseFieldValue = (
@@ -790,6 +870,7 @@ export default function RoutesPage() {
       {hasRoutes ? (
         <RouteTable
           routes={filteredRoutes}
+          highlightedRouteId={highlightRouteId}
           onEdit={handleEditRoute}
           onDelete={(routeId: string) => {
             if (

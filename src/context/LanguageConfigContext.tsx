@@ -32,11 +32,19 @@ export const LanguageConfigProvider: React.FC<{ children: React.ReactNode }> = (
   );
 
   if (isLoading) {
-    return <div>Loading language configs...</div>;
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-default-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-300 border-t-neutral-800" />
+          <span className="text-caption font-caption text-subtext-color">Loading language configurations...</span>
+        </div>
+      </div>
+    );
   }
 
+  // Gracefully provide children even if language configs fail to prevent fullscreen app crash
   if (isError) {
-    return <div>Failed to load language configs.</div>;
+    console.warn("Language configurations failed to load; using defaults.");
   }
 
   return (

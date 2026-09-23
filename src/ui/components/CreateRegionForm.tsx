@@ -9,6 +9,7 @@ import { Button } from "./Button";
 import { IconButton } from "./IconButton";
 import { TextField } from "./TextField";
 import { IRegion, IRegionCreate, regionCrud } from "@/types/IRegion";
+import { checkActiveDuplicate } from "@/hooks/useCrud";
 import { toast } from "react-toastify";
 
 interface CreateRegionFormProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -32,6 +33,7 @@ const CreateRegionFormRoot = React.forwardRef<
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
+    setError,
   } = useForm<IRegionCreate>({
     defaultValues: { name: initialData?.name || "" },
   });
@@ -45,13 +47,36 @@ const CreateRegionFormRoot = React.forwardRef<
   const { mutate: updateRegion, isPending: isUpdating } = useUpdate();
 
   const onSubmit = async (values: IRegionCreate) => {
+    setApiError(null);
+    const trimmedName = values.name?.trim();
+    if (!trimmedName) {
+      setError("name", { message: "Region name is required" });
+      return;
+    }
+
+    // Pre-submission duplicate check for active regions within this organization
+    const isDup = await checkActiveDuplicate(
+      "regions",
+      "name",
+      trimmedName,
+      { organization_id: organizationId },
+      isEditMode && initialData ? initialData.id : undefined
+    );
+
+    if (isDup) {
+      const msg = `A region named "${trimmedName}" already exists in this organization.`;
+      setApiError(msg);
+      toast.error(msg);
+      return;
+    }
+
     if (isEditMode && initialData) {
-      await updateRegion(
+      updateRegion(
         {
           id: initialData.id,
           payload: {
             id: initialData.id,
-            name: values.name,
+            name: trimmedName,
             organization_id: organizationId,
           },
         },
@@ -61,16 +86,24 @@ const CreateRegionFormRoot = React.forwardRef<
             reset(); // Reset form after successful update
             if (onSuccess) onSuccess();
           },
-          onError: (error) => {
-            toast.error(`Failed to update region: ${error.message}`);
+          onError: (error: any) => {
+            if (error?.code === "23505" || error?.message?.includes("23505")) {
+              const msg = `A region named "${trimmedName}" already exists in this organization.`;
+              setApiError(msg);
+              toast.error(msg);
+            } else if (error?.message?.includes("deleted or is no longer accessible")) {
+              toast.error("This region was deleted by another user and cannot be updated.");
+            } else {
+              toast.error(`Failed to update region: ${error.message || "Unknown error"}`);
+            }
             console.error("Update Error:", error);
           },
         }
       );
     } else {
-      await createRegion(
+      createRegion(
         {
-          name: values.name,
+          name: trimmedName,
           organization_id: organizationId,
         },
         {
@@ -79,8 +112,14 @@ const CreateRegionFormRoot = React.forwardRef<
             reset(); // Reset form after successful creation
             if (onSuccess) onSuccess();
           },
-          onError: (error) => {
-            toast.error(`Failed to create region: ${error.message}`);
+          onError: (error: any) => {
+            if (error?.code === "23505" || error?.message?.includes("23505")) {
+              const msg = `A region named "${trimmedName}" already exists in this organization.`;
+              setApiError(msg);
+              toast.error(msg);
+            } else {
+              toast.error(`Failed to create region: ${error.message || "Unknown error"}`);
+            }
             console.error("Creation Error:", error);
           },
         }

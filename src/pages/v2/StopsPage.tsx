@@ -99,22 +99,52 @@ function useStopsPageData() {
     return sortByLatestCreated(list);
   }, [stopsData]);
 
-  // Auto-select first region
+  // Auto-select first region or assigned region
   useEffect(() => {
-    if (regions?.length > 0 && !selectedRegion) {
+    if (!regions || regions.length === 0) return;
+
+    const userRole = user?.role?.name?.toLowerCase();
+    const isDepotAdmin = userRole === "depot_admin";
+    const isRegionAdmin = userRole === "region_admin";
+    const userRegionId = user?.region?.id || (user as any)?.region_id;
+
+    if ((isDepotAdmin || isRegionAdmin) && userRegionId) {
+      const assigned = regions.find((r) => r.id === userRegionId) || user.region || null;
+      if (selectedRegion?.id !== userRegionId && assigned) {
+        setSelectedRegionInStore(assigned as any);
+        return;
+      }
+    }
+
+    if (!selectedRegion) {
       setSelectedRegionInStore(regions[0]);
     }
-  }, [regions, selectedRegion, setSelectedRegionInStore]);
+  }, [regions, selectedRegion, setSelectedRegionInStore, user]);
 
-  // Auto-select / clear depot
+  // Auto-select / clear depot or assigned depot
   useEffect(() => {
     if (!depots) return;
     if (depots.length === 0 && selectedDepot) {
       setSelectedDepotInStore(null);
-    } else if (depots.length > 0 && !selectedDepot) {
+      return;
+    }
+
+    const userRole = user?.role?.name?.toLowerCase();
+    const isDepotAdmin = userRole === "depot_admin";
+    const userDepotId = user?.depot?.id || (user as any)?.depot_id;
+
+    if (isDepotAdmin && userDepotId) {
+      const assigned = depots.find((d) => d.id === userDepotId) || user.depot || null;
+      if (selectedDepot?.id !== userDepotId && assigned) {
+        setSelectedDepotInStore(assigned as any);
+        return;
+      }
+    }
+
+    if (depots.length > 0 && !selectedDepot) {
       setSelectedDepotInStore(depots[0]);
     }
-  }, [depots, selectedDepot, setSelectedDepotInStore]);
+  }, [depots, selectedDepot, setSelectedDepotInStore, user]);
 
   return {
     user,
@@ -188,6 +218,13 @@ export default function StopsPage() {
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedDepot]);
+
+  // Clamp current page if deletions reduced the total pages
+  React.useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
 
   const paginatedStops = React.useMemo(() => {
     const start = (currentPage - 1) * pageSize;
@@ -660,7 +697,6 @@ export default function StopsPage() {
                   "organization_admin",
                   "master",
                   "depot_admin",
-                  "user",
                 ]}
               >
                 <Button

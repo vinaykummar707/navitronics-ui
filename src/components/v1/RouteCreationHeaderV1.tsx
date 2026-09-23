@@ -53,7 +53,7 @@ export const RouteCreationHeaderV1: React.FC<RouteCreationHeaderV1Props> = ({
           </Button>
         )}
 
-        <RBAC roles={["master", "organization_admin", "region_admin", "depot_admin"]} features={[]}>
+        <RBAC roles={["master"]} features={[]}>
           <JsonViewerDialog
             dialogTitle="V1 Route Configuration"
             buttonLabel="View JSON"

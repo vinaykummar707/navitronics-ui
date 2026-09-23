@@ -83,6 +83,12 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
           {users.map((user: ILoggedUser) => {
             const routeAccess = getUserRouteAccess(user);
             const isRowMaster = user.role?.name === "master";
+            const isSelf = user.id === loggedInUser?.id || (Boolean(loggedInUser?.user_id) && user.user_id === loggedInUser?.user_id);
+            const isOrgAdminRole = user.role?.name === "organization_admin";
+
+            // Only Super Admin can delete organization admins; no user can delete their own account
+            const canDelete = !isRowMaster && !isSelf && (isSuperAdminUser || !isOrgAdminRole);
+            const canEdit = !isRowMaster && (isSuperAdminUser || !isOrgAdminRole || isSelf);
 
             return (
               <Table.Row key={user.id || user.user_id}>
@@ -147,9 +153,9 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
                 <Table.Cell className="w-12 justify-end">
                   <div className="flex grow shrink-0 basis-0 items-center justify-end">
                     <OptionsDropdown
-                      isDisabled={user.role?.name === "master"}
-                      onDelete={() => onDeleteUser && onDeleteUser(user.id)}
-                      onEdit={() => onEditUser && onEditUser(user)}
+                      isDisabled={isRowMaster}
+                      onDelete={canDelete ? () => onDeleteUser && onDeleteUser(user.id) : undefined}
+                      onEdit={canEdit ? () => onEditUser && onEditUser(user) : undefined}
                     />
                   </div>
                 </Table.Cell>

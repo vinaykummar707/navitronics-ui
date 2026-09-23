@@ -137,7 +137,7 @@ const protectedRoutes = [
   },
   { path: "stops", element: <StopsPage />, features: ["PAS", "ITMS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
   { path: "settings", element: <Settings /> },
-  { path: "utility", element: <UtilityPage /> },
+  { path: "utility", roles: [ROLES.MASTER], features: [], element: <UtilityPage /> },
   { path: "font-configuration", roles: [ROLES.MASTER], features: [], element: <FontConfigurationPage /> },
 ] as const;
 
@@ -263,7 +263,6 @@ function App() {
                       ROLES.ORGANIZATION_ADMIN,
                       ROLES.REGION_ADMIN,
                       ROLES.DEPOT_ADMIN,
-                      ROLES.USER,
                     ]}
                     features={["v2_routes"]}
                   >
@@ -284,7 +283,6 @@ function App() {
                       ROLES.ORGANIZATION_ADMIN,
                       ROLES.REGION_ADMIN,
                       ROLES.DEPOT_ADMIN,
-                      ROLES.USER,
                     ]}
                     features={["v1_routes"]}
                   >
@@ -305,7 +303,6 @@ function App() {
                       ROLES.ORGANIZATION_ADMIN,
                       ROLES.REGION_ADMIN,
                       ROLES.DEPOT_ADMIN,
-                      ROLES.USER,
                     ]}
                     features={["v1_routes"]}
                   >
@@ -326,7 +323,6 @@ function App() {
                       ROLES.ORGANIZATION_ADMIN,
                       ROLES.REGION_ADMIN,
                       ROLES.DEPOT_ADMIN,
-                      ROLES.USER,
                     ]}
                     features={["v2_routes"]}
                   >

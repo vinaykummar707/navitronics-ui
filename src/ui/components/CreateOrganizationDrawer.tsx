@@ -190,6 +190,8 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
               error?.message?.toLowerCase().includes("already exists")
             ) {
               toast.error("The email address or name is already in use");
+            } else if (error?.message?.includes("deleted or is no longer accessible")) {
+              toast.error("This organization was deleted by another user and cannot be updated.");
             } else {
               toast.error(`Failed to update organization: ${error.message}`);
             }

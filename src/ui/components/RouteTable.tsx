@@ -36,6 +36,7 @@ interface RouteTableRootProps extends React.HTMLAttributes<HTMLDivElement> {
   selectedRouteIds?: string[]; // Array of selected route IDs for checkbox state
   onSelectedChange?: (routeId: string, selected: boolean) => void; // Callback for checkbox state change
   onSelectAllChange?: (checked: boolean) => void; // Atomic callback for select all
+  highlightedRouteId?: string | null; // Route ID to highlight and focus
 }
 
 const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
@@ -47,6 +48,7 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
       selectedRouteIds,
       onSelectedChange,
       onSelectAllChange,
+      highlightedRouteId,
       onEdit,
       onDelete,
       onDuplicate,
@@ -104,24 +106,41 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
             </Table.HeaderRow>
           }
         >
-          {routes?.map((route: IRoute) => (
-            <Table.Row key={route.id}>
-              <Table.Cell className="w-10">
-                <Checkbox
-                  label=""
-                  checked={selectedSet.has(route.id)}
-                  onCheckedChange={(checked: boolean) => {
-                    onSelectedChange?.(route.id, checked);
-                  }}
-                />
-              </Table.Cell>
-              <Table.Cell className="min-w-[100px]">
-                <span className="whitespace-nowrap text-body-bold font-body-bold text-default-font">
-                  {!route.is_split_route
-                    ? `${route.route_number}`
-                    : `${route.route_number_1} - ${route.route_number_2}`}
-                </span>
-              </Table.Cell>
+          {routes?.map((route: IRoute) => {
+            const isHighlighted = highlightedRouteId === route.id;
+            return (
+              <Table.Row
+                key={route.id}
+                id={`route-row-${route.id}`}
+                className={SubframeUtils.twClassNames(
+                  "transition-all duration-300",
+                  isHighlighted &&
+                    "!bg-brand-50/90 border-l-4 !border-l-brand-primary ring-1 ring-inset ring-brand-300 shadow-xs"
+                )}
+              >
+                <Table.Cell className="w-10">
+                  <Checkbox
+                    label=""
+                    checked={selectedSet.has(route.id)}
+                    onCheckedChange={(checked: boolean) => {
+                      onSelectedChange?.(route.id, checked);
+                    }}
+                  />
+                </Table.Cell>
+                <Table.Cell className="min-w-[100px]">
+                  <div className="flex items-center gap-2">
+                    <span className="whitespace-nowrap text-body-bold font-body-bold text-default-font">
+                      {!route.is_split_route
+                        ? `${route.route_number}`
+                        : `${route.route_number_1} - ${route.route_number_2}`}
+                    </span>
+                    {isHighlighted && (
+                      <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-brand-primary text-white shadow-xs">
+                        Selected
+                      </span>
+                    )}
+                  </div>
+                </Table.Cell>
               <Table.Cell className="min-w-[120px]">
                 <span className="whitespace-nowrap text-body font-body text-neutral-500">
                   {route.source}
@@ -202,7 +221,7 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
                             Edit
                           </DropdownMenu.DropdownItem>
                           <DropdownMenu.DropdownItem
-                            onClick={() => onDuplicate(route.id, " (Copy)")}
+                            onClick={() => onDuplicate(route.id, "D")}
                             icon={<SubframeCore.FeatherCopy />}
                           >
                             Duplicate
@@ -226,8 +245,9 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
                   </SubframeCore.DropdownMenu.Root>
                 </div>
               </Table.Cell>
-            </Table.Row>
-          ))}
+              </Table.Row>
+            );
+          })}
         </Table>
       </div>
     );

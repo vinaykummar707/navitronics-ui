@@ -63,21 +63,17 @@ export default function UsersPage() {
   }, [rawUsers]);
 
   // Soft delete a user by setting deleted to true and active to false
-  const handleDeleteUser = async (userId: string) => {
-    try {
-      const { error } = await supabase
-        .from("users")
-        .update({ deleted: true, active: false })
-        .eq("id", userId);
-
-      if (error) throw error;
-
-      toast.success("User deleted successfully");
-      refetch();
-    } catch (error: any) {
-      toast.error(`Failed to delete user: ${error.message}`);
-      console.error("Error deleting user:", error);
-    }
+  const handleDeleteUser = (userId: string) => {
+    deleteMutate(userId, {
+      onSuccess: () => {
+        toast.success("User deleted successfully");
+        refetch();
+      },
+      onError: (error: any) => {
+        toast.error(`Failed to delete user: ${error.message || "Unknown error"}`);
+        console.error("Error deleting user:", error);
+      },
+    });
   };
 
   return (
@@ -103,9 +99,13 @@ export default function UsersPage() {
             variant="neutral-primary"
             className="flex-1 sm:flex-none"
             icon={<FeatherRefreshCw />}
-            onClick={() => {
-              toast.success("Users refreshed successfully");
-              refetch();
+            onClick={async () => {
+              try {
+                await refetch();
+                toast.success("Users refreshed successfully");
+              } catch (err: any) {
+                toast.error(`Failed to refresh users: ${err.message || "Unknown error"}`);
+              }
             }}
           >
             Refresh

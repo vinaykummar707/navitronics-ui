@@ -26,6 +26,7 @@ import { PanelToggleDropdown } from "./PanelToggleDropdown";
 import { JsonViewerDialog } from "./JsonViewerDialog";
 import RBAC from "@/components/RBAC";
 import { IRoute, routeCrud } from "@/types/IRoute";
+import { checkActiveDuplicate } from "@/hooks/useCrud";
 import { toast } from "react-toastify";
 import { Dialog } from "./Dialog";
 
@@ -52,7 +53,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
     toggleInspector,
   } = useToggleStore();
 
-  const { handleSubmit, getValues, watch, formState } = useFormContext<IRoute>();
+  const { handleSubmit, getValues, watch, formState, setError } = useFormContext<IRoute>();
   const { useCreate, useUpdate } = routeCrud;
   const { mutate: createRoute, isPending: isCreatingRoute } = useCreate();
   const { mutate: updateRoute, isPending: isUpdatingRoute } = useUpdate();
@@ -86,6 +87,37 @@ const RouteCreationHeaderRoot = React.forwardRef<
 
   const onSubmit: SubmitHandler<IRoute> = async (data) => {
     if (isCreatingRoute || isUpdatingRoute) return;
+
+    const trimmedRouteNum = (data.route_number || "").trim();
+    if (!trimmedRouteNum && !data.is_split_route) {
+      setError("route_number", { message: "Route number is required" });
+      toast.error("Route number is required");
+      return;
+    }
+
+    // Pre-submission duplicate check for active routes in depot (or user account if standalone)
+    if (trimmedRouteNum) {
+      const scopeFilter: Record<string, any> = {};
+      if (data.depot_id) {
+        scopeFilter.depot_id = data.depot_id;
+      } else if (data.created_by) {
+        scopeFilter.created_by = data.created_by;
+      }
+
+      const isDup = await checkActiveDuplicate(
+        "routes",
+        "route_number",
+        trimmedRouteNum,
+        scopeFilter,
+        mode === "edit" && data.id ? data.id : undefined
+      );
+
+      if (isDup) {
+        const msg = `Route number "${trimmedRouteNum}" is already in use in this depot.`;
+        toast.error(msg);
+        return;
+      }
+    }
 
     // BUG-051: Auto-sync intermediate stops entered in 'via' field to depot stops
     if (data.via && data.depot_id) {
@@ -125,36 +157,51 @@ const RouteCreationHeaderRoot = React.forwardRef<
       }
     }
 
+    const payload = {
+      ...data,
+      route_number: trimmedRouteNum,
+    };
+
     if (mode === "edit") {
       updateRoute(
         {
           id: data.id,
-          payload: data,
+          payload: payload,
         },
         {
           onSuccess: () => {
-            console.log("Route updated successfully:", data);
+            console.log("Route updated successfully:", payload);
             toast.success("Route updated successfully");
             setHasBeenSaved(true);
             navigate(-1);
           },
-          onError: (error) => {
+          onError: (error: any) => {
             console.error("Error updating route:", error);
-            toast.error("Error updating route");
+            if (error?.code === "23505" || error?.message?.includes("23505")) {
+              toast.error(`Route number "${trimmedRouteNum}" is already in use.`);
+            } else if (error?.message?.includes("deleted or is no longer accessible")) {
+              toast.error("This route was deleted by another user and cannot be updated.");
+            } else {
+              toast.error(`Error updating route: ${error.message || "Unknown error"}`);
+            }
           },
         },
       );
     } else {
-      createRoute(data, {
+      createRoute(payload, {
         onSuccess: () => {
-          console.log("Route created successfully:", data);
+          console.log("Route created successfully:", payload);
           toast.success("Route created successfully");
           setHasBeenSaved(true);
           navigate(-1);
         },
-        onError: (error) => {
+        onError: (error: any) => {
           console.error("Error creating route:", error);
-          toast.error("Error creating route");
+          if (error?.code === "23505" || error?.message?.includes("23505")) {
+            toast.error(`Route number "${trimmedRouteNum}" is already in use in this depot.`);
+          } else {
+            toast.error(`Error creating route: ${error.message || "Unknown error"}`);
+          }
         },
       });
     }

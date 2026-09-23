@@ -68,9 +68,13 @@ export default function FontConfigurationPage() {
               variant="neutral-secondary"
               className="flex-1 sm:flex-none"
               icon={<FeatherRefreshCw />}
-              onClick={() => {
-                toast.success("Refreshed font settings");
-                refetchFontSettings();
+              onClick={async () => {
+                try {
+                  await refetchFontSettings();
+                  toast.success("Refreshed font settings");
+                } catch (err: any) {
+                  toast.error(`Failed to refresh font settings: ${err.message || "Unknown error"}`);
+                }
               }}
             >
               Refresh

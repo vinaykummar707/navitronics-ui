@@ -33,6 +33,8 @@ import { sortByLatestCreated } from "@/utils/dateUtils";
 export default function RegularRoutesPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const highlightRouteId =
+    searchParams.get("highlightRouteId") || searchParams.get("routeId");
   const user = useLoggedUserStore((state) => state.user);
   const routeAccess = getUserRouteAccess(user);
   const isRegular = isRegularCustomer(user);
@@ -160,6 +162,35 @@ export default function RegularRoutesPage() {
     }
   };
 
+  // Auto-focus, select, and scroll to highlighted route from navigation
+  useEffect(() => {
+    if (!highlightRouteId || !routes || routes.length === 0) return;
+    const target = routes.find((r) => r.id === highlightRouteId);
+    if (target) {
+      // 1. Auto-select the route
+      setSelectedRouteIds((prev) =>
+        prev.includes(highlightRouteId) ? prev : [highlightRouteId, ...prev]
+      );
+
+      // 2. Adjust version filter if target would be filtered out
+      if (target.version === "1.0" && versionFilter === "v2") {
+        setVersionFilter("all");
+      } else if (target.version !== "1.0" && versionFilter === "v1") {
+        setVersionFilter("all");
+      }
+
+      // 3. Smoothly scroll target into view
+      const timer = setTimeout(() => {
+        const rowElement = document.getElementById(`route-row-${highlightRouteId}`);
+        if (rowElement) {
+          rowElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 300);
+
+      return () => clearTimeout(timer);
+    }
+  }, [highlightRouteId, routes]);
+
   const handleAddV1Route = () => {
     navigate("/routes/create-v1");
   };
@@ -217,18 +248,38 @@ export default function RegularRoutesPage() {
       .from("routes")
       .select("*")
       .eq("id", routeId)
+      .eq("deleted", false)
       .single();
 
     if (fetchError || !originalRoute) {
-      toast.error("Error fetching route to duplicate");
+      toast.error("Error fetching active route to duplicate");
       return;
     }
 
-    const { id, ...routeWithoutId } = originalRoute;
+    const { id, deleted, ...routeWithoutId } = originalRoute;
+    const baseNumber = (originalRoute.route_number || "").trim();
+    const suffix = routeNumberSuffix === " (Copy)" ? "D" : (routeNumberSuffix || "D");
+    let candidateNumber = `${baseNumber}${suffix}`;
+
+    // Check duplicate for regular customer
+    const { data: existing } = await supabase
+      .from("routes")
+      .select("id")
+      .eq("created_by", user?.id || "")
+      .is("depot_id", null)
+      .ilike("route_number", candidateNumber)
+      .eq("deleted", false)
+      .maybeSingle();
+
+    if (existing) {
+      candidateNumber = `${baseNumber}${suffix}1`;
+    }
+
     createRoute(
       {
         ...routeWithoutId,
-        route_number: `${originalRoute.route_number}${routeNumberSuffix}`,
+        deleted: false,
+        route_number: candidateNumber,
         created_at: new Date().toISOString(),
         created_by: user?.id || "",
         organization_id: null,
@@ -236,11 +287,15 @@ export default function RegularRoutesPage() {
       },
       {
         onSuccess: () => {
-          toast.success("Route duplicated successfully");
+          toast.success(`Route duplicated as "${candidateNumber}"`);
           refetchRoutes();
         },
-        onError: (error) => {
-          toast.error(`Error duplicating route: ${error.message || "Unknown error"}`);
+        onError: (error: any) => {
+          if (error?.code === "23505" || error?.message?.includes("23505")) {
+            toast.error(`Route "${candidateNumber}" already exists in your account.`);
+          } else {
+            toast.error(`Error duplicating route: ${error.message || "Unknown error"}`);
+          }
         },
       },
     );
@@ -646,6 +701,7 @@ export default function RegularRoutesPage() {
       ) : (
         <RouteTable
           routes={filteredRoutes}
+          highlightedRouteId={highlightRouteId}
           onEdit={handleEditRoute}
           onDelete={(routeId: string) => {
             if (

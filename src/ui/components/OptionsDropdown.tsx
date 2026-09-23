@@ -40,9 +40,13 @@ const OptionsDropdownRoot = React.forwardRef<
   }: OptionsDropdownRootProps,
   ref,
 ) {
+  const hasActions = Boolean(onEdit || onDelete);
+
   return (
     <>
-      {isDisabled ? <IconButton disabled icon={<FeatherMoreHorizontal />} /> : (
+      {isDisabled || !hasActions ? (
+        <IconButton disabled icon={<FeatherMoreHorizontal />} />
+      ) : (
         <SubframeCore.DropdownMenu.Root>
           <SubframeCore.DropdownMenu.Trigger asChild={true}>
             <IconButton
@@ -61,18 +65,22 @@ const OptionsDropdownRoot = React.forwardRef<
               asChild={true}
             >
               <DropdownMenu>
-                <DropdownMenu.DropdownItem
-                  onClick={onEdit}
-                  icon={<FeatherPencil />}
-                >
-                  Edit
-                </DropdownMenu.DropdownItem>
-                <DropdownMenu.DropdownItem
-                  onClick={onDelete}
-                  icon={<FeatherTrash />}
-                >
-                  Delete
-                </DropdownMenu.DropdownItem>
+                {onEdit && (
+                  <DropdownMenu.DropdownItem
+                    onClick={onEdit}
+                    icon={<FeatherPencil />}
+                  >
+                    Edit
+                  </DropdownMenu.DropdownItem>
+                )}
+                {onDelete && (
+                  <DropdownMenu.DropdownItem
+                    onClick={onDelete}
+                    icon={<FeatherTrash />}
+                  >
+                    Delete
+                  </DropdownMenu.DropdownItem>
+                )}
               </DropdownMenu>
             </SubframeCore.DropdownMenu.Content>
           </SubframeCore.DropdownMenu.Portal>

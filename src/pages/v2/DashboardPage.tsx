@@ -35,7 +35,8 @@ import { depotCrud, IDepot } from "@/types/IDepot";
 import { IRoute } from "@/types/IRoute";
 import { stopCrud } from "@/types/IStop";
 import { userCrud, ILoggedUser } from "@/types/IUser";
-import { isSuperAdmin } from "@/utils/customerType";
+import { isSuperAdmin, isRegularCustomer } from "@/utils/customerType";
+import { ROLES } from "@/constants/roles";
 import { supabase } from "@/supabaseClient";
 import { toast } from "react-toastify";
 import { formatDate, sortByLatestCreated } from "@/utils/dateUtils";
@@ -44,6 +45,19 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const loggedInUser = useLoggedUserStore((state) => state.user);
   const isSuper = isSuperAdmin(loggedInUser);
+  const userRole = (loggedInUser?.role?.name || "").toLowerCase();
+
+  const isOrgAdmin = !isSuper && userRole === ROLES.ORGANIZATION_ADMIN;
+  const isRegionAdmin =
+    !isSuper && (userRole === ROLES.REGION_ADMIN || userRole === ROLES.AREA_ADMIN);
+  const isDepotAdmin = !isSuper && userRole === ROLES.DEPOT_ADMIN;
+
+  const userOrgId =
+    loggedInUser?.organization?.id || loggedInUser?.organization_id || "";
+  const userRegionId =
+    loggedInUser?.region?.id || loggedInUser?.region_id || "";
+  const userDepotId =
+    loggedInUser?.depot?.id || loggedInUser?.depot_id || "";
 
   const { selectedOrganization } = useOrganizationStore();
   const setRoutesPageRegion = useRegionStore((state) => state.setRoutesPageRegion);
@@ -51,7 +65,7 @@ export default function DashboardPage() {
 
   const targetOrgId = isSuper
     ? selectedOrganization?.id
-    : loggedInUser?.organization?.id || loggedInUser?.organization_id;
+    : userOrgId;
 
   // 1. Fetch Regions
   const { data: regionsData, refetch: refetchRegions } = regionCrud.useList({
@@ -83,39 +97,163 @@ export default function DashboardPage() {
   });
   const users = (usersData?.data as ILoggedUser[]) || [];
 
-  // 5. Route counts for KPI card (lightweight head: true count queries - zero route rows loaded)
+  // Scoped views for KPI cards based on role
+  const scopedRegions = useMemo(() => {
+    if ((isRegionAdmin || isDepotAdmin) && userRegionId) {
+      return regions.filter((r) => r.id === userRegionId);
+    }
+    return regions;
+  }, [regions, isRegionAdmin, isDepotAdmin, userRegionId]);
+
+  const scopedDepots = useMemo(() => {
+    if (isDepotAdmin && userDepotId) {
+      return depots.filter((d) => d.id === userDepotId);
+    }
+    if (isRegionAdmin && userRegionId) {
+      return depots.filter((d) => d.region_id === userRegionId);
+    }
+    return depots;
+  }, [depots, isDepotAdmin, userDepotId, isRegionAdmin, userRegionId]);
+
+  const scopedStops = useMemo(() => {
+    if (isDepotAdmin && userDepotId) {
+      return stops.filter((s) => s.depot_id === userDepotId);
+    }
+    if (isRegionAdmin && userRegionId) {
+      const depotIdSet = new Set(scopedDepots.map((d) => d.id));
+      return stops.filter((s) => depotIdSet.has(s.depot_id));
+    }
+    return stops;
+  }, [stops, isDepotAdmin, userDepotId, isRegionAdmin, userRegionId, scopedDepots]);
+
+  const scopedUsers = useMemo(() => {
+    if (isDepotAdmin && userDepotId) {
+      return users.filter(
+        (u) => (u.depot_id || u.depot?.id) === userDepotId
+      );
+    }
+    if (isRegionAdmin && userRegionId) {
+      return users.filter(
+        (u) => (u.region_id || u.region?.id) === userRegionId
+      );
+    }
+    return users;
+  }, [users, isDepotAdmin, userDepotId, isRegionAdmin, userRegionId]);
+
+  // 5. Route counts for KPI card - scoped precisely by user role
   const { data: routeStats, refetch: refetchRouteStats } = useQuery({
-    queryKey: ["dashboard-route-stats", targetOrgId],
+    queryKey: [
+      "dashboard-route-stats",
+      isSuper,
+      isOrgAdmin,
+      isRegionAdmin,
+      isDepotAdmin,
+      targetOrgId,
+      userOrgId,
+      userRegionId,
+      userDepotId,
+    ],
     queryFn: async () => {
-      const [stuRes, regularRes, v1Res] = await Promise.all([
-        targetOrgId
-          ? supabase
-            .from("routes")
-            .select("*", { count: "exact", head: true })
-            .eq("organization_id", targetOrgId)
-            .eq("deleted", false)
-          : supabase
+      // 1. Super Admin: Counts across all regular and STU routes
+      if (isSuper) {
+        const [stuRes, regularRes, v1Res] = await Promise.all([
+          supabase
             .from("routes")
             .select("*", { count: "exact", head: true })
             .not("depot_id", "is", null)
             .eq("deleted", false),
-        supabase
-          .from("routes")
-          .select("*", { count: "exact", head: true })
-          .is("depot_id", null)
-          .eq("deleted", false),
-        supabase
-          .from("routes")
-          .select("*", { count: "exact", head: true })
-          .eq("version", "1.0")
-          .eq("deleted", false),
-      ]);
-      const stu = stuRes.count || 0;
-      const regular = regularRes.count || 0;
-      const total = stu + regular;
-      const v1 = v1Res.count || 0;
-      const v2 = Math.max(0, total - v1);
-      return { total, stu, regular, v1, v2 };
+          supabase
+            .from("routes")
+            .select("*", { count: "exact", head: true })
+            .is("depot_id", null)
+            .eq("deleted", false),
+          supabase
+            .from("routes")
+            .select("*", { count: "exact", head: true })
+            .eq("version", "1.0")
+            .eq("deleted", false),
+        ]);
+        const stu = stuRes.count || 0;
+        const regular = regularRes.count || 0;
+        const total = stu + regular;
+        const v1 = v1Res.count || 0;
+        const v2 = Math.max(0, total - v1);
+        return { total, stu, regular, v1, v2 };
+      }
+
+      // 2. Organization Admin: Limited strictly to their organization
+      if (isOrgAdmin && userOrgId) {
+        const [orgRes, v1Res] = await Promise.all([
+          supabase
+            .from("routes")
+            .select("*", { count: "exact", head: true })
+            .eq("organization_id", userOrgId)
+            .eq("deleted", false),
+          supabase
+            .from("routes")
+            .select("*", { count: "exact", head: true })
+            .eq("organization_id", userOrgId)
+            .eq("version", "1.0")
+            .eq("deleted", false),
+        ]);
+        const total = orgRes.count || 0;
+        const v1 = v1Res.count || 0;
+        const v2 = Math.max(0, total - v1);
+        return { total, stu: total, regular: 0, v1, v2 };
+      }
+
+      // 3. Region Admin: Limited strictly to depots within their region
+      if (isRegionAdmin && userRegionId) {
+        const { data: regionDepots } = await supabase
+          .from("depots")
+          .select("id")
+          .eq("region_id", userRegionId)
+          .eq("deleted", false);
+        const depotIds = (regionDepots || []).map((d) => d.id);
+        if (depotIds.length === 0) {
+          return { total: 0, stu: 0, regular: 0, v1: 0, v2: 0 };
+        }
+        const [regRes, v1Res] = await Promise.all([
+          supabase
+            .from("routes")
+            .select("*", { count: "exact", head: true })
+            .in("depot_id", depotIds)
+            .eq("deleted", false),
+          supabase
+            .from("routes")
+            .select("*", { count: "exact", head: true })
+            .in("depot_id", depotIds)
+            .eq("version", "1.0")
+            .eq("deleted", false),
+        ]);
+        const total = regRes.count || 0;
+        const v1 = v1Res.count || 0;
+        const v2 = Math.max(0, total - v1);
+        return { total, stu: total, regular: 0, v1, v2 };
+      }
+
+      // 4. Depot Admin: Limited strictly to their assigned depot
+      if (isDepotAdmin && userDepotId) {
+        const [depRes, v1Res] = await Promise.all([
+          supabase
+            .from("routes")
+            .select("*", { count: "exact", head: true })
+            .eq("depot_id", userDepotId)
+            .eq("deleted", false),
+          supabase
+            .from("routes")
+            .select("*", { count: "exact", head: true })
+            .eq("depot_id", userDepotId)
+            .eq("version", "1.0")
+            .eq("deleted", false),
+        ]);
+        const total = depRes.count || 0;
+        const v1 = v1Res.count || 0;
+        const v2 = Math.max(0, total - v1);
+        return { total, stu: total, regular: 0, v1, v2 };
+      }
+
+      return { total: 0, stu: 0, regular: 0, v1: 0, v2: 0 };
     },
     enabled: true,
   });
@@ -154,14 +292,28 @@ export default function DashboardPage() {
 
   const isDebouncing = routeSearchQuery.trim() !== debouncedQuery;
 
-  // 6. Dynamic Route Search Query - Searches BOTH STU routes and Regular Customer routes!
+  // 6. Dynamic Route Search Query - Scoped by Role Hierarchy:
+  // - Super Admin: lists all routes from regular and STU users
+  // - Organization Admin: strictly limited to their organization
+  // - Region Admin: strictly limited to routes within depots of their region
+  // - Depot Admin: strictly limited to routes of that depot
   const {
     data: searchResults,
     isLoading: isSearchLoading,
     isFetching: isSearchFetching,
     refetch: refetchSearchResults,
   } = useQuery({
-    queryKey: ["dashboard-routes-search", targetOrgId, debouncedQuery],
+    queryKey: [
+      "dashboard-routes-search",
+      isSuper,
+      isOrgAdmin,
+      isRegionAdmin,
+      isDepotAdmin,
+      userOrgId,
+      userRegionId,
+      userDepotId,
+      debouncedQuery,
+    ],
     queryFn: async () => {
       if (!debouncedQuery) return [];
       const sanitized = debouncedQuery.replace(/[,()]/g, "");
@@ -178,9 +330,42 @@ export default function DashboardPage() {
           `route_number.ilike.%${sanitized}%,route_number_1.ilike.%${sanitized}%,route_number_2.ilike.%${sanitized}%`
         );
 
-      // Search BOTH STU routes (for selected organization) AND all Regular Customer routes (depot_id is null)
-      if (targetOrgId) {
-        query = query.or(`organization_id.eq.${targetOrgId},depot_id.is.null`);
+      if (isSuper) {
+        // Super Admin: lists all routes across regular and STU users across all organizations
+      } else if (isOrgAdmin) {
+        // Organization Admin: strictly limited to their organization
+        if (!userOrgId) return [];
+        query = query.eq("organization_id", userOrgId);
+      } else if (isRegionAdmin) {
+        // Region Admin: strictly limited to routes belonging to depots in their region
+        if (!userRegionId) return [];
+        const { data: regionDepots, error: depotError } = await supabase
+          .from("depots")
+          .select("id")
+          .eq("region_id", userRegionId)
+          .eq("deleted", false);
+
+        if (depotError) {
+          console.error("Error fetching region depots for route search:", depotError);
+          throw depotError;
+        }
+
+        const regionDepotIds = (regionDepots || []).map((d) => d.id);
+        if (regionDepotIds.length === 0) {
+          return [];
+        }
+        query = query.in("depot_id", regionDepotIds);
+      } else if (isDepotAdmin) {
+        // Depot Admin: strictly limited to their assigned depot
+        if (!userDepotId) return [];
+        query = query.eq("depot_id", userDepotId);
+      } else if (isRegularCustomer(loggedInUser)) {
+        // Regular customer: only their own routes
+        const currentUid = loggedInUser?.id || loggedInUser?.user_id;
+        query = query.is("depot_id", null);
+        if (currentUid) {
+          query = query.eq("created_by", currentUid);
+        }
       }
 
       query = query.order("created_at", { ascending: false }).limit(100);
@@ -243,7 +428,7 @@ export default function DashboardPage() {
     toast.success("Dashboard metrics refreshed");
   };
 
-  const handleNavigateToDepotRoutes = (depotId?: string | null) => {
+  const handleNavigateToDepotRoutes = (depotId?: string | null, routeId?: string | null) => {
     if (depotId) {
       const targetDepot = depotMap.get(depotId);
       if (targetDepot) {
@@ -254,7 +439,8 @@ export default function DashboardPage() {
         }
       }
     }
-    navigate("/home/routes");
+    const query = routeId ? `?highlightRouteId=${routeId}` : "";
+    navigate(`/home/routes${query}`);
   };
 
   const handleEditRoute = (route: IRoute) => {
@@ -297,11 +483,27 @@ export default function DashboardPage() {
               Dashboard & Route Explorer
             </span>
             <span className="inline-flex rounded px-2 py-0.5 text-micro font-caption-bold text-brand-primary bg-brand-50 border border-brand-200">
-              {selectedOrganization?.name || "All Transit Operations"}
+              {isSuper
+                ? (selectedOrganization?.name || "All Transit Operations")
+                : isOrgAdmin
+                ? (loggedInUser?.organization?.name || "Organization Scope")
+                : isRegionAdmin
+                ? (loggedInUser?.region?.name || "Region Scope")
+                : isDepotAdmin
+                ? (loggedInUser?.depot?.name || "Depot Scope")
+                : "Transit Operations"}
             </span>
           </div>
           <span className="text-body font-body text-subtext-color">
-            Search and inspect routes across STU enterprise fleets and regular customers
+            {isSuper
+              ? "Search and inspect routes across STU enterprise fleets and regular customers"
+              : isOrgAdmin
+              ? "Search and inspect routes across your organization"
+              : isRegionAdmin
+              ? "Search and inspect routes within your region"
+              : isDepotAdmin
+              ? "Search and inspect routes for your assigned depot"
+              : "Search and inspect routes"}
           </span>
         </div>
 
@@ -334,9 +536,11 @@ export default function DashboardPage() {
             </div>
           </div>
           <span className="text-heading-3 font-heading-3 font-bold text-default-font">
-            {regions.length}
+            {scopedRegions.length}
           </span>
-          <span className="text-micro text-subtext-color">Operational Divisions</span>
+          <span className="text-micro text-subtext-color">
+            {isRegionAdmin || isDepotAdmin ? "Assigned Division" : "Operational Divisions"}
+          </span>
         </div>
 
         {/* Depots KPI */}
@@ -348,12 +552,14 @@ export default function DashboardPage() {
             </div>
           </div>
           <span className="text-heading-3 font-heading-3 font-bold text-default-font">
-            {depots.length}
+            {scopedDepots.length}
           </span>
-          <span className="text-micro text-subtext-color">Transit Facilities</span>
+          <span className="text-micro text-subtext-color">
+            {isDepotAdmin ? "Assigned Facility" : "Transit Facilities"}
+          </span>
         </div>
 
-        {/* Routes KPI (fetched via zero-row count queries: STU + Regular) */}
+        {/* Routes KPI (scoped precisely by user role) */}
         <div className="flex flex-col gap-1 rounded-xl border border-neutral-border bg-sidebar-background p-4 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-caption font-medium text-subtext-color">Routes</span>
@@ -365,13 +571,29 @@ export default function DashboardPage() {
             <span className="text-heading-3 font-heading-3 font-bold text-default-font">
               {totalRoutesCount}
             </span>
-            <div className="flex items-center gap-1 text-micro">
-              <span className="text-brand-primary font-medium">{stuRoutesCount} STU</span>
-              <span className="text-subtext-color">•</span>
-              <span className="text-purple-600 font-medium">{regularRoutesCount} Regular</span>
-            </div>
+            {isSuper ? (
+              <div className="flex items-center gap-1 text-micro">
+                <span className="text-brand-primary font-medium">{stuRoutesCount} STU</span>
+                <span className="text-subtext-color">•</span>
+                <span className="text-purple-600 font-medium">{regularRoutesCount} Regular</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 text-micro">
+                <span className="text-brand-primary font-medium">{totalRoutesCount} Active</span>
+              </div>
+            )}
           </div>
-          <span className="text-micro text-subtext-color">STU & Regular Routes</span>
+          <span className="text-micro text-subtext-color">
+            {isSuper
+              ? "STU & Regular Routes"
+              : isOrgAdmin
+              ? "Organization Routes"
+              : isRegionAdmin
+              ? "Region Routes"
+              : isDepotAdmin
+              ? "Depot Routes"
+              : "Active Routes"}
+          </span>
         </div>
 
         {/* Stops KPI */}
@@ -383,7 +605,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <span className="text-heading-3 font-heading-3 font-bold text-default-font">
-            {stops.length}
+            {scopedStops.length}
           </span>
           <span className="text-micro text-subtext-color">Configured Waypoints</span>
         </div>
@@ -397,7 +619,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <span className="text-heading-3 font-heading-3 font-bold text-default-font">
-            {users.length}
+            {scopedUsers.length}
           </span>
           <span className="text-micro text-subtext-color">Admins & Staff</span>
         </div>
@@ -413,10 +635,26 @@ export default function DashboardPage() {
             </div>
             <div className="flex flex-col">
               <span className="text-body-bold font-body-bold text-default-font">
-                Search All Routes (STU & Regular Customers)
+                {isSuper
+                  ? "Search All Routes (STU & Regular Customers)"
+                  : isOrgAdmin
+                  ? "Search Organization Routes"
+                  : isRegionAdmin
+                  ? "Search Region Routes"
+                  : isDepotAdmin
+                  ? "Search Depot Routes"
+                  : "Search Routes"}
               </span>
               <span className="text-caption text-subtext-color">
-                Search by route number across both enterprise STU depots and regular customer routes
+                {isSuper
+                  ? "Search by route number across both enterprise STU depots and regular customer routes"
+                  : isOrgAdmin
+                  ? "Search by route number across depots in your organization"
+                  : isRegionAdmin
+                  ? "Search by route number across depots in your region"
+                  : isDepotAdmin
+                  ? "Search by route number within your assigned depot"
+                  : "Search by route number"}
               </span>
             </div>
           </div>
@@ -424,11 +662,13 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2">
             {isQueryActive ? (
               <Badge variant="brand">
-                {filteredRoutes.length} route{filteredRoutes.length === 1 ? "" : "s"} found ({stuCountInResults} STU, {regularCountInResults} Regular)
+                {filteredRoutes.length} route{filteredRoutes.length === 1 ? "" : "s"} found
+                {isSuper ? ` (${stuCountInResults} STU, ${regularCountInResults} Regular)` : ""}
               </Badge>
             ) : (
               <Badge variant="neutral">
-                {totalRoutesCount} total routes ({stuRoutesCount} STU, {regularRoutesCount} Regular)
+                {totalRoutesCount} total routes
+                {isSuper ? ` (${stuRoutesCount} STU, ${regularRoutesCount} Regular)` : ""}
               </Badge>
             )}
           </div>
@@ -475,39 +715,41 @@ export default function DashboardPage() {
 
           {/* Filter Controls: Customer Tier, Format & Depot */}
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Type / Tier Filter: All vs STU vs Regular */}
-            <div className="flex items-center rounded-lg border border-neutral-border bg-sidebar-background p-0.5">
-              <button
-                type="button"
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${selectedTypeFilter === "all"
-                    ? "bg-brand-primary text-white shadow-xs font-semibold"
-                    : "text-subtext-color hover:text-default-font"
-                  }`}
-                onClick={() => setSelectedTypeFilter("all")}
-              >
-                All Types
-              </button>
-              <button
-                type="button"
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${selectedTypeFilter === "stu"
-                    ? "bg-brand-primary text-white shadow-xs font-semibold"
-                    : "text-subtext-color hover:text-default-font"
-                  }`}
-                onClick={() => setSelectedTypeFilter("stu")}
-              >
-                STU Routes {isQueryActive ? `(${stuCountInResults})` : ""}
-              </button>
-              <button
-                type="button"
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${selectedTypeFilter === "regular"
-                    ? "bg-brand-primary text-white shadow-xs font-semibold"
-                    : "text-subtext-color hover:text-default-font"
-                  }`}
-                onClick={() => setSelectedTypeFilter("regular")}
-              >
-                Regular Customer {isQueryActive ? `(${regularCountInResults})` : ""}
-              </button>
-            </div>
+            {/* Type / Tier Filter: Only shown for Super Admin (since other roles only manage STU routes) */}
+            {isSuper && (
+              <div className="flex items-center rounded-lg border border-neutral-border bg-sidebar-background p-0.5">
+                <button
+                  type="button"
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${selectedTypeFilter === "all"
+                      ? "bg-brand-primary text-white shadow-xs font-semibold"
+                      : "text-subtext-color hover:text-default-font"
+                    }`}
+                  onClick={() => setSelectedTypeFilter("all")}
+                >
+                  All Types
+                </button>
+                <button
+                  type="button"
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${selectedTypeFilter === "stu"
+                      ? "bg-brand-primary text-white shadow-xs font-semibold"
+                      : "text-subtext-color hover:text-default-font"
+                    }`}
+                  onClick={() => setSelectedTypeFilter("stu")}
+                >
+                  STU Routes {isQueryActive ? `(${stuCountInResults})` : ""}
+                </button>
+                <button
+                  type="button"
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${selectedTypeFilter === "regular"
+                      ? "bg-brand-primary text-white shadow-xs font-semibold"
+                      : "text-subtext-color hover:text-default-font"
+                    }`}
+                  onClick={() => setSelectedTypeFilter("regular")}
+                >
+                  Regular Customer {isQueryActive ? `(${regularCountInResults})` : ""}
+                </button>
+              </div>
+            )}
 
             {/* Version Toggle */}
             <div className="flex items-center rounded-lg border border-neutral-border bg-sidebar-background p-0.5">
@@ -543,8 +785,8 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            {/* Depot Selector Filter (shown when not filtering exclusively for regular customers) */}
-            {selectedTypeFilter !== "regular" && depots.length > 0 && (
+            {/* Depot Selector Filter (shown when there are scoped depots available, and not already depot_admin) */}
+            {!isDepotAdmin && selectedTypeFilter !== "regular" && scopedDepots.length > 0 && (
               <div className="w-44">
                 <Select
                   placeholder="All Depots"
@@ -552,7 +794,7 @@ export default function DashboardPage() {
                   onValueChange={(val) => setSelectedDepotFilter(val as string)}
                 >
                   <Select.Item value="all">All Depots</Select.Item>
-                  {depots.map((d) => (
+                  {scopedDepots.map((d) => (
                     <Select.Item key={d.id} value={d.id}>
                       {d.name}
                     </Select.Item>
@@ -588,10 +830,26 @@ export default function DashboardPage() {
                 <FeatherSearch className="h-6 w-6" />
               </div>
               <span className="text-body font-medium text-default-font">
-                Search All STU & Regular Customer Routes
+                {isSuper
+                  ? "Search All STU & Regular Customer Routes"
+                  : isOrgAdmin
+                  ? "Search Organization Routes"
+                  : isRegionAdmin
+                  ? "Search Region Routes"
+                  : isDepotAdmin
+                  ? "Search Depot Routes"
+                  : "Search Routes"}
               </span>
               <span className="text-caption max-w-md text-subtext-color">
-                Type a route number in the search bar above to fetch and inspect matching routes across both STU enterprise fleets and regular customers.
+                {isSuper
+                  ? "Type a route number in the search bar above to fetch and inspect matching routes across both STU enterprise fleets and regular customers."
+                  : isOrgAdmin
+                  ? "Type a route number to search matching routes within your organization."
+                  : isRegionAdmin
+                  ? "Type a route number to search matching routes across depots in your region."
+                  : isDepotAdmin
+                  ? "Type a route number to search matching routes in your assigned depot."
+                  : "Type a route number in the search bar above to fetch and inspect matching routes."}
               </span>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-micro text-neutral-400">Try searching:</span>
@@ -614,7 +872,7 @@ export default function DashboardPage() {
               <span className="text-caption">
                 {isDebouncing
                   ? `Searching for "${routeSearchQuery}"...`
-                  : `Fetching matching STU & regular routes for "${debouncedQuery}"...`}
+                  : `Fetching matching routes for "${debouncedQuery}"...`}
               </span>
             </div>
           ) : filteredRoutes.length === 0 ? (
@@ -625,7 +883,15 @@ export default function DashboardPage() {
                 No routes match "{debouncedQuery}"
               </span>
               <span className="text-caption max-w-sm">
-                No STU or regular customer routes were found matching this route number. Try searching for another number or clear filters.
+                {isSuper
+                  ? "No STU or regular customer routes were found matching this route number. Try searching for another number or clear filters."
+                  : isOrgAdmin
+                  ? "No routes in your organization were found matching this route number. Try searching for another number or clear filters."
+                  : isRegionAdmin
+                  ? "No routes in your region were found matching this route number. Try searching for another number or clear filters."
+                  : isDepotAdmin
+                  ? "No routes in your depot were found matching this route number. Try searching for another number or clear filters."
+                  : "No routes were found matching this route number. Try searching for another number or clear filters."}
               </span>
               <Button
                 variant="neutral-secondary"
@@ -776,12 +1042,12 @@ export default function DashboardPage() {
                           icon={<FeatherExternalLink className="h-3.5 w-3.5" />}
                           onClick={() => {
                             if (route.depot_id) {
-                              handleNavigateToDepotRoutes(route.depot_id);
+                              handleNavigateToDepotRoutes(route.depot_id, route.id);
                             } else {
-                              navigate("/home/regular-routes");
+                              navigate(`/home/regular-routes?highlightRouteId=${route.id}`);
                             }
                           }}
-                          title={route.depot_id ? "Open depot in Routes page" : "Open in Regular Routes page"}
+                          title={route.depot_id ? "Open depot in Routes page and highlight route" : "Open in Regular Routes page and highlight route"}
                         >
                           View
                         </Button>

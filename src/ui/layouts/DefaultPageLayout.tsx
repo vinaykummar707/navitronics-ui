@@ -220,7 +220,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
         </RBAC>
 
         <RBAC
-          roles={[ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.DEPOT_ADMIN]}
+          roles={[ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN]}
           features={["PIS", "PAS", "ITMS"]}
         >
           <SidebarWithSections.NavItem

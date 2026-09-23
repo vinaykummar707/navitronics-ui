@@ -10,6 +10,7 @@ import { IconButton } from "./IconButton";
 import { TextField } from "./TextField";
 import { Select } from "./Select";
 import { depotCrud, IDepot } from "@/types/IDepot";
+import { checkActiveDuplicate } from "@/hooks/useCrud";
 import { toast } from "react-toastify";
 
 interface CreateDepotFormProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -38,6 +39,7 @@ const CreateDepotFormRoot = React.forwardRef<
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
+    setError,
   } = useForm<IDepot>({
     defaultValues: {
       name: initialData?.name || "",
@@ -56,14 +58,38 @@ const CreateDepotFormRoot = React.forwardRef<
   const onSubmit = async (values: FormValues) => {
     setApiError(null);
     setSuccessMessage(null);
+    const trimmedName = values.name?.trim();
+    if (!trimmedName) {
+      setError("name", { message: "Depot name is required" });
+      return;
+    }
+
+    const targetRegionId = values.region_id || region_id;
+
+    // Pre-submission duplicate check for active depots within this region/organization
+    const isDup = await checkActiveDuplicate(
+      "depots",
+      "name",
+      trimmedName,
+      { region_id: targetRegionId, organization_id: organizationId },
+      isUpdate && initialData ? initialData.id : undefined
+    );
+
+    if (isDup) {
+      const msg = `A depot named "${trimmedName}" already exists in this region.`;
+      setApiError(msg);
+      toast.error(msg);
+      return;
+    }
+
     if (isUpdate && initialData) {
-      await updateDepot(
+      updateDepot(
         {
           id: initialData.id,
           payload: {
             id: initialData.id,
-            name: values.name,
-            region_id: values.region_id,
+            name: trimmedName,
+            region_id: targetRegionId,
             organization_id: organizationId,
           },
         },
@@ -73,17 +99,25 @@ const CreateDepotFormRoot = React.forwardRef<
             reset();
             if (onSuccess) onSuccess();
           },
-          onError: (error) => {
-            toast.error(`Failed to update depot: ${error.message}`);
+          onError: (error: any) => {
+            if (error?.code === "23505" || error?.message?.includes("23505")) {
+              const msg = `A depot named "${trimmedName}" already exists in this region.`;
+              setApiError(msg);
+              toast.error(msg);
+            } else if (error?.message?.includes("deleted or is no longer accessible")) {
+              toast.error("This depot was deleted by another user and cannot be updated.");
+            } else {
+              toast.error(`Failed to update depot: ${error.message || "Unknown error"}`);
+            }
             console.error("Update Error:", error);
           },
         }
       );
     } else {
-      await createDepot(
+      createDepot(
         {
-          name: values.name,
-          region_id: values.region_id,
+          name: trimmedName,
+          region_id: targetRegionId,
           organization_id: organizationId,
         },
         {
@@ -92,8 +126,14 @@ const CreateDepotFormRoot = React.forwardRef<
             reset();
             if (onSuccess) onSuccess();
           },
-          onError: (error) => {
-            toast.error(`Failed to create depot: ${error.message}`);
+          onError: (error: any) => {
+            if (error?.code === "23505" || error?.message?.includes("23505")) {
+              const msg = `A depot named "${trimmedName}" already exists in this region.`;
+              setApiError(msg);
+              toast.error(msg);
+            } else {
+              toast.error(`Failed to create depot: ${error.message || "Unknown error"}`);
+            }
             console.error("Creation Error:", error);
           },
         }

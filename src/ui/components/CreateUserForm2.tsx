@@ -31,6 +31,7 @@ import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { depotCrud } from "@/types/IDepot";
 import { regionCrud } from "@/types/IRegion";
 import { organizationCrud } from "@/types/organization";
+import { isSuperAdmin as checkIsSuperAdmin } from "@/utils/customerType";
 import { toast } from "react-toastify";
 
 interface CreateUserForm2RootProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -50,7 +51,10 @@ const CreateUserForm2Root = React.forwardRef<
 ) {
   const { selectedOrganization } = useOrganizationStore();
   const loggedInUser = useLoggedUserStore((state) => state.user);
-  const isSuperAdmin = loggedInUser?.role?.name === "master";
+  const isSuperAdmin =
+    checkIsSuperAdmin(loggedInUser) ||
+    loggedInUser?.role?.name?.toLowerCase() === "master" ||
+    loggedInUser?.role?.name?.toLowerCase() === "super_admin";
 
   const isEditMode = !!initialData;
   const [showPassword, setShowPassword] = useState(false);
@@ -150,15 +154,12 @@ const CreateUserForm2Root = React.forwardRef<
       region_id: initialData?.region?.id || initialData?.region_id || null,
       depot_id: initialData?.depot?.id || initialData?.depot_id || null,
       email: initialData?.email || "",
-      password: initialData?.password || "",
+      password: "",
       organization_id: initialTier === "regular" ? null : defaultOrgId,
       user_id: initialData?.user_id || "",
       active: initialData?.active ?? true,
       v1_routes: initialData?.v1_routes ?? selectedOrganization?.v1_routes ?? false,
       v2_routes: initialData?.v2_routes ?? selectedOrganization?.v2_routes ?? true,
-      PIS: (initialData as any)?.PIS ?? selectedOrganization?.PIS ?? true,
-      PAS: (initialData as any)?.PAS ?? selectedOrganization?.PAS ?? true,
-      ITMS: (initialData as any)?.ITMS ?? selectedOrganization?.ITMS ?? false,
     } as any,
   });
 
@@ -254,9 +255,6 @@ const CreateUserForm2Root = React.forwardRef<
         active: true,
         v1_routes: selectedOrganization?.v1_routes ?? false,
         v2_routes: selectedOrganization?.v2_routes ?? true,
-        PIS: selectedOrganization?.PIS ?? true,
-        PAS: selectedOrganization?.PAS ?? true,
-        ITMS: selectedOrganization?.ITMS ?? false,
       } as any);
     }
   }, [initialData, reset, selectedOrganization, defaultOrgId]);
@@ -290,15 +288,17 @@ const CreateUserForm2Root = React.forwardRef<
       depot_id: targetDepotId,
       organization_id: targetOrgId,
       customer_type: customerTier,
-      active: data.active,
-      v1_routes: Boolean(data.v1_routes),
-      v2_routes: Boolean(data.v2_routes),
-      PIS: Boolean((data as any).PIS),
-      PAS: Boolean((data as any).PAS),
-      ITMS: Boolean((data as any).ITMS),
+      active: isSuperAdmin ? Boolean(data.active) : (initialData?.active ?? true),
+      v1_routes: isSuperAdmin ? Boolean(data.v1_routes) : (initialData?.v1_routes ?? false),
+      v2_routes: isSuperAdmin ? Boolean(data.v2_routes) : (initialData?.v2_routes ?? true),
     };
 
     if (isEditMode && initialData) {
+      // If super admin specified a new password, include it in payload
+      if (isSuperAdmin && data.password && data.password.trim().length >= 6) {
+        basePayload.password = data.password.trim();
+      }
+
       // Update existing user
       try {
         const { error: updateError } = await supabase
@@ -829,21 +829,68 @@ const CreateUserForm2Root = React.forwardRef<
                 className="cursor-not-allowed opacity-75"
               />
             </TextField>
-            <div className="flex w-full flex-col items-start gap-1">
-              <Button
-                className="h-9 w-full flex-none"
-                variant="neutral-secondary"
-                type="button"
-                disabled={isResettingPassword}
-                loading={isResettingPassword}
-                onClick={handleResetPassword}
-              >
-                Reset Password
-              </Button>
-              <span className="text-caption font-caption text-subtext-color">
-                Sends a password reset link to {initialData?.email || "user"}
-              </span>
-            </div>
+
+            {/* Password Reset Field & Action (Only Super Admin / Master) */}
+            {isSuperAdmin && (
+              <div className="flex w-full flex-col gap-3 pt-1">
+                <Controller
+                  control={control}
+                  name="password"
+                  rules={{
+                    minLength: { value: 6, message: "At least 6 characters" },
+                  }}
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      className="h-auto w-full flex-none"
+                      label="Reset Password"
+                      helpText={
+                        fieldState.error?.message ||
+                        "Enter a new password or send a reset link below"
+                      }
+                      icon={<FeatherKey />}
+                      error={!!fieldState.error}
+                      iconRight={
+                        <button
+                          type="button"
+                          tabIndex={-1}
+                          className="flex items-center justify-center p-0.5 text-subtext-color hover:text-default-font transition-colors cursor-pointer"
+                          onClick={() => setShowPassword((prev) => !prev)}
+                          title={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? (
+                            <FeatherEyeOff className="w-4 h-4" />
+                          ) : (
+                            <FeatherEye className="w-4 h-4" />
+                          )}
+                        </button>
+                      }
+                    >
+                      <TextField.Input
+                        type={showPassword ? "text" : "password"}
+                        {...field}
+                        value={field.value || ""}
+                        placeholder="Enter new password (optional)"
+                      />
+                    </TextField>
+                  )}
+                />
+                <div className="flex w-full flex-col items-start gap-1">
+                  <Button
+                    className="h-9 w-full flex-none"
+                    variant="neutral-secondary"
+                    type="button"
+                    disabled={isResettingPassword}
+                    loading={isResettingPassword}
+                    onClick={handleResetPassword}
+                  >
+                    Send Password Reset Link
+                  </Button>
+                  <span className="text-caption font-caption text-subtext-color">
+                    Sends a password reset email link to {initialData?.email || "user"}
+                  </span>
+                </div>
+              </div>
+            )}
           </>
         ) : (
           <>
@@ -918,86 +965,51 @@ const CreateUserForm2Root = React.forwardRef<
           </>
         )}
 
-        {/* Module Access Permissions (STU Enterprise Users) */}
-        {!isRegular && (
-          <div className="flex flex-col gap-3 w-full border-t border-neutral-border pt-3">
-            <span className="text-caption-bold font-caption-bold text-default-font">
-              Module Access Permissions
-            </span>
-            <div className="flex flex-col gap-2 w-full">
+        {/* Route Version Capabilities & Account Status (Super Admin / Master Only) */}
+        {isSuperAdmin && (
+          <>
+            <div className="flex flex-col gap-3 w-full border-t border-neutral-border pt-3">
+              <span className="text-caption-bold font-caption-bold text-default-font">
+                Route Version Access
+              </span>
+              <div className="flex flex-col gap-2 w-full">
+                <FeatureToggle
+                  label="V1 Routes (Legacy Format)"
+                  description="Enable creation, editing, and export of V1 route configurations"
+                  toggle={
+                    <Switch
+                      checked={Boolean(watch("v1_routes"))}
+                      onCheckedChange={(checked) => setValue("v1_routes", checked)}
+                    />
+                  }
+                />
+                <FeatureToggle
+                  label="V2 Routes (Modern Format)"
+                  description="Enable creation, editing, and export of V2 multi-screen LED configurations"
+                  toggle={
+                    <Switch
+                      checked={Boolean(watch("v2_routes"))}
+                      onCheckedChange={(checked) => setValue("v2_routes", checked)}
+                    />
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col w-full border-t border-b border-neutral-border py-3">
               <FeatureToggle
-                label="PIS (Passenger Information System)"
-                description="Allow user access to route creation and LED signboard simulator"
+                label="Active Account"
+                description="Toggle to activate or deactivate this user account"
                 toggle={
                   <Switch
-                    checked={Boolean(watch("PIS" as any))}
-                    onCheckedChange={(checked) => setValue("PIS" as any, checked)}
-                  />
-                }
-              />
-              <FeatureToggle
-                label="PAS (Public Address System)"
-                description="Allow user access to stop management and automated audio announcements"
-                toggle={
-                  <Switch
-                    checked={Boolean(watch("PAS" as any))}
-                    onCheckedChange={(checked) => setValue("PAS" as any, checked)}
-                  />
-                }
-              />
-              <FeatureToggle
-                label="ITMS (Intelligent Transit Management System)"
-                description="Enable intelligent fleet and transit management features"
-                toggle={
-                  <Switch
-                    checked={Boolean(watch("ITMS" as any))}
-                    onCheckedChange={(checked) => setValue("ITMS" as any, checked)}
+                    checked={Boolean(watch("active"))}
+                    onCheckedChange={(checked) => setValue("active", checked)}
                   />
                 }
               />
             </div>
-          </div>
+          </>
         )}
-
-        {/* Route Version Capabilities */}
-        <div className="flex flex-col gap-3 w-full border-t border-b border-neutral-border py-3">
-          <span className="text-caption-bold font-caption-bold text-default-font">
-            Route Version Access
-          </span>
-          <div className="flex flex-col gap-2 w-full">
-            <FeatureToggle
-              label="V1 Routes (Legacy Format)"
-              description="Enable creation, editing, and export of V1 route configurations"
-              toggle={
-                <Switch
-                  checked={Boolean(watch("v1_routes"))}
-                  onCheckedChange={(checked) => setValue("v1_routes", checked)}
-                />
-              }
-            />
-            <FeatureToggle
-              label="V2 Routes (Modern Format)"
-              description="Enable creation, editing, and export of V2 multi-screen LED configurations"
-              toggle={
-                <Switch
-                  checked={Boolean(watch("v2_routes"))}
-                  onCheckedChange={(checked) => setValue("v2_routes", checked)}
-                />
-              }
-            />
-          </div>
-        </div>
-
-        <FeatureToggle
-          label="Active Account"
-          description="Toggle to activate or deactivate this user account"
-          toggle={
-            <Switch
-              checked={watch("active")}
-              onCheckedChange={(checked) => setValue("active", checked)}
-            />
-          }
-        />
 
       </div>
 
