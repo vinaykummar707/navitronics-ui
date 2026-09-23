@@ -32,8 +32,8 @@ export default function UsersPage() {
     refetch,
   } = useList({
     filters: targetOrgId
-      ? { organization_id: targetOrgId, deleted: false }
-      : { deleted: false },
+      ? { organization_id: targetOrgId }
+      : {},
     orderBy: { column: "created_at", ascending: false },
     skip: !targetOrgId,
     custom(query) {
@@ -62,7 +62,7 @@ export default function UsersPage() {
     return sortByLatestCreated(list);
   }, [rawUsers]);
 
-  // Soft delete a user by setting deleted to true and active to false
+  // Delete a user
   const handleDeleteUser = (userId: string) => {
     deleteMutate(userId, {
       onSuccess: () => {

@@ -9,7 +9,6 @@ export interface IStop {
   up_longitude: string;
   down_latitude: string;
   down_longitude: string;
-  deleted: boolean;
   created_at: string;
   active: boolean;
 }
@@ -23,7 +22,6 @@ export interface IStopWithAudio {
   up_longitude: string;
   down_latitude: string;
   down_longitude: string;
-  deleted: boolean;
   created_at: string;
   active: boolean;
   stop_audios:IStopAudio
@@ -36,13 +34,12 @@ export interface IStopAudio {
   file_size: number;
   created_at: string;
   stop_id: string;
-  deleted: boolean;
 }
 
 
 
-// Create: everything but id, deleted, created_at; all optional except name
-export type IStopCreate = Omit<Partial<IStop>, 'id' | 'deleted' | 'created_at' | 'active' | 'stop_audios'> & { name: string };
+// Create: everything but id, created_at; all optional except name
+export type IStopCreate = Omit<Partial<IStop>, 'id' | 'created_at' | 'active' | 'stop_audios'> & { name: string };
 
 // Update: id required, rest optional (except created_at)
 export type IStopUpdate = Pick<IStop, 'id'> & Partial<Omit<IStop, 'id' | 'created_at'>>;

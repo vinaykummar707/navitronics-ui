@@ -69,7 +69,7 @@ export default function DashboardPage() {
 
   // 1. Fetch Regions
   const { data: regionsData, refetch: refetchRegions } = regionCrud.useList({
-    filters: { organization_id: targetOrgId || "", deleted: false },
+    filters: { organization_id: targetOrgId || "" },
     skip: !targetOrgId,
     orderBy: { column: "name", ascending: true },
   });
@@ -77,7 +77,7 @@ export default function DashboardPage() {
 
   // 2. Fetch Depots
   const { data: depotsData, refetch: refetchDepots } = depotCrud.useList({
-    filters: { organization_id: targetOrgId || "", deleted: false },
+    filters: { organization_id: targetOrgId || "" },
     skip: !targetOrgId,
     orderBy: { column: "name", ascending: true },
   });
@@ -85,14 +85,14 @@ export default function DashboardPage() {
 
   // 3. Fetch Stops
   const { data: stopsData, refetch: refetchStops } = stopCrud.useList({
-    filters: { organization_id: targetOrgId || "", deleted: false },
+    filters: { organization_id: targetOrgId || "" },
     skip: !targetOrgId,
   });
   const stops = (stopsData?.data as any[]) || [];
 
   // 4. Fetch Users
   const { data: usersData, refetch: refetchUsers } = userCrud.useList({
-    filters: { organization_id: targetOrgId || "", deleted: false },
+    filters: { organization_id: targetOrgId || "" },
     skip: !targetOrgId,
   });
   const users = (usersData?.data as ILoggedUser[]) || [];
@@ -160,18 +160,15 @@ export default function DashboardPage() {
           supabase
             .from("routes")
             .select("*", { count: "exact", head: true })
-            .not("depot_id", "is", null)
-            .eq("deleted", false),
+            .not("depot_id", "is", null),
           supabase
             .from("routes")
             .select("*", { count: "exact", head: true })
-            .is("depot_id", null)
-            .eq("deleted", false),
+            .is("depot_id", null),
           supabase
             .from("routes")
             .select("*", { count: "exact", head: true })
-            .eq("version", "1.0")
-            .eq("deleted", false),
+            .eq("version", "1.0"),
         ]);
         const stu = stuRes.count || 0;
         const regular = regularRes.count || 0;
@@ -187,14 +184,12 @@ export default function DashboardPage() {
           supabase
             .from("routes")
             .select("*", { count: "exact", head: true })
-            .eq("organization_id", userOrgId)
-            .eq("deleted", false),
+            .eq("organization_id", userOrgId),
           supabase
             .from("routes")
             .select("*", { count: "exact", head: true })
             .eq("organization_id", userOrgId)
-            .eq("version", "1.0")
-            .eq("deleted", false),
+            .eq("version", "1.0"),
         ]);
         const total = orgRes.count || 0;
         const v1 = v1Res.count || 0;
@@ -207,8 +202,7 @@ export default function DashboardPage() {
         const { data: regionDepots } = await supabase
           .from("depots")
           .select("id")
-          .eq("region_id", userRegionId)
-          .eq("deleted", false);
+          .eq("region_id", userRegionId);
         const depotIds = (regionDepots || []).map((d) => d.id);
         if (depotIds.length === 0) {
           return { total: 0, stu: 0, regular: 0, v1: 0, v2: 0 };
@@ -217,14 +211,12 @@ export default function DashboardPage() {
           supabase
             .from("routes")
             .select("*", { count: "exact", head: true })
-            .in("depot_id", depotIds)
-            .eq("deleted", false),
+            .in("depot_id", depotIds),
           supabase
             .from("routes")
             .select("*", { count: "exact", head: true })
             .in("depot_id", depotIds)
-            .eq("version", "1.0")
-            .eq("deleted", false),
+            .eq("version", "1.0"),
         ]);
         const total = regRes.count || 0;
         const v1 = v1Res.count || 0;
@@ -238,14 +230,12 @@ export default function DashboardPage() {
           supabase
             .from("routes")
             .select("*", { count: "exact", head: true })
-            .eq("depot_id", userDepotId)
-            .eq("deleted", false),
+            .eq("depot_id", userDepotId),
           supabase
             .from("routes")
             .select("*", { count: "exact", head: true })
             .eq("depot_id", userDepotId)
-            .eq("version", "1.0")
-            .eq("deleted", false),
+            .eq("version", "1.0"),
         ]);
         const total = depRes.count || 0;
         const v1 = v1Res.count || 0;
@@ -325,7 +315,6 @@ export default function DashboardPage() {
           *,
           created_by_user:created_by (email)
         `)
-        .eq("deleted", false)
         .or(
           `route_number.ilike.%${sanitized}%,route_number_1.ilike.%${sanitized}%,route_number_2.ilike.%${sanitized}%`
         );
@@ -342,8 +331,7 @@ export default function DashboardPage() {
         const { data: regionDepots, error: depotError } = await supabase
           .from("depots")
           .select("id")
-          .eq("region_id", userRegionId)
-          .eq("deleted", false);
+          .eq("region_id", userRegionId);
 
         if (depotError) {
           console.error("Error fetching region depots for route search:", depotError);

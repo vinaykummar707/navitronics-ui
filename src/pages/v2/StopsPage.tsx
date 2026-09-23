@@ -59,14 +59,13 @@ function useStopsPageData() {
   const { data: regionData, refetch: refetchRegions } = regionCrud.useList({
     filters: {
       organization_id: selectedOrganization?.id || "",
-      deleted: false,
     },
     orderBy: { column: "created_at", ascending: true },
     skip: !selectedOrganization?.id,
   });
 
   const { data: depotData, refetch: refetchDepots } = depotCrud.useList({
-    filters: { region_id: selectedRegion?.id || "", deleted: false },
+    filters: { region_id: selectedRegion?.id || "" },
     orderBy: { column: "created_at", ascending: true },
     skip: !selectedRegion?.id,
   });
@@ -74,7 +73,6 @@ function useStopsPageData() {
   const { data: stopsData, refetch: refetchStops } = stopCrud.useList({
     filters: {
       depot_id: selectedDepot?.id || "",
-      deleted: false,
       organization_id: selectedOrganization?.id || "",
     },
     orderBy: { column: "created_at", ascending: false },
@@ -377,9 +375,8 @@ export default function StopsPage() {
       resetAudioPlayer();
       const { error } = await supabase
         .from("stops")
-        .update({ deleted: true })
-        .eq("depot_id", selectedDepot.id)
-        .eq("deleted", false);
+        .delete()
+        .eq("depot_id", selectedDepot.id);
 
       if (error) throw error;
 
@@ -508,7 +505,6 @@ export default function StopsPage() {
           up_longitude: upLonIndex !== -1 && row[upLonIndex] ? parseFloat(row[upLonIndex]) : null,
           depot_id: selectedDepot.id,
           organization_id: selectedOrganization?.id,
-          deleted: false,
         });
       }
 

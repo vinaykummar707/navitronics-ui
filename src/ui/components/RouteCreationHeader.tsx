@@ -131,8 +131,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
           const { data: existingStops } = await supabase
             .from("stops")
             .select("name")
-            .eq("depot_id", data.depot_id)
-            .eq("deleted", false);
+            .eq("depot_id", data.depot_id);
 
           const existingSet = new Set(
             (existingStops || []).map((s) => s.name?.toLowerCase().trim())
@@ -144,7 +143,6 @@ const RouteCreationHeaderRoot = React.forwardRef<
               name: sName,
               depot_id: data.depot_id,
               organization_id: data.organization_id || null,
-              deleted: false,
             }));
 
           if (newStopsToCreate.length > 0) {

@@ -34,19 +34,19 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
           return;
         }
 
-        // Verify that account is still active and not deleted in public.users
+        // Verify that account is still active in public.users
         if (user.id) {
           const { data: dbUser, error: dbError } = await supabase
             .from("users")
-            .select("active, deleted")
+            .select("active")
             .eq("id", user.id)
             .maybeSingle();
 
           if (!isMounted) return;
 
-          if (!dbError && dbUser && (!dbUser.active || dbUser.deleted)) {
+          if (!dbError && dbUser && !dbUser.active) {
             toast.error(
-              "Your account is inactive or has been deactivated. Please contact support at support@navitronix.in."
+              "Your account is inactive. Please contact support at support@navitronix.in."
             );
             await supabase.auth.signOut();
             logout();

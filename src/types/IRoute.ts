@@ -15,7 +15,6 @@ export interface IRoute {
   rear: string;
   internal: string;
   stops: string;
-  deleted: boolean;
   created_at: string;
   organization_id?: string | null;
   depot_id?: string | null;
@@ -27,10 +26,10 @@ export interface IRoute {
   };
 }
 
-// Create: everything but id, deleted, created_at; all optional except name
+// Create: everything but id, created_at; all optional except name
 export type IRouteCreate = Omit<
   Partial<IRoute>,
-  "id" | "deleted" | "created_at"
+  "id" | "created_at"
 >;
 
 // Update: id required, rest optional (except created_at)

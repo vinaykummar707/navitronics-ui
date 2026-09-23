@@ -72,7 +72,6 @@ const SimulationSettingsPanelRoot = React.forwardRef<
   const { data: stopsData } = stopCrud.useList({
     filters: {
       depot_id: depotId || "",
-      deleted: false,
       organization_id: selectedOrganization?.id || "",
     },
     skip: !depotId,

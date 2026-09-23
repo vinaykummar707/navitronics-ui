@@ -137,8 +137,8 @@ export function CreateRegularCustomerDrawer({
         .eq("email", values.email)
         .maybeSingle();
 
-      if (existingUser && !existingUser.deleted) {
-        toast.error("A user with this email address already exists and is active.");
+      if (existingUser) {
+        toast.error("A user with this email address already exists.");
         return;
       }
 
@@ -203,29 +203,15 @@ export function CreateRegularCustomerDrawer({
         return;
       }
 
-      // 3. Upsert into public.users
-      if (existingUser) {
-        const { error: updErr } = await supabase
-          .from("users")
-          .update({
-            deleted: false,
-            user_id: userId,
-            password: values.password,
-            ...basePayload,
-          })
-          .eq("id", existingUser.id);
+      // 3. Insert into public.users
+      const { error: insErr } = await supabase.from("users").insert({
+        email: values.email,
+        user_id: userId,
+        password: values.password,
+        ...basePayload,
+      });
 
-        if (updErr) throw updErr;
-      } else {
-        const { error: insErr } = await supabase.from("users").insert({
-          email: values.email,
-          user_id: userId,
-          password: values.password,
-          ...basePayload,
-        });
-
-        if (insErr) throw insErr;
-      }
+      if (insErr) throw insErr;
 
       toast.success("Regular Customer created successfully!");
       onSuccess();

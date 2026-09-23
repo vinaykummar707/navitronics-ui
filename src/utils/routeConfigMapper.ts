@@ -132,7 +132,6 @@ export function convertV2ToV1(v2Route: any): DisplayConfig {
     areaId: v2Route.organization_id || v2Route.areaId || "",
     depotId: v2Route.depot_id || v2Route.depotId || "",
     active: v2Route.active ?? true,
-    deleted: v2Route.deleted ?? false,
     createdAt: v2Route.created_at || v2Route.createdAt || new Date().toISOString(),
   };
 

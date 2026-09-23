@@ -12,7 +12,6 @@ export function useRegions() {
   const { data, refetch } = useList({
     filters: {
       organization_id: selectedOrganization?.id || "",
-      deleted: false,
     },
     orderBy: { column: "created_at", ascending: true },
   });

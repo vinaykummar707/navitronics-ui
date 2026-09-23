@@ -226,7 +226,7 @@ export const SignboardCanvasStage = React.forwardRef<
   const [selectedStopTypes, setSelectedStopTypes] = useState<string[]>([]);
 
   const { data: stopsData } = stopCrud.useList({
-    filters: { depot_id: depotId || "", deleted: false, organization_id: selectedOrganization?.id || "" },
+    filters: { depot_id: depotId || "", organization_id: selectedOrganization?.id || "" },
     orderBy: { column: "created_at", ascending: false },
     skip: !depotId || !selectedOrganization?.id,
   });

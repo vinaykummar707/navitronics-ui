@@ -138,9 +138,9 @@ const UserLoginFormRoot = React.forwardRef<
         const userData = { ...(loggedUserDetails.data as ILoggedUser) };
 
         // 1. Account status validation
-        if (!userData.active || userData.deleted) {
+        if (!userData.active) {
           throw new Error(
-            "Your account is inactive or has been deactivated. Please contact support at support@navitronix.in or reach your administrator.",
+            "Your account is inactive. Please contact support at support@navitronix.in or reach your administrator.",
           );
         }
 

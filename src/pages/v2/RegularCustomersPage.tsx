@@ -36,7 +36,6 @@ export default function RegularCustomersPage() {
 
   const { useList } = userCrud;
   const { data, isLoading, refetch } = useList({
-    filters: { deleted: false },
     custom(query) {
       return query
         .select(
@@ -81,13 +80,13 @@ export default function RegularCustomersPage() {
   }, [regularCustomers]);
 
   const handleDelete = async (id: string, email: string) => {
-    if (!confirm(`Are you sure you want to deactivate regular customer "${email}"?`)) {
+    if (!confirm(`Are you sure you want to delete regular customer "${email}"?`)) {
       return;
     }
     try {
       const { error } = await supabase
         .from("users")
-        .update({ deleted: true, active: false })
+        .delete()
         .eq("id", id);
 
       if (error) throw error;

@@ -137,8 +137,7 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
     try {
       let checkQuery = supabase
         .from("organizations")
-        .select("id, name, email")
-        .eq("deleted", false);
+        .select("id, name, email");
 
       if (isEditMode && initialData?.id) {
         checkQuery = checkQuery.neq("id", initialData.id);

@@ -39,7 +39,6 @@ export default function DepotsPage() {
   const { data: regionData } = useRegionList({
     filters: {
       organization_id: selectedOrganization?.id || "",
-      deleted: false,
     },
     orderBy: { column: "created_at", ascending: true },
     skip: !selectedOrganization?.id,
@@ -51,7 +50,6 @@ export default function DepotsPage() {
   const { data: depotData, refetch: refetchDepots } = useDepotList({
     filters: {
       region_id: selectedRegion?.id || "",
-      deleted: false,
       organization_id: selectedOrganization?.id || "",
     },
     orderBy: { column: "created_at", ascending: false },

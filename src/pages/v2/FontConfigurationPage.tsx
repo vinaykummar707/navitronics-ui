@@ -10,7 +10,6 @@ import { toast } from "react-toastify";
 import { sortByLatestCreated } from "@/utils/dateUtils";
 
 const QUERY_OPTIONS = {
-  filters: { deleted: false },
   orderBy: { column: "created_at", ascending: false },
 };
 

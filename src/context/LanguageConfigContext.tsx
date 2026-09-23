@@ -13,7 +13,7 @@ const LanguageConfigContext = createContext<LanguageConfigContextType>({
   isError: false,
 });
 
-const QUERY_OPTIONS = { filters: { deleted: false } };
+const QUERY_OPTIONS = {};
 
 export const LanguageConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { data, isLoading, isError } = fontSettingsCrud.useList(QUERY_OPTIONS);

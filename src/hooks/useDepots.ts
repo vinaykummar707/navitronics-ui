@@ -11,7 +11,7 @@ export function useDepots(regionId?: string) {
     data: depotData,
     refetch: refetchDepots
   } = useList({
-    filters: { region_id: regionId || "", deleted: false },
+    filters: { region_id: regionId || "" },
     orderBy: { column: "created_at", ascending: true },
     skip: !regionId
   });

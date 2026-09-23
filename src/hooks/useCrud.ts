@@ -2,23 +2,11 @@ import { supabase } from '@/supabaseClient'
 import { QueryOptions } from '@/types/query'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
-const SOFT_DELETE_TABLES = [
-  'routes',
-  'stops',
-  'depots',
-  'regions',
-  'organizations',
-  'users',
-  'font_settings',
-]
-
 export function createCrudHooks<
   TRow extends { id: string },
   TInsert,
   TUpdate
 >(table: string) {
-  const isSoftDeleteTable = SOFT_DELETE_TABLES.includes(table)
-
   // ========================
   // LIST
   // ========================
@@ -34,13 +22,6 @@ export function createCrudHooks<
 
         // Apply filters
         const filters = { ...(options?.filters || {}) } as Record<string, any>
-        if (
-          !options?.includeDeleted &&
-          filters.deleted === undefined &&
-          isSoftDeleteTable
-        ) {
-          filters.deleted = false
-        }
 
         Object.entries(filters).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
@@ -88,20 +69,15 @@ export function createCrudHooks<
   // ========================
   // GET BY ID
   // ========================
-  const useGet = (id: string, options?: { includeDeleted?: boolean }) =>
+  const useGet = (id: string) =>
     useQuery({
-      queryKey: [table, id, options?.includeDeleted],
+      queryKey: [table, id],
       queryFn: async () => {
-        let query = supabase
+        const { data, error } = await supabase
           .from(table)
           .select('*')
           .eq('id', id)
-
-        if (!options?.includeDeleted && isSoftDeleteTable) {
-          query = query.eq('deleted', false)
-        }
-
-        const { data, error } = await query.maybeSingle()
+          .maybeSingle()
 
         if (error) throw error
         return data as TRow | null
@@ -132,7 +108,7 @@ export function createCrudHooks<
   }
 
   // ========================
-  // UPDATE (With Concurrency & Soft-Delete Protection)
+  // UPDATE
   // ========================
   const useUpdate = () => {
     const queryClient = useQueryClient()
@@ -149,23 +125,17 @@ export function createCrudHooks<
           updated_at: new Date().toISOString(),
         }
 
-        let query = supabase
+        const { data, error } = await supabase
           .from(table)
           .update(updatePayload)
           .eq('id', id)
-
-        // Concurrency protection: prevent updating soft-deleted records
-        if (isSoftDeleteTable) {
-          query = query.eq('deleted', false)
-        }
-
-        const { data, error } = await query.select()
+          .select()
 
         if (error) throw error
 
         if (!data || data.length === 0) {
           throw new Error(
-            'This record has been deleted or is no longer accessible and cannot be updated.'
+            'This record no longer exists or is not accessible and cannot be updated.'
           )
         }
 
@@ -178,31 +148,16 @@ export function createCrudHooks<
   }
 
   // ========================
-  // DELETE (Soft delete with audit metadata)
+  // DELETE (Hard delete)
   // ========================
   const useDelete = () => {
     const queryClient = useQueryClient()
     return useMutation({
       mutationFn: async (id: string) => {
-        const deletePayload: Record<string, any> = {
-          deleted: true,
-          updated_at: new Date().toISOString(),
-        }
-
-        if (table === 'users') {
-          deletePayload.active = false
-        }
-
-        let query = supabase
+        const { error } = await supabase
           .from(table)
-          .update(deletePayload)
+          .delete()
           .eq('id', id)
-
-        if (isSoftDeleteTable) {
-          query = query.eq('deleted', false)
-        }
-
-        const { error } = await query
 
         if (error) throw error
       },
@@ -213,77 +168,18 @@ export function createCrudHooks<
   }
 
   // ========================
-  // DELETE ALL / BULK DELETE
+  // DELETE ALL / BULK DELETE (Hard delete)
   // ========================
   const useDeleteAll = () => {
     const queryClient = useQueryClient()
     return useMutation({
       mutationFn: async (ids: string[]) => {
-        const deletePayload: Record<string, any> = {
-          deleted: true,
-          updated_at: new Date().toISOString(),
-        }
-
-        if (table === 'users') {
-          deletePayload.active = false
-        }
-
-        let query = supabase
+        const { error } = await supabase
           .from(table)
-          .update(deletePayload)
+          .delete()
           .in('id', ids)
 
-        if (isSoftDeleteTable) {
-          query = query.eq('deleted', false)
-        }
-
-        const { error } = await query
-
         if (error) throw error
-      },
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: [table] })
-      },
-    })
-  }
-
-  // ========================
-  // RESTORE (Soft delete recovery with conflict detection)
-  // ========================
-  const useRestore = () => {
-    const queryClient = useQueryClient()
-    return useMutation({
-      mutationFn: async (id: string) => {
-        const restorePayload: Record<string, any> = {
-          deleted: false,
-          updated_at: new Date().toISOString(),
-        }
-
-        if (table === 'users') {
-          restorePayload.active = true
-        }
-
-        const { data, error } = await supabase
-          .from(table)
-          .update(restorePayload)
-          .eq('id', id)
-          .eq('deleted', true)
-          .select()
-
-        if (error) {
-          if (error.code === '23505') {
-            throw new Error(
-              'Cannot restore: an active record with the same unique name or identifier already exists.'
-            )
-          }
-          throw error
-        }
-
-        if (!data || data.length === 0) {
-          throw new Error('Record not found or already active.')
-        }
-
-        return data[0] as TRow
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: [table] })
@@ -298,12 +194,11 @@ export function createCrudHooks<
     useUpdate,
     useDelete,
     useDeleteAll,
-    useRestore,
   }
 }
 
 /**
- * Reusable utility to check for active duplicates (case-insensitive & trimmed)
+ * Reusable utility to check for duplicates (case-insensitive & trimmed)
  */
 export async function checkActiveDuplicate(
   table: string,
@@ -319,7 +214,6 @@ export async function checkActiveDuplicate(
     .from(table)
     .select('id')
     .ilike(column, trimmed)
-    .eq('deleted', false)
 
   if (excludeId) {
     query = query.neq('id', excludeId)

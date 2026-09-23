@@ -6,7 +6,6 @@ export interface IOrganization {
     logo: string | null;
     name: string;
     phone: string | null;
-    deleted: boolean;
     created_at: string;
     active: boolean;
     PIS: boolean;
@@ -17,8 +16,8 @@ export interface IOrganization {
     customer_type?: "regular" | "stu" | null;
 }
 
-// Create: everything but id, deleted, created_at; all optional except name
-export type IOrganizationCreate = Omit<Partial<IOrganization>, 'id' | 'deleted' | 'created_at'> & { name: string };
+// Create: everything but id, created_at; all optional except name
+export type IOrganizationCreate = Omit<Partial<IOrganization>, 'id' | 'created_at'> & { name: string };
 
 // Update: id required, rest optional (except created_at)
 export type IOrganizationUpdate = Pick<IOrganization, 'id'> & Partial<Omit<IOrganization, 'id' | 'created_at'>>;

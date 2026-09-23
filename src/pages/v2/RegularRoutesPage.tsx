@@ -50,11 +50,8 @@ export default function RegularRoutesPage() {
     filters: isRegular
       ? {
         created_by: user?.id || "",
-        deleted: false,
       }
-      : {
-        deleted: false,
-      },
+      : {},
     orderBy: { column: "created_at", ascending: false },
     custom(query) {
       let q = query.select(`*, created_by_user:created_by (email)`);
@@ -248,15 +245,14 @@ export default function RegularRoutesPage() {
       .from("routes")
       .select("*")
       .eq("id", routeId)
-      .eq("deleted", false)
       .single();
 
     if (fetchError || !originalRoute) {
-      toast.error("Error fetching active route to duplicate");
+      toast.error("Error fetching route to duplicate");
       return;
     }
 
-    const { id, deleted, ...routeWithoutId } = originalRoute;
+    const { id, ...routeWithoutId } = originalRoute;
     const baseNumber = (originalRoute.route_number || "").trim();
     const suffix = routeNumberSuffix === " (Copy)" ? "D" : (routeNumberSuffix || "D");
     let candidateNumber = `${baseNumber}${suffix}`;
@@ -268,7 +264,6 @@ export default function RegularRoutesPage() {
       .eq("created_by", user?.id || "")
       .is("depot_id", null)
       .ilike("route_number", candidateNumber)
-      .eq("deleted", false)
       .maybeSingle();
 
     if (existing) {
@@ -278,7 +273,6 @@ export default function RegularRoutesPage() {
     createRoute(
       {
         ...routeWithoutId,
-        deleted: false,
         route_number: candidateNumber,
         created_at: new Date().toISOString(),
         created_by: user?.id || "",

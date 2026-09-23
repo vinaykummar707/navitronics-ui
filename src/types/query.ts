@@ -14,6 +14,5 @@ export type QueryOptions<TRow> = {
   }
   custom?: (query: any) => any
   skip?: boolean;
-  includeDeleted?: boolean;
   columns?: string;
 }

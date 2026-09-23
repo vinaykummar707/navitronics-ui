@@ -14,7 +14,6 @@ export interface IUser {
     depot_id: string | null;
     created_at: string;
     active: boolean;
-    deleted: boolean;
     role_id: string;
     v1_routes?: boolean | null;
     v2_routes?: boolean | null;
@@ -28,9 +27,9 @@ export interface ILoggedUser extends IUser {
     role: IRole | null;
 }
 
-// Create: everything but id, deleted, created_at; all optional except name
-export type IUserCreate = Omit<Partial<IUser>, 'id' | 'deleted' | 'created_at'> ;
-export type ILoggedUserCreate = Omit<Partial<IUser>, 'id' | 'deleted' | 'created_at'> ;
+// Create: everything but id, created_at; all optional except name
+export type IUserCreate = Omit<Partial<IUser>, 'id' | 'created_at'> ;
+export type ILoggedUserCreate = Omit<Partial<IUser>, 'id' | 'created_at'> ;
 
 // Update: id required, rest optional (except created_at)
 export type IUserUpdate = Pick<IUser, 'id'> & Partial<Omit<IUser, 'id' | 'created_at'>>;

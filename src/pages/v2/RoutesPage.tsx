@@ -60,14 +60,13 @@ function useRoutesPageData() {
   const { data: regionData, refetch: refetchRegions } = regionCrud.useList({
     filters: {
       organization_id: selectedOrganization?.id || "",
-      deleted: false,
     },
     orderBy: { column: "created_at", ascending: true },
     skip: !selectedOrganization?.id,
   });
 
   const { data: depotData, refetch: refetchDepots } = depotCrud.useList({
-    filters: { region_id: selectedRegion?.id || "", deleted: false },
+    filters: { region_id: selectedRegion?.id || "" },
     orderBy: { column: "created_at", ascending: true },
     skip: !selectedRegion?.id,
   });
@@ -75,7 +74,6 @@ function useRoutesPageData() {
   const { data: routesData, refetch: refetchRoutes } = routeCrud.useList({
     filters: {
       depot_id: selectedDepot?.id || "",
-      deleted: false,
       organization_id: selectedOrganization?.id || "",
     },
     orderBy: { column: "created_at", ascending: false },
@@ -361,15 +359,14 @@ export default function RoutesPage() {
       .from("routes")
       .select("*")
       .eq("id", routeId)
-      .eq("deleted", false)
       .single();
 
     if (fetchError || !originalRoute) {
-      toast.error("Error fetching active route to duplicate");
+      toast.error("Error fetching route to duplicate");
       return;
     }
 
-    const { id, deleted, ...routeWithoutId } = originalRoute;
+    const { id, ...routeWithoutId } = originalRoute;
     const baseNumber = (originalRoute.route_number || "").trim();
     const suffix = routeNumberSuffix === " (Copy)" ? "D" : (routeNumberSuffix || "D");
     let candidateNumber = `${baseNumber}${suffix}`;
@@ -380,7 +377,6 @@ export default function RoutesPage() {
         .select("id")
         .eq("depot_id", originalRoute.depot_id)
         .ilike("route_number", candidateNumber)
-        .eq("deleted", false)
         .maybeSingle();
 
       if (existing) {
@@ -391,7 +387,6 @@ export default function RoutesPage() {
     createRoute(
       {
         ...routeWithoutId,
-        deleted: false,
         route_number: candidateNumber,
         created_at: new Date().toISOString(),
         created_by: user?.id || "",

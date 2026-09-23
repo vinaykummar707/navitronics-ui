@@ -85,9 +85,7 @@ const CreateUserForm2Root = React.forwardRef<
 
   // Fetch organizations
   const { useList: useOrgList } = organizationCrud;
-  const { data: orgsData } = useOrgList({
-    filters: { deleted: false },
-  });
+  const { data: orgsData } = useOrgList();
   const organizations = orgsData?.data || [];
 
   // Fetch roles
@@ -187,7 +185,6 @@ const CreateUserForm2Root = React.forwardRef<
     filters: {
       organization_id: selectedOrgId || selectedOrganization?.id,
       region_id: selectedRegionId,
-      deleted: false,
     },
     skip: !selectedOrgId && !selectedOrganization?.id,
   });
@@ -197,7 +194,6 @@ const CreateUserForm2Root = React.forwardRef<
   const { data: regionsData } = useRegionList({
     filters: {
       organization_id: selectedOrgId || selectedOrganization?.id,
-      deleted: false,
     },
     skip: !selectedOrgId && !selectedOrganization?.id,
   });
@@ -334,62 +330,16 @@ const CreateUserForm2Root = React.forwardRef<
         console.error("Update Error:", error);
       }
     } else {
-      // Create user: Check if email already existed (including soft deleted)
+      // Create user: Check if email already exists
       const { data: existingUser } = await supabase
         .from("users")
-        .select("*")
+        .select("id")
         .eq("email", data.email)
         .maybeSingle();
 
       if (existingUser) {
-        if (existingUser.deleted) {
-          // Reactivate soft-deleted user
-          const { error: updateErr } = await supabase
-            .from("users")
-            .update({
-              deleted: false,
-              password: data.password,
-              ...basePayload,
-            })
-            .eq("id", existingUser.id);
-
-          if (updateErr) {
-            if (updateErr.code === "42703") {
-              await supabase
-                .from("users")
-                .update({
-                  deleted: false,
-                  password: data.password,
-                  role_id: data.role_id,
-                  region_id: data.region_id || null,
-                  depot_id: data.depot_id || null,
-                  organization_id: targetOrgId,
-                  active: data.active,
-                })
-                .eq("id", existingUser.id);
-            } else {
-              toast.error(`Failed to reactivate user: ${updateErr.message}`);
-              return;
-            }
-          }
-
-          // Trigger password reset email so user can set their password
-          try {
-            await supabase.auth.resetPasswordForEmail(data.email);
-          } catch (resetErr) {
-            console.error("Password reset trigger error:", resetErr);
-          }
-
-          toast.success(
-            `User account reactivated! A password reset link has been sent to ${data.email} to set their password.`
-          );
-          reset();
-          if (onUserCreated) onUserCreated();
-          return;
-        } else {
-          toast.error("A user with this email address already exists and is active.");
-          return;
-        }
+        toast.error("A user with this email address already exists.");
+        return;
       }
 
       // New signup in Supabase Auth using session-isolated client
@@ -419,37 +369,13 @@ const CreateUserForm2Root = React.forwardRef<
           // Check if user exists in public.users
           const { data: dbUser } = await supabase
             .from("users")
-            .select("*")
+            .select("id")
             .eq("email", data.email)
             .maybeSingle();
 
           if (dbUser) {
-            if (dbUser.deleted) {
-              await supabase
-                .from("users")
-                .update({
-                  deleted: false,
-                  password: data.password,
-                  ...basePayload,
-                })
-                .eq("id", dbUser.id);
-
-              try {
-                await supabase.auth.resetPasswordForEmail(data.email);
-              } catch (resetErr) {
-                console.error("Password reset trigger error:", resetErr);
-              }
-
-              toast.success(
-                `User account reactivated! A password reset link has been sent to ${data.email} to set their password.`
-              );
-              reset();
-              if (onUserCreated) onUserCreated();
-              return;
-            } else {
-              toast.error("A user with this email address already exists and is active.");
-              return;
-            }
+            toast.error("A user with this email address already exists.");
+            return;
           }
 
           // User exists in Supabase Auth but not in public.users (orphaned auth account from a failed insert)
@@ -479,12 +405,12 @@ const CreateUserForm2Root = React.forwardRef<
         // Supabase email enumeration protection (returns user with empty identities when user already exists)
         const { data: dbUser } = await supabase
           .from("users")
-          .select("*")
+          .select("id")
           .eq("email", data.email)
           .maybeSingle();
 
-        if (dbUser && !dbUser.deleted) {
-          toast.error("A user with this email address already exists and is active.");
+        if (dbUser) {
+          toast.error("A user with this email address already exists.");
           return;
         }
 
@@ -510,36 +436,15 @@ const CreateUserForm2Root = React.forwardRef<
       }
 
       try {
-        const { data: existingInDb } = await supabase
-          .from("users")
-          .select("id")
-          .eq("email", data.email)
-          .maybeSingle();
+        const { error: insErr } = await supabase.from("users").insert({
+          email: data.email,
+          user_id: userId,
+          password: data.password,
+          ...basePayload,
+        });
 
-        let insertError: any = null;
-        if (existingInDb) {
-          const { error: updErr } = await supabase
-            .from("users")
-            .update({
-              deleted: false,
-              user_id: userId,
-              password: data.password,
-              ...basePayload,
-            })
-            .eq("id", existingInDb.id);
-          insertError = updErr;
-        } else {
-          const { error: insErr } = await supabase.from("users").insert({
-            email: data.email,
-            user_id: userId,
-            password: data.password,
-            ...basePayload,
-          });
-          insertError = insErr;
-        }
-
-        if (insertError) {
-          if (insertError.code === "42703") {
+        if (insErr) {
+          if (insErr.code === "42703") {
             const fallbackPayload = {
               email: data.email,
               user_id: userId,
@@ -550,20 +455,12 @@ const CreateUserForm2Root = React.forwardRef<
               organization_id: targetOrgId,
               active: Boolean(data.active),
             };
-            if (existingInDb) {
-              const { error: fbErr } = await supabase
-                .from("users")
-                .update({ deleted: false, ...fallbackPayload })
-                .eq("id", existingInDb.id);
-              if (fbErr) throw fbErr;
-            } else {
-              const { error: fbErr } = await supabase
-                .from("users")
-                .insert(fallbackPayload);
-              if (fbErr) throw fbErr;
-            }
+            const { error: fbErr } = await supabase
+              .from("users")
+              .insert(fallbackPayload);
+            if (fbErr) throw fbErr;
           } else {
-            throw insertError;
+            throw insErr;
           }
         }
 

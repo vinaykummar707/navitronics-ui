@@ -33,7 +33,7 @@ const SelectOrganizationComponentRoot = React.forwardRef<
   const isSuper = user?.role?.name === "master";
 
   const orgFilters = React.useMemo(() => {
-    const base: Record<string, any> = { deleted: false };
+    const base: Record<string, any> = {};
     if (!isSuper && user?.organization?.id) {
       base.id = user.organization.id;
     }

@@ -5,7 +5,6 @@ export interface ITextConfig {
     code: string;
     name: string;
     config: string;
-    deleted: boolean;
     created_at: string;
 }
 

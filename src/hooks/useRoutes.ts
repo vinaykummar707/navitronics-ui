@@ -7,7 +7,7 @@ export function useRoutes(depotId?: string) {
     data: routesData,
     refetch: refetchRoutes
   } = useList({
-    filters: { depot_id: depotId || "", deleted: false },
+    filters: { depot_id: depotId || "" },
     orderBy: { column: "created_at", ascending: false },
     skip: !depotId
   });

@@ -209,23 +209,22 @@ export function STUOnboardingWizard({
       const { data: existingOrgs } = await supabase
         .from("organizations")
         .select("id, name, email")
-        .eq("deleted", false)
         .ilike("name", trimmedOrgName);
 
       if (existingOrgs && existingOrgs.length > 0) {
         throw new Error(
-          `An active organization named "${trimmedOrgName}" already exists.`
+          `An organization named "${trimmedOrgName}" already exists.`
         );
       }
 
-      // Check if admin user is already assigned to an active organization
+      // Check if admin user is already assigned to an organization
       const { data: existingUser } = await supabase
         .from("users")
-        .select("id, organization_id, deleted")
+        .select("id, organization_id")
         .eq("email", trimmedAdminEmail)
         .maybeSingle();
 
-      if (existingUser && !existingUser.deleted && existingUser.organization_id) {
+      if (existingUser && existingUser.organization_id) {
         throw new Error(
           `A user with email "${trimmedAdminEmail}" is already registered to another organization.`
         );
@@ -246,7 +245,6 @@ export function STUOnboardingWizard({
           v2_routes: enableV2Routes,
           customer_type: "stu",
           active: true,
-          deleted: false,
         })
         .select()
         .single();
@@ -266,7 +264,6 @@ export function STUOnboardingWizard({
           .insert({
             name: regionName.trim(),
             organization_id: orgId,
-            deleted: false,
           })
           .select()
           .single();
@@ -291,7 +288,6 @@ export function STUOnboardingWizard({
           name: depot.name.trim(),
           region_id: targetRegionId,
           organization_id: orgId,
-          deleted: false,
         });
 
         if (depotError) {
@@ -376,7 +372,6 @@ export function STUOnboardingWizard({
             role_id: orgAdminRoleId,
             customer_type: "stu",
             active: true,
-            deleted: false,
             v1_routes: enableV1Routes,
             v2_routes: enableV2Routes,
           })
@@ -394,7 +389,6 @@ export function STUOnboardingWizard({
           role_id: orgAdminRoleId,
           customer_type: "stu",
           active: true,
-          deleted: false,
           v1_routes: enableV1Routes,
           v2_routes: enableV2Routes,
         });

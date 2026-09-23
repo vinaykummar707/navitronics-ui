@@ -141,7 +141,7 @@ const SimulationsPlayerPanelRoot = React.forwardRef<
   const { selectedOrganization } = useOrganizationStore();
 
   const { data: stopsData, refetch: refetchStops } = stopCrud.useList({
-    filters: { depot_id: depotId || "", deleted: false, organization_id: selectedOrganization?.id || "" },
+    filters: { depot_id: depotId || "", organization_id: selectedOrganization?.id || "" },
     orderBy: { column: "created_at", ascending: false },
     custom(query) {
       return query

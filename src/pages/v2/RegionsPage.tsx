@@ -24,7 +24,6 @@ export default function AreasPage() {
   } = useList({
     filters: {
       organization_id: selectedOrganization ? selectedOrganization.id : "",
-      deleted: false,
     },
     orderBy: { column: "created_at", ascending: false },
     skip: !selectedOrganization?.id,
