@@ -2,12 +2,16 @@ import axios from "axios";
 import { BitmapApiParams } from "@/types/bitmapApi";
 
 const getInitialBitmapUrl = (): string => {
+  // Check if Electron desktop bridge provides a configured backend URL
+  if (typeof window !== "undefined" && (window as any).navitronixDesktop?.backendUrl) {
+    return (window as any).navitronixDesktop.backendUrl;
+  }
+
   const envUrl = (import.meta as any).env?.VITE_BITMAP_API_URL;
   if (envUrl) return envUrl;
-  if (typeof window !== "undefined" && window.location.protocol === "https:") {
-    return "http://13.233.103.63:5288/api/bitmap";
-  }
-  return "http://13.233.103.63:5288/api/bitmap";
+
+  // Default to local sidecar engine on 127.0.0.1:5288
+  return "http://127.0.0.1:5288/api/bitmap";
 };
 
 export const BITMAP_API_BASE_URL = getInitialBitmapUrl();
