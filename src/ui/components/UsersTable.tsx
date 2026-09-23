@@ -82,13 +82,14 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
         >
           {users.map((user: ILoggedUser) => {
             const routeAccess = getUserRouteAccess(user);
+            const isGuest = loggedInUser?.role?.name?.toLowerCase() === "guest";
             const isRowMaster = user.role?.name === "master";
             const isSelf = user.id === loggedInUser?.id || (Boolean(loggedInUser?.user_id) && user.user_id === loggedInUser?.user_id);
             const isOrgAdminRole = user.role?.name === "organization_admin";
 
-            // Only Super Admin can delete organization admins; no user can delete their own account
-            const canDelete = !isRowMaster && !isSelf && (isSuperAdminUser || !isOrgAdminRole);
-            const canEdit = !isRowMaster && (isSuperAdminUser || !isOrgAdminRole || isSelf);
+            // Only Super Admin can delete organization admins; no user can delete their own account; guests cannot delete or edit
+            const canDelete = !isGuest && !isRowMaster && !isSelf && (isSuperAdminUser || !isOrgAdminRole);
+            const canEdit = !isGuest && !isRowMaster && (isSuperAdminUser || !isOrgAdminRole || isSelf);
 
             return (
               <Table.Row key={user.id || user.user_id}>
@@ -151,13 +152,15 @@ const UsersTableRoot = React.forwardRef<HTMLDivElement, UsersTableRootProps>(
                   </span>
                 </Table.Cell>
                 <Table.Cell className="w-12 justify-end">
-                  <div className="flex grow shrink-0 basis-0 items-center justify-end">
-                    <OptionsDropdown
-                      isDisabled={isRowMaster}
-                      onDelete={canDelete ? () => onDeleteUser && onDeleteUser(user.id) : undefined}
-                      onEdit={canEdit ? () => onEditUser && onEditUser(user) : undefined}
-                    />
-                  </div>
+                  {!isGuest && (
+                    <div className="flex grow shrink-0 basis-0 items-center justify-end">
+                      <OptionsDropdown
+                        isDisabled={isRowMaster}
+                        onDelete={canDelete ? () => onDeleteUser && onDeleteUser(user.id) : undefined}
+                        onEdit={canEdit ? () => onEditUser && onEditUser(user) : undefined}
+                      />
+                    </div>
+                  )}
                 </Table.Cell>
               </Table.Row>
             );

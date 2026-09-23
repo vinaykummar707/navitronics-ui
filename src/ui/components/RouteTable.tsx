@@ -24,6 +24,7 @@ import { IRoute } from "@/types/IRoute";
 import { Checkbox } from "./Checkbox";
 import Avvvatars from "avvvatars-react";
 import { formatDate } from "@/utils/dateUtils";
+import useLoggedUserStore from "@/store/useLoggedUserStore";
 
 interface RouteTableRootProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: React.ReactNode;
@@ -57,6 +58,9 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
     }: RouteTableRootProps,
     ref,
   ) {
+    const loggedInUser = useLoggedUserStore((state) => state.user);
+    const isGuest = loggedInUser?.role?.name?.toLowerCase() === "guest";
+
     const selectedSet = React.useMemo(
       () => new Set(selectedRouteIds || []),
       [selectedRouteIds]
@@ -194,56 +198,58 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
                 </span>
               </Table.Cell>
               <Table.Cell className="w-12 justify-end">
-                <div className="flex grow shrink-0 basis-0 items-center justify-end">
-                  <SubframeCore.DropdownMenu.Root>
-                    <SubframeCore.DropdownMenu.Trigger asChild={true}>
-                      <IconButton
-                        variant="neutral-tertiary"
-                        size="medium"
-                        icon={<FeatherMoreHorizontal />}
-                        onClick={(
-                          event: React.MouseEvent<HTMLButtonElement>,
-                        ) => {}}
-                      />
-                    </SubframeCore.DropdownMenu.Trigger>
-                    <SubframeCore.DropdownMenu.Portal>
-                      <SubframeCore.DropdownMenu.Content
-                        side="bottom"
-                        align="end"
-                        sideOffset={8}
-                        asChild={true}
-                      >
-                        <DropdownMenu>
-                          <DropdownMenu.DropdownItem
-                            onClick={() => onEdit(route.id)}
-                            icon={<FeatherEdit2 />}
-                          >
-                            Edit
-                          </DropdownMenu.DropdownItem>
-                          <DropdownMenu.DropdownItem
-                            onClick={() => onDuplicate(route.id, "D")}
-                            icon={<SubframeCore.FeatherCopy />}
-                          >
-                            Duplicate
-                          </DropdownMenu.DropdownItem>
-                          <DropdownMenu.DropdownItem
-                            onClick={() => onReturn(route.id, "(Return)")}
-                            icon={<SubframeCore.FeatherRepeat />}
-                          >
-                            Make Return Route
-                          </DropdownMenu.DropdownItem>
-                          <DropdownMenu.DropdownDivider />
-                          <DropdownMenu.DropdownItem
-                            onClick={() => onDelete(route.id)}
-                            icon={<SubframeCore.FeatherTrash />}
-                          >
-                            Delete
-                          </DropdownMenu.DropdownItem>
-                        </DropdownMenu>
-                      </SubframeCore.DropdownMenu.Content>
-                    </SubframeCore.DropdownMenu.Portal>
-                  </SubframeCore.DropdownMenu.Root>
-                </div>
+                {!isGuest && (
+                  <div className="flex grow shrink-0 basis-0 items-center justify-end">
+                    <SubframeCore.DropdownMenu.Root>
+                      <SubframeCore.DropdownMenu.Trigger asChild={true}>
+                        <IconButton
+                          variant="neutral-tertiary"
+                          size="medium"
+                          icon={<FeatherMoreHorizontal />}
+                          onClick={(
+                            event: React.MouseEvent<HTMLButtonElement>,
+                          ) => {}}
+                        />
+                      </SubframeCore.DropdownMenu.Trigger>
+                      <SubframeCore.DropdownMenu.Portal>
+                        <SubframeCore.DropdownMenu.Content
+                          side="bottom"
+                          align="end"
+                          sideOffset={8}
+                          asChild={true}
+                        >
+                          <DropdownMenu>
+                            <DropdownMenu.DropdownItem
+                              onClick={() => onEdit(route.id)}
+                              icon={<FeatherEdit2 />}
+                            >
+                              Edit
+                            </DropdownMenu.DropdownItem>
+                            <DropdownMenu.DropdownItem
+                              onClick={() => onDuplicate(route.id, "D")}
+                              icon={<SubframeCore.FeatherCopy />}
+                            >
+                              Duplicate
+                            </DropdownMenu.DropdownItem>
+                            <DropdownMenu.DropdownItem
+                              onClick={() => onReturn(route.id, "(Return)")}
+                              icon={<SubframeCore.FeatherRepeat />}
+                            >
+                              Make Return Route
+                            </DropdownMenu.DropdownItem>
+                            <DropdownMenu.DropdownDivider />
+                            <DropdownMenu.DropdownItem
+                              onClick={() => onDelete(route.id)}
+                              icon={<SubframeCore.FeatherTrash />}
+                            >
+                              Delete
+                            </DropdownMenu.DropdownItem>
+                          </DropdownMenu>
+                        </SubframeCore.DropdownMenu.Content>
+                      </SubframeCore.DropdownMenu.Portal>
+                    </SubframeCore.DropdownMenu.Root>
+                  </div>
+                )}
               </Table.Cell>
               </Table.Row>
             );

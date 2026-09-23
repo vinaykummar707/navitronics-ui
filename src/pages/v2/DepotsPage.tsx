@@ -140,7 +140,7 @@ export default function DepotsPage() {
                 </Select>
               </RBAC>
 
-              <RBAC features={[]} roles={["master", "organization_admin"]}>
+              <RBAC features={[]} roles={["master", "organization_admin", "guest"]}>
                 <Select
                   className="h-auto w-full flex-none"
                   variant="filled"
@@ -239,19 +239,21 @@ export default function DepotsPage() {
                     </span>
                   </Table.Cell>
                   <Table.Cell className="justify-end">
-                    <OptionsDropdown
-                      onDelete={() => {
-                        if (
-                          confirm("Are you sure you want to delete this depot?")
-                        ) {
-                          handleDeleteDepot(depot.id);
-                        }
-                      }}
-                      onEdit={() => {
-                        setEditData(depot);
-                        setOpen(true);
-                      }}
-                    />
+                    <RBAC features={[]} roles={["region_admin", "organization_admin", "master"]}>
+                      <OptionsDropdown
+                        onDelete={() => {
+                          if (
+                            confirm("Are you sure you want to delete this depot?")
+                          ) {
+                            handleDeleteDepot(depot.id);
+                          }
+                        }}
+                        onEdit={() => {
+                          setEditData(depot);
+                          setOpen(true);
+                        }}
+                      />
+                    </RBAC>
                   </Table.Cell>
                 </Table.Row>
               );

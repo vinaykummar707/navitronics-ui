@@ -11,6 +11,7 @@ import { FeatherMapPin, FeatherPlus } from "@subframe/core";
 import React from "react";
 import { toast } from "react-toastify";
 import { formatDate, sortByLatestCreated } from "@/utils/dateUtils";
+import RBAC from "@/components/RBAC";
 
 export default function AreasPage() {
   const [open, setOpen] = React.useState(false);
@@ -71,7 +72,7 @@ export default function AreasPage() {
           setEditData(null);
         }}
         buttonLabel="Add Region"
-        roles={["region_admin", "organization_admin", "master"]}
+        roles={["organization_admin", "master"]}
       />
 
       {regions && regions.length > 0 ? (
@@ -112,19 +113,21 @@ export default function AreasPage() {
                     </span>
                   </Table.Cell>
                   <Table.Cell className="justify-end">
-                    <OptionsDropdown
-                      onDelete={() => {
-                        if (
-                          confirm("Are you sure you want to delete this region?")
-                        ) {
-                          handleDeleteRegion(region);
-                        }
-                      }}
-                      onEdit={() => {
-                        setEditData(region);
-                        setOpen(true);
-                      }}
-                    />
+                    <RBAC features={[]} roles={["organization_admin", "master"]}>
+                      <OptionsDropdown
+                        onDelete={() => {
+                          if (
+                            confirm("Are you sure you want to delete this region?")
+                          ) {
+                            handleDeleteRegion(region);
+                          }
+                        }}
+                        onEdit={() => {
+                          setEditData(region);
+                          setOpen(true);
+                        }}
+                      />
+                    </RBAC>
                   </Table.Cell>
                 </Table.Row>
               );
@@ -141,17 +144,19 @@ export default function AreasPage() {
               You do not have any regions added yet. Start by adding a new
               region.
             </p>
-            <Button
-              variant=""
-              icon={<FeatherPlus />}
-              onClick={() => {
-                setOpen(true);
-                setEditData(null);
-              }}
-              className="mt-4"
-            >
-              Add Region
-            </Button>
+            <RBAC features={[]} roles={["organization_admin", "master"]}>
+              <Button
+                variant=""
+                icon={<FeatherPlus />}
+                onClick={() => {
+                  setOpen(true);
+                  setEditData(null);
+                }}
+                className="mt-4"
+              >
+                Add Region
+              </Button>
+            </RBAC>
           </div>
         </div>
       ) : null}

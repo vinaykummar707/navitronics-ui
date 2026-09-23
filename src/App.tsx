@@ -36,6 +36,7 @@ const RouteCreatePage = lazy(() => import("./pages/v2/CreateRoutePage"));
 const CreateRoutePageV1 = lazy(() => import("./pages/v1/CreateRoutePageV1"));
 const RegularRoutesPage = lazy(() => import("./pages/v2/RegularRoutesPage"));
 const RegularCustomersPage = lazy(() => import("./pages/v2/RegularCustomersPage"));
+const GuestsPage = lazy(() => import("./pages/v2/GuestsPage"));
 const UserLoginForm = lazy(() =>
   import("./ui/components/UserLoginForm").then((module) => ({
     default: module.UserLoginForm,
@@ -68,19 +69,25 @@ const protectedRoutes = [
       ROLES.ORGANIZATION_ADMIN,
       ROLES.REGION_ADMIN,
       ROLES.DEPOT_ADMIN,
+      ROLES.GUEST,
     ],
     features: [],
     element: <DashboardPage />,
   },
   {
     path: "organizations",
-    roles: [ROLES.MASTER],
+    roles: [ROLES.MASTER, ROLES.GUEST],
     features: [],
     element: <OrganizationsPage />,
   },
   {
     path: "regions",
-    roles: [ROLES.ORGANIZATION_ADMIN, ROLES.MASTER],
+    roles: [
+      ROLES.ORGANIZATION_ADMIN,
+      ROLES.REGION_ADMIN,
+      ROLES.MASTER,
+      ROLES.GUEST,
+    ],
     features: ["PIS", "PAS", "ITMS"],
     element: <AreasPage />,
   },
@@ -89,16 +96,29 @@ const protectedRoutes = [
     roles: [
       ROLES.REGION_ADMIN,
       ROLES.ORGANIZATION_ADMIN,
+      ROLES.DEPOT_ADMIN,
       ROLES.MASTER,
+      ROLES.GUEST,
     ],
     features: ["PIS", "PAS", "ITMS"],
     element: <DepotsPage />,
   },
   {
     path: "users",
-    roles: [ROLES.MASTER, ROLES.ORGANIZATION_ADMIN],
+    roles: [
+      ROLES.DEPOT_ADMIN,
+      ROLES.REGION_ADMIN,
+      ROLES.ORGANIZATION_ADMIN,
+      ROLES.MASTER,
+    ],
     features: [],
     element: <UsersPage />,
+  },
+  {
+    path: "guests",
+    roles: [ROLES.MASTER],
+    features: [],
+    element: <GuestsPage />,
   },
   {
     path: "roles",
@@ -133,9 +153,21 @@ const protectedRoutes = [
       ROLES.REGION_ADMIN,
       ROLES.ORGANIZATION_ADMIN,
       ROLES.MASTER,
+      ROLES.GUEST,
     ],
   },
-  { path: "stops", element: <StopsPage />, features: ["PAS", "ITMS"], roles: [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.MASTER] },
+  {
+    path: "stops",
+    element: <StopsPage />,
+    features: ["PAS", "ITMS"],
+    roles: [
+      ROLES.DEPOT_ADMIN,
+      ROLES.REGION_ADMIN,
+      ROLES.ORGANIZATION_ADMIN,
+      ROLES.MASTER,
+      ROLES.GUEST,
+    ],
+  },
   { path: "settings", element: <Settings /> },
   { path: "utility", roles: [ROLES.MASTER], features: [], element: <UtilityPage /> },
   { path: "font-configuration", roles: [ROLES.MASTER], features: [], element: <FontConfigurationPage /> },
@@ -151,6 +183,7 @@ function App() {
       case ROLES.ORGANIZATION_ADMIN:
       case ROLES.REGION_ADMIN:
       case ROLES.DEPOT_ADMIN:
+      case ROLES.GUEST:
         return "/home/dashboard";
       default:
         return "/home/routes";

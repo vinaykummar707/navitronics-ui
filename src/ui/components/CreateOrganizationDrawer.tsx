@@ -29,34 +29,46 @@ import { toast } from "react-toastify";
 // 1. Zod Validation Schema
 // ----------------------------------------------------------------------
 
-const organizationSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(2, "Organization name must be at least 2 characters")
-    .regex(
-      /^[a-zA-Z0-9\s&.,'_-]+$/,
-      "Organization name must contain valid alphanumeric characters",
-    )
-    .refine(
-      (val) => /[a-zA-Z0-9]/.test(val),
-      "Organization name must contain alphanumeric characters",
-    ),
-  email: z
-    .string()
-    .trim()
-    .min(1, "Email is required")
-    .regex(
-      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-      "Invalid email format",
-    ),
-  phone: z.string().optional().or(z.literal("")),
-  logo: z.string().optional().or(z.literal("")),
-  PIS: z.boolean().optional(),
-  PAS: z.boolean().optional(),
-  ITMS: z.boolean().optional(),
-  active: z.boolean().optional(),
-});
+const organizationSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(3, "Organization name must be between 3 and 100 characters")
+      .max(100, "Organization name must be between 3 and 100 characters")
+      .regex(
+        /^[a-zA-Z0-9\s&.,'_-]+$/,
+        "Organization name must contain valid alphanumeric characters",
+      )
+      .refine(
+        (val) => /[a-zA-Z0-9]/.test(val),
+        "Organization name must contain alphanumeric characters",
+      ),
+    email: z
+      .string()
+      .trim()
+      .min(1, "Email is required")
+      .regex(
+        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+        "Invalid email format",
+      ),
+    phone: z
+      .string()
+      .trim()
+      .regex(
+        /^[6-9]\d{9}$/,
+        "Phone number must be a valid 10-digit Indian phone number (starts with 6-9)",
+      ),
+    logo: z.string().optional().or(z.literal("")),
+    PIS: z.boolean().optional(),
+    PAS: z.boolean().optional(),
+    ITMS: z.boolean().optional(),
+    active: z.boolean().optional(),
+  })
+  .refine((data) => data.PIS || data.PAS || data.ITMS, {
+    message: "At least one module must be selected for the organization",
+    path: ["PIS"],
+  });
 
 type OrganizationFormValues = z.infer<typeof organizationSchema>;
 

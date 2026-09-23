@@ -572,7 +572,7 @@ export default function StopsPage() {
               </RBAC>
 
               {/* Region Select — admin roles */}
-              <RBAC features={[]} roles={["master", "organization_admin"]}>
+              <RBAC features={[]} roles={["master", "organization_admin", "guest"]}>
                 <RegionSelect
                   regions={regions}
                   selectedRegionId={selectedRegion?.id ?? ""}
@@ -582,7 +582,7 @@ export default function StopsPage() {
 
               {/* Depot Select */}
               {hasDepots && (
-                <RBAC features={[]} roles={["master", "organization_admin", "region_admin"]}>
+                <RBAC features={[]} roles={["master", "organization_admin", "region_admin", "guest"]}>
                   <Select
                     className="h-auto flex-none"
                     variant="filled"
@@ -623,18 +623,28 @@ export default function StopsPage() {
                 Refresh
               </Button>
 
-              <Button
-                variant="neutral-secondary"
-                className="h-9 flex-1 sm:flex-none"
-                icon={<FeatherMusic className="h-3.5 w-3.5" />}
-                loading={isGeneratingAll}
-                disabled={isGeneratingAll || filteredStops.length === 0}
-                onClick={handleGenerateAllAudio}
+              <RBAC
+                features={["PAS", "ITMS"]}
+                roles={[
+                  "region_admin",
+                  "organization_admin",
+                  "master",
+                  "depot_admin",
+                ]}
               >
-                {isGeneratingAll && genProgress
-                  ? `Generating (${genProgress.current}/${genProgress.total})...`
-                  : "Generate All Audio"}
-              </Button>
+                <Button
+                  variant="neutral-secondary"
+                  className="h-9 flex-1 sm:flex-none"
+                  icon={<FeatherMusic className="h-3.5 w-3.5" />}
+                  loading={isGeneratingAll}
+                  disabled={isGeneratingAll || filteredStops.length === 0}
+                  onClick={handleGenerateAllAudio}
+                >
+                  {isGeneratingAll && genProgress
+                    ? `Generating (${genProgress.current}/${genProgress.total})...`
+                    : "Generate All Audio"}
+                </Button>
+              </RBAC>
 
               <Button
                 variant="neutral-secondary"
@@ -824,39 +834,59 @@ export default function StopsPage() {
                             {playingAudioUrl === audioUrl ? "Playing" : "Play"}
                           </Button>
                           <Badge variant="success" icon={<FeatherCheck className="h-3 w-3" />}>Audio Ready</Badge>
-                          <IconButton
-                            size="small"
-                            variant="destructive-tertiary"
-                            icon={<FeatherTrash className="h-3.5 w-3.5" />}
-                            title="Delete Audio"
-                            aria-label="Delete Audio"
-                            onClick={() => {
-                              if (
-                                confirm(
-                                  "Are you sure you want to delete this audio? This action cannot be undone.",
-                                )
-                              ) {
-                                deleteAudioFileAndStopAudioRecord(
-                                  audioUrl,
-                                  stop.id || "",
-                                  audioId || undefined,
-                                );
-                              }
-                            }}
-                          />
+                          <RBAC
+                            features={["PAS", "ITMS"]}
+                            roles={[
+                              "region_admin",
+                              "organization_admin",
+                              "master",
+                              "depot_admin",
+                            ]}
+                          >
+                            <IconButton
+                              size="small"
+                              variant="destructive-tertiary"
+                              icon={<FeatherTrash className="h-3.5 w-3.5" />}
+                              title="Delete Audio"
+                              aria-label="Delete Audio"
+                              onClick={() => {
+                                if (
+                                  confirm(
+                                    "Are you sure you want to delete this audio? This action cannot be undone.",
+                                  )
+                                ) {
+                                  deleteAudioFileAndStopAudioRecord(
+                                    audioUrl,
+                                    stop.id || "",
+                                    audioId || undefined,
+                                  );
+                                }
+                              }}
+                            />
+                          </RBAC>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <Button
-                            size="small"
-                            variant="neutral-secondary"
-                            icon={<FeatherMusic className="h-3 w-3" />}
-                            loading={generatingStopId === stop.id}
-                            disabled={generatingStopId !== null}
-                            onClick={() => genAudio(stop.name, stop.id || "")}
+                          <RBAC
+                            features={["PAS", "ITMS"]}
+                            roles={[
+                              "region_admin",
+                              "organization_admin",
+                              "master",
+                              "depot_admin",
+                            ]}
                           >
-                            {generatingStopId === stop.id ? "Generating..." : "Generate Audio"}
-                          </Button>
+                            <Button
+                              size="small"
+                              variant="neutral-secondary"
+                              icon={<FeatherMusic className="h-3 w-3" />}
+                              loading={generatingStopId === stop.id}
+                              disabled={generatingStopId !== null}
+                              onClick={() => genAudio(stop.name, stop.id || "")}
+                            >
+                              {generatingStopId === stop.id ? "Generating..." : "Generate Audio"}
+                            </Button>
+                          </RBAC>
                         </div>
                       )}
                     </Table.Cell>
@@ -866,29 +896,39 @@ export default function StopsPage() {
                       </span>
                     </Table.Cell>
                     <Table.Cell className="justify-end">
-                      <OptionsDropdown
-                        onEdit={() => {
-                          setOpen(true);
-                          setEditData(stop);
-                        }}
-                        onDelete={() => {
-                          if (
-                            confirm(
-                              "Are you sure you want to delete this stop? This action cannot be undone.",
-                            )
-                          ) {
-                            if (audioUrl) {
-                              deleteAudioFileAndStopAudioRecordAndStop(
-                                audioUrl,
-                                stop.id || "",
-                                audioId || undefined,
-                              );
-                            } else {
-                              handleDeleteStop(stop.id || "");
+                      <RBAC
+                        features={["PAS", "ITMS"]}
+                        roles={[
+                          "region_admin",
+                          "organization_admin",
+                          "master",
+                          "depot_admin",
+                        ]}
+                      >
+                        <OptionsDropdown
+                          onEdit={() => {
+                            setOpen(true);
+                            setEditData(stop);
+                          }}
+                          onDelete={() => {
+                            if (
+                              confirm(
+                                "Are you sure you want to delete this stop? This action cannot be undone.",
+                              )
+                            ) {
+                              if (audioUrl) {
+                                deleteAudioFileAndStopAudioRecordAndStop(
+                                  audioUrl,
+                                  stop.id || "",
+                                  audioId || undefined,
+                                );
+                              } else {
+                                handleDeleteStop(stop.id || "");
+                              }
                             }
-                          }
-                        }}
-                      />
+                          }}
+                        />
+                      </RBAC>
                     </Table.Cell>
                   </Table.Row>
                 );

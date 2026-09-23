@@ -6,6 +6,7 @@ export const ROLES = {
   REGION_ADMIN: 'region_admin',
   DEPOT_ADMIN: 'depot_admin',
   USER: 'user',
+  GUEST: 'guest',
 } as const;
 
 export const ROLE_LABELS: Record<string, string> = {
@@ -16,6 +17,7 @@ export const ROLE_LABELS: Record<string, string> = {
   region_admin: 'Region Admin',
   depot_admin: 'Depot Admin',
   user: 'User',
+  guest: 'Guest',
 };
 
 export const getRoleLabel = (roleName?: string | null): string => {

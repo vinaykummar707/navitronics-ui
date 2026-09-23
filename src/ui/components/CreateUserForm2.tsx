@@ -61,6 +61,12 @@ const CreateUserForm2Root = React.forwardRef<
   const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+
+  const loggedInRoleName = loggedInUser?.role?.name?.toLowerCase();
+  const userOrgId = loggedInUser?.organization?.id || loggedInUser?.organization_id;
+  const userRegionId = loggedInUser?.region?.id || loggedInUser?.region_id;
+  const userDepotId = loggedInUser?.depot?.id || loggedInUser?.depot_id;
 
   const handleResetPassword = async () => {
     const targetEmail = initialData?.email;
@@ -123,6 +129,26 @@ const CreateUserForm2Root = React.forwardRef<
     });
   }, [allRoles]);
 
+  const availableRoles = useMemo(() => {
+    return roles.filter((role: any) => {
+      const rName = role.name?.toLowerCase();
+      if (isSuperAdmin || loggedInRoleName === "organization_admin") {
+        return (
+          rName === "organization_admin" ||
+          rName === "region_admin" ||
+          rName === "depot_admin"
+        );
+      }
+      if (loggedInRoleName === "region_admin") {
+        return rName === "depot_admin";
+      }
+      if (loggedInRoleName === "depot_admin") {
+        return rName === "depot_admin";
+      }
+      return true;
+    });
+  }, [roles, isSuperAdmin, loggedInRoleName]);
+
   const initialTier = fixedTier
     ? fixedTier
     : initialData
@@ -132,11 +158,12 @@ const CreateUserForm2Root = React.forwardRef<
   const [customerTier, setCustomerTier] = useState<"regular" | "stu">(initialTier);
   const isRegular = customerTier === "regular";
 
-  const defaultOrgId =
-    initialData?.organization?.id ||
-    initialData?.organization_id ||
-    selectedOrganization?.id ||
-    (organizations.length > 0 ? organizations[0].id : "");
+  const defaultOrgId = isSuperAdmin
+    ? (initialData?.organization?.id ||
+       initialData?.organization_id ||
+       selectedOrganization?.id ||
+       (organizations.length > 0 ? organizations[0].id : ""))
+    : (userOrgId || selectedOrganization?.id || "");
 
   // Setup form
   const {
@@ -149,8 +176,8 @@ const CreateUserForm2Root = React.forwardRef<
   } = useForm<ILoggedUser>({
     defaultValues: {
       role_id: initialData?.role?.id || initialData?.role_id || (initialTier === "regular" ? regularRoleId : ""),
-      region_id: initialData?.region?.id || initialData?.region_id || null,
-      depot_id: initialData?.depot?.id || initialData?.depot_id || null,
+      region_id: initialData?.region?.id || initialData?.region_id || userRegionId || null,
+      depot_id: initialData?.depot?.id || initialData?.depot_id || userDepotId || null,
       email: initialData?.email || "",
       password: "",
       organization_id: initialTier === "regular" ? null : defaultOrgId,
@@ -229,21 +256,20 @@ const CreateUserForm2Root = React.forwardRef<
         organization_id:
           initialData.organization?.id ||
           initialData.organization_id ||
-          selectedOrganization?.id ||
-          "",
+          defaultOrgId,
         user_id: initialData.user_id || "",
         active: initialData.active ?? true,
         v1_routes: initialData.v1_routes ?? selectedOrganization?.v1_routes ?? false,
         v2_routes: initialData.v2_routes ?? selectedOrganization?.v2_routes ?? true,
-        PIS: (initialData as any).PIS ?? selectedOrganization?.PIS ?? true,
-        PAS: (initialData as any).PAS ?? selectedOrganization?.PAS ?? true,
-        ITMS: (initialData as any).ITMS ?? selectedOrganization?.ITMS ?? false,
       } as any);
     } else {
+      const defaultRole = loggedInRoleName === "region_admin" || loggedInRoleName === "depot_admin"
+        ? (roles.find((r) => r.name === "depot_admin")?.id || "")
+        : "";
       reset({
-        role_id: "",
-        region_id: null,
-        depot_id: null,
+        role_id: defaultRole,
+        region_id: userRegionId || null,
+        depot_id: userDepotId || null,
         email: "",
         password: "",
         organization_id: defaultOrgId,
@@ -253,7 +279,7 @@ const CreateUserForm2Root = React.forwardRef<
         v2_routes: selectedOrganization?.v2_routes ?? true,
       } as any);
     }
-  }, [initialData, reset, selectedOrganization, defaultOrgId]);
+  }, [initialData, reset, selectedOrganization, defaultOrgId, userRegionId, userDepotId, loggedInRoleName, roles]);
 
   // Helper to ensure valid UUID or null (never empty string "")
   const toNullableUuid = (val?: string | null) => {
@@ -277,6 +303,68 @@ const CreateUserForm2Root = React.forwardRef<
     }
     const targetRegionId = isRegular ? null : toNullableUuid(data.region_id);
     const targetDepotId = isRegular ? null : toNullableUuid(data.depot_id);
+
+    if (!isRegular) {
+      // Strict 1:1 Hierarchy Uniqueness Check
+      if (selectedRole?.name === "organization_admin" && targetOrgId) {
+        let query = supabase
+          .from("users")
+          .select("id")
+          .eq("organization_id", targetOrgId)
+          .eq("role_id", targetRoleId);
+        if (isEditMode && initialData?.id) {
+          query = query.neq("id", initialData.id);
+        }
+        const { data: existing } = await query;
+        if (existing && existing.length > 0) {
+          toast.error("Only one user is allowed for the selected organization/region/depot.");
+          return;
+        }
+      } else if (selectedRole?.name === "region_admin" && targetRegionId) {
+        let query = supabase
+          .from("users")
+          .select("id")
+          .eq("region_id", targetRegionId)
+          .eq("role_id", targetRoleId);
+        if (isEditMode && initialData?.id) {
+          query = query.neq("id", initialData.id);
+        }
+        const { data: existing } = await query;
+        if (existing && existing.length > 0) {
+          toast.error("Only one user is allowed for the selected organization/region/depot.");
+          return;
+        }
+      } else if (selectedRole?.name === "depot_admin" && targetDepotId) {
+        let query = supabase
+          .from("users")
+          .select("id")
+          .eq("depot_id", targetDepotId)
+          .eq("role_id", targetRoleId);
+        if (isEditMode && initialData?.id) {
+          query = query.neq("id", initialData.id);
+        }
+        const { data: existing } = await query;
+        if (existing && existing.length > 0) {
+          toast.error("Only one user is allowed for the selected organization/region/depot.");
+          return;
+        }
+      }
+    }
+
+    // Password complexity check
+    if (!isEditMode) {
+      if (!data.password || !PASSWORD_REGEX.test(data.password)) {
+        toast.error("Password must be at least 8 characters and include uppercase, lowercase, number, and a special character");
+        return;
+      }
+    } else {
+      if (data.password && data.password.trim().length > 0) {
+        if (!PASSWORD_REGEX.test(data.password)) {
+          toast.error("Password must be at least 8 characters and include uppercase, lowercase, number, and a special character");
+          return;
+        }
+      }
+    }
 
     const basePayload: any = {
       role_id: targetRoleId,
@@ -351,9 +439,6 @@ const CreateUserForm2Root = React.forwardRef<
             data: {
               v1_routes: Boolean(data.v1_routes),
               v2_routes: Boolean(data.v2_routes),
-              PIS: Boolean((data as any).PIS),
-              PAS: Boolean((data as any).PAS),
-              ITMS: Boolean((data as any).ITMS),
             },
           },
         });
@@ -621,7 +706,7 @@ const CreateUserForm2Root = React.forwardRef<
                   value={field.value || undefined}
                   onValueChange={field.onChange}
                 >
-                  {roles.map((role) => {
+                  {availableRoles.map((role) => {
                     const roleName = role.name || (role as any).roleName || "";
                     return (
                       <Select.Item key={role.id} value={role.id}>
@@ -648,6 +733,7 @@ const CreateUserForm2Root = React.forwardRef<
                       </span>
                     }
                     placeholder="Select Region"
+                    disabled={loggedInRoleName === "region_admin" || loggedInRoleName === "depot_admin"}
                     error={!!fieldState.error}
                     helpText={fieldState.error?.message}
                     value={field.value || undefined}
@@ -681,6 +767,7 @@ const CreateUserForm2Root = React.forwardRef<
                         </span>
                       }
                       placeholder="Select Depot"
+                      disabled={loggedInRoleName === "depot_admin"}
                       error={!!fieldState.error}
                       helpText={fieldState.error?.message}
                       value={field.value || undefined}
@@ -734,7 +821,10 @@ const CreateUserForm2Root = React.forwardRef<
                   control={control}
                   name="password"
                   rules={{
-                    minLength: { value: 6, message: "At least 6 characters" },
+                    pattern: {
+                      value: PASSWORD_REGEX,
+                      message: "Must be >= 8 characters with uppercase, lowercase, number, and special character",
+                    },
                   }}
                   render={({ field, fieldState }) => (
                     <TextField
@@ -822,7 +912,10 @@ const CreateUserForm2Root = React.forwardRef<
               name="password"
               rules={{
                 required: "Password is required",
-                minLength: { value: 6, message: "At least 6 characters" },
+                pattern: {
+                  value: PASSWORD_REGEX,
+                  message: "Must be >= 8 characters with uppercase, lowercase, number, and special character",
+                },
               }}
               render={({ field, fieldState }) => (
                 <TextField
@@ -832,7 +925,7 @@ const CreateUserForm2Root = React.forwardRef<
                       Password <span className="text-red-500">*</span>
                     </span>
                   }
-                  helpText={fieldState.error?.message || "Minimum 6 characters"}
+                  helpText={fieldState.error?.message || "Min 8 chars with uppercase, lowercase, number & special character"}
                   icon={<FeatherKey />}
                   error={!!fieldState.error}
                   iconRight={

@@ -11,6 +11,7 @@ import { FeatherPlus, FeatherRefreshCw, FeatherUsers } from "@subframe/core";
 import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { sortByLatestCreated } from "@/utils/dateUtils";
+import RBAC from "@/components/RBAC";
 
 export default function UsersPage() {
   const [open, setOpen] = useState(false);
@@ -21,9 +22,28 @@ export default function UsersPage() {
 
   const { useList, useDelete } = userCrud;
 
-  const targetOrgId = isSuper
-    ? selectedOrganization?.id
-    : loggedInUser?.organization?.id || loggedInUser?.organization_id;
+  const userRole = loggedInUser?.role?.name?.toLowerCase();
+
+  const userFilters = useMemo(() => {
+    const f: Record<string, any> = {};
+    if (isSuper) {
+      if (selectedOrganization?.id) {
+        f.organization_id = selectedOrganization.id;
+      }
+    } else if (userRole === "depot_admin") {
+      const depotId = loggedInUser?.depot_id || loggedInUser?.depot?.id;
+      if (depotId) f.depot_id = depotId;
+    } else if (userRole === "region_admin") {
+      const regionId = loggedInUser?.region_id || loggedInUser?.region?.id;
+      if (regionId) f.region_id = regionId;
+    } else {
+      const orgId = loggedInUser?.organization?.id || loggedInUser?.organization_id || selectedOrganization?.id;
+      if (orgId) f.organization_id = orgId;
+    }
+    return f;
+  }, [isSuper, userRole, selectedOrganization?.id, loggedInUser]);
+
+  const shouldSkip = isSuper ? !selectedOrganization?.id : Object.keys(userFilters).length === 0;
 
   const {
     data,
@@ -31,11 +51,9 @@ export default function UsersPage() {
     error: usersError,
     refetch,
   } = useList({
-    filters: targetOrgId
-      ? { organization_id: targetOrgId }
-      : {},
+    filters: userFilters,
     orderBy: { column: "created_at", ascending: false },
-    skip: !targetOrgId,
+    skip: shouldSkip,
     custom(query) {
       return query.select(
         ` *,
@@ -110,16 +128,18 @@ export default function UsersPage() {
           >
             Refresh
           </Button>
-          <Button
-            className="flex-1 sm:flex-none"
-            icon={<FeatherPlus />}
-            onClick={() => {
-              setOpen(true);
-              setEditData(null);
-            }}
-          >
-            Add STU User
-          </Button>
+          <RBAC features={[]} roles={["master", "organization_admin", "region_admin", "depot_admin"]}>
+            <Button
+              className="flex-1 sm:flex-none"
+              icon={<FeatherPlus />}
+              onClick={() => {
+                setOpen(true);
+                setEditData(null);
+              }}
+            >
+              Add STU User
+            </Button>
+          </RBAC>
         </div>
       </div>
       {stuUsers && stuUsers.length > 0 ? (

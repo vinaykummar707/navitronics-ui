@@ -8,7 +8,7 @@
  * UserLoginForm — https://app.subframe.com/11b10bc240cf/library?component=UserLoginForm_e5743870-e2c4-4e34-a182-7c38cd5ae2ef
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   FeatherEye,
   FeatherEyeOff,
@@ -23,7 +23,7 @@ import { TextField } from "./TextField";
 import { supabase } from "@/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { ILoggedUser, loggedUserCrud, userCrud } from "@/types/IUser";
+import { ILoggedUser } from "@/types/IUser";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { Dialog } from "./Dialog";
@@ -56,36 +56,10 @@ const UserLoginFormRoot = React.forwardRef<
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [userId, setUserId] = useState(""); // State to hold user ID after login
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-  const { useList } = loggedUserCrud;
-
-  const {
-    data: loggedUserDetails,
-    isLoading: usersLoading,
-    error: usersError,
-    refetch: usersRefetch,
-  } = useList({
-    filters: { user_id: userId },
-    includeDeleted: true,
-    custom(query) {
-      return query
-        .select(
-          ` *,
-        region:region_id (*),
-        organization:organization_id (*),
-        depot:depot_id (*),
-        role:role_id (*)
-      `,
-        )
-        .maybeSingle();
-    },
-    skip: !userId, // Skip the query until we have a userId
-  });
-
-  // Update input values and submit handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let hasError = false;
@@ -110,116 +84,123 @@ const UserLoginFormRoot = React.forwardRef<
 
     if (hasError) return;
 
-    setUserId(""); // Clear previous user ID on new login attempt
-    // Authenticate with Supabase
-    const { data, error: supaError } = await supabase.auth.signInWithPassword({
-      email: trimmedEmail,
-      password,
-    });
-    if (supaError) {
-      toast.error(`Login failed: ${supaError.message}`);
-    } else if (data && data.user) {
-      setUserId(data.user.id); // Set user ID to trigger fetching user details
-    }
-  };
+    setIsSubmitting(true);
 
-  // Handle post-login navigation when user details are retrieved
-  useEffect(() => {
-    if (!userId || usersLoading) return;
+    try {
+      // 1. Authenticate with Supabase Auth
+      const { data: authData, error: supaError } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password,
+      });
 
-    const processLogin = async () => {
+      if (supaError) {
+        throw new Error(supaError.message || "Invalid email or password");
+      }
+
+      if (!authData?.user) {
+        throw new Error("Authentication failed. No user returned from server.");
+      }
+
+      // 2. Fetch user profile from public.users with joined relations
+      const { data: dbUser, error: dbError } = await supabase
+        .from("users")
+        .select(`
+          *,
+          region:region_id (*),
+          organization:organization_id (*),
+          depot:depot_id (*),
+          role:role_id (*)
+        `)
+        .eq("user_id", authData.user.id)
+        .maybeSingle();
+
+      if (dbError) {
+        throw new Error(`Failed to load user profile: ${dbError.message}`);
+      }
+
+      if (!dbUser) {
+        throw new Error(
+          "Your account profile is not found in the users table. Please contact support at support@navitronix.in or reach your administrator."
+        );
+      }
+
+      const userData = { ...(dbUser as ILoggedUser) };
+
+      // 3. Account active status check
+      if (!userData.active) {
+        throw new Error(
+          "Your account is inactive. Please contact support at support@navitronix.in or reach your administrator."
+        );
+      }
+
+      // 4. Hydrate auth user metadata
       try {
-        if (usersError || !loggedUserDetails?.data) {
-          throw new Error(
-            "Your account is inactive or has been deactivated. Please contact support at support@navitronix.in or reach your administrator.",
-          );
-        }
-
-        const userData = { ...(loggedUserDetails.data as ILoggedUser) };
-
-        // 1. Account status validation
-        if (!userData.active) {
-          throw new Error(
-            "Your account is inactive. Please contact support at support@navitronix.in or reach your administrator.",
-          );
-        }
-
-        // 2. Hydrate auth user metadata feature flags
-        try {
-          const { data: authUser } = await supabase.auth.getUser();
-          const meta = authUser?.user?.user_metadata;
-          if (meta) {
-            if (meta.v1_routes !== undefined && (userData.v1_routes === undefined || userData.v1_routes === null)) {
-              userData.v1_routes = meta.v1_routes;
-            }
-            if (meta.v2_routes !== undefined && (userData.v2_routes === undefined || userData.v2_routes === null)) {
-              userData.v2_routes = meta.v2_routes;
-            }
-            if (meta.PIS !== undefined && (userData.PIS === undefined || userData.PIS === null)) {
-              userData.PIS = meta.PIS;
-            }
-            if (meta.PAS !== undefined && (userData.PAS === undefined || userData.PAS === null)) {
-              userData.PAS = meta.PAS;
-            }
-            if (meta.ITMS !== undefined && (userData.ITMS === undefined || userData.ITMS === null)) {
-              userData.ITMS = meta.ITMS;
-            }
-            if (meta.customer_type && !userData.customer_type) {
-              userData.customer_type = meta.customer_type;
-            }
+        const meta = authData.user.user_metadata;
+        if (meta) {
+          if (meta.v1_routes !== undefined && (userData.v1_routes === undefined || userData.v1_routes === null)) {
+            userData.v1_routes = meta.v1_routes;
           }
-        } catch (metaErr) {
-          console.warn("Could not fetch auth metadata:", metaErr);
-        }
-
-        // 3. Regular Customer: standalone (no organization required or permitted)
-        if (isRegularCustomer(userData)) {
-          login(userData);
-          setSelectedOrganization(null);
-          toast.success("Login successful!");
-          navigate("/home/regular-routes");
-          return;
-        }
-
-        // 4. Super Admin: full access (organization optional)
-        if (isSuperAdmin(userData)) {
-          login(userData);
-          if (userData.organization) {
-            setSelectedOrganization(userData.organization);
+          if (meta.v2_routes !== undefined && (userData.v2_routes === undefined || userData.v2_routes === null)) {
+            userData.v2_routes = meta.v2_routes;
           }
-          toast.success("Login successful!");
-          navigate("/home");
-          return;
+          if (meta.customer_type && !userData.customer_type) {
+            userData.customer_type = meta.customer_type;
+          }
         }
+      } catch (metaErr) {
+        console.warn("Could not fetch auth metadata:", metaErr);
+      }
 
-        // 5. STU Enterprise Users: must belong to an active organization
-        if (!userData.organization || userData.organization.active === false) {
-          throw new Error(
-            "Your organization account is inactive. Please contact support at support@navitronix.in.",
-          );
-        }
+      const roleName = userData.role?.name?.toLowerCase();
 
+      // 5. Super Admin (master / super_admin)
+      if (isSuperAdmin(userData) || roleName === "master" || roleName === "super_admin") {
         login(userData);
-        setSelectedOrganization(userData.organization);
+        if (userData.organization) {
+          setSelectedOrganization(userData.organization);
+        }
         toast.success("Login successful!");
         navigate("/home");
-      } catch (error: any) {
-        toast.error(error.message);
-        logout();
-        supabase.auth.signOut();
-        setUserId("");
+        return;
       }
-    };
 
-    processLogin();
-  }, [
-    userId,
-    loggedUserDetails,
-    login,
-    navigate,
-    logout,
-    setSelectedOrganization,
-  ]);
+      // 6. Guest User
+      if (roleName === "guest") {
+        login(userData);
+        setSelectedOrganization(null);
+        toast.success("Login successful!");
+        navigate("/home");
+        return;
+      }
+
+      // 7. Regular Customer
+      if (isRegularCustomer(userData)) {
+        login(userData);
+        setSelectedOrganization(null);
+        toast.success("Login successful!");
+        navigate("/home/regular-routes");
+        return;
+      }
+
+      // 8. STU Enterprise Users: must belong to an active organization
+      if (!userData.organization || userData.organization.active === false) {
+        throw new Error(
+          "Your organization account is inactive. Please contact support at support@navitronix.in."
+        );
+      }
+
+      login(userData);
+      setSelectedOrganization(userData.organization);
+      toast.success("Login successful!");
+      navigate("/home");
+    } catch (error: any) {
+      toast.error(error.message);
+      logout();
+      await supabase.auth.signOut();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const [showResetDialog, setShowResetDialog] = useState(false);
 
@@ -379,9 +360,10 @@ const UserLoginFormRoot = React.forwardRef<
               className="h-11 mt-1 w-full flex-none text-body-bold font-body-bold"
               size="large"
               type="submit"
-              disabled={usersLoading}
+              disabled={isSubmitting}
+              loading={isSubmitting}
             >
-              {usersLoading ? "Fetching User Details..." : "Login"}
+              {isSubmitting ? "Signing in..." : "Login"}
             </Button>
           </form>
         </div>

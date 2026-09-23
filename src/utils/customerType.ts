@@ -25,6 +25,7 @@ export function isRegularCustomer(user: ILoggedUser | IUser | null | undefined):
 
   // If role is explicitly 'user'
   const roleName = (user as any).role?.name?.toLowerCase() || "";
+  if (roleName === "guest") return false;
   if (roleName === "user") return true;
 
   // If user has no organization assigned

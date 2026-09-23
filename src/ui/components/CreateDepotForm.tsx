@@ -63,6 +63,10 @@ const CreateDepotFormRoot = React.forwardRef<
       setError("name", { message: "Depot name is required" });
       return;
     }
+    if (trimmedName.length < 2 || trimmedName.length > 50) {
+      setError("name", { message: "Depot name must be between 2 and 50 characters" });
+      return;
+    }
 
     const targetRegionId = values.region_id || region_id;
 

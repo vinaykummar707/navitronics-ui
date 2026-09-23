@@ -753,7 +753,7 @@ export default function RoutesPage() {
               </RBAC>
 
               {/* Region Select — admin roles */}
-              <RBAC features={[]} roles={["master", "organization_admin"]}>
+              <RBAC features={[]} roles={["master", "organization_admin", "guest"]}>
                 <RegionSelect
                   regions={regions}
                   selectedRegionId={selectedRegion?.id ?? ""}
@@ -763,7 +763,7 @@ export default function RoutesPage() {
 
               {/* Depot Select */}
               {hasDepots && (
-                <RBAC features={[]} roles={["master", "organization_admin", "region_admin"]}>
+                <RBAC features={[]} roles={["master", "organization_admin", "region_admin", "guest"]}>
                   <Select
                     className="h-auto flex-none"
                     variant="filled"
@@ -838,23 +838,33 @@ export default function RoutesPage() {
                 >
                   Export ({selectedRouteIds.length})
                 </Button>
-                <Button
-                  icon={<FeatherTrash />}
-                  variant="destructive-secondary"
-                  className="h-9 flex-1 sm:flex-none"
-                  disabled={!selectedDepot || selectedRouteIds.length === 0}
-                  onClick={() => {
-                    if (
-                      confirm(
-                        `Are you sure you want to delete ${selectedRouteIds.length} selected route(s)?`,
-                      )
-                    ) {
-                      handleDeleteSelectedRoutes();
-                    }
-                  }}
+                <RBAC
+                  features={[]}
+                  roles={[
+                    "region_admin",
+                    "organization_admin",
+                    "master",
+                    "depot_admin",
+                  ]}
                 >
-                  Delete ({selectedRouteIds.length})
-                </Button>
+                  <Button
+                    icon={<FeatherTrash />}
+                    variant="destructive-secondary"
+                    className="h-9 flex-1 sm:flex-none"
+                    disabled={!selectedDepot || selectedRouteIds.length === 0}
+                    onClick={() => {
+                      if (
+                        confirm(
+                          `Are you sure you want to delete ${selectedRouteIds.length} selected route(s)?`,
+                        )
+                      ) {
+                        handleDeleteSelectedRoutes();
+                      }
+                    }}
+                  >
+                    Delete ({selectedRouteIds.length})
+                  </Button>
+                </RBAC>
               </>
             )}
           </div>

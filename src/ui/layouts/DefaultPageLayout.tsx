@@ -153,6 +153,14 @@ const DefaultPageLayoutRoot = React.forwardRef<
             >
               STU Users
             </SidebarWithSections.NavItem>
+
+            <SidebarWithSections.NavItem
+              selected={path.startsWith("/home/guests")}
+              onClick={() => handleNavClick("/home/guests")}
+              icon={<FeatherUsers />}
+            >
+              Guests
+            </SidebarWithSections.NavItem>
           </SidebarWithSections.NavSection>
 
           <SidebarWithSections.NavSection className="no-scrollbar" label="Regular Customers">
@@ -186,7 +194,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
       );
     }
 
-    // STU Enterprise Users
+    // STU Enterprise Users & Guests
     return (
       <SidebarWithSections.NavSection className="no-scrollbar" label="Menu">
         <RBAC
@@ -194,6 +202,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
             ROLES.ORGANIZATION_ADMIN,
             ROLES.REGION_ADMIN,
             ROLES.DEPOT_ADMIN,
+            ROLES.GUEST,
           ]}
           features={[]}
         >
@@ -206,8 +215,18 @@ const DefaultPageLayoutRoot = React.forwardRef<
           </SidebarWithSections.NavItem>
         </RBAC>
 
+        <RBAC roles={[ROLES.GUEST]} features={[]}>
+          <SidebarWithSections.NavItem
+            selected={path.startsWith("/home/organizations")}
+            onClick={() => handleNavClick("/home/organizations")}
+            icon={<FeatherHotel />}
+          >
+            Organizations
+          </SidebarWithSections.NavItem>
+        </RBAC>
+
         <RBAC
-          roles={[ROLES.ORGANIZATION_ADMIN]}
+          roles={[ROLES.ORGANIZATION_ADMIN, ROLES.REGION_ADMIN, ROLES.GUEST]}
           features={["PIS", "PAS", "ITMS"]}
         >
           <SidebarWithSections.NavItem
@@ -220,7 +239,12 @@ const DefaultPageLayoutRoot = React.forwardRef<
         </RBAC>
 
         <RBAC
-          roles={[ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN]}
+          roles={[
+            ROLES.DEPOT_ADMIN,
+            ROLES.REGION_ADMIN,
+            ROLES.ORGANIZATION_ADMIN,
+            ROLES.GUEST,
+          ]}
           features={["PIS", "PAS", "ITMS"]}
         >
           <SidebarWithSections.NavItem
@@ -237,6 +261,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
             ROLES.DEPOT_ADMIN,
             ROLES.REGION_ADMIN,
             ROLES.ORGANIZATION_ADMIN,
+            ROLES.GUEST,
           ]}
           features={["PAS", "ITMS"]}
         >
@@ -254,6 +279,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
             ROLES.DEPOT_ADMIN,
             ROLES.REGION_ADMIN,
             ROLES.ORGANIZATION_ADMIN,
+            ROLES.GUEST,
           ]}
           features={["PIS", "PAS", "ITMS"]}
         >
@@ -266,7 +292,14 @@ const DefaultPageLayoutRoot = React.forwardRef<
           </SidebarWithSections.NavItem>
         </RBAC>
 
-        <RBAC roles={[ROLES.ORGANIZATION_ADMIN]} features={[]}>
+        <RBAC
+          roles={[
+            ROLES.ORGANIZATION_ADMIN,
+            ROLES.REGION_ADMIN,
+            ROLES.DEPOT_ADMIN,
+          ]}
+          features={[]}
+        >
           <SidebarWithSections.NavItem
             selected={path.startsWith("/home/users")}
             onClick={() => handleNavClick("/home/users")}

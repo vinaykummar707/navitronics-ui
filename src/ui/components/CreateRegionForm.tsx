@@ -49,8 +49,8 @@ const CreateRegionFormRoot = React.forwardRef<
   const onSubmit = async (values: IRegionCreate) => {
     setApiError(null);
     const trimmedName = values.name?.trim();
-    if (!trimmedName) {
-      setError("name", { message: "Region name is required" });
+    if (!trimmedName || trimmedName.length < 2 || trimmedName.length > 50) {
+      setError("name", { message: "Region name must be between 2 and 50 characters" });
       return;
     }
 

@@ -68,14 +68,16 @@ function OrganizationsPage() {
         buttonLabel="Add Organization"
         roles={["master"]}
         extraActions={
-          <Button
-            variant="brand-secondary-2"
-            className="flex-1 sm:flex-none"
-            icon={<FeatherPlus />}
-            onClick={() => setWizardOpen(true)}
-          >
-            Onboard STU Customer
-          </Button>
+          <RBAC roles={["master"]} features={[]}>
+            <Button
+              variant="brand-secondary-2"
+              className="flex-1 sm:flex-none"
+              icon={<FeatherPlus />}
+              onClick={() => setWizardOpen(true)}
+            >
+              Onboard STU Customer
+            </Button>
+          </RBAC>
         }
       />
       {isLoading && (
@@ -157,22 +159,24 @@ function OrganizationsPage() {
                     </span>
                   </Table.Cell>
                   <Table.Cell className="justify-end">
-                    <OptionsDropdown
-                      isDisabled={isNavitronix}
-                      onEdit={() => {
-                        setEditData(org);
-                        setOpen(true);
-                      }}
-                      onDelete={() => {
-                        if (
-                          confirm(
-                            "Are you sure you want to delete this organization? This action cannot be undone.",
-                          )
-                        ) {
-                          handleDelete(org.id);
-                        }
-                      }}
-                    />
+                    <RBAC roles={["master"]} features={[]}>
+                      <OptionsDropdown
+                        isDisabled={isNavitronix}
+                        onEdit={() => {
+                          setEditData(org);
+                          setOpen(true);
+                        }}
+                        onDelete={() => {
+                          if (
+                            confirm(
+                              "Are you sure you want to delete this organization? This action cannot be undone.",
+                            )
+                          ) {
+                            handleDelete(org.id);
+                          }
+                        }}
+                      />
+                    </RBAC>
                   </Table.Cell>
                 </Table.Row>
               );
