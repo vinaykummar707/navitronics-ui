@@ -161,7 +161,7 @@ export const defaultDisplayConfigPostRequest: IRouteCreate = {
   route_number: "123",
   source: "SOURCE",
   destination: "DESTINATION",
-  via: "VIA:",
+  via: "",
   route_number_1: "",
   route_number_2: "",
   separation: "",

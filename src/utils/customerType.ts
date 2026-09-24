@@ -1,4 +1,5 @@
 import { ILoggedUser, IUser } from "@/types/IUser";
+import { ROLES } from "@/constants/roles";
 
 export type CustomerTier = "super_admin" | "regular" | "stu";
 
@@ -58,4 +59,27 @@ export function getCustomerTier(user: ILoggedUser | IUser | null | undefined): C
   if (isSuperAdmin(user)) return "super_admin";
   if (isRegularCustomer(user)) return "regular";
   return "stu";
+}
+
+/**
+ * Resolves the default landing route for a logged-in user.
+ * Only roles with assigned access to the dashboard page navigate to '/home/dashboard'.
+ * Roles without dashboard access are navigated to their respective primary route.
+ */
+export function getDefaultRouteForUser(currentUser: any): string {
+  if (!currentUser) return "/login";
+  if (isSuperAdmin(currentUser)) return "/home/organizations";
+  if (isRegularCustomer(currentUser)) return "/home/regular-routes";
+  const role = currentUser.role?.name?.toLowerCase();
+  switch (role) {
+    case ROLES.ORGANIZATION_ADMIN:
+    case ROLES.REGION_ADMIN:
+      return "/home/dashboard";
+    case ROLES.GUEST:
+      return "/home/organizations";
+    case ROLES.DEPOT_ADMIN:
+      return "/home/routes";
+    default:
+      return "/home/routes";
+  }
 }

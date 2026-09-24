@@ -10,30 +10,37 @@
 // @subframe/sync-disable
 import React, { useEffect } from "react";
 import {
-  FeatherBusFront,
+  FeatherBriefcase,
+  FeatherBuilding2,
   FeatherGlobe2,
-  FeatherHotel,
+  FeatherLayoutDashboard,
+  FeatherLogOut,
   FeatherMapPin,
-  FeatherPanelLeftClose,
-  FeatherPanelLeftOpen,
-  FeatherPlaneTakeoff,
+  FeatherMenu,
+  FeatherNavigation,
+  FeatherRoute,
   FeatherType,
-  FeatherUser,
+  FeatherUserCheck,
   FeatherUsers,
+  FeatherWarehouse,
   FeatherX,
 } from "@subframe/core";
-import { LoggedUser } from "../components/LoggedUser";
 import { SelectOrganizationComponent } from "../components/SelectOrganizationComponent";
 import { SidebarWithSections } from "../components/SidebarWithSections";
 import * as SubframeUtils from "../utils";
 import { useLocation, useNavigate } from "react-router-dom";
 import RBAC from "@/components/RBAC";
-import { ROLES } from "@/constants/roles";
+import { ROLES, getRoleLabel } from "@/constants/roles";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import useToggleStore from "@/store/useToggleStore";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
-import { isRegularCustomer, isSuperAdmin } from "@/utils/customerType";
+import {
+  isRegularCustomer,
+  isSuperAdmin,
+  getDefaultRouteForUser,
+} from "@/utils/customerType";
 import { IconButton } from "../components/IconButton";
+import { supabase } from "@/supabaseClient";
 
 interface DefaultPageLayoutRootProps
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -76,8 +83,51 @@ const DefaultPageLayoutRoot = React.forwardRef<
   };
 
   const user = useLoggedUserStore((state) => state.user);
+  const logout = useLoggedUserStore((state) => state.logout);
   const isRegular = isRegularCustomer(user);
   const isSuper = isSuperAdmin(user);
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("Sign out error:", err);
+    }
+    logout();
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch {
+      // Ignore storage access errors
+    }
+    navigate("/login", { replace: true });
+  };
+
+  const userRoleName = user?.role?.name?.toLowerCase() || "";
+  const roleLabel =
+    userRoleName === "master"
+      ? "Super Admin"
+      : userRoleName
+      ? getRoleLabel(userRoleName)
+      : "User";
+
+  const userScope = (() => {
+    if (!user) return "";
+    switch (userRoleName) {
+      case "master":
+        return "System Admin";
+      case "organization_admin":
+        return user.organization?.name || "";
+      case "region_admin":
+        return user.region?.name || user.organization?.name || "";
+      case "depot_admin":
+        return user.depot?.name || user.region?.name || "";
+      case "guest":
+        return user.organization?.name || "View Only";
+      default:
+        return "";
+    }
+  })();
 
   const renderNavItems = () => {
     if (isRegular) {
@@ -86,7 +136,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
           <SidebarWithSections.NavItem
             selected={path.startsWith("/home/regular-routes")}
             onClick={() => handleNavClick("/home/regular-routes")}
-            icon={<FeatherPlaneTakeoff />}
+            icon={<FeatherNavigation />}
           >
             My Routes
           </SidebarWithSections.NavItem>
@@ -101,7 +151,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
             <SidebarWithSections.NavItem
               selected={path.startsWith("/home/dashboard")}
               onClick={() => handleNavClick("/home/dashboard")}
-              icon={<FeatherHotel />}
+              icon={<FeatherLayoutDashboard />}
             >
               Dashboard
             </SidebarWithSections.NavItem>
@@ -109,7 +159,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
             <SidebarWithSections.NavItem
               selected={path.startsWith("/home/organizations")}
               onClick={() => handleNavClick("/home/organizations")}
-              icon={<FeatherHotel />}
+              icon={<FeatherBuilding2 />}
             >
               Organizations
             </SidebarWithSections.NavItem>
@@ -125,7 +175,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
             <SidebarWithSections.NavItem
               selected={path.startsWith("/home/depots")}
               onClick={() => handleNavClick("/home/depots")}
-              icon={<FeatherBusFront />}
+              icon={<FeatherWarehouse />}
             >
               Depots
             </SidebarWithSections.NavItem>
@@ -141,7 +191,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
             <SidebarWithSections.NavItem
               selected={path.startsWith("/home/routes")}
               onClick={() => handleNavClick("/home/routes")}
-              icon={<FeatherPlaneTakeoff />}
+              icon={<FeatherRoute />}
             >
               STU Routes
             </SidebarWithSections.NavItem>
@@ -154,20 +204,20 @@ const DefaultPageLayoutRoot = React.forwardRef<
               STU Users
             </SidebarWithSections.NavItem>
 
-            <SidebarWithSections.NavItem
+            {/* <SidebarWithSections.NavItem
               selected={path.startsWith("/home/guests")}
               onClick={() => handleNavClick("/home/guests")}
-              icon={<FeatherUsers />}
+              icon={<FeatherUserCheck />}
             >
               Guests
-            </SidebarWithSections.NavItem>
+            </SidebarWithSections.NavItem> */}
           </SidebarWithSections.NavSection>
 
           <SidebarWithSections.NavSection className="no-scrollbar" label="Regular Customers">
             <SidebarWithSections.NavItem
               selected={path.startsWith("/home/regular-routes")}
               onClick={() => handleNavClick("/home/regular-routes")}
-              icon={<FeatherPlaneTakeoff />}
+              icon={<FeatherNavigation />}
             >
               Regular Routes
             </SidebarWithSections.NavItem>
@@ -175,7 +225,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
             <SidebarWithSections.NavItem
               selected={path.startsWith("/home/regular-customers")}
               onClick={() => handleNavClick("/home/regular-customers")}
-              icon={<FeatherUser />}
+              icon={<FeatherBriefcase />}
             >
               Regular Customers
             </SidebarWithSections.NavItem>
@@ -201,15 +251,14 @@ const DefaultPageLayoutRoot = React.forwardRef<
           roles={[
             ROLES.ORGANIZATION_ADMIN,
             ROLES.REGION_ADMIN,
-            ROLES.DEPOT_ADMIN,
-            ROLES.GUEST,
+           
           ]}
           features={[]}
         >
           <SidebarWithSections.NavItem
             selected={path.startsWith("/home/dashboard")}
             onClick={() => handleNavClick("/home/dashboard")}
-            icon={<FeatherHotel />}
+            icon={<FeatherLayoutDashboard />}
           >
             Dashboard
           </SidebarWithSections.NavItem>
@@ -219,14 +268,14 @@ const DefaultPageLayoutRoot = React.forwardRef<
           <SidebarWithSections.NavItem
             selected={path.startsWith("/home/organizations")}
             onClick={() => handleNavClick("/home/organizations")}
-            icon={<FeatherHotel />}
+            icon={<FeatherBuilding2 />}
           >
             Organizations
           </SidebarWithSections.NavItem>
         </RBAC>
 
         <RBAC
-          roles={[ROLES.ORGANIZATION_ADMIN, ROLES.REGION_ADMIN, ROLES.GUEST]}
+          roles={[ROLES.ORGANIZATION_ADMIN]}
           features={["PIS", "PAS", "ITMS"]}
         >
           <SidebarWithSections.NavItem
@@ -240,7 +289,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
 
         <RBAC
           roles={[
-            ROLES.DEPOT_ADMIN,
+           
             ROLES.REGION_ADMIN,
             ROLES.ORGANIZATION_ADMIN,
             ROLES.GUEST,
@@ -250,7 +299,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
           <SidebarWithSections.NavItem
             selected={path.startsWith("/home/depots")}
             onClick={() => handleNavClick("/home/depots")}
-            icon={<FeatherBusFront />}
+            icon={<FeatherWarehouse />}
           >
             Depots
           </SidebarWithSections.NavItem>
@@ -260,8 +309,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
           roles={[
             ROLES.DEPOT_ADMIN,
             ROLES.REGION_ADMIN,
-            ROLES.ORGANIZATION_ADMIN,
-            ROLES.GUEST,
+            ROLES.ORGANIZATION_ADMIN
           ]}
           features={["PAS", "ITMS"]}
         >
@@ -286,7 +334,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
           <SidebarWithSections.NavItem
             selected={path.startsWith("/home/routes")}
             onClick={() => handleNavClick("/home/routes")}
-            icon={<FeatherPlaneTakeoff />}
+            icon={<FeatherRoute />}
           >
             Routes
           </SidebarWithSections.NavItem>
@@ -296,7 +344,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
           roles={[
             ROLES.ORGANIZATION_ADMIN,
             ROLES.REGION_ADMIN,
-            ROLES.DEPOT_ADMIN,
+           
           ]}
           features={[]}
         >
@@ -327,26 +375,14 @@ const DefaultPageLayoutRoot = React.forwardRef<
           <IconButton
             variant="neutral-tertiary"
             onClick={handleToggleClick}
-            icon={
-              showSidebar || isMobileMenuOpen ? (
-                <FeatherPanelLeftClose className="text-default-font" />
-              ) : (
-                <FeatherPanelLeftOpen className="text-default-font" />
-              )
-            }
+            icon={<FeatherMenu className="text-default-font" />}
             title="Toggle navigation"
           />
           <div className="h-5 w-px bg-neutral-border flex-none" />
           <div
             className="flex items-center gap-2 sm:gap-2.5 cursor-pointer select-none min-w-0"
             onClick={() => {
-              if (isRegular) {
-                navigate("/home/regular-routes");
-              } else if (isSuper) {
-                navigate("/home/organizations");
-              } else {
-                navigate("/home/dashboard");
-              }
+              navigate(getDefaultRouteForUser(user));
             }}
           >
             <img
@@ -365,54 +401,61 @@ const DefaultPageLayoutRoot = React.forwardRef<
           </div>
         </div>
 
-        {/* Right side: Theme Switcher & Logged user avatar */}
-        <div className="flex items-center gap-2.5 flex-none">
+        {/* Right side: Theme Switcher & Directly Visible Logged User Information */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-none">
           <ThemeToggle />
-          <LoggedUser />
+          <div className="flex items-center gap-2 sm:gap-2.5 pl-2 sm:pl-3 border-l border-neutral-border">
+            
+            <div className="flex flex-col items-start leading-tight min-w-0 select-none">
+              <span className="text-caption-bold font-caption-bold text-default-font truncate max-w-[130px] sm:max-w-[200px] md:max-w-[240px]">
+                {user?.email || "User"}
+              </span>
+              <div className="flex items-center gap-1.5 mt-1 min-w-0">
+                <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold text-brand-primary bg-brand-50/80 border border-brand-200/50 capitalize flex-none">
+                  {roleLabel}
+                </span>
+                {userScope ? (
+                  <span className="text-[11px] text-subtext-color truncate max-w-[120px] hidden md:inline">
+                    • {userScope}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
       {/* Main App Workspace: Desktop Sidebar + Content */}
       <div className="relative flex w-full grow shrink-0 basis-0 items-start overflow-hidden">
         {/* Desktop Docked Sidebar (hidden on tablet/mobile < 1024px) */}
-        <div className="hidden lg:flex h-full flex-none">
-          <SidebarWithSections
-            collapsed={!showSidebar}
-            header={
-              !isRegular ? (
-                <SelectOrganizationComponent
-                  className="shrink-0 w-full"
-                  collapsed={!showSidebar}
-                  onExpand={() => {
-                    if (!showSidebar) toggleSidebar();
-                  }}
-                />
-              ) : null
-            }
-            footer={
-              <button
-                type="button"
-                onClick={toggleSidebar}
-                className={SubframeUtils.twClassNames(
-                  "flex items-center gap-2.5 rounded-lg py-2 text-neutral-700 hover:text-white hover:bg-brand-500/20 transition-colors w-full cursor-pointer select-none",
-                  showSidebar ? "px-3" : "justify-center px-0"
-                )}
-                title={showSidebar ? "Collapse sidebar" : "Expand sidebar"}
-              >
-                {showSidebar ? (
-                  <>
-                    <FeatherPanelLeftClose className="w-4 h-4 flex-none" />
-                    <span className="text-caption font-caption">Collapse</span>
-                  </>
-                ) : (
-                  <FeatherPanelLeftOpen className="w-4 h-4 flex-none" />
-                )}
-              </button>
-            }
-          >
-            {renderNavItems()}
-          </SidebarWithSections>
-        </div>
+        {showSidebar && (
+          <div className="hidden lg:flex h-full flex-none">
+            <SidebarWithSections
+              collapsed={false}
+              header={
+                !isRegular ? (
+                  <SelectOrganizationComponent
+                    className="shrink-0 w-full"
+                    collapsed={false}
+                  />
+                ) : null
+              }
+              footer={
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-500/10 transition-colors w-full cursor-pointer select-none text-caption font-caption-bold"
+                  title="Log out"
+                >
+                  <FeatherLogOut className="w-4 h-4 flex-none" />
+                  <span>Log out</span>
+                </button>
+              }
+            >
+              {renderNavItems()}
+            </SidebarWithSections>
+          </div>
+        )}
 
         {/* Mobile & Tablet Slide-over Drawer (< 1024px) */}
         {isMobileMenuOpen && (
@@ -456,6 +499,18 @@ const DefaultPageLayoutRoot = React.forwardRef<
 
           <div className="flex-1 overflow-y-auto overflow-x-hidden px-3  no-scrollbar">
             {renderNavItems()}
+          </div>
+
+          <div className="p-3 border-t border-neutral-border flex-none">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-500/10 transition-colors w-full cursor-pointer select-none text-caption font-caption-bold"
+              title="Log out"
+            >
+              <FeatherLogOut className="w-4 h-4 flex-none" />
+              <span>Log out</span>
+            </button>
           </div>
         </div>
 

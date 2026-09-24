@@ -29,7 +29,11 @@ import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { Dialog } from "./Dialog";
 import { ResetPasswordForm } from "./ResetPassword";
 import { Checkbox } from "./Checkbox";
-import { isRegularCustomer, isSuperAdmin } from "@/utils/customerType";
+import {
+  isRegularCustomer,
+  isSuperAdmin,
+  getDefaultRouteForUser,
+} from "@/utils/customerType";
 
 interface UserLoginFormRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -160,7 +164,7 @@ const UserLoginFormRoot = React.forwardRef<
           setSelectedOrganization(userData.organization);
         }
         toast.success("Login successful!");
-        navigate("/home");
+        navigate(getDefaultRouteForUser(userData));
         return;
       }
 
@@ -169,7 +173,7 @@ const UserLoginFormRoot = React.forwardRef<
         login(userData);
         setSelectedOrganization(null);
         toast.success("Login successful!");
-        navigate("/home");
+        navigate(getDefaultRouteForUser(userData));
         return;
       }
 
@@ -178,7 +182,7 @@ const UserLoginFormRoot = React.forwardRef<
         login(userData);
         setSelectedOrganization(null);
         toast.success("Login successful!");
-        navigate("/home/regular-routes");
+        navigate(getDefaultRouteForUser(userData));
         return;
       }
 
@@ -192,7 +196,7 @@ const UserLoginFormRoot = React.forwardRef<
       login(userData);
       setSelectedOrganization(userData.organization);
       toast.success("Login successful!");
-      navigate("/home");
+      navigate(getDefaultRouteForUser(userData));
     } catch (error: any) {
       toast.error(error.message);
       logout();

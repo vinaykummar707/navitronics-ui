@@ -16,7 +16,11 @@ import { ROLES } from "./constants/roles";
 import useLoggedUserStore from "./store/useLoggedUserStore";
 import { LanguageConfigProvider } from "./context/LanguageConfigContext";
 import { useTheme } from "next-themes";
-import { isRegularCustomer, isSuperAdmin } from "./utils/customerType";
+import {
+  isRegularCustomer,
+  isSuperAdmin,
+  getDefaultRouteForUser,
+} from "./utils/customerType";
 
 // Lazy-loaded page components for route-level code splitting
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -68,8 +72,6 @@ const protectedRoutes = [
       ROLES.MASTER,
       ROLES.ORGANIZATION_ADMIN,
       ROLES.REGION_ADMIN,
-      ROLES.DEPOT_ADMIN,
-      ROLES.GUEST,
     ],
     features: [],
     element: <DashboardPage />,
@@ -174,22 +176,6 @@ const protectedRoutes = [
 ] as const;
 
 function App() {
-  const getDefaultRouteForUser = (currentUser: any) => {
-    if (!currentUser) return "/login";
-    if (isSuperAdmin(currentUser)) return "/home/organizations";
-    if (isRegularCustomer(currentUser)) return "/home/regular-routes";
-    const role = currentUser.role?.name?.toLowerCase();
-    switch (role) {
-      case ROLES.ORGANIZATION_ADMIN:
-      case ROLES.REGION_ADMIN:
-      case ROLES.DEPOT_ADMIN:
-      case ROLES.GUEST:
-        return "/home/dashboard";
-      default:
-        return "/home/routes";
-    }
-  };
-
   const user = useLoggedUserStore((state) => state.user);
   const { resolvedTheme } = useTheme();
 
