@@ -7,6 +7,7 @@ import {
   FeatherChevronRight,
   FeatherColumns2,
   FeatherCopy,
+  FeatherLayers,
   FeatherMaximize2,
   FeatherMinus,
   FeatherMoveDown,
@@ -205,6 +206,19 @@ export const SignboardCanvasStage = React.forwardRef<
     setValue(selectedTab as any, list, { shouldDirty: true });
     setSelectedSimulationIndex(list.length > 0 ? Math.min(idx, list.length - 1) : -1);
     toast.info(`Deleted Slide #${idx + 1}`);
+  };
+
+  // Copy single slide to another destination signboard
+  const handleCopyToBoard = (idx: number, destBoard: string) => {
+    const list = getValues(selectedTab as any) || [];
+    const targetSlide = list[idx];
+    if (!targetSlide) return;
+    const destList = getValues(destBoard as any) || [];
+    const cloned = JSON.parse(JSON.stringify(targetSlide));
+    setValue(destBoard as any, [...destList, cloned], { shouldDirty: true });
+    toast.success(
+      `Copied Slide #${idx + 1} from ${selectedTab.toUpperCase()} to ${destBoard.toUpperCase()}!`
+    );
   };
 
   // Delete All (BUG-056 fix)
@@ -595,6 +609,44 @@ export const SignboardCanvasStage = React.forwardRef<
                             handleDuplicate(index);
                           }}
                         />
+                        <SubframeCore.DropdownMenu.Root>
+                          <SubframeCore.DropdownMenu.Trigger asChild>
+                            <IconButton
+                              variant="neutral-tertiary"
+                              size="small"
+                              icon={<FeatherLayers className="h-3 w-3 text-brand-primary" />}
+                              title="Copy Slide to Another Board"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </SubframeCore.DropdownMenu.Trigger>
+                          <SubframeCore.DropdownMenu.Portal>
+                            <SubframeCore.DropdownMenu.Content
+                              sideOffset={4}
+                              className="z-50 min-w-[150px] rounded-lg border border-neutral-border bg-default-background p-1 shadow-lg"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-subtext-color">
+                                Copy to Signboard
+                              </div>
+                              {(["front", "side", "rear", "internal"] as const)
+                                .filter((b) => b !== selectedTab)
+                                .map((b) => (
+                                  <button
+                                    key={b}
+                                    type="button"
+                                    className="flex w-full items-center gap-2 rounded px-2.5 py-1.5 text-xs capitalize text-default-font hover:bg-neutral-100 hover:text-brand-primary transition-colors cursor-pointer"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCopyToBoard(index, b);
+                                    }}
+                                  >
+                                    <FeatherCopy className="h-3 w-3 text-subtext-color" />
+                                    {b} Signboard
+                                  </button>
+                                ))}
+                            </SubframeCore.DropdownMenu.Content>
+                          </SubframeCore.DropdownMenu.Portal>
+                        </SubframeCore.DropdownMenu.Root>
                         <IconButton
                           variant="neutral-tertiary"
                           size="small"

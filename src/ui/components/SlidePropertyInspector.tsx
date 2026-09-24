@@ -37,8 +37,6 @@ import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { supabase } from "@/supabaseClient";
 
-const WIDTH_OPTIONS = [64, 96, 128, 160, 192, 224] as const;
-const HEIGHT_OPTIONS = [16, 32] as const;
 
 interface SlidePropertyInspectorProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -124,26 +122,15 @@ export const SlidePropertyInspector = React.forwardRef<
     setValue(`${selectedTab}[${selectedSimulationIndex}].type`, newType, { shouldDirty: true });
   };
 
-  // Change matrix height
-  const handleHeightChange = (newHeight: 16 | 32) => {
+  // Copy current slide to another signboard
+  const handleCopyCurrentSlideToBoard = (destBoard: string) => {
     if (!currentSimulation) return;
-    setValue(`${selectedTab}[${selectedSimulationIndex}].height`, newHeight, { shouldDirty: true });
-    // Scale down text font heights if height is 16
-    if (newHeight === 16) {
-      const texts = currentSimulation.texts || {};
-      Object.keys(texts).forEach((k) => {
-        const item = (texts as any)[k];
-        if (item && (item.fontHeight > 16 || !item.fontHeight)) {
-          setValue(`${selectedTab}[${selectedSimulationIndex}].texts.${k}.fontHeight`, 16, { shouldDirty: true });
-        }
-      });
-    }
-  };
-
-  // Change matrix width
-  const handleWidthChange = (newWidth: any) => {
-    if (!currentSimulation) return;
-    setValue(`${selectedTab}[${selectedSimulationIndex}].width`, newWidth, { shouldDirty: true });
+    const destSims = getValues(destBoard as any) || [];
+    const cloned = JSON.parse(JSON.stringify(currentSimulation));
+    setValue(destBoard as any, [...destSims, cloned], { shouldDirty: true });
+    toast.success(
+      `Copied Slide #${selectedSimulationIndex + 1} to ${destBoard.toUpperCase()} (Total: ${destSims.length + 1} slides)`
+    );
   };
 
   // Audio Playback
@@ -297,59 +284,31 @@ export const SlidePropertyInspector = React.forwardRef<
               </div>
             </div>
 
-            {/* 2. LED Matrix Resolution */}
-            <div className="rounded-xl border border-neutral-border bg-neutral-0/40 p-3 space-y-2.5 shadow-2xs">
+            {/* 2. Quick Copy Slide to Another Signboard */}
+            <div className="rounded-xl border border-neutral-border bg-neutral-0/40 p-3 space-y-2 shadow-2xs">
               <div className="flex items-center justify-between">
                 <span className="text-caption-bold font-caption-bold text-default-font">
-                  Matrix Resolution
+                  Copy Slide to Board
                 </span>
-                <span className="text-[10px] font-mono font-bold text-brand-primary bg-brand-500/10 px-2 py-0.5 rounded border border-brand-500/20">
-                  {currentSimulation.width} × {currentSimulation.height} px
+                <span className="text-[10px] text-subtext-color font-mono">
+                  Slide #{selectedSimulationIndex + 1}
                 </span>
               </div>
-
-              {/* Height row */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-subtext-color w-14 flex-none">Height:</span>
-                <div className="grid grid-cols-2 gap-1.5 flex-1">
-                  {HEIGHT_OPTIONS.map((h) => (
+              <div className="grid grid-cols-3 gap-1.5">
+                {(["front", "side", "rear", "internal"] as const)
+                  .filter((b) => b !== selectedTab)
+                  .map((b) => (
                     <button
-                      key={h}
+                      key={b}
                       type="button"
-                      onClick={() => handleHeightChange(h)}
-                      className={SubframeUtils.twClassNames(
-                        "h-8 flex items-center justify-center rounded text-xs font-mono font-bold transition-all border cursor-pointer",
-                        currentSimulation.height === h
-                          ? "bg-brand-500/15 border-brand-500 text-brand-primary"
-                          : "border-neutral-border bg-neutral-100/50 text-subtext-color hover:text-default-font"
-                      )}
+                      onClick={() => handleCopyCurrentSlideToBoard(b)}
+                      className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md border border-neutral-border bg-neutral-100/50 hover:bg-brand-50 hover:border-brand-500/30 text-xs font-semibold text-default-font capitalize transition-all cursor-pointer"
+                      title={`Copy Slide #${selectedSimulationIndex + 1} to ${b.toUpperCase()} signboard`}
                     >
-                      {h} px
+                      <FeatherCopy className="h-3 w-3 text-brand-primary" />
+                      {b}
                     </button>
                   ))}
-                </div>
-              </div>
-
-              {/* Width grid */}
-              <div className="flex items-center gap-2 pt-1">
-                <span className="text-xs text-subtext-color w-14 flex-none">Width:</span>
-                <div className="grid grid-cols-3 gap-1 flex-1">
-                  {WIDTH_OPTIONS.map((w) => (
-                    <button
-                      key={w}
-                      type="button"
-                      onClick={() => handleWidthChange(w)}
-                      className={SubframeUtils.twClassNames(
-                        "h-8 flex items-center justify-center rounded text-xs font-mono font-bold transition-all border cursor-pointer",
-                        currentSimulation.width === w
-                          ? "bg-brand-500/15 border-brand-500 text-brand-primary"
-                          : "border-neutral-border bg-neutral-100/50 text-subtext-color hover:text-default-font"
-                      )}
-                    >
-                      {w}
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
 
@@ -396,7 +355,7 @@ export const SlidePropertyInspector = React.forwardRef<
                         className={SubframeUtils.twClassNames(
                           "flex-1 py-1 px-1.5 rounded text-xs font-medium transition-all text-center cursor-pointer truncate",
                           activeTextZone === "upperHalfText"
-                            ? "bg-neutral-0 text-brand-primary shadow-xs ring-1 ring-neutral-border font-bold"
+                            ? "bg-brand-500 shadow-xs ring-1 ring-neutral-border font-bold"
                             : "text-subtext-color hover:text-default-font"
                         )}
                       >

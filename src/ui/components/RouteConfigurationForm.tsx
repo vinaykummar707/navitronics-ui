@@ -38,7 +38,20 @@ const RouteConfigurationFormRoot = React.forwardRef<
       ref={ref}
       {...otherProps}
     >
-      {!isSplitRoute && (
+      {/* 1. Split Route Toggle */}
+      <div className="flex items-center justify-between w-full p-2.5 rounded-lg bg-neutral-100/60 border border-neutral-border">
+        <div className="flex flex-col">
+          <span className="text-caption-bold font-caption-bold text-default-font">Split Route</span>
+          <span className="text-micro text-subtext-color">Enable dual route numbers</span>
+        </div>
+        <Checkbox
+          checked={watch("is_split_route")}
+          onCheckedChange={(bool) => setValue("is_split_route", bool)}
+        />
+      </div>
+
+      {/* 2. Route Number Fields */}
+      {!isSplitRoute ? (
         <TextField
           size="small"
           className="h-auto w-full flex-none"
@@ -58,7 +71,50 @@ const RouteConfigurationFormRoot = React.forwardRef<
             })}
           />
         </TextField>
+      ) : (
+        <div className="grid grid-cols-2 gap-2 w-full">
+          <TextField
+            size="small"
+            className="h-auto w-full flex-none"
+            label={
+              <span>
+                Route #1 <span className="text-red-500">*</span>
+              </span>
+            }
+            variant="filled"
+            error={!!errors.route_number_1}
+            helpText={(errors.route_number_1?.message as string) || ""}
+          >
+            <TextField.Input
+              placeholder="e.g. 101"
+              {...register("route_number_1", {
+                required: isSplitRoute ? "Route number 1 is required" : false,
+              })}
+            />
+          </TextField>
+          <TextField
+            size="small"
+            className="h-auto w-full flex-none"
+            label={
+              <span>
+                Route #2 <span className="text-red-500">*</span>
+              </span>
+            }
+            variant="filled"
+            error={!!errors.route_number_2}
+            helpText={(errors.route_number_2?.message as string) || ""}
+          >
+            <TextField.Input
+              placeholder="e.g. 102"
+              {...register("route_number_2", {
+                required: isSplitRoute ? "Route number 2 is required" : false,
+              })}
+            />
+          </TextField>
+        </div>
       )}
+
+      {/* 3. Path Endpoints & Waypoints */}
       <TextField
         size="small"
         className="h-auto w-full flex-none"
@@ -96,62 +152,6 @@ const RouteConfigurationFormRoot = React.forwardRef<
       <TextField size="small" className="h-auto w-full flex-none" label="Via" variant="filled" helpText="">
         <TextField.Input placeholder="Enter via" {...register("via")} />
       </TextField>
-      {/* <TextField
-        size="small"
-        className="h-auto w-full flex-none"
-        label="Separation"
-        variant="filled"
-        helpText=""
-      >
-        <TextField.Input placeholder="Enter separation" {...register("separation")} />
-      </TextField> */}
-      <Checkbox
-        checked={watch("is_split_route")}
-        onCheckedChange={(bool) => setValue("is_split_route", bool)}
-        label="Is Split Route"
-      />
-      {isSplitRoute && (
-        <>
-          <TextField
-            size="small"
-            className="h-auto w-full flex-none"
-            label={
-              <span>
-                Route Number 1 <span className="text-red-500">*</span>
-              </span>
-            }
-            variant="filled"
-            error={!!errors.route_number_1}
-            helpText={(errors.route_number_1?.message as string) || ""}
-          >
-            <TextField.Input
-              placeholder="Enter route number 1"
-              {...register("route_number_1", {
-                required: isSplitRoute ? "Route number 1 is required" : false,
-              })}
-            />
-          </TextField>
-          <TextField
-            size="small"
-            className="h-auto w-full flex-none"
-            label={
-              <span>
-                Route Number 2 <span className="text-red-500">*</span>
-              </span>
-            }
-            variant="filled"
-            error={!!errors.route_number_2}
-            helpText={(errors.route_number_2?.message as string) || ""}
-          >
-            <TextField.Input
-              placeholder="Enter route number 2"
-              {...register("route_number_2", {
-                required: isSplitRoute ? "Route number 2 is required" : false,
-              })}
-            />
-          </TextField>
-        </>
-      )}
     </div>
   );
 });

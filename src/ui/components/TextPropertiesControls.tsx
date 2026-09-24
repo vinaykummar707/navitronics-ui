@@ -127,6 +127,15 @@ const TextPropertiesControlsRoot = React.forwardRef<
         />
       </ControlItem>
 
+      <ControlItem label="Auto Text Generator">
+        <AutoTextGenerator
+          route={watch()}
+          text={watch(`${pathBase}.text`)}
+          targetLang={watch(`${pathBase}.language`) || "en"}
+          onSelect={(value) => setValue(`${pathBase}.text`, value)}
+        />
+      </ControlItem>
+
       <ControlItem label="Symbol / Icon">
         {watch(`${pathBase}.icon`) ? (
           <div className="flex w-full flex-col gap-2 p-2.5 rounded-md border border-solid border-neutral-border bg-default-background shadow-2xs">
@@ -329,14 +338,6 @@ const TextPropertiesControlsRoot = React.forwardRef<
         </>
       )}
 
-      <ControlItem label="Auto Text Generator">
-        <AutoTextGenerator
-          route={watch()}
-          text={watch(`${pathBase}.text`)}
-          targetLang={watch(`${pathBase}.language`) || "en"}
-          onSelect={(value) => setValue(`${pathBase}.text`, value)}
-        />
-      </ControlItem>
 
       <ControlItem label="Text Scroll Direction">
         <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-neutral-100/60 border border-neutral-border w-full">
