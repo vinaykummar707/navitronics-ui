@@ -70,21 +70,26 @@ export default function UsersPage() {
 
   const rawUsers = data ? (data.data as ILoggedUser[]) : ([] as ILoggedUser[]);
 
-  // Filter strictly to STU users in this organization (sorted by latest created date)
+  // Filter strictly to STU users in this organization (sorted by latest created date), excluding logged-in self user
   const stuUsers = useMemo(() => {
     const list = rawUsers.filter(
       (u) =>
         u.customer_type !== "regular" &&
-        u.role?.name?.toLowerCase() !== "user"
+        u.role?.name?.toLowerCase() !== "user" &&
+        u.id !== loggedInUser?.id &&
+        u.user_id !== loggedInUser?.user_id &&
+        u.email?.toLowerCase() !== loggedInUser?.email?.toLowerCase()
     );
     return sortByLatestCreated(list);
-  }, [rawUsers]);
+  }, [rawUsers, loggedInUser]);
 
   // Delete a user
   const handleDeleteUser = (userId: string) => {
+    setEditData(null);
     deleteMutate(userId, {
       onSuccess: () => {
         toast.success("User deleted successfully");
+        setEditData(null);
         refetch();
       },
       onError: (error: any) => {
@@ -133,11 +138,11 @@ export default function UsersPage() {
               className="flex-1 sm:flex-none"
               icon={<FeatherPlus />}
               onClick={() => {
-                setOpen(true);
                 setEditData(null);
+                setOpen(true);
               }}
             >
-              Add STU User
+              Add User
             </Button>
           </RBAC>
         </div>
@@ -175,9 +180,9 @@ export default function UsersPage() {
       )}
       <Drawer
         open={open}
-        onOpenChange={(open: boolean) => {
-          setOpen(open);
-          if (!open) setEditData(null);
+        onOpenChange={(isOpen: boolean) => {
+          setOpen(isOpen);
+          if (!isOpen) setEditData(null);
         }}
       >
         <Drawer.Content
@@ -192,11 +197,16 @@ export default function UsersPage() {
           }}
         >
           <CreateUserForm2
+            key={editData?.id || editData?.user_id || "create-new-stu-user"}
             fixedTier="stu"
-            onCancel={() => setOpen(false)}
+            onCancel={() => {
+              setOpen(false);
+              setEditData(null);
+            }}
             initialData={editData}
             onUserCreated={() => {
               setOpen(false);
+              setEditData(null);
               refetch();
             }}
           />

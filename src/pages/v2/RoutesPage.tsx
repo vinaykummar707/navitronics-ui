@@ -103,12 +103,14 @@ function useRoutesPageData() {
     }
 
     const userRole = user?.role?.name?.toLowerCase();
-    const isDepotAdmin = userRole === "depot_admin";
-    const isRegionAdmin = userRole === "region_admin";
+    const isRegionOrDepotAdmin =
+      userRole === "region_admin" || userRole === "depot_admin";
     const userRegionId = user?.region?.id || (user as any)?.region_id;
 
-    if ((isDepotAdmin || isRegionAdmin) && userRegionId) {
-      const assigned = regions.find((r) => r.id === userRegionId) || user.region || null;
+    // Auto-select user's assigned region ONLY for region_admin or depot_admin
+    if (isRegionOrDepotAdmin && userRegionId) {
+      const assigned =
+        regions.find((r) => r.id === userRegionId) || user.region || null;
       if (selectedRegion?.id !== userRegionId && assigned) {
         setRoutesPageRegion(assigned as any);
         return;
@@ -119,6 +121,7 @@ function useRoutesPageData() {
       (region) => region.id === selectedRegion?.id,
     );
 
+    // If master, organization_admin, or selection is invalid, select the first from list
     if (!isSelectedRegionValid) {
       setRoutesPageRegion(regions[0] || null);
     }
@@ -140,8 +143,10 @@ function useRoutesPageData() {
     const isDepotAdmin = userRole === "depot_admin";
     const userDepotId = user?.depot?.id || (user as any)?.depot_id;
 
+    // Auto-select user's assigned depot ONLY for depot_admin
     if (isDepotAdmin && userDepotId) {
-      const assigned = depots.find((d) => d.id === userDepotId) || user.depot || null;
+      const assigned =
+        depots.find((d) => d.id === userDepotId) || user.depot || null;
       if (selectedDepot?.id !== userDepotId && assigned) {
         setRoutesPageDepot(assigned as any);
         return;

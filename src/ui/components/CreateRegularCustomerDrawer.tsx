@@ -35,6 +35,9 @@ interface FormValues {
   active: boolean;
   v1_routes: boolean;
   v2_routes: boolean;
+  PIS: boolean;
+  PAS: boolean;
+  ITMS: boolean;
 }
 
 export function CreateRegularCustomerDrawer({
@@ -43,7 +46,7 @@ export function CreateRegularCustomerDrawer({
   onSuccess,
   initialData,
 }: CreateRegularCustomerDrawerProps) {
-  const isEdit = Boolean(initialData);
+  const isEdit = Boolean(initialData && (initialData.id || initialData.user_id));
   const [showPassword, setShowPassword] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
 
@@ -59,18 +62,37 @@ export function CreateRegularCustomerDrawer({
       active: initialData?.active ?? true,
       v1_routes: initialData?.v1_routes ?? false,
       v2_routes: initialData?.v2_routes ?? true,
+      PIS: (initialData as any)?.PIS ?? true,
+      PAS: (initialData as any)?.PAS ?? false,
+      ITMS: (initialData as any)?.ITMS ?? false,
     },
   });
 
   useEffect(() => {
     if (open) {
-      reset({
-        email: initialData?.email || "",
-        password: initialData?.password || "",
-        active: initialData?.active ?? true,
-        v1_routes: initialData?.v1_routes ?? false,
-        v2_routes: initialData?.v2_routes ?? true,
-      });
+      if (initialData && (initialData.id || initialData.user_id)) {
+        reset({
+          email: initialData.email || "",
+          password: initialData.password || "",
+          active: initialData.active ?? true,
+          v1_routes: initialData.v1_routes ?? false,
+          v2_routes: initialData.v2_routes ?? true,
+          PIS: (initialData as any)?.PIS ?? true,
+          PAS: (initialData as any)?.PAS ?? false,
+          ITMS: (initialData as any)?.ITMS ?? false,
+        });
+      } else {
+        reset({
+          email: "",
+          password: "",
+          active: true,
+          v1_routes: false,
+          v2_routes: true,
+          PIS: true,
+          PAS: false,
+          ITMS: false,
+        });
+      }
     }
   }, [open, initialData, reset]);
 
@@ -149,8 +171,12 @@ export function CreateRegularCustomerDrawer({
           password: values.password,
           options: {
             data: {
+              customer_type: "regular",
               v1_routes: values.v1_routes,
               v2_routes: values.v2_routes,
+              PIS: values.PIS,
+              PAS: values.PAS,
+              ITMS: values.ITMS,
             },
           },
         });
@@ -350,6 +376,76 @@ export function CreateRegularCustomerDrawer({
                 </Button>
               </div>
             )}
+
+            {/* Module Access (PIS, PAS, ITMS) */}
+            <div className="flex flex-col gap-3 rounded-lg border border-neutral-border bg-neutral-50 p-4">
+              <span className="text-caption-bold font-caption-bold text-default-font">
+                Module Access
+              </span>
+
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="text-caption font-caption text-default-font">
+                    PIS (Passenger Information System)
+                  </span>
+                  <span className="text-caption font-caption text-subtext-color text-[11px]">
+                    Display and announcement configurations for passengers
+                  </span>
+                </div>
+                <Controller
+                  control={control}
+                  name="PIS"
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
+                />
+              </div>
+
+              <div className="flex items-center justify-between border-t border-neutral-200 pt-3">
+                <div className="flex flex-col">
+                  <span className="text-caption font-caption text-default-font">
+                    PAS (Public Address System)
+                  </span>
+                  <span className="text-caption font-caption text-subtext-color text-[11px]">
+                    Public audio announcements and voice system
+                  </span>
+                </div>
+                <Controller
+                  control={control}
+                  name="PAS"
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
+                />
+              </div>
+
+              <div className="flex items-center justify-between border-t border-neutral-200 pt-3">
+                <div className="flex flex-col">
+                  <span className="text-caption font-caption text-default-font">
+                    ITMS (Intelligent Transit Management)
+                  </span>
+                  <span className="text-caption font-caption text-subtext-color text-[11px]">
+                    Fleet telemetry and operational management system
+                  </span>
+                </div>
+                <Controller
+                  control={control}
+                  name="ITMS"
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
+                />
+              </div>
+            </div>
 
             {/* Route Format Access Toggles */}
             <div className="flex flex-col gap-3 rounded-lg border border-neutral-border bg-neutral-50 p-4">

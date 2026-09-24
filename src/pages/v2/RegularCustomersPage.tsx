@@ -50,16 +50,19 @@ export default function RegularCustomersPage() {
 
   const rawUsers = data ? (data.data as ILoggedUser[]) : ([] as ILoggedUser[]);
 
-  // Filter strictly to regular customers (sorted by latest created date)
+  // Filter strictly to regular customers (sorted by latest created date), excluding logged-in self user
   const regularCustomers = useMemo(() => {
     const list = rawUsers.filter(
       (u) =>
-        u.customer_type === "regular" ||
+        (u.customer_type === "regular" ||
         u.role?.name?.toLowerCase() === "user" ||
-        !u.organization_id
+        !u.organization_id) &&
+        u.id !== loggedInUser?.id &&
+        u.user_id !== loggedInUser?.user_id &&
+        u.email?.toLowerCase() !== loggedInUser?.email?.toLowerCase()
     );
     return sortByLatestCreated(list);
-  }, [rawUsers]);
+  }, [rawUsers, loggedInUser]);
 
   // Apply search query
   const filteredCustomers = useMemo(() => {
@@ -84,6 +87,7 @@ export default function RegularCustomersPage() {
       return;
     }
     try {
+      setEditingCustomer(null);
       const { error } = await supabase
         .from("users")
         .delete()
@@ -326,12 +330,15 @@ export default function RegularCustomersPage() {
 
       {/* Drawer */}
       <CreateRegularCustomerDrawer
+        key={editingCustomer?.id || editingCustomer?.user_id || "create-regular-customer"}
         open={isDrawerOpen}
         onClose={() => {
           setIsDrawerOpen(false);
           setEditingCustomer(null);
         }}
         onSuccess={() => {
+          setIsDrawerOpen(false);
+          setEditingCustomer(null);
           refetch();
         }}
         initialData={editingCustomer}

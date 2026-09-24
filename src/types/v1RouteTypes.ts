@@ -22,10 +22,10 @@ export const DEFAULT_SCREEN_WIDTHS = [64, 96, 128, 160, 192, 224] as const;
 export type ScreenWidth = typeof DEFAULT_SCREEN_WIDTHS[number];
 
 export const SCROLL_SPEED_PRESETS = [
-  { label: "Very Fast", value: 9 },
-  { label: "Medium Fast", value: 6 },
-  { label: "Normal", value: 4 },
-  { label: "Slow", value: 3 },
+  { label: "Very Fast", value: 5 },
+  { label: "Medium Fast", value: 4 },
+  { label: "Normal", value: 3 },
+  { label: "Slow", value: 2 },
   { label: "Very Slow", value: 1 },
 ] as const;
 

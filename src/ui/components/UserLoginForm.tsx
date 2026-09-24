@@ -150,6 +150,9 @@ const UserLoginFormRoot = React.forwardRef<
           if (meta.customer_type && !userData.customer_type) {
             userData.customer_type = meta.customer_type;
           }
+          if (meta.PIS !== undefined) (userData as any).PIS = meta.PIS;
+          if (meta.PAS !== undefined) (userData as any).PAS = meta.PAS;
+          if (meta.ITMS !== undefined) (userData as any).ITMS = meta.ITMS;
         }
       } catch (metaErr) {
         console.warn("Could not fetch auth metadata:", metaErr);

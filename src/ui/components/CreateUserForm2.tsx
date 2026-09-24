@@ -56,7 +56,7 @@ const CreateUserForm2Root = React.forwardRef<
     loggedInUser?.role?.name?.toLowerCase() === "master" ||
     loggedInUser?.role?.name?.toLowerCase() === "super_admin";
 
-  const isEditMode = !!initialData;
+  const isEditMode = Boolean(initialData && (initialData.id || initialData.user_id));
   const [showPassword, setShowPassword] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
 
@@ -129,23 +129,37 @@ const CreateUserForm2Root = React.forwardRef<
     });
   }, [allRoles]);
 
+  const getUserCreationRoleLabel = (roleName?: string | null): string => {
+    const baseLabel = getRoleLabel(roleName);
+    return baseLabel.replace(/\bAdmin\b/g, "User");
+  };
+
   const availableRoles = useMemo(() => {
     return roles.filter((role: any) => {
       const rName = role.name?.toLowerCase();
-      if (isSuperAdmin || loggedInRoleName === "organization_admin") {
+      // 1. Organization admin can ONLY be created by master (super admin)
+      if (rName === "organization_admin" && !isSuperAdmin) {
+        return false;
+      }
+      // 2. Every role cannot create a self role type account
+      if (rName === loggedInRoleName) {
+        return false;
+      }
+      // Hierarchy filtering
+      if (isSuperAdmin) {
         return (
           rName === "organization_admin" ||
           rName === "region_admin" ||
           rName === "depot_admin"
         );
       }
+      if (loggedInRoleName === "organization_admin") {
+        return rName === "region_admin" || rName === "depot_admin";
+      }
       if (loggedInRoleName === "region_admin") {
         return rName === "depot_admin";
       }
-      if (loggedInRoleName === "depot_admin") {
-        return rName === "depot_admin";
-      }
-      return true;
+      return false;
     });
   }, [roles, isSuperAdmin, loggedInRoleName]);
 
@@ -185,6 +199,9 @@ const CreateUserForm2Root = React.forwardRef<
       active: initialData?.active ?? true,
       v1_routes: initialData?.v1_routes ?? selectedOrganization?.v1_routes ?? false,
       v2_routes: initialData?.v2_routes ?? selectedOrganization?.v2_routes ?? true,
+      PIS: (initialData as any)?.PIS ?? true,
+      PAS: (initialData as any)?.PAS ?? false,
+      ITMS: (initialData as any)?.ITMS ?? false,
     } as any,
   });
 
@@ -246,7 +263,7 @@ const CreateUserForm2Root = React.forwardRef<
 
   // Sync form when initialData or defaultOrgId changes
   React.useEffect(() => {
-    if (initialData) {
+    if (initialData && (initialData.id || initialData.user_id)) {
       reset({
         role_id: initialData.role?.id || initialData.role_id || "",
         region_id: initialData.region?.id || initialData.region_id || null,
@@ -437,8 +454,16 @@ const CreateUserForm2Root = React.forwardRef<
           password: data.password,
           options: {
             data: {
+              customer_type: customerTier,
               v1_routes: Boolean(data.v1_routes),
               v2_routes: Boolean(data.v2_routes),
+              ...(customerTier === "regular"
+                ? {
+                    PIS: Boolean((data as any).PIS ?? true),
+                    PAS: Boolean((data as any).PAS ?? false),
+                    ITMS: Boolean((data as any).ITMS ?? false),
+                  }
+                : {}),
             },
           },
         });
@@ -710,7 +735,7 @@ const CreateUserForm2Root = React.forwardRef<
                     const roleName = role.name || (role as any).roleName || "";
                     return (
                       <Select.Item key={role.id} value={role.id}>
-                        {getRoleLabel(roleName)}
+                        {getUserCreationRoleLabel(roleName)}
                       </Select.Item>
                     );
                   })}
@@ -958,6 +983,46 @@ const CreateUserForm2Root = React.forwardRef<
         {/* Route Version Capabilities & Account Status (Super Admin / Master Only) */}
         {isSuperAdmin && (
           <>
+            {customerTier === "regular" && (
+              <div className="flex flex-col gap-3 w-full border-t border-neutral-border pt-3">
+                <span className="text-caption-bold font-caption-bold text-default-font">
+                  Module Access
+                </span>
+                <div className="flex flex-col gap-2 w-full">
+                  <FeatureToggle
+                    label="PIS"
+                    description="Passenger Information System"
+                    toggle={
+                      <Switch
+                        checked={Boolean(watch("PIS" as any) ?? true)}
+                        onCheckedChange={(checked) => setValue("PIS" as any, checked)}
+                      />
+                    }
+                  />
+                  <FeatureToggle
+                    label="PAS"
+                    description="Public Address System"
+                    toggle={
+                      <Switch
+                        checked={Boolean(watch("PAS" as any) ?? false)}
+                        onCheckedChange={(checked) => setValue("PAS" as any, checked)}
+                      />
+                    }
+                  />
+                  <FeatureToggle
+                    label="ITMS"
+                    description="Intelligent Transit Management System"
+                    toggle={
+                      <Switch
+                        checked={Boolean(watch("ITMS" as any) ?? false)}
+                        onCheckedChange={(checked) => setValue("ITMS" as any, checked)}
+                      />
+                    }
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col gap-3 w-full border-t border-neutral-border pt-3">
               <span className="text-caption-bold font-caption-bold text-default-font">
                 Route Version Access

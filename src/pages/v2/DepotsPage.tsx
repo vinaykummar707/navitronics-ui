@@ -72,14 +72,30 @@ export default function DepotsPage() {
       return;
     }
 
+    const userRole = user?.role?.name?.toLowerCase();
+    const isRegionOrDepotAdmin =
+      userRole === "region_admin" || userRole === "depot_admin";
+    const userRegionId = user?.region?.id || (user as any)?.region_id;
+
+    // Auto-select user's assigned region ONLY for region_admin or depot_admin
+    if (isRegionOrDepotAdmin && userRegionId) {
+      const assigned =
+        regions.find((r) => r.id === userRegionId) || user?.region || null;
+      if (assigned && selectedRegion?.id !== userRegionId) {
+        setDepotsPageRegion(assigned as any);
+        return;
+      }
+    }
+
     const isSelectedRegionValid = regions.some(
       (region) => region.id === selectedRegion?.id,
     );
 
+    // If master, organization_admin, or selection is invalid, select the first from list
     if (!isSelectedRegionValid) {
       setDepotsPageRegion(regions[0]);
     }
-  }, [regions, selectedRegion, setDepotsPageRegion, selectedOrganization]);
+  }, [regions, selectedRegion, setDepotsPageRegion, selectedOrganization, user]);
 
   const handleDeleteDepot = (depotId: string) => {
     deleteDepot(depotId, {
