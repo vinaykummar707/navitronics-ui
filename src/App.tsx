@@ -33,6 +33,7 @@ const Roles = lazy(() => import("./pages/Roles"));
 const LanguageModify = lazy(() => import("./components/LanguageModify"));
 const RoutesPage = lazy(() => import("./pages/v2/RoutesPage"));
 const StopsPage = lazy(() => import("./pages/v2/StopsPage"));
+const RouteConfigurationPage = lazy(() => import("./pages/v2/RouteConfigurationPage"));
 const Settings = lazy(() => import("./pages/Settings"));
 const UtilityPage = lazy(() => import("./pages/v2/UtilityPage"));
 const FontConfigurationPage = lazy(() => import("./pages/v2/FontConfigurationPage"));
@@ -149,6 +150,18 @@ const protectedRoutes = [
   {
     path: "routes",
     element: <RoutesPage />,
+    features: ["PIS", "PAS", "ITMS"],
+    roles: [
+      ROLES.DEPOT_ADMIN,
+      ROLES.REGION_ADMIN,
+      ROLES.ORGANIZATION_ADMIN,
+      ROLES.MASTER,
+      ROLES.GUEST,
+    ],
+  },
+  {
+    path: "route-configuration",
+    element: <RouteConfigurationPage />,
     features: ["PIS", "PAS", "ITMS"],
     roles: [
       ROLES.DEPOT_ADMIN,

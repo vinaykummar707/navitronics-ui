@@ -9,6 +9,7 @@ import {
   FeatherChevronLeft,
   FeatherChevronRight,
   FeatherDownload,
+  FeatherGitBranch,
   FeatherMusic,
   FeatherPin,
   FeatherPlay,
@@ -693,6 +694,27 @@ export default function StopsPage() {
                   onClick={() => setIsDeleteAllOpen(true)}
                 >
                   Delete All Stops
+                </Button>
+              </RBAC>
+
+              <RBAC
+                features={["PIS", "PAS", "ITMS"]}
+                roles={[
+                  "region_admin",
+                  "organization_admin",
+                  "master",
+                  "depot_admin",
+                ]}
+              >
+                <Button
+                  variant="neutral-secondary"
+                  className="h-9 flex-1 sm:flex-none"
+                  icon={<FeatherGitBranch className="h-3.5 w-3.5" />}
+                  disabled={!selectedDepot}
+                  onClick={() => navigate("/home/route-configuration")}
+                  title="Proceed to Route Configuration"
+                >
+                  Configure Routes
                 </Button>
               </RBAC>
 

@@ -13,6 +13,8 @@ import { TextField } from "./TextField";
 import { useFormContext, Watch } from "react-hook-form";
 import { DisplayConfigPostRequest } from "@/types/routeConfigV2";
 
+import { stopCrud } from "@/types/IStop";
+
 interface RouteConfigurationFormRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
 }
@@ -28,6 +30,12 @@ const RouteConfigurationFormRoot = React.forwardRef<
     useFormContext<DisplayConfigPostRequest>();
 
   const isSplitRoute = watch("is_split_route");
+  const depotId = watch("depot_id");
+  const { data: stopsData } = stopCrud.useList({
+    filters: { depot_id: depotId || "" },
+    skip: !depotId,
+  });
+  const depotStops = (stopsData?.data as any[]) || [];
 
   return (
     <div
@@ -129,9 +137,18 @@ const RouteConfigurationFormRoot = React.forwardRef<
       >
         <TextField.Input
           placeholder="Enter source"
+          list="depot-stops-source-list"
           {...register("source", { required: "Source is required" })}
         />
       </TextField>
+      <datalist id="depot-stops-source-list">
+        {depotStops.map((s) => (
+          <option key={s.id} value={s.name}>
+            {s.name}
+          </option>
+        ))}
+      </datalist>
+
       <TextField
         size="small"
         className="h-auto w-full flex-none"
@@ -146,12 +163,28 @@ const RouteConfigurationFormRoot = React.forwardRef<
       >
         <TextField.Input
           placeholder="Enter destination"
+          list="depot-stops-dest-list"
           {...register("destination", { required: "Destination is required" })}
         />
       </TextField>
+      <datalist id="depot-stops-dest-list">
+        {depotStops.map((s) => (
+          <option key={s.id} value={s.name}>
+            {s.name}
+          </option>
+        ))}
+      </datalist>
+
       <TextField size="small" className="h-auto w-full flex-none" label="Via" variant="filled" helpText="">
-        <TextField.Input placeholder="Enter via" {...register("via")} />
+        <TextField.Input placeholder="Enter via" list="depot-stops-via-list" {...register("via")} />
       </TextField>
+      <datalist id="depot-stops-via-list">
+        {depotStops.map((s) => (
+          <option key={s.id} value={s.name}>
+            {s.name}
+          </option>
+        ))}
+      </datalist>
     </div>
   );
 });

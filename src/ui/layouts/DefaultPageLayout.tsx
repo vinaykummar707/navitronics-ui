@@ -12,6 +12,7 @@ import React, { useEffect } from "react";
 import {
   FeatherBriefcase,
   FeatherBuilding2,
+  FeatherGitBranch,
   FeatherGlobe2,
   FeatherLayoutDashboard,
   FeatherLogOut,
@@ -189,6 +190,14 @@ const DefaultPageLayoutRoot = React.forwardRef<
             </SidebarWithSections.NavItem>
 
             <SidebarWithSections.NavItem
+              selected={path.startsWith("/home/route-configuration")}
+              onClick={() => handleNavClick("/home/route-configuration")}
+              icon={<FeatherGitBranch />}
+            >
+              Route Configuration
+            </SidebarWithSections.NavItem>
+
+            <SidebarWithSections.NavItem
               selected={path.startsWith("/home/routes")}
               onClick={() => handleNavClick("/home/routes")}
               icon={<FeatherRoute />}
@@ -319,6 +328,24 @@ const DefaultPageLayoutRoot = React.forwardRef<
             icon={<FeatherMapPin />}
           >
             Stops
+          </SidebarWithSections.NavItem>
+        </RBAC>
+
+        <RBAC
+          roles={[
+            ROLES.DEPOT_ADMIN,
+            ROLES.REGION_ADMIN,
+            ROLES.ORGANIZATION_ADMIN,
+            ROLES.GUEST,
+          ]}
+          features={["PIS", "PAS", "ITMS"]}
+        >
+          <SidebarWithSections.NavItem
+            selected={path.startsWith("/home/route-configuration")}
+            onClick={() => handleNavClick("/home/route-configuration")}
+            icon={<FeatherGitBranch />}
+          >
+            Route Configuration
           </SidebarWithSections.NavItem>
         </RBAC>
 
