@@ -33,7 +33,10 @@ import { Select } from "./Select";
 import { AVAILABLE_LANGUAGES } from "@/constants/defaultRouteValues";
 import { getBitmapHeight } from "@/utils/measurements";
 import IMEInput from "@/components/IMEInput";
-import { useFontHeightForLanguage } from "@/utils/getFontFileByLanguage";
+import {
+  useFontHeightForLanguage,
+  useFontHeightsForLanguage,
+} from "@/utils/getFontFileByLanguage";
 import { Button } from "./Button";
 import { MaterialSymbolPicker } from "./MaterialSymbolPicker";
 
@@ -54,6 +57,7 @@ const TextPropertiesControlsRoot = React.forwardRef<
   );
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const getDefaultFontHeightForLanguage = useFontHeightForLanguage();
+  const getConfiguredFontHeightsForLanguage = useFontHeightsForLanguage();
 
   if (selectedSimulationIndex < 0) {
     return null;
@@ -61,27 +65,53 @@ const TextPropertiesControlsRoot = React.forwardRef<
 
   const pathBase = `${selectedTab}.${selectedSimulationIndex}.texts.${textProperty}`;
   const selectedSimulationPath = `${selectedTab}.${selectedSimulationIndex}`;
+  const currentLanguage = (watch(`${pathBase}.language`) as string) || "en";
+
+  const getMaxAllowedHeight = () => {
+    const boardHeight = (getValues(`${selectedSimulationPath}.height`) as number) || 16;
+    const isSplit = textProperty === "upperHalfText" || textProperty === "lowerHalfText";
+    return isSplit ? Math.floor(boardHeight / 2) : boardHeight;
+  };
+
+  const getBoardHeightOptions = () => {
+    const maxAllowedHeight = getMaxAllowedHeight();
+    const options: number[] = [];
+
+    if (maxAllowedHeight >= 7) {
+      options.push(7);
+    }
+
+    for (let height = 8; height <= maxAllowedHeight; height += 2) {
+      options.push(height);
+    }
+
+    return options;
+  };
+
+  const getNearestAllowedHeight = (height: number, options: number[]) => {
+    if (options.length === 0) {
+      return Math.min(Math.max(height, 6), getMaxAllowedHeight());
+    }
+
+    if (options.includes(height)) {
+      return height;
+    }
+
+    return options.reduce((best, current) => {
+      const bestDistance = Math.abs(best - height);
+      const currentDistance = Math.abs(current - height);
+      return currentDistance < bestDistance ? current : best;
+    }, options[0]);
+  };
 
   const isSelected = (field: string, value: string | number) =>
     watch(`${pathBase}.${field}`) === value;
   const handleSelection = (field: string, value: string | number) =>
     setValue(`${pathBase}.${field}`, value);
-  const handleIncrement = () => {
-    const boardHeight = (getValues(`${selectedSimulationPath}.height`) as number) || 16;
-    const isSplit = textProperty === "upperHalfText" || textProperty === "lowerHalfText";
-    const maxAllowedHeight = isSplit ? Math.floor(boardHeight / 2) : boardHeight;
-    const currentHeight = (getValues(`${pathBase}.fontHeight`) as number) || 16;
-    if (currentHeight < maxAllowedHeight) {
-      setValue(`${pathBase}.fontHeight`, currentHeight + 1);
-    }
-  };
 
-  const handleDecrement = () => {
-    const currentHeight = (getValues(`${pathBase}.fontHeight`) as number) || 16;
-    if (currentHeight > 6) {
-      setValue(`${pathBase}.fontHeight`, currentHeight - 1);
-    }
-  };
+  const boardHeightOptions = getBoardHeightOptions();
+  const currentFontHeight = Number(watch(`${pathBase}.fontHeight`)) || 16;
+  const selectedFontHeight = getNearestAllowedHeight(currentFontHeight, boardHeightOptions);
 
   const currentText = watch(`${pathBase}.text`) || "";
   const wordsList = currentText.trim().split(/\s+/).filter(Boolean);
@@ -102,10 +132,21 @@ const TextPropertiesControlsRoot = React.forwardRef<
       <ControlItem label="Choose Language">
         <Select
           variant="filled"
-          value={watch(`${pathBase}.language`) || "en"}
+          value={currentLanguage}
           onValueChange={(value) => {
+            const options = getBoardHeightOptions();
+            const configuredHeights = getConfiguredFontHeightsForLanguage(value, textProperty);
             const defaultFontHeight = getDefaultFontHeightForLanguage(value, textProperty);
-            setValue(`${pathBase}.fontHeight`, defaultFontHeight);
+
+            const configuredDefaultInRange = configuredHeights.find((height) =>
+              options.includes(height)
+            );
+
+            const nextFontHeight = configuredDefaultInRange
+              ? configuredDefaultInRange
+              : getNearestAllowedHeight(defaultFontHeight, options);
+
+            setValue(`${pathBase}.fontHeight`, nextFontHeight);
             setValue(`${pathBase}.language`, value);
           }}
           className="w-full"
@@ -422,29 +463,27 @@ const TextPropertiesControlsRoot = React.forwardRef<
       </ControlItem>
 
       <ControlItem label="Text Height">
-        <div className="flex items-center gap-1.5 w-full">
-          <IconButton
-            className="h-8 w-8 flex-none"
-            variant="neutral-secondary"
-            size="small"
-            icon={<FeatherMinus className="h-3.5 w-3.5" />}
-            onClick={handleDecrement}
-          />
-          <div className="flex h-8 grow items-center justify-center rounded-lg border border-neutral-border bg-neutral-100/60 px-2 font-mono text-xs text-default-font">
-            <span className="font-bold text-brand-primary mr-1">
-              {watch(`${pathBase}.fontHeight`) || 16} px
-            </span>
-            <span className="text-[10px] text-subtext-color">
-              (Bitmap: {getBitmapHeight(watch(`${pathBase}.bitmap`))})
-            </span>
+        <div className="flex w-full items-center gap-1.5">
+          <Select
+            variant="filled"
+            value={String(selectedFontHeight)}
+            onValueChange={(value) => {
+              const nextHeight = Number(value);
+              if (Number.isFinite(nextHeight)) {
+                setValue(`${pathBase}.fontHeight`, nextHeight);
+              }
+            }}
+            className="h-8 w-full"
+          >
+            {boardHeightOptions.map((height) => (
+              <Select.Item key={height} value={String(height)}>
+                {height} px
+              </Select.Item>
+            ))}
+          </Select>
+          <div className="flex h-8 shrink-0 items-center justify-center rounded-lg border border-neutral-border bg-neutral-100/60 px-2 font-mono text-[10px] text-subtext-color whitespace-nowrap">
+            Bitmap: {getBitmapHeight(watch(`${pathBase}.bitmap`))}
           </div>
-          <IconButton
-            className="h-8 w-8 flex-none"
-            variant="neutral-secondary"
-            size="small"
-            icon={<FeatherPlus className="h-3.5 w-3.5" />}
-            onClick={handleIncrement}
-          />
         </div>
       </ControlItem>
 

@@ -2,9 +2,6 @@
 
 import React from "react";
 import { Button } from "@/ui/components/Button";
-import { FontSettingsDrawer } from "@/ui/components/FontSettingsDrawer";
-import { Select } from "@/ui/components/Select";
-import { Tabs } from "@/ui/components/Tabs";
 import { TextField } from "@/ui/components/TextField";
 import { FeatherSave, FeatherType } from "@subframe/core";
 import { FontConfigDrawer } from "@/ui/components/FontConfigDrawer";
@@ -123,12 +120,12 @@ function FontSettingsDrawerWrapper({ initialData, onSuccess, onCancel }: FontSet
                                             error={false}
                                             variant="outline"
                                             label="Font Height"
-                                            helpText="Height in numbers"
+                                            helpText="Comma-separated heights (e.g. 7,8,10)"
                                             icon={null}
                                             iconRight={null}
                                         >
                                             <TextField.Input
-                                                placeholder="14"
+                                                placeholder="7,8,10"
                                                 value={watch("config.sideText.fontHeight")}
                                                 onChange={(
                                                     event: React.ChangeEvent<HTMLInputElement>
@@ -214,12 +211,12 @@ function FontSettingsDrawerWrapper({ initialData, onSuccess, onCancel }: FontSet
                                             error={false}
                                             variant="outline"
                                             label="Font Height"
-                                            helpText="Height in numbers"
+                                            helpText="Comma-separated heights (e.g. 7,8,10)"
                                             icon={null}
                                             iconRight={null}
                                         >
                                             <TextField.Input
-                                                placeholder="14"
+                                                placeholder="7,8,10"
                                                 value={watch("config.text.fontHeight")}
                                                 onChange={(
                                                     event: React.ChangeEvent<HTMLInputElement>
@@ -305,12 +302,12 @@ function FontSettingsDrawerWrapper({ initialData, onSuccess, onCancel }: FontSet
                                             error={false}
                                             variant="outline"
                                             label="Font Height"
-                                            helpText="Height in numbers"
+                                            helpText="Comma-separated heights (e.g. 7,8,10)"
                                             icon={null}
                                             iconRight={null}
                                         >
                                             <TextField.Input
-                                                placeholder="14"
+                                                placeholder="7,8,10"
                                                 value={watch("config.upperHalfText.fontHeight")}
                                                 onChange={(
                                                     event: React.ChangeEvent<HTMLInputElement>
@@ -396,12 +393,12 @@ function FontSettingsDrawerWrapper({ initialData, onSuccess, onCancel }: FontSet
                                             error={false}
                                             variant="outline"
                                             label="Font Height"
-                                            helpText="Height in numbers"
+                                            helpText="Comma-separated heights (e.g. 7,8,10)"
                                             icon={null}
                                             iconRight={null}
                                         >
                                             <TextField.Input
-                                                placeholder="14"
+                                                placeholder="7,8,10"
                                                 value={watch("config.lowerHalfText.fontHeight")}
                                                 onChange={(
                                                     event: React.ChangeEvent<HTMLInputElement>
@@ -487,12 +484,12 @@ function FontSettingsDrawerWrapper({ initialData, onSuccess, onCancel }: FontSet
                                             error={false}
                                             variant="outline"
                                             label="Font Height"
-                                            helpText="Height in numbers"
+                                            helpText="Comma-separated heights (e.g. 7,8,10)"
                                             icon={null}
                                             iconRight={null}
                                         >
                                             <TextField.Input
-                                                placeholder="14"
+                                                placeholder="7,8,10"
                                                 value={watch("config.routeNumber1.fontHeight")}
                                                 onChange={(
                                                     event: React.ChangeEvent<HTMLInputElement>
@@ -578,12 +575,12 @@ function FontSettingsDrawerWrapper({ initialData, onSuccess, onCancel }: FontSet
                                             error={false}
                                             variant="outline"
                                             label="Font Height"
-                                            helpText="Height in numbers"
+                                            helpText="Comma-separated heights (e.g. 7,8,10)"
                                             icon={null}
                                             iconRight={null}
                                         >
                                             <TextField.Input
-                                                placeholder="14"
+                                                placeholder="7,8,10"
                                                 value={watch("config.routeNumber2.fontHeight")}
                                                 onChange={(
                                                     event: React.ChangeEvent<HTMLInputElement>
@@ -665,7 +662,7 @@ function FontSettingsDrawerWrapper({ initialData, onSuccess, onCancel }: FontSet
                                 icon={null}
                                 iconRight={null}
                                 loading={false}
-                                onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
+                                onClick={() => {
                                     if (onCancel) {
                                         onCancel();
                                     }

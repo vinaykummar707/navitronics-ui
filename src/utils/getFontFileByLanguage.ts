@@ -13,6 +13,45 @@ const SCRIPT_FALLBACKS: Record<string, string> = {
   en: "Arial",
 };
 
+type FontConfigSection = {
+  fontHeight?: string | number | null;
+  fontFamily8?: string;
+  fontFamily16?: string;
+  fontFamily32?: string;
+};
+
+const parseConfiguredFontHeights = (
+  rawHeights?: string | number | null
+): number[] => {
+  if (rawHeights === undefined || rawHeights === null) {
+    return [];
+  }
+
+  const values = String(rawHeights)
+    .split(",")
+    .map((value) => Number(value.trim()))
+    .filter((value) => Number.isFinite(value) && value > 0);
+
+  return Array.from(new Set(values)).sort((a, b) => a - b);
+};
+
+const getFontFamilyByHeight = (
+  fontHeight: number,
+  configForSection: FontConfigSection,
+  fallbackFont: string
+): string => {
+  const use8 = fontHeight <= 8;
+  const use16 = fontHeight > 8 && fontHeight <= 16;
+
+  const fontFamily = use8
+    ? configForSection.fontFamily8 || fallbackFont
+    : use16
+    ? configForSection.fontFamily16 || fallbackFont
+    : configForSection.fontFamily32 || configForSection.fontFamily16 || fallbackFont;
+
+  return fontFamily && fontFamily !== "Arial" ? fontFamily : fallbackFont;
+};
+
 const normalizeLang = (l?: string): string => {
   if (!l) return "en";
   const lower = l.toLowerCase().trim();
@@ -43,35 +82,50 @@ export function useFontFileByLanguage() {
     );
     if (!langObj || !langObj.config) return fallbackFont;
 
-    const configForSection = langObj.config[key] || langObj.config["text"] || langObj.config["sideText"];
+    const configForSection: FontConfigSection =
+      langObj.config[key] || langObj.config["text"] || langObj.config["sideText"];
     if (!configForSection) return fallbackFont;
 
-    const use8 = typeof fontHeight === "number" ? fontHeight <= 8 : false;
-    const use16 = typeof fontHeight === "number" ? fontHeight > 8 && fontHeight <= 16 : false;
+    const configuredHeights = parseConfiguredFontHeights(configForSection.fontHeight);
 
-    const fontFamily = use8
-      ? configForSection.fontFamily8 || fallbackFont
-      : use16
-      ? configForSection.fontFamily16 || fallbackFont
-      : configForSection.fontFamily32 || configForSection.fontFamily16 || fallbackFont;
+    if (typeof fontHeight === "number" && Number.isFinite(fontHeight)) {
+      const normalizedHeight = Math.round(fontHeight);
+      if (configuredHeights.includes(normalizedHeight)) {
+        return getFontFamilyByHeight(normalizedHeight, configForSection, fallbackFont);
+      }
 
-    return (fontFamily && fontFamily !== "Arial") ? fontFamily : fallbackFont;
+      return getFontFamilyByHeight(fontHeight, configForSection, fallbackFont);
+    }
+
+    return getFontFamilyByHeight(16, configForSection, fallbackFont);
   };
 }
 
-export function useFontHeightForLanguage() {
+export function useFontHeightsForLanguage() {
   const offsetConfigs = useLanguageConfigs();
 
-  return (lang: string, key: string): number => {
+  return (lang: string, key: string): number[] => {
     const targetLang = normalizeLang(lang);
     const langObj = offsetConfigs.configs.find(
       (language) =>
         normalizeLang(language.code) === targetLang ||
         language.name?.toLowerCase() === targetLang
     );
-    if (!langObj || !langObj.config) return 16;
-    const configForSection = langObj.config[key] || langObj.config["text"] || langObj.config["sideText"];
-    if (!configForSection) return 16;
-    return Number(configForSection.fontHeight) || 16;
+    if (!langObj || !langObj.config) return [];
+
+    const configForSection: FontConfigSection =
+      langObj.config[key] || langObj.config["text"] || langObj.config["sideText"];
+    if (!configForSection) return [];
+
+    return parseConfiguredFontHeights(configForSection.fontHeight);
+  };
+}
+
+export function useFontHeightForLanguage() {
+  const getConfiguredHeights = useFontHeightsForLanguage();
+
+  return (lang: string, key: string): number => {
+    const configuredHeights = getConfiguredHeights(lang, key);
+    return configuredHeights[0] || 16;
   };
 }
