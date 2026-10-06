@@ -2,21 +2,16 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
   FeatherAirplay,
-  FeatherChevronDown,
   FeatherChevronLeft,
   FeatherChevronRight,
   FeatherColumns2,
   FeatherCopy,
   FeatherLayers,
-  FeatherMaximize2,
-  FeatherMinus,
   FeatherMoveDown,
   FeatherMoveUp,
   FeatherPause,
   FeatherPlay,
   FeatherPlus,
-  FeatherRectangleHorizontal,
-  FeatherRows3,
   FeatherSparkle,
   FeatherSpeech,
   FeatherTrash,
@@ -25,7 +20,6 @@ import * as SubframeCore from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { Button } from "./Button";
 import { IconButton } from "./IconButton";
-import { DropdownMenu } from "./DropdownMenu";
 import { TabsPanel } from "./TabsPanel";
 import DisplayEditor from "@/components/DisplayEditor";
 import useTabsStore, { Tab } from "@/store/useTabsStore";
@@ -90,18 +84,22 @@ export const SignboardCanvasStage = React.forwardRef<
   const handleZoomIn = () => setZoom((prev) => Math.min(175, prev + 15));
   const handleZoomOut = () => setZoom((prev) => Math.max(10, prev - 15));
   const handleResetZoom = () => setZoom(100);
-  const handleFitToScreen = () => {
-    if (stageRef.current && currentSimulation) {
+
+  // Shared fit-to-screen math so new slides can auto-fit too
+  const computeFitZoom = (width?: number, height?: number) => {
+    if (stageRef.current) {
       // Intrinsic width of the LED screen: width columns * 8px per dot + chassis padding (approx 70px)
-      const intrinsicWidth = (currentSimulation.width || 160) * 8 + 70;
+      const intrinsicWidth = (width || 160) * 8 + 70;
       const containerWidth = stageRef.current.clientWidth - 48; // Stage padding (p-6 is 24px each side)
       if (containerWidth > 0 && intrinsicWidth > 0) {
-        const computedZoom = Math.min(100, Math.max(40, Math.floor((containerWidth / intrinsicWidth) * 100)));
-        setZoom(computedZoom);
-        return;
+        return Math.min(100, Math.max(40, Math.floor((containerWidth / intrinsicWidth) * 100)));
       }
     }
-    setZoom(100);
+    return 100;
+  };
+
+  const handleFitToScreen = () => {
+    setZoom(computeFitZoom(currentSimulation?.width, currentSimulation?.height));
   };
 
   // Add Simulation logic with smart dimension inheritance
@@ -168,6 +166,7 @@ export const SignboardCanvasStage = React.forwardRef<
 
     append(newSim);
     setSelectedSimulationIndex(simulations.length);
+    setZoom(computeFitZoom(newSim.width, newSim.height));
     toast.success(`Added new ${format.toUpperCase()} slide to ${selectedTab.toUpperCase()}`);
   };
 
@@ -269,61 +268,19 @@ export const SignboardCanvasStage = React.forwardRef<
       {...otherProps}
     >
       {/* 1. Signboard Switcher & Secondary Control Bar */}
-      <TabsPanel />
+      <TabsPanel
+        onAddSlide={handleAddSimulation}
+        zoom={zoom}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        onResetZoom={handleResetZoom}
+        onFitToScreen={handleFitToScreen}
+      />
 
       {/* 2. Stage Action Header */}
-      <div className="flex w-full flex-none items-center justify-between border-b border-solid border-neutral-border bg-sidebar-background/60 px-3 sm:px-4 py-2 gap-2 flex-wrap sm:flex-nowrap">
-        <div className="flex items-center gap-2 flex-wrap">
-          {selectedTab !== Tab.STOPS && (
-            <SubframeCore.DropdownMenu.Root>
-              <SubframeCore.DropdownMenu.Trigger asChild>
-                <Button
-                  variant="brand-primary"
-                  size="small"
-                  iconRight={<FeatherChevronDown />}
-                >
-                  Add Slide
-                </Button>
-              </SubframeCore.DropdownMenu.Trigger>
-              <SubframeCore.DropdownMenu.Portal>
-                <SubframeCore.DropdownMenu.Content
-                  side="bottom"
-                  align="start"
-                  sideOffset={4}
-                  asChild
-                >
-                  <DropdownMenu>
-                    <DropdownMenu.DropdownItem
-                      icon={<FeatherRectangleHorizontal />}
-                      onClick={() => handleAddSimulation("single")}
-                    >
-                      Single-Line Route
-                    </DropdownMenu.DropdownItem>
-                    <DropdownMenu.DropdownItem
-                      icon={<FeatherColumns2 />}
-                      onClick={() => handleAddSimulation("two")}
-                    >
-                      Two-Line (Route # + Terminus)
-                    </DropdownMenu.DropdownItem>
-                    <DropdownMenu.DropdownItem
-                      icon={<FeatherRows3 />}
-                      onClick={() => handleAddSimulation("three")}
-                    >
-                      Three-Line (Route # + Dual Text)
-                    </DropdownMenu.DropdownItem>
-                    <DropdownMenu.DropdownItem
-                      icon={<FeatherSpeech />}
-                      onClick={() => handleAddSimulation("single", "slogan", "PLEASE WEAR SEAT BELT")}
-                    >
-                      Slogan Slide
-                    </DropdownMenu.DropdownItem>
-                  </DropdownMenu>
-                </SubframeCore.DropdownMenu.Content>
-              </SubframeCore.DropdownMenu.Portal>
-            </SubframeCore.DropdownMenu.Root>
-          )}
-
-          {selectedTab === Tab.STOPS && (
+      {selectedTab === Tab.STOPS && (
+        <div className="flex w-full flex-none items-center justify-between border-b border-solid border-neutral-border bg-sidebar-background/60 px-3 sm:px-4 py-2 gap-2 flex-wrap sm:flex-nowrap">
+          <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-2 flex-wrap">
               <Select value={selectedLanguage} onValueChange={(v) => setSelectedLanguage(v)}>
                 {AVAILABLE_LANGUAGES.map((l) => (
@@ -358,59 +315,9 @@ export const SignboardCanvasStage = React.forwardRef<
                 Generate Stop Slide
               </Button>
             </div>
-          )}
-
-          {simulations.length > 0 && (
-            <Button
-              variant="destructive-secondary"
-              size="small"
-              icon={<FeatherTrash />}
-              onClick={handleDeleteAll}
-              title="Delete all slides on this display"
-            >
-              Clear All
-            </Button>
-          )}
+          </div>
         </div>
-
-        {/* Zoom Controls */}
-        <div className="flex items-center gap-1 rounded-lg border border-neutral-border bg-sidebar-background p-1 shadow-xs">
-          <IconButton
-            variant="neutral-secondary"
-            size="small"
-            icon={<FeatherMinus className="h-3.5 w-3.5" />}
-            title="Zoom Out"
-            onClick={handleZoomOut}
-            disabled={zoom <= 10}
-          />
-          <button
-            type="button"
-            onClick={handleResetZoom}
-            className="px-2 py-0.5 text-xs font-mono font-bold text-default-font hover:text-brand-primary min-w-[44px] text-center cursor-pointer"
-            title="Reset Zoom to 100%"
-          >
-            {zoom}%
-          </button>
-          <IconButton
-            variant="neutral-secondary"
-            size="small"
-            icon={<FeatherPlus className="h-3.5 w-3.5" />}
-            title="Zoom In"
-            onClick={handleZoomIn}
-            disabled={zoom >= 175}
-          />
-          <div className="h-3.5 w-[1px] bg-neutral-border mx-0.5" />
-          <Button
-            variant="neutral-secondary"
-            size="small"
-            icon={<FeatherMaximize2 className="h-3.5 w-3.5" />}
-            onClick={handleFitToScreen}
-            title="Fit to Screen"
-          >
-            Fit
-          </Button>
-        </div>
-      </div>
+      )}
 
       {/* 3. Main Stage Canvas (Centered Stage + Slide Loop Strip) */}
       <div
@@ -521,12 +428,13 @@ export const SignboardCanvasStage = React.forwardRef<
                 </span>
               </div>
               <Button
-                variant="brand-primary"
+                variant="destructive-secondary"
                 size="small"
-                icon={<FeatherPlus />}
-                onClick={() => handleAddSimulation("single")}
+                icon={<FeatherTrash />}
+                onClick={handleDeleteAll}
+                title="Delete all slides on this display"
               >
-                Add Slide
+                Clear All
               </Button>
             </div>
 
@@ -548,7 +456,7 @@ export const SignboardCanvasStage = React.forwardRef<
                     className={SubframeUtils.twClassNames(
                       "flex flex-col flex-none w-48 sm:w-56 p-2.5 rounded-xl border transition-all cursor-pointer shadow-xs select-none",
                       isSelected
-                        ? "border-brand-primary ring-2 ring-brand-primary/50 bg-brand-50/50 shadow-md"
+                        ? "border-brand-primary ring-2 ring-brand-primary/50 bg-brand-500/10 shadow-md"
                         : "border-neutral-border bg-sidebar-background hover:border-brand-primary/40 hover:bg-neutral-100/60"
                     )}
                   >

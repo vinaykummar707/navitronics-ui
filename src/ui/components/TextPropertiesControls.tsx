@@ -396,7 +396,7 @@ const TextPropertiesControlsRoot = React.forwardRef<
                 className={SubframeUtils.twClassNames(
                   "h-8 flex items-center justify-center gap-1.5 px-2 rounded text-xs font-medium transition-all cursor-pointer select-none",
                   active
-                    ? "bg-neutral-0 text-brand-primary font-bold shadow-xs ring-1 ring-neutral-border"
+                    ? "bg-brand-500 text-neutral-0 font-bold shadow-xs ring-1 ring-brand-400"
                     : "text-subtext-color hover:text-default-font hover:bg-neutral-200/50"
                 )}
               >
@@ -424,7 +424,7 @@ const TextPropertiesControlsRoot = React.forwardRef<
                 className={SubframeUtils.twClassNames(
                   "h-8 flex items-center justify-center gap-1.5 px-2 rounded text-xs font-medium transition-all cursor-pointer select-none",
                   active
-                    ? "bg-neutral-0 text-brand-primary font-bold shadow-xs ring-1 ring-neutral-border"
+                    ? "bg-brand-500 text-neutral-0 font-bold shadow-xs ring-1 ring-brand-400"
                     : "text-subtext-color hover:text-default-font hover:bg-neutral-200/50"
                 )}
               >
@@ -451,7 +451,7 @@ const TextPropertiesControlsRoot = React.forwardRef<
                 className={SubframeUtils.twClassNames(
                   "h-8 flex items-center justify-center rounded text-xs font-medium transition-all cursor-pointer select-none",
                   active
-                    ? "bg-neutral-0 text-brand-primary font-bold shadow-xs ring-1 ring-neutral-border"
+                    ? "bg-brand-500 text-neutral-0 font-bold shadow-xs ring-1 ring-brand-400"
                     : "text-subtext-color hover:text-default-font hover:bg-neutral-200/50"
                 )}
               >

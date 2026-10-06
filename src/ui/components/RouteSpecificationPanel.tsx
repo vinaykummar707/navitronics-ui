@@ -1,19 +1,15 @@
 "use client";
 import React, { useState, useMemo, useEffect } from "react";
 import {
-  FeatherChevronLeft,
   FeatherCopy,
   FeatherLayers,
   FeatherRepeat,
   FeatherRoute,
-  FeatherSliders,
 } from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { RouteConfigurationForm } from "./RouteConfigurationForm";
-import { IconButton } from "./IconButton";
 import { Button } from "./Button";
 import { Select } from "./Select";
-import useToggleStore from "@/store/useToggleStore";
 import useTabsStore, { Tab } from "@/store/useTabsStore";
 import useSimulationStore from "@/store/useSimulationStore";
 import { useFormContext } from "react-hook-form";
@@ -38,7 +34,6 @@ export const RouteSpecificationPanel = React.forwardRef<
   HTMLDivElement,
   RouteSpecificationPanelProps
 >(function RouteSpecificationPanel({ className, ...otherProps }, ref) {
-  const { isRoutePanelOpen, toggleRoutePanel } = useToggleStore();
   const selectedTab = useTabsStore((state) => state.selectedTab);
   const selectedSimulationIndex = useSimulationStore((state) => state.selectedSimulationIndex);
   const { watch, setValue, getValues } = useFormContext<DisplayConfigPostRequest>();
@@ -63,8 +58,6 @@ export const RouteSpecificationPanel = React.forwardRef<
       }
     }
   }, [selectedTab, destinationBoards, selectedDestBoard]);
-
-  if (!isRoutePanelOpen) return null;
 
   // Invert Source & Destination for Return Route
   const handleInvertEndpoints = () => {
@@ -153,7 +146,7 @@ export const RouteSpecificationPanel = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "fixed xl:relative inset-y-0 left-0 z-40 xl:z-auto flex h-full w-[320px] max-w-[85vw] sm:max-w-[320px] flex-none flex-col border-r border-solid border-neutral-border bg-sidebar-background shadow-2xl xl:shadow-md overflow-hidden select-none pb-safe",
+        "relative flex h-full w-[320px] max-w-[85vw] flex-none flex-col border-r border-solid border-neutral-border bg-sidebar-background shadow-md overflow-hidden select-none pb-safe",
         className
       )}
       ref={ref}
@@ -174,25 +167,18 @@ export const RouteSpecificationPanel = React.forwardRef<
             </span>
           </div>
         </div>
-        <IconButton
-          variant="neutral-tertiary"
-          size="small"
-          icon={<FeatherChevronLeft className="h-4 w-4" />}
-          title="Collapse Route Panel"
-          onClick={toggleRoutePanel}
-        />
       </div>
 
       {/* Body */}
       <div className="flex-1 w-full overflow-y-auto no-scrollbar p-3 space-y-3.5">
         {/* Core Inputs Form */}
-        <div className="rounded-xl border border-neutral-border bg-neutral-0/40 p-3 shadow-2xs">
+        <div className="rounded-xl border border-neutral-border bg-neutral-100/50 p-3 shadow-2xs">
           <RouteConfigurationForm className="w-full" />
         </div>
 
         {/* LED Matrix Resolution (Moved to Route Info Panel) */}
         {selectedTab !== Tab.STOPS && (
-          <div className="rounded-xl border border-neutral-border bg-neutral-0/40 p-3 space-y-2.5 shadow-2xs">
+          <div className="rounded-xl border border-neutral-border bg-neutral-100/50 p-3 space-y-2.5 shadow-2xs">
             <div className="flex items-center justify-between">
               <span className="text-caption-bold font-caption-bold text-default-font">
                 Matrix Resolution
@@ -214,8 +200,8 @@ export const RouteSpecificationPanel = React.forwardRef<
                     className={SubframeUtils.twClassNames(
                       "h-7 flex items-center justify-center rounded text-xs font-mono font-bold transition-all border cursor-pointer",
                       activeHeight === h
-                        ? "bg-brand-500 border-brand-500 "
-                        : "border-neutral-border bg-neutral-100 text-subtext-color hover:text-default-font"
+                        ? "bg-brand-500 border-brand-500 text-neutral-0 shadow-xs"
+                        : "border-neutral-border bg-neutral-100 text-subtext-color hover:text-default-font hover:bg-neutral-200"
                     )}
                   >
                     {h} px
@@ -236,8 +222,8 @@ export const RouteSpecificationPanel = React.forwardRef<
                     className={SubframeUtils.twClassNames(
                       "h-7 flex items-center justify-center rounded text-xs font-mono font-bold transition-all border cursor-pointer",
                       activeWidth === w
-                        ? "bg-brand-500 border-brand-500 "
-                        : "border-neutral-border bg-neutral-100 text-subtext-color hover:text-default-font"
+                        ? "bg-brand-500 border-brand-500 text-neutral-0 shadow-xs"
+                        : "border-neutral-border bg-neutral-100 text-subtext-color hover:text-default-font hover:bg-neutral-200"
                     )}
                   >
                     {w}
@@ -250,7 +236,7 @@ export const RouteSpecificationPanel = React.forwardRef<
 
         {/* Signboard Slide Automation & Transfer */}
         {selectedTab !== Tab.STOPS && (
-          <div className="rounded-xl border border-neutral-border bg-neutral-0/40 p-3 space-y-2.5 shadow-2xs">
+          <div className="rounded-xl border border-neutral-border bg-neutral-100/50 p-3 space-y-2.5 shadow-2xs">
             <div className="flex items-center justify-between">
               <span className="text-caption-bold font-caption-bold text-default-font">
                 Signboard Transfer
@@ -305,7 +291,7 @@ export const RouteSpecificationPanel = React.forwardRef<
         )}
 
         {/* Route Utilities */}
-        <div className="rounded-xl border border-neutral-border bg-neutral-0/40 p-3 space-y-2 shadow-2xs">
+        <div className="rounded-xl border border-neutral-border bg-neutral-100/50 p-3 space-y-2 shadow-2xs">
           <span className="text-caption-bold font-caption-bold text-default-font block mb-0.5">
             Route Utilities
           </span>

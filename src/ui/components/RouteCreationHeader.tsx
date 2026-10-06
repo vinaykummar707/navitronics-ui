@@ -10,19 +10,13 @@ import {
   FeatherChevronLeft,
   FeatherCloud,
   FeatherDownload,
-  FeatherEye,
-  FeatherEyeOff,
-  FeatherRoute,
-  FeatherSliders,
 } from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { Button } from "./Button";
 import { SubmitHandler, useFormContext } from "react-hook-form";
 import { DisplayConfigPostRequest } from "@/types/routeConfigV2";
-import useToggleStore from "@/store/useToggleStore";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/supabaseClient";
-import { PanelToggleDropdown } from "./PanelToggleDropdown";
 import { JsonViewerDialog } from "./JsonViewerDialog";
 import RBAC from "@/components/RBAC";
 import { IRoute, routeCrud } from "@/types/IRoute";
@@ -45,13 +39,6 @@ const RouteCreationHeaderRoot = React.forwardRef<
   const navigate = useNavigate();
   const [hasBeenSaved, setHasBeenSaved] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-
-  const {
-    isRoutePanelOpen,
-    toggleRoutePanel,
-    isInspectorOpen,
-    toggleInspector,
-  } = useToggleStore();
 
   const { handleSubmit, getValues, watch, formState, setError } = useFormContext<IRoute>();
   const { useCreate, useUpdate } = routeCrud;
@@ -88,14 +75,26 @@ const RouteCreationHeaderRoot = React.forwardRef<
   const onSubmit: SubmitHandler<IRoute> = async (data) => {
     if (isCreatingRoute || isUpdatingRoute) return;
 
-    const trimmedRouteNum = (data.route_number || "").trim();
-    if (!trimmedRouteNum && !data.is_split_route) {
+    const trimmedRouteNum1 = (data.route_number_1 || "").trim();
+    const trimmedRouteNum2 = (data.route_number_2 || "").trim();
+    const trimmedRouteNum = data.is_split_route
+      ? `${trimmedRouteNum1}-${trimmedRouteNum2}`
+      : (data.route_number || "").trim();
+
+    if (data.is_split_route) {
+      if (!trimmedRouteNum1 || !trimmedRouteNum2) {
+        setError("route_number", { message: "Both Route #1 and Route #2 are required for Split Route" });
+        toast.error("Both Route #1 and Route #2 are required for Split Route");
+        return;
+      }
+    } else if (!trimmedRouteNum) {
       setError("route_number", { message: "Route number is required" });
       toast.error("Route number is required");
       return;
     }
 
     // Pre-submission duplicate check for active routes in depot (or user account if standalone)
+    // Split routes are uniquely identified by route #1 + route #2, not the single route_number field
     if (trimmedRouteNum) {
       const scopeFilter: Record<string, any> = {};
       if (data.depot_id) {
@@ -158,6 +157,8 @@ const RouteCreationHeaderRoot = React.forwardRef<
     const payload = {
       ...data,
       route_number: trimmedRouteNum,
+      route_number_1: data.is_split_route ? trimmedRouteNum1 : "",
+      route_number_2: data.is_split_route ? trimmedRouteNum2 : "",
     };
 
     if (mode === "edit") {
@@ -301,30 +302,6 @@ const RouteCreationHeaderRoot = React.forwardRef<
             />
           </RBAC>
         </div>
-
-        <Button
-          variant={isRoutePanelOpen ? "brand-secondary" : "neutral-secondary"}
-          size="small"
-          className="h-8 text-xs font-medium px-2 sm:px-3"
-          icon={<FeatherRoute className="h-3.5 w-3.5" />}
-          onClick={toggleRoutePanel}
-          title={isRoutePanelOpen ? "Hide Route Info Panel" : "Show Route Info Panel"}
-        >
-          <span className="hidden sm:inline">Route Info</span>
-          <span className="sm:hidden">Info</span>
-        </Button>
-
-        <Button
-          variant={isInspectorOpen ? "brand-secondary" : "neutral-secondary"}
-          size="small"
-          className="h-8 text-xs font-medium px-2 sm:px-3"
-          icon={<FeatherSliders className="h-3.5 w-3.5" />}
-          onClick={toggleInspector}
-          title={isInspectorOpen ? "Hide Slide Inspector" : "Show Slide Inspector"}
-        >
-          <span className="hidden sm:inline">Slide Inspector</span>
-          <span className="sm:hidden">Inspector</span>
-        </Button>
 
         <Button
           type="submit"

@@ -9,13 +9,12 @@
  * TextSettingsPanel — https://app.subframe.com/11b10bc240cf/library?component=TextSettingsPanel_4a1acded-5433-4051-89f3-db7282cc2d47
  */
 // @subframe/sync-disable
-import React, { useRef } from "react";
+import React from "react";
 import * as SubframeUtils from "../utils";
 import { RouteCreationHeader } from "./RouteCreationHeader";
 import { RouteSpecificationPanel } from "./RouteSpecificationPanel";
 import { SignboardCanvasStage } from "./SignboardCanvasStage";
 import { SlidePropertyInspector } from "./SlidePropertyInspector";
-import useToggleStore from "@/store/useToggleStore";
 
 interface RouteCreationLayoutRootProps
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -30,9 +29,6 @@ const RouteCreationLayoutRoot = React.forwardRef<
   { className, mode, ...otherProps }: RouteCreationLayoutRootProps,
   ref
 ) {
-  const addSimRef = useRef<((format: string, type?: any, defaultText?: string) => void) | null>(null);
-  const { isRoutePanelOpen, toggleRoutePanel, isInspectorOpen, toggleInspector } = useToggleStore();
-
   return (
     <div
       className={SubframeUtils.twClassNames(
@@ -44,31 +40,9 @@ const RouteCreationLayoutRoot = React.forwardRef<
     >
       <RouteCreationHeader mode={mode} />
       <div className="relative flex w-full grow shrink-0 basis-0 items-start overflow-hidden">
-        {/* Mobile/Tablet Backdrop Overlays */}
-        {isRoutePanelOpen && (
-          <div
-            className="fixed inset-0 z-30 bg-black/40 backdrop-blur-xs xl:hidden"
-            onClick={toggleRoutePanel}
-            aria-hidden="true"
-          />
-        )}
-        {isInspectorOpen && (
-          <div
-            className="fixed inset-0 z-30 bg-black/40 backdrop-blur-xs xl:hidden"
-            onClick={toggleInspector}
-            aria-hidden="true"
-          />
-        )}
-
         <RouteSpecificationPanel />
-        <SignboardCanvasStage
-          className="flex-1 min-w-0 h-full self-stretch"
-          onAddSimulationRef={addSimRef}
-        />
-        <SlidePropertyInspector
-          className="h-full self-stretch"
-          onAddSimulation={(format, type) => addSimRef.current?.(format, type)}
-        />
+        <SignboardCanvasStage className="flex-1 min-w-0 h-full self-stretch" />
+        <SlidePropertyInspector className="h-full self-stretch" />
       </div>
     </div>
   );

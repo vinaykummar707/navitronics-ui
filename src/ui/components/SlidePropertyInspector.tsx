@@ -1,23 +1,15 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
-  FeatherAirplay,
-  FeatherCheck,
   FeatherCopy,
   FeatherMusic,
-  FeatherPlus,
   FeatherSliders,
-  FeatherTrash,
-  FeatherType,
-  FeatherX,
 } from "@subframe/core";
 import * as SubframeUtils from "../utils";
 import { Button } from "./Button";
-import { IconButton } from "./IconButton";
 import { TextPropertiesControls } from "./TextPropertiesControls";
 import useSimulationStore from "@/store/useSimulationStore";
 import useTabsStore from "@/store/useTabsStore";
-import useToggleStore from "@/store/useToggleStore";
 import { useFormContext } from "react-hook-form";
 import {
   DEFAULT_SIMULATION_HEIGHTS,
@@ -40,14 +32,12 @@ import { supabase } from "@/supabaseClient";
 
 interface SlidePropertyInspectorProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
-  onAddSimulation?: (format: string, type?: string) => void;
 }
 
 export const SlidePropertyInspector = React.forwardRef<
   HTMLDivElement,
   SlidePropertyInspectorProps
->(function SlidePropertyInspector({ className, onAddSimulation, ...otherProps }, ref) {
-  const { isInspectorOpen, toggleInspector } = useToggleStore();
+>(function SlidePropertyInspector({ className, ...otherProps }, ref) {
   const selectedTab = useTabsStore((state) => state.selectedTab);
   const selectedSimulationIndex = useSimulationStore((state) => state.selectedSimulationIndex);
 
@@ -68,10 +58,16 @@ export const SlidePropertyInspector = React.forwardRef<
   const audiopath = watch(`${selectedTab}[${selectedSimulationIndex}].audioFileUrl`);
   const stopTypeAudioFileUrl = watch(`${selectedTab}[${selectedSimulationIndex}].stopTypeAudioFileUrl`);
 
-  // Active sub-property for text (e.g. main text vs route number vs upper/lower)
-  const [activeTextZone, setActiveTextZone] = useState<string>("text");
+  // First tab in the text zone selector is always the route number tab
+  const getFirstTextZone = (split: boolean) => (split ? "routeNumber1" : "routeNumber");
 
-  if (!isInspectorOpen) return null;
+  // Active sub-property for text (e.g. main text vs route number vs upper/lower)
+  const [activeTextZone, setActiveTextZone] = useState<string>(() => getFirstTextZone(isSplitRoute));
+
+  // Default back to the first tab whenever the selected slide or split-route mode changes
+  useEffect(() => {
+    setActiveTextZone(getFirstTextZone(isSplitRoute));
+  }, [selectedTab, selectedSimulationIndex, isSplitRoute]);
 
   // Change slide format with clean state migration
   const handleFormatChange = (newFormat: "single" | "two" | "three") => {
@@ -112,7 +108,7 @@ export const SlidePropertyInspector = React.forwardRef<
     updated.width = w;
     updated.height = h;
     setValue(`${selectedTab}[${selectedSimulationIndex}]`, updated, { shouldDirty: true });
-    setActiveTextZone(newFormat === "single" ? "text" : "text");
+    setActiveTextZone(newFormat === "single" ? "text" : getFirstTextZone(isSplitRoute));
     toast.success(`Converted slide layout to ${newFormat.toUpperCase()}`);
   };
 
@@ -201,7 +197,7 @@ export const SlidePropertyInspector = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "fixed xl:relative inset-y-0 right-0 z-40 xl:z-auto flex h-full w-[360px] max-w-[90vw] sm:max-w-[360px] flex-none flex-col border-l border-solid border-neutral-border bg-sidebar-background shadow-2xl xl:shadow-md overflow-hidden select-none pb-safe",
+        "relative flex h-full w-[360px] max-w-[90vw] flex-none flex-col border-l border-solid border-neutral-border bg-sidebar-background shadow-md overflow-hidden select-none pb-safe",
         className
       )}
       ref={ref}
@@ -228,21 +224,21 @@ export const SlidePropertyInspector = React.forwardRef<
             </span>
           </div>
         </div>
-        <IconButton
-          variant="neutral-tertiary"
-          size="small"
-          icon={<FeatherX className="h-4 w-4" />}
-          title="Close Inspector"
-          onClick={toggleInspector}
-        />
       </div>
 
-      {/* Body */}
-      <div className="flex-1 w-full overflow-y-auto no-scrollbar p-3 space-y-4">
-        {currentSimulation ? (
-          <>
+      {!currentSimulation ? (
+        /* No slide selected — the empty state lives only in the canvas, not here */
+        <div className="flex flex-1 items-center justify-center p-6 text-center">
+          <p className="text-xs text-subtext-color max-w-[220px]">
+            Select a slide in the sequence to view and edit its properties.
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Fixed top section: format, copy-to-board, and text zone tabs stay in place */}
+          <div className="flex-none w-full p-3 space-y-4 border-b border-solid border-neutral-border">
             {/* 1. Format & Semantics (Compact Segmented Controls) */}
-            <div className="rounded-xl border border-neutral-border bg-neutral-0/40 p-3 space-y-2.5 shadow-2xs">
+            <div className="rounded-xl border border-neutral-border bg-neutral-100/50 p-3 space-y-2.5 shadow-2xs">
               <span className="text-caption-bold font-caption-bold text-default-font block">
                 Slide Format & Layout
               </span>
@@ -255,8 +251,8 @@ export const SlidePropertyInspector = React.forwardRef<
                     className={SubframeUtils.twClassNames(
                       "flex items-center justify-center py-1.5 px-2 rounded text-xs font-semibold capitalize transition-all cursor-pointer",
                       currentSimulation.format === fmt
-                        ? "bg-neutral-0 text-brand-primary shadow-xs ring-1 ring-neutral-border font-bold"
-                        : "text-subtext-color hover:text-default-font"
+                        ? "bg-brand-500 text-neutral-0 shadow-xs ring-1 ring-brand-400 font-bold"
+                        : "text-subtext-color hover:text-default-font hover:bg-neutral-200/50"
                     )}
                   >
                     {fmt === "single" ? "Single" : fmt === "two" ? "Two-Line" : "Three-Line"}
@@ -274,8 +270,8 @@ export const SlidePropertyInspector = React.forwardRef<
                     className={SubframeUtils.twClassNames(
                       "py-1 px-1.5 rounded-md text-[11px] font-medium capitalize truncate text-center border transition-all cursor-pointer",
                       currentSimulation.type === tp
-                        ? "bg-brand-500/10 border-brand-500/30 text-brand-primary font-bold"
-                        : "border-neutral-border bg-neutral-100/40 text-subtext-color hover:text-default-font"
+                        ? "bg-brand-500 border-brand-500 text-neutral-0 shadow-xs font-bold"
+                        : "border-neutral-border bg-neutral-100/40 text-subtext-color hover:text-default-font hover:bg-neutral-200/40"
                     )}
                   >
                     {tp === "route" ? "Route" : tp === "slogan" ? "Slogan" : "Special"}
@@ -285,7 +281,7 @@ export const SlidePropertyInspector = React.forwardRef<
             </div>
 
             {/* 2. Quick Copy Slide to Another Signboard */}
-            <div className="rounded-xl border border-neutral-border bg-neutral-0/40 p-3 space-y-2 shadow-2xs">
+            <div className="rounded-xl border border-neutral-border bg-neutral-100/50 p-3 space-y-2 shadow-2xs">
               <div className="flex items-center justify-between">
                 <span className="text-caption-bold font-caption-bold text-default-font">
                   Copy Slide to Board
@@ -302,7 +298,7 @@ export const SlidePropertyInspector = React.forwardRef<
                       key={b}
                       type="button"
                       onClick={() => handleCopyCurrentSlideToBoard(b)}
-                      className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md border border-neutral-border bg-neutral-100/50 hover:bg-brand-50 hover:border-brand-500/30 text-xs font-semibold text-default-font capitalize transition-all cursor-pointer"
+                      className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md border border-neutral-border bg-neutral-100/50 hover:bg-brand-500/10 hover:border-brand-500/30 text-xs font-semibold text-default-font capitalize transition-all cursor-pointer"
                       title={`Copy Slide #${selectedSimulationIndex + 1} to ${b.toUpperCase()} signboard`}
                     >
                       <FeatherCopy className="h-3 w-3 text-brand-primary" />
@@ -314,23 +310,52 @@ export const SlidePropertyInspector = React.forwardRef<
 
             {/* 3. Text Zone Selector (if Two or Three Line Format) */}
             {currentSimulation.format !== "single" && (
-              <div className="rounded-xl border border-neutral-border bg-neutral-0/40 p-2 shadow-2xs">
+              <div className="rounded-xl border border-neutral-border bg-neutral-100/50 p-2 shadow-2xs">
                 <span className="text-[11px] font-semibold text-subtext-color block px-1 mb-1.5 uppercase tracking-wider">
                   Select Text Zone to Edit:
                 </span>
                 <div className="flex items-center gap-1 rounded-lg bg-neutral-100/70 p-1 border border-neutral-border">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTextZone("routeNumber")}
-                    className={SubframeUtils.twClassNames(
-                      "flex-1 py-1 px-1.5 rounded text-xs font-medium transition-all text-center cursor-pointer truncate",
-                      activeTextZone === "routeNumber"
-                        ? "bg-neutral-0 text-brand-primary shadow-xs ring-1 ring-neutral-border font-bold"
-                        : "text-subtext-color hover:text-default-font"
-                    )}
-                  >
-                    Route #
-                  </button>
+                  {isSplitRoute ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTextZone("routeNumber1")}
+                        className={SubframeUtils.twClassNames(
+                          "flex-1 py-1 px-1.5 rounded text-xs font-medium transition-all text-center cursor-pointer truncate",
+                          activeTextZone === "routeNumber1"
+                            ? "bg-brand-500 text-neutral-0 shadow-xs ring-1 ring-brand-400 font-bold"
+                            : "text-subtext-color hover:text-default-font hover:bg-neutral-200/50"
+                        )}
+                      >
+                        Route #1
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTextZone("routeNumber2")}
+                        className={SubframeUtils.twClassNames(
+                          "flex-1 py-1 px-1.5 rounded text-xs font-medium transition-all text-center cursor-pointer truncate",
+                          activeTextZone === "routeNumber2"
+                            ? "bg-brand-500 text-neutral-0 shadow-xs ring-1 ring-brand-400 font-bold"
+                            : "text-subtext-color hover:text-default-font hover:bg-neutral-200/50"
+                        )}
+                      >
+                        Route #2
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setActiveTextZone("routeNumber")}
+                      className={SubframeUtils.twClassNames(
+                        "flex-1 py-1 px-1.5 rounded text-xs font-medium transition-all text-center cursor-pointer truncate",
+                        activeTextZone === "routeNumber"
+                          ? "bg-brand-500 text-neutral-0 shadow-xs ring-1 ring-brand-400 font-bold"
+                          : "text-subtext-color hover:text-default-font hover:bg-neutral-200/50"
+                      )}
+                    >
+                      Route #
+                    </button>
+                  )}
 
                   {currentSimulation.format === "two" && (
                     <button
@@ -339,8 +364,8 @@ export const SlidePropertyInspector = React.forwardRef<
                       className={SubframeUtils.twClassNames(
                         "flex-1 py-1 px-1.5 rounded text-xs font-medium transition-all text-center cursor-pointer truncate",
                         activeTextZone === "text"
-                          ? "bg-neutral-0 text-brand-primary shadow-xs ring-1 ring-neutral-border font-bold"
-                          : "text-subtext-color hover:text-default-font"
+                          ? "bg-brand-500 text-neutral-0 shadow-xs ring-1 ring-brand-400 font-bold"
+                          : "text-subtext-color hover:text-default-font hover:bg-neutral-200/50"
                       )}
                     >
                       Destination Text
@@ -355,8 +380,8 @@ export const SlidePropertyInspector = React.forwardRef<
                         className={SubframeUtils.twClassNames(
                           "flex-1 py-1 px-1.5 rounded text-xs font-medium transition-all text-center cursor-pointer truncate",
                           activeTextZone === "upperHalfText"
-                            ? "bg-brand-500 shadow-xs ring-1 ring-neutral-border font-bold"
-                            : "text-subtext-color hover:text-default-font"
+                            ? "bg-brand-500 text-neutral-0 shadow-xs ring-1 ring-brand-400 font-bold"
+                            : "text-subtext-color hover:text-default-font hover:bg-neutral-200/50"
                         )}
                       >
                         Upper Line
@@ -367,8 +392,8 @@ export const SlidePropertyInspector = React.forwardRef<
                         className={SubframeUtils.twClassNames(
                           "flex-1 py-1 px-1.5 rounded text-xs font-medium transition-all text-center cursor-pointer truncate",
                           activeTextZone === "lowerHalfText"
-                            ? "bg-neutral-0 text-brand-primary shadow-xs ring-1 ring-neutral-border font-bold"
-                            : "text-subtext-color hover:text-default-font"
+                            ? "bg-brand-500 text-neutral-0 shadow-xs ring-1 ring-brand-400 font-bold"
+                            : "text-subtext-color hover:text-default-font hover:bg-neutral-200/50"
                         )}
                       >
                         Lower Line
@@ -378,9 +403,12 @@ export const SlidePropertyInspector = React.forwardRef<
                 </div>
               </div>
             )}
+          </div>
 
+          {/* Scrollable bottom section: typography/motion + voice announcement */}
+          <div className="flex-1 min-h-0 w-full overflow-y-auto no-scrollbar p-3 space-y-4">
             {/* 4. Text Properties & Motion Controls */}
-            <div className="rounded-xl border border-neutral-border bg-neutral-0/40 p-3 shadow-2xs">
+            <div className="rounded-xl border border-neutral-border bg-neutral-100/50 p-3 shadow-2xs">
               <span className="text-caption-bold font-caption-bold text-default-font block mb-3">
                 Typography & Scroll Motion
               </span>
@@ -392,6 +420,8 @@ export const SlidePropertyInspector = React.forwardRef<
                     ? isSplitRoute
                       ? "routeNumber1"
                       : "sideText"
+                    : (activeTextZone === "routeNumber1" || activeTextZone === "routeNumber2") && !isSplitRoute
+                    ? "sideText"
                     : activeTextZone
                 }
               />
@@ -399,7 +429,7 @@ export const SlidePropertyInspector = React.forwardRef<
 
             {/* 5. Voice Announcement (PAS Audio) */}
             {currentSimulation.type !== "route" && (
-              <div className="rounded-xl border border-neutral-border bg-neutral-0/40 p-3 space-y-2.5 shadow-2xs">
+              <div className="rounded-xl border border-neutral-border bg-neutral-100/50 p-3 space-y-2.5 shadow-2xs">
                 <div className="flex items-center gap-2">
                   <div className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-500/10 text-brand-primary">
                     <FeatherMusic className="h-3.5 w-3.5" />
@@ -459,54 +489,9 @@ export const SlidePropertyInspector = React.forwardRef<
                 )}
               </div>
             )}
-          </>
-        ) : (
-          /* Empty Inspector State with Quick Add Buttons */
-          <div className="flex flex-col items-center justify-center p-6 text-center rounded-xl border border-dashed border-neutral-border bg-neutral-0/20 space-y-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/10 border border-brand-500/20 text-brand-primary">
-              <FeatherAirplay className="h-6 w-6" />
-            </div>
-            <div>
-              <h4 className="text-caption-bold font-caption-bold text-default-font">
-                No Slide Selected
-              </h4>
-              <p className="text-xs text-subtext-color mt-1">
-                Select a slide in the sequence below, or add a new slide to configure its LED matrix.
-              </p>
-            </div>
-
-            {onAddSimulation && (
-              <div className="flex flex-col w-full gap-2 pt-2">
-                <Button
-                  variant="brand-primary"
-                  size="small"
-                  className="w-full h-8 text-xs font-medium"
-                  icon={<FeatherPlus />}
-                  onClick={() => onAddSimulation("single")}
-                >
-                  Add Single-Line Slide
-                </Button>
-                <Button
-                  variant="neutral-secondary"
-                  size="small"
-                  className="w-full h-8 text-xs font-medium"
-                  onClick={() => onAddSimulation("two")}
-                >
-                  Add Two-Line Route Slide
-                </Button>
-                <Button
-                  variant="neutral-secondary"
-                  size="small"
-                  className="w-full h-8 text-xs font-medium"
-                  onClick={() => onAddSimulation("single", "slogan")}
-                >
-                  Add Safety Slogan Slide
-                </Button>
-              </div>
-            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 });
