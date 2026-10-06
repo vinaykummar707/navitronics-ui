@@ -27,7 +27,7 @@ import { convertV2ToV1 } from "@/utils/routeConfigMapper";
 import { Dialog } from "@/ui/components/Dialog";
 import { getUserRouteAccess } from "@/utils/featureFlags";
 import { isRegularCustomer, isSuperAdmin } from "@/utils/customerType";
-import { pickTargetDirectory, writeZipToDirectoryOrFallback } from "@/utils/fileSystemExport";
+import { writeZipToDirectoryOrFallback } from "@/utils/fileSystemExport";
 import { sortByLatestCreated } from "@/utils/dateUtils";
 
 export default function RegularRoutesPage() {
@@ -433,12 +433,6 @@ export default function RegularRoutesPage() {
       return;
     }
 
-    const { handle: dirHandle, cancelled } = await pickTargetDirectory();
-    if (cancelled) {
-      toast.info("Export cancelled");
-      return;
-    }
-
     const rawRoutesToExport = selectedRouteObjects.map((route) => ({
       ...route,
       front: parseFieldValue(route.front as string | null, "front", route),
@@ -467,18 +461,12 @@ export default function RegularRoutesPage() {
         });
 
         const blob = new Blob([response.data], { type: "application/zip" });
-        const result = await writeZipToDirectoryOrFallback(
+        await writeZipToDirectoryOrFallback(
           blob,
-          dirHandle,
-          `regular_routes_export_v1_${currentDate}.zip`,
-          "Navitronix_Routes"
+          `regular_routes_export_v1_${currentDate}.zip`
         );
 
-        if (result.savedAsFolder) {
-          toast.success(`Exported ${selectedRouteObjects.length} route(s) to Navitronix_Routes folder (V1)`);
-        } else {
-          toast.success(`Exported ${selectedRouteObjects.length} route(s) in V1 format (.zip)`);
-        }
+        toast.success(`Exported ${selectedRouteObjects.length} route(s) in V1 format (.zip)`);
       } catch (error: any) {
         console.error("V1 Export API Error:", error);
         toast.error(`V1 Export failed: ${error?.response?.data?.message || error.message || "Server error"}`);
@@ -499,18 +487,12 @@ export default function RegularRoutesPage() {
         });
 
         const blob = new Blob([response.data], { type: "application/zip" });
-        const result = await writeZipToDirectoryOrFallback(
+        await writeZipToDirectoryOrFallback(
           blob,
-          dirHandle,
-          `regular_routes_export_v2_${currentDate}.zip`,
-          "Navitronix_Routes"
+          `regular_routes_export_v2_${currentDate}.zip`
         );
 
-        if (result.savedAsFolder) {
-          toast.success(`Exported ${selectedRouteObjects.length} route(s) to Navitronix_Routes folder (V2)`);
-        } else {
-          toast.success(`Exported ${selectedRouteObjects.length} route(s) in V2 format (.zip)`);
-        }
+        toast.success(`Exported ${selectedRouteObjects.length} route(s) in V2 format (.zip)`);
       } catch (error: any) {
         console.error("V2 Export API Error:", error);
         toast.error(`V2 Export failed: ${error?.response?.data?.message || error.message || "Server error"}`);
