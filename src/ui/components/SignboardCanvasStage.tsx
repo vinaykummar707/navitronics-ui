@@ -34,7 +34,6 @@ import {
   getDefaultStopSingleSimulation,
 } from "@/constants/defaultRouteValues";
 import { DisplayConfigPostRequest, Simulation, SimulationType } from "@/types/routeConfigV2";
-import { toast } from "react-toastify";
 import { useParams } from "react-router-dom";
 import { useOrganizationStore } from "@/store/useOrganizationStore";
 import { IStopWithAudio, stopCrud } from "@/types/IStop";
@@ -167,7 +166,6 @@ export const SignboardCanvasStage = React.forwardRef<
     append(newSim);
     setSelectedSimulationIndex(simulations.length);
     setZoom(computeFitZoom(newSim.width, newSim.height));
-    toast.success(`Added new ${format.toUpperCase()} slide to ${selectedTab.toUpperCase()}`);
   };
 
   // Expose to parent ref if provided
@@ -184,7 +182,6 @@ export const SignboardCanvasStage = React.forwardRef<
     const nextList = [...list, clone];
     setValue(selectedTab as any, nextList, { shouldDirty: true });
     setSelectedSimulationIndex(nextList.length - 1);
-    toast.success(`Duplicated Slide #${idx + 1}`);
   };
 
   // Move slide Left/Right in loop
@@ -204,7 +201,6 @@ export const SignboardCanvasStage = React.forwardRef<
     list.splice(idx, 1);
     setValue(selectedTab as any, list, { shouldDirty: true });
     setSelectedSimulationIndex(list.length > 0 ? Math.min(idx, list.length - 1) : -1);
-    toast.info(`Deleted Slide #${idx + 1}`);
   };
 
   // Copy single slide to another destination signboard
@@ -215,9 +211,6 @@ export const SignboardCanvasStage = React.forwardRef<
     const destList = getValues(destBoard as any) || [];
     const cloned = JSON.parse(JSON.stringify(targetSlide));
     setValue(destBoard as any, [...destList, cloned], { shouldDirty: true });
-    toast.success(
-      `Copied Slide #${idx + 1} from ${selectedTab.toUpperCase()} to ${destBoard.toUpperCase()}!`
-    );
   };
 
   // Delete All (BUG-056 fix)
@@ -226,7 +219,6 @@ export const SignboardCanvasStage = React.forwardRef<
       setValue(selectedTab as any, []);
       replace([]);
       setSelectedSimulationIndex(-1);
-      toast.info(`Cleared all slides from ${selectedTab.toUpperCase()}`);
     }
   };
 
@@ -247,7 +239,6 @@ export const SignboardCanvasStage = React.forwardRef<
 
   const handleGenerateStopSimulations = async () => {
     if (!selectedStop || !selectedLanguage || selectedStopTypes.length === 0) {
-      toast.error("Please select a stop, language, and stop type.");
       return;
     }
     const newSims = selectedStopTypes.map((stopType) => {
@@ -255,7 +246,6 @@ export const SignboardCanvasStage = React.forwardRef<
       return getDefaultStopSingleSimulation(text, "stop", stopType as any, selectedStop, selectedLanguage, selectedUpDown);
     });
     append(newSims);
-    toast.success(`Generated ${newSims.length} stop announcements`);
   };
 
   return (

@@ -14,6 +14,7 @@ import { useFormContext, Watch } from "react-hook-form";
 import { DisplayConfigPostRequest } from "@/types/routeConfigV2";
 
 import { stopCrud } from "@/types/IStop";
+import { migrateSlidesOnSplitRouteToggle } from "@/utils/simulationUtils";
 
 interface RouteConfigurationFormRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -26,7 +27,7 @@ const RouteConfigurationFormRoot = React.forwardRef<
   { className, ...otherProps }: RouteConfigurationFormRootProps,
   ref,
 ) {
-  const { register, watch, setValue, formState: { errors } } =
+  const { register, watch, setValue, getValues, formState: { errors } } =
     useFormContext<DisplayConfigPostRequest>();
 
   const isSplitRoute = watch("is_split_route");
@@ -54,7 +55,22 @@ const RouteConfigurationFormRoot = React.forwardRef<
         </div>
         <Checkbox
           checked={watch("is_split_route")}
-          onCheckedChange={(bool) => setValue("is_split_route", bool)}
+          onCheckedChange={(bool) => {
+            setValue("is_split_route", bool, { shouldDirty: true });
+            const boards = ["front", "side", "rear", "internal"] as const;
+            const routeNumbers = {
+              routeNumber: getValues("route_number"),
+              routeNumber1: getValues("route_number_1"),
+              routeNumber2: getValues("route_number_2"),
+            };
+            boards.forEach((board) => {
+              const slides = getValues(board) || [];
+              if (slides.length > 0) {
+                const updated = migrateSlidesOnSplitRouteToggle(slides, bool, routeNumbers);
+                setValue(board, updated, { shouldDirty: true });
+              }
+            });
+          }}
         />
       </div>
 

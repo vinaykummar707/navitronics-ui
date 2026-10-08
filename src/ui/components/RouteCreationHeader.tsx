@@ -23,6 +23,7 @@ import { IRoute, routeCrud } from "@/types/IRoute";
 import { checkActiveDuplicate } from "@/hooks/useCrud";
 import { toast } from "react-toastify";
 import { Dialog } from "./Dialog";
+import { sanitizeRouteBoards } from "@/utils/simulationUtils";
 
 interface RouteCreationHeaderRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -59,7 +60,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
     : routeNumber || "---";
 
   const handleExportRoute = () => {
-    const values = getValues();
+    const values = sanitizeRouteBoards(getValues() as any);
     const safeNum = (displayRouteNum || "config").replace(/[^a-zA-Z0-9_-]/g, "_");
     const filename = `route-v2-${safeNum}.json`;
     const blob = new Blob([JSON.stringify(values, null, 2)], { type: "application/json" });
@@ -69,7 +70,6 @@ const RouteCreationHeaderRoot = React.forwardRef<
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(`Exported route config as ${filename}`);
   };
 
   const onSubmit: SubmitHandler<IRoute> = async (data) => {
@@ -154,8 +154,10 @@ const RouteCreationHeaderRoot = React.forwardRef<
       }
     }
 
+    const cleanedData = sanitizeRouteBoards(data);
+
     const payload = {
-      ...data,
+      ...cleanedData,
       route_number: trimmedRouteNum,
       route_number_1: data.is_split_route ? trimmedRouteNum1 : "",
       route_number_2: data.is_split_route ? trimmedRouteNum2 : "",
@@ -298,7 +300,7 @@ const RouteCreationHeaderRoot = React.forwardRef<
             <JsonViewerDialog
               dialogTitle="Route Configuration JSON"
               buttonLabel="JSON"
-              getJsonData={() => getValues()}
+              getJsonData={() => sanitizeRouteBoards(getValues() as any)}
             />
           </RBAC>
         </div>

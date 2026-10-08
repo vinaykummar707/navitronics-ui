@@ -14,7 +14,6 @@ import useTabsStore, { Tab } from "@/store/useTabsStore";
 import useSimulationStore from "@/store/useSimulationStore";
 import { useFormContext } from "react-hook-form";
 import { DisplayConfigPostRequest, Simulation } from "@/types/routeConfigV2";
-import { toast } from "react-toastify";
 
 const HEIGHT_OPTIONS = [16, 32] as const;
 const WIDTH_OPTIONS = [64, 96, 128, 160, 192, 224] as const;
@@ -66,16 +65,12 @@ export const RouteSpecificationPanel = React.forwardRef<
     setValue("source", dest, { shouldDirty: true });
     setValue("destination", src, { shouldDirty: true });
     setValue("return", !isReturn, { shouldDirty: true });
-    toast.success(`Swapped Source & Destination for ${!isReturn ? "Return" : "Forward"} Route`);
   };
 
   // Change matrix height for current signboard
   const handleHeightChange = (newHeight: 16 | 32) => {
     const sims: Simulation[] = getValues(selectedTab as any) || [];
-    if (sims.length === 0) {
-      toast.info("Add a slide to apply matrix resolution");
-      return;
-    }
+    if (sims.length === 0) return;
     const updated = sims.map((s) => {
       const texts = s.texts || {};
       const newTexts = { ...texts };
@@ -90,57 +85,34 @@ export const RouteSpecificationPanel = React.forwardRef<
       return { ...s, height: newHeight, texts: newTexts };
     });
     setValue(selectedTab as any, updated, { shouldDirty: true });
-    toast.success(`${selectedTab.toUpperCase()} Matrix height set to ${newHeight}px`);
   };
 
   // Change matrix width for current signboard
   const handleWidthChange = (newWidth: typeof WIDTH_OPTIONS[number]) => {
     const sims: Simulation[] = getValues(selectedTab as any) || [];
-    if (sims.length === 0) {
-      toast.info("Add a slide to apply matrix resolution");
-      return;
-    }
+    if (sims.length === 0) return;
     const updated = sims.map((s) => ({ ...s, width: newWidth }));
     setValue(selectedTab as any, updated, { shouldDirty: true });
-    toast.success(`${selectedTab.toUpperCase()} Matrix width set to ${newWidth}px`);
   };
 
   // Copy all simulations from current tab to chosen destination board
   const handleCopyAllToBoard = () => {
     const currentSims = getValues(selectedTab as any) || [];
-    if (currentSims.length === 0) {
-      toast.warning(`No slides on ${selectedTab.toUpperCase()} to copy.`);
-      return;
-    }
-    if (!selectedDestBoard || selectedDestBoard === selectedTab) {
-      toast.error("Please select a valid destination signboard.");
-      return;
-    }
+    if (currentSims.length === 0) return;
+    if (!selectedDestBoard || selectedDestBoard === selectedTab) return;
     const cloned = JSON.parse(JSON.stringify(currentSims));
     setValue(selectedDestBoard as any, cloned, { shouldDirty: true });
-    toast.success(
-      `Copied all ${currentSims.length} slide(s) from ${selectedTab.toUpperCase()} to ${selectedDestBoard.toUpperCase()}!`
-    );
   };
 
   // Copy single active slide to chosen destination board
   const handleCopySingleSlide = () => {
     const currentSims = getValues(selectedTab as any) || [];
     const activeSlide = currentSims[selectedSimulationIndex] || currentSims[0];
-    if (!activeSlide) {
-      toast.warning(`No slide on ${selectedTab.toUpperCase()} to copy.`);
-      return;
-    }
-    if (!selectedDestBoard || selectedDestBoard === selectedTab) {
-      toast.error("Please select a valid destination signboard.");
-      return;
-    }
+    if (!activeSlide) return;
+    if (!selectedDestBoard || selectedDestBoard === selectedTab) return;
     const destSims = getValues(selectedDestBoard as any) || [];
     const cloned = JSON.parse(JSON.stringify(activeSlide));
     setValue(selectedDestBoard as any, [...destSims, cloned], { shouldDirty: true });
-    toast.success(
-      `Copied Slide #${selectedSimulationIndex + 1} to ${selectedDestBoard.toUpperCase()} (Total: ${destSims.length + 1} slides)!`
-    );
   };
 
   return (

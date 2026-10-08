@@ -92,12 +92,32 @@ export interface TextConfig {
 export type SimulationTextKey = 'sideText' | 'upperHalfText' | 'lowerHalfText' | 'text' | 'routeNumber1' | 'routeNumber2';
 
 export type SimulationTexts<T extends readonly SimulationTextKey[]> = {
-  [K in T[number]]: TextConfig;
+  [K in T[number]]?: TextConfig;
 };
 
-export type SingleSimulationTexts = SimulationTexts<['text']>;
-export type TwoSimulationTexts = SimulationTexts<['sideText', 'text', 'routeNumber1', 'routeNumber2']>; // Added route numbers for two-screen format
-export type ThreeSimulationTexts = SimulationTexts<['sideText', 'upperHalfText', 'lowerHalfText', 'routeNumber1', 'routeNumber2']>;
+export type SingleSimulationTexts = {
+  text: TextConfig;
+};
+
+export type TwoSimulationTexts = {
+  text: TextConfig;
+  sideText?: TextConfig;
+  routeNumber1?: TextConfig;
+  routeNumber2?: TextConfig;
+};
+
+export type ThreeSimulationTexts = {
+  upperHalfText: TextConfig;
+  lowerHalfText: TextConfig;
+  sideText?: TextConfig;
+  routeNumber1?: TextConfig;
+  routeNumber2?: TextConfig;
+};
+
+/**
+ * Backwards-compatible alias for Simulation.
+ */
+export type Screen = Simulation;
 
 /**
  * Represents a digital simulation configuration.

@@ -109,31 +109,60 @@ export function getDefaultStopSingleSimulation(text?: string, type: SimulationTy
   };
 }
 
-export function getDefaultTwoSimulation(sideText?: string, text?: string, type: SimulationType = DEFAULT_SIMULATION_TYPE, routeNumber1?: string, routeNumber2?: string, isSplitRoute?: boolean): Simulation {
+export function getDefaultTwoSimulation(
+  sideText?: string,
+  text?: string,
+  type: SimulationType = DEFAULT_SIMULATION_TYPE,
+  routeNumber1?: string,
+  routeNumber2?: string,
+  isSplitRoute?: boolean
+): Simulation {
+  const texts: TwoSimulationTexts = {
+    text: getDefaultTextConfig(text),
+    ...(isSplitRoute
+      ? {
+          routeNumber1: getDefaultTextConfig(routeNumber1 || "Route 1"),
+          routeNumber2: getDefaultTextConfig(routeNumber2 || "Route 2"),
+        }
+      : {
+          sideText: getDefaultTextConfig(sideText),
+        }),
+  };
+
   return {
     format: "two",
-    texts: {
-      routeNumber1: getDefaultTextConfig(routeNumber1 || "Route 1"),
-      routeNumber2: getDefaultTextConfig(routeNumber2 || "Route 2"),
-      sideText: getDefaultTextConfig(sideText),
-      text: getDefaultTextConfig(text),
-    },
+    texts,
     height: DEFAULT_SIMULATION_HEIGHT,
     width: DEFAULT_SIMULATION_WIDTH,
     type,
   };
 }
 
-export function getDefaultThreeSimulation(sideText?: string, upperHalfText?: string, lowerHalfText?: string, type: SimulationType = DEFAULT_SIMULATION_TYPE, routeNumber1?: string, routeNumber2?: string, isSplitRoute?: boolean): Simulation {
+export function getDefaultThreeSimulation(
+  sideText?: string,
+  upperHalfText?: string,
+  lowerHalfText?: string,
+  type: SimulationType = DEFAULT_SIMULATION_TYPE,
+  routeNumber1?: string,
+  routeNumber2?: string,
+  isSplitRoute?: boolean
+): Simulation {
+  const texts: ThreeSimulationTexts = {
+    upperHalfText: getDefaultTextConfig(upperHalfText),
+    lowerHalfText: getDefaultTextConfig(lowerHalfText),
+    ...(isSplitRoute
+      ? {
+          routeNumber1: getDefaultTextConfig(routeNumber1 || "Route 1"),
+          routeNumber2: getDefaultTextConfig(routeNumber2 || "Route 2"),
+        }
+      : {
+          sideText: getDefaultTextConfig(sideText),
+        }),
+  };
+
   return {
     format: "three",
-    texts: {
-      routeNumber1: getDefaultTextConfig(routeNumber1 || "Route 1"),
-      routeNumber2: getDefaultTextConfig(routeNumber2 || "Route 2"),
-      sideText: getDefaultTextConfig(sideText),
-      upperHalfText: getDefaultTextConfig(upperHalfText),
-      lowerHalfText: getDefaultTextConfig(lowerHalfText),
-    },
+    texts,
     height: DEFAULT_SIMULATION_HEIGHT,
     width: DEFAULT_SIMULATION_WIDTH,
     type,

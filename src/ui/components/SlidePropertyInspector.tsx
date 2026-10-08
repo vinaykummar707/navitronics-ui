@@ -109,7 +109,6 @@ export const SlidePropertyInspector = React.forwardRef<
     updated.height = h;
     setValue(`${selectedTab}[${selectedSimulationIndex}]`, updated, { shouldDirty: true });
     setActiveTextZone(newFormat === "single" ? "text" : getFirstTextZone(isSplitRoute));
-    toast.success(`Converted slide layout to ${newFormat.toUpperCase()}`);
   };
 
   // Change slide type
@@ -124,9 +123,6 @@ export const SlidePropertyInspector = React.forwardRef<
     const destSims = getValues(destBoard as any) || [];
     const cloned = JSON.parse(JSON.stringify(currentSimulation));
     setValue(destBoard as any, [...destSims, cloned], { shouldDirty: true });
-    toast.success(
-      `Copied Slide #${selectedSimulationIndex + 1} to ${destBoard.toUpperCase()} (Total: ${destSims.length + 1} slides)`
-    );
   };
 
   // Audio Playback
@@ -167,11 +163,9 @@ export const SlidePropertyInspector = React.forwardRef<
     }
     try {
       setGeneratingAudio(true);
-      toast.info("Synthesizing voice announcement via Sarvam AI...");
       const { fileUrl, fileName } = await handleSloganAudioGeneration(textToConvert, depotId);
       setValue(`${selectedTab}[${selectedSimulationIndex}].audioFileUrl`, fileUrl, { shouldDirty: true });
       setValue(`${selectedTab}[${selectedSimulationIndex}].audioFileName`, fileName, { shouldDirty: true });
-      toast.success("Voice announcement synthesized successfully!");
     } catch (err: any) {
       console.error("Audio generation failed:", err);
       toast.error(`Audio synthesis failed: ${err?.message || err}`);
@@ -188,7 +182,6 @@ export const SlidePropertyInspector = React.forwardRef<
       await supabase.storage.from("stops").remove([`${depotId}/${path}`]);
       setValue(`${selectedTab}[${selectedSimulationIndex}].audioFileUrl`, null, { shouldDirty: true });
       setValue(`${selectedTab}[${selectedSimulationIndex}].audioFileName`, null, { shouldDirty: true });
-      toast.success("Audio file removed");
     } catch (err: any) {
       toast.error(`Failed to delete audio: ${err.message || err}`);
     }
