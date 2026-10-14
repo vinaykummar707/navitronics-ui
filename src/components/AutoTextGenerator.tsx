@@ -30,6 +30,7 @@ interface AutoTextGeneratorProps {
   isRouteNumber?: boolean;
   fieldKey?: string;
   text?: string;
+  variant?: "select" | "list";
   onSelect: (value: string) => void;
 }
 
@@ -228,6 +229,7 @@ const AutoTextGenerator: React.FC<AutoTextGeneratorProps> = ({
   isRouteNumber = false,
   fieldKey,
   text,
+  variant = "select",
   onSelect,
 }) => {
   const [suggestions, setSuggestions] = useState<RouteCombo[]>([]);
@@ -308,6 +310,46 @@ const AutoTextGenerator: React.FC<AutoTextGeneratorProps> = ({
     category,
     items: suggestions.filter((combo) => combo.category === category),
   })).filter((group) => group.items.length > 0);
+
+  if (variant === "list") {
+    return (
+      <div className="flex flex-col max-h-[360px] overflow-y-auto divide-y divide-neutral-100 pr-1">
+        {loading && (
+          <div className="px-3 py-2 text-xs text-neutral-500 flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+            Transliterating suggestions...
+          </div>
+        )}
+        {groupedSuggestions.map((group) => (
+          <div key={group.category} className="py-1">
+            <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+              {group.category}
+            </div>
+            <div className="flex flex-col gap-0.5 px-1">
+              {group.items.map((combo, idx) => (
+                <button
+                  key={`${group.category}-${combo.value}-${idx}`}
+                  type="button"
+                  onClick={() => onSelect(combo.value)}
+                  className="w-full text-left px-2.5 py-1.5 text-xs rounded-md text-default-font hover:bg-neutral-100 active:bg-neutral-200 transition-colors flex items-center justify-between group cursor-pointer"
+                >
+                  <span className="font-medium truncate">{combo.value}</span>
+                  <span className="text-[10px] text-neutral-400 opacity-0 group-hover:opacity-100 flex-none ml-2">
+                    Pick ↵
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+        {!loading && groupedSuggestions.length === 0 && (
+          <div className="p-3 text-xs text-neutral-400 text-center">
+            No suggestions available. Enter route number, source, or destination first.
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <Select

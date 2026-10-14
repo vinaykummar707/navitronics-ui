@@ -1,0 +1,142 @@
+{
+  "project_name": "navitronics-ui",
+  "specification_version": "1.0.0-FINAL",
+  "audit_date": "2026-10-12",
+  "lead_architect": "Antigravity Principal Systems Architect",
+  "handover_status": "READY_FOR_REIMPLEMENTATION",
+  "completion_gates": {
+    "gate_A_discovery": "PASSED",
+    "gate_B_functional_extraction": "PASSED",
+    "gate_C_security_and_data": "PASSED",
+    "gate_D_traceability": "PASSED",
+    "gate_E_quality_and_consistency": "PASSED",
+    "gate_F_final_handover": "PASSED"
+  },
+  "metrics": {
+    "files_inventoried": 234,
+    "files_inspected": 234,
+    "lines_of_code_evaluated": 39321,
+    "routes_discovered": 18,
+    "routes_documented": 18,
+    "pages_documented": 18,
+    "components_inventoried": 145,
+    "components_assessed": 145,
+    "operations_discovered": 44,
+    "operations_documented": 44,
+    "forms_documented": 15,
+    "form_fields_documented": 58,
+    "functional_requirements_documented": 75,
+    "non_functional_requirements_documented": 20,
+    "business_rules_documented": 30,
+    "conditional_behaviors_documented": 10,
+    "roles_documented": 5,
+    "permissions_documented": 28,
+    "database_tables_documented": 9,
+    "database_views_and_functions_documented": 5,
+    "database_indexes_documented": 14,
+    "rls_policies_inspected_and_documented": 18,
+    "typescript_types_documented": 25,
+    "api_and_integration_contracts_documented": 7,
+    "error_scenarios_documented": 10,
+    "failure_modes_documented": 6,
+    "manual_tests_mapped": 11,
+    "automated_test_coverage_percentage": 0.0,
+    "acceptance_criteria_count": 24,
+    "unresolved_gaps_count": 6,
+    "exclusions_count": 3
+  },
+  "critical_findings": [
+    {
+      "id": "SEC-01",
+      "severity": "CRITICAL",
+      "category": "Security / Authorization",
+      "title": "RLS Privilege Escalation on public.users",
+      "remediation": "Split into separate SELECT and UPDATE policies; disallow updating role_id."
+    },
+    {
+      "id": "SEC-02",
+      "severity": "CRITICAL",
+      "category": "Security / Data Privacy",
+      "title": "Plaintext Password Storage in public.users.password and UI Viewer Cell",
+      "remediation": "Drop password column from public.users; eliminate eye-toggle viewer; rely solely on GoTrue hashes."
+    },
+    {
+      "id": "SEC-03",
+      "severity": "HIGH",
+      "category": "Security / Secrets Exposure",
+      "title": "Client-Exposed Sarvam AI Secret API Key in VITE_SARVAM_API_KEY",
+      "remediation": "Proxy speech synthesis requests through a secure Supabase Edge Function."
+    },
+    {
+      "id": "ARC-01",
+      "severity": "HIGH",
+      "category": "Architecture / Integrity",
+      "title": "Non-Atomic Sequential STU Onboarding Wizard with Pseudo-Rollback",
+      "remediation": "Encapsulate organization, region, depot, and user creation inside a single atomic PostgreSQL transaction."
+    },
+    {
+      "id": "TST-01",
+      "severity": "HIGH",
+      "category": "Quality Assurance",
+      "title": "Zero Automated Tests (0% Unit/Integration/E2E Coverage)",
+      "remediation": "Implement Vitest unit test suite and Playwright E2E test matrix meeting Gate 6 acceptance criteria."
+    }
+  ],
+  "exclusions": [
+    {
+      "path": "node_modules/",
+      "reason": "Third-party vendor dependencies managed via pnpm-lock.yaml."
+    },
+    {
+      "path": "dist-electron/",
+      "reason": "Generated compiler build artifacts."
+    },
+    {
+      "path": ".git/",
+      "reason": "VCS internal repository metadata."
+    }
+  ],
+  "documentation_manifest": [
+    "docs/migration-handover/00-MASTER-INDEX.md",
+    "docs/migration-handover/01-EXECUTIVE-SUMMARY.md",
+    "docs/migration-handover/02-SCOPE-AND-COVERAGE.md",
+    "docs/migration-handover/03-ASSUMPTIONS-DECISIONS-OPEN-QUESTIONS.md",
+    "docs/migration-handover/10-SYSTEM-ARCHITECTURE.md",
+    "docs/migration-handover/11-APPLICATION-LIFECYCLE.md",
+    "docs/migration-handover/12-ROUTE-AND-NAVIGATION-INVENTORY.md",
+    "docs/migration-handover/13-COMPONENT-AND-MODULE-INVENTORY.md",
+    "docs/migration-handover/20-FUNCTIONAL-REQUIREMENTS.md",
+    "docs/migration-handover/21-NON-FUNCTIONAL-REQUIREMENTS.md",
+    "docs/migration-handover/22-PAGE-BY-PAGE-SPECIFICATIONS.md",
+    "docs/migration-handover/23-USER-OPERATIONS-AND-CRUD.md",
+    "docs/migration-handover/24-BUSINESS-RULES-AND-DECISION-TABLES.md",
+    "docs/migration-handover/25-USER-WORKFLOWS-AND-STATE-MACHINES.md",
+    "docs/migration-handover/26-FORMS-VALIDATION-AND-ERRORS.md",
+    "docs/migration-handover/27-TABLES-SEARCH-FILTERS-AND-PAGINATION.md",
+    "docs/migration-handover/28-UI-RENDERING-AND-CONDITIONAL-LOGIC.md",
+    "docs/migration-handover/30-AUTHENTICATION-AND-SESSION-MANAGEMENT.md",
+    "docs/migration-handover/31-ROLES-PERMISSIONS-AND-RBAC.md",
+    "docs/migration-handover/32-AUTHORIZATION-AND-RLS-POLICIES.md",
+    "docs/migration-handover/33-SECURITY-AND-PRIVACY-REQUIREMENTS.md",
+    "docs/migration-handover/40-DATABASE-SCHEMA-AND-DATA-DICTIONARY.md",
+    "docs/migration-handover/41-ENTITY-RELATIONSHIP-DIAGRAM.md",
+    "docs/migration-handover/42-DATABASE-QUERIES-AND-MUTATIONS.md",
+    "docs/migration-handover/43-DATABASE-MIGRATIONS-AND-SEED-DATA.md",
+    "docs/migration-handover/44-TYPES-INTERFACES-AND-DATA-CONTRACTS.md",
+    "docs/migration-handover/45-API-AND-INTEGRATION-CATALOG.md",
+    "docs/migration-handover/46-FILE-STORAGE-IMPORT-EXPORT.md",
+    "docs/migration-handover/47-REALTIME-BACKGROUND-JOBS-AND-NOTIFICATIONS.md",
+    "docs/migration-handover/50-ENVIRONMENT-AND-CONFIGURATION.md",
+    "docs/migration-handover/51-BUILD-DEPLOYMENT-AND-INFRASTRUCTURE.md",
+    "docs/migration-handover/52-LOGGING-MONITORING-AND-OBSERVABILITY.md",
+    "docs/migration-handover/53-TEST-CATALOG-AND-VERIFICATION.md",
+    "docs/migration-handover/54-ERRORS-EDGE-CASES-AND-FAILURE-MODES.md",
+    "docs/migration-handover/60-REQUIREMENT-TRACEABILITY-MATRIX.md",
+    "docs/migration-handover/61-MIGRATION-COMPATIBILITY-AND-DATA-PRESERVATION.md",
+    "docs/migration-handover/62-KNOWN-ISSUES-AND-TECHNICAL-DEBT.md",
+    "docs/migration-handover/63-MIGRATION-ACCEPTANCE-CRITERIA.md",
+    "docs/migration-handover/64-REQUIREMENT-GAPS-AND-UNVERIFIED-BEHAVIOR.md",
+    "docs/migration-handover/65-FINAL-COVERAGE-AND-HANDOVER-REPORT.md",
+    "docs/migration-handover/coverage-manifest.json"
+  ]
+}

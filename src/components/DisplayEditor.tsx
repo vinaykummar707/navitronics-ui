@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 import {
   ensureMin,
@@ -14,27 +14,35 @@ import { useFontFileByLanguage } from "@/utils/getFontFileByLanguage";
 interface DisplayEditorProps {
   listIndex: number;
   stopScroll?: boolean;
+  ledColor?: string;
 }
 
 /**
  * Extracted LED Wrapper to prevent re-creation on every parent render
  */
-const LEDWrapper = ({ 
-  fieldKey, rows, cols, textConfig, isRouteNumber = false, 
-  fontFamily, stopScroll, basePath, watch, setValue 
+const LEDWrapper = React.memo(({
+  fieldKey, rows, cols, textConfig, isRouteNumber = false,
+  fontFamily, stopScroll, basePath, setValue, ledColor
 }: any) => {
   const fieldPath = `${basePath}.texts.${fieldKey}`;
-  const currentBitmap = watch(`${fieldPath}.bitmap`);
+  const currentBitmap = textConfig?.bitmap || "";
+  const currentBitmapRef = React.useRef(currentBitmap);
+
+  React.useEffect(() => {
+    currentBitmapRef.current = currentBitmap;
+  }, [currentBitmap]);
 
   const handleBitmapChange = useCallback((text: string) => {
-    if (text !== currentBitmap) {
+    if (text && text !== currentBitmapRef.current) {
+      currentBitmapRef.current = text;
       setValue(`${fieldPath}.bitmap`, text, { shouldDirty: false });
       setValue(`${fieldPath}.fontWidth`, getBitmapColumns(text), { shouldDirty: false });
     }
-  }, [currentBitmap, fieldPath, setValue]);
+  }, [fieldPath, setValue]);
 
   return (
     <LEDBitmapSimulator
+      key={fieldPath}
       stopScroll={stopScroll}
       rows={rows}
       cols={cols}
@@ -42,26 +50,36 @@ const LEDWrapper = ({
       isRouteNumber={isRouteNumber}
       fontFamily={fontFamily}
       onBitmapTextChange={handleBitmapChange}
+      ledColor={ledColor}
     />
   );
-};
+});
 
-export default function DisplayEditor({ listIndex, stopScroll }: DisplayEditorProps) {
+export default function DisplayEditor({ listIndex, stopScroll, ledColor }: DisplayEditorProps) {
   const { selectedTab } = useTabsStore();
   const { watch, setValue } = useFormContext<DisplayConfigPostRequest>();
   const getFontFileByLanguage = useFontFileByLanguage();
   const [isScrollStopped, setIsScrollStopped] = useState(stopScroll);
 
-  const basePath = `${selectedTab}[${listIndex}]`;
-  const screenConfig: Simulation = watch(basePath);
+  useEffect(() => {
+    setIsScrollStopped(stopScroll);
+  }, [stopScroll]);
+
+  const simulationsForTab: Simulation[] = watch(selectedTab as any) || [];
+  const safeListIndex = simulationsForTab.length > 0
+    ? Math.min(Math.max(0, listIndex), simulationsForTab.length - 1)
+    : 0;
+
+  const basePath = `${selectedTab}[${safeListIndex}]`;
+  const screenConfig: Simulation = simulationsForTab[safeListIndex];
 
   if (!screenConfig) return null;
 
   const commonProps = {
     stopScroll: isScrollStopped,
     basePath,
-    watch,
     setValue,
+    ledColor,
   };
 
   const getFontFor = (key: string) => {
@@ -74,17 +92,17 @@ export default function DisplayEditor({ listIndex, stopScroll }: DisplayEditorPr
   // Layout Logic for Multi-screen formats
   const renderMultiLayout = () => {
     const splitRoute = watch("is_split_route");
-    const sideTextBitmap = watch(`${basePath}.texts.sideText.bitmap`);
-    const routeBitmap1 = watch(`${basePath}.texts.routeNumber1.bitmap`);
-    const routeBitmap2 = watch(`${basePath}.texts.routeNumber2.bitmap`);
+    const sideTextBitmap = screenConfig.texts?.sideText?.bitmap || "";
+    const routeBitmap1 = screenConfig.texts?.routeNumber1?.bitmap || "";
+    const routeBitmap2 = screenConfig.texts?.routeNumber2?.bitmap || "";
 
-    const routePosition = !splitRoute 
-      ? watch(`${basePath}.texts.sideText.position`) 
-      : watch(`${basePath}.texts.routeNumber1.position`);
+    const routePosition = !splitRoute
+      ? (screenConfig.texts?.sideText?.position || "Center")
+      : (screenConfig.texts?.routeNumber1?.position || "Center");
 
     const leftCols = ensureMin(
-      splitRoute 
-        ? Math.max(getBitmapColumns(routeBitmap1), getBitmapColumns(routeBitmap2)) 
+      splitRoute
+        ? Math.max(getBitmapColumns(routeBitmap1), getBitmapColumns(routeBitmap2))
         : getBitmapColumns(sideTextBitmap),
       96
     );
@@ -111,6 +129,7 @@ export default function DisplayEditor({ listIndex, stopScroll }: DisplayEditorPr
           </div>
         ) : (
           <LEDWrapper
+            key="sideText"
             {...commonProps}
             fieldKey="sideText"
             rows={screenConfig.height || 16}
@@ -124,6 +143,7 @@ export default function DisplayEditor({ listIndex, stopScroll }: DisplayEditorPr
 
         {screenConfig.format === "two" ? (
           <LEDWrapper
+            key="two-text"
             {...commonProps}
             fieldKey="text"
             rows={screenConfig.height || 16}
@@ -156,6 +176,7 @@ export default function DisplayEditor({ listIndex, stopScroll }: DisplayEditorPr
     <div className="flex flex-col items-start gap-4">
       {screenConfig.format === "single" ? (
         <LEDWrapper
+          key="single-text"
           {...commonProps}
           fieldKey="text"
           rows={screenConfig.height || 16}

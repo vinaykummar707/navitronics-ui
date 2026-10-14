@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 
 type MarqueeDirection = "none" | "ltr" | "rtl";
 type Alignment = "start" | "center" | "end";
@@ -31,7 +31,7 @@ const LEDMatrix: React.FC<LEDMatrixProps> = ({
   paused = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [matrix, setMatrix] = useState<boolean[][]>([]);
+  const [interactiveMatrix, setInteractiveMatrix] = useState<boolean[][] | null>(null);
   const animationFrameRef = useRef<number>();
   const currentScrollPositionRef = useRef(0); // Renamed for clarity
 
@@ -44,19 +44,24 @@ const LEDMatrix: React.FC<LEDMatrixProps> = ({
     return max - (value - min);
   }
 
-  useEffect(() => {
+  // Derive matrix synchronously on render to prevent blank/lagging frame flashes
+  const baseMatrix = useMemo(() => {
     if (pattern && pattern.length > 0) {
-      const newMatrix = pattern.map((row) =>
+      return pattern.map((row) =>
         row.split("").map((char) => char === "#")
       );
-      setMatrix(newMatrix);
-    } else {
-      const newMatrix = Array(rows)
-        .fill(0)
-        .map(() => Array(columns).fill(false));
-      setMatrix(newMatrix);
     }
+    return Array(rows)
+      .fill(0)
+      .map(() => Array(columns).fill(false));
   }, [rows, columns, pattern]);
+
+  // Reset user manual clicks when pattern or dimensions change
+  useEffect(() => {
+    setInteractiveMatrix(null);
+  }, [baseMatrix]);
+
+  const matrix = interactiveMatrix || baseMatrix;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -69,8 +74,12 @@ const LEDMatrix: React.FC<LEDMatrixProps> = ({
     const canvasWidth = columns * totalDotSize;
     const canvasHeight = rows * totalDotSize;
 
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
+    if (canvas.width !== canvasWidth) {
+      canvas.width = canvasWidth;
+    }
+    if (canvas.height !== canvasHeight) {
+      canvas.height = canvasHeight;
+    }
 
     // Calculate the actual width of the pattern in pixels
     const patternPixelWidth = (matrix[0]?.length || 0) * totalDotSize;

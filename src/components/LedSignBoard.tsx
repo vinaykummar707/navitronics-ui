@@ -1,5 +1,5 @@
 import axiosInstance from "@/config/axios";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import EnhancedTextToLEDMatrix from "./TextToLedMatrix";
 import { generateLedMatrixFromText } from "./canvasUtility";
 import LEDBusBoard from "./FullScreenBoard";
@@ -9,6 +9,42 @@ import axios from "axios";
 
 import { buildBitmapApiUrl } from "@/services/bitmapService";
 import { BitmapApiParams } from "@/types/bitmapApi";
+
+const bitmapMemoryCache = new Map<string, string>();
+
+function convertAsciiToArray(ascii?: string): string[] {
+  if (!ascii || typeof ascii !== "string") return [];
+  return ascii
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+}
+
+function convertScrollTypeToMarqueeDirection(scrollType: any) {
+  switch (scrollType) {
+    case "Left To Right":
+      return "ltr";
+    case "Right To Left":
+      return "rtl";
+    case "Fixed":
+      return "none";
+    default:
+      return "none";
+  }
+}
+
+function convertPositionToAlignment(position: any) {
+  switch (position) {
+    case "Left":
+      return "start";
+    case "Right":
+      return "end";
+    case "Center":
+      return "center";
+    default:
+      return "center";
+  }
+}
 
 const LEDBitmapSimulator = ({
   text,
@@ -20,7 +56,8 @@ const LEDBitmapSimulator = ({
   stopScroll,
   onBitmapTextChange,
   isRouteNumber = false, // Flag to indicate if this is a route number display
-}) => {
+  ledColor = "#ffbf00",
+}: any) => {
   const safeText = text || {
     text: "",
     fontHeight: 12,
@@ -34,9 +71,8 @@ const LEDBitmapSimulator = ({
   const [ledSize, setLedSize] = useState(4);
   const [ledSpacing, setLedSpacing] = useState(horizontalSpacing);
   const [rowSpacing, setRowSpacing] = useState(verticalSpacing);
-  const [bitmapText, setBitmapText] = useState("");
+  const [bitmapText, setBitmapText] = useState(safeText?.bitmap || "");
   const [ledMatrix, setLedMatrix] = useState([]);
-  const [ledColor, setLedColor] = useState("#ff0000");
   const [bgColor, setBgColor] = useState("#000000");
   const [viewportWidth, setViewportWidth] = useState(800);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -131,25 +167,52 @@ const LEDBitmapSimulator = ({
     return buildBitmapApiUrl(params);
   };
 
+  const apiUrl = getApiUrl();
+  const currentBitmapText = (safeText?.bitmap && safeText.bitmap.trim().length > 0)
+    ? safeText.bitmap
+    : (bitmapMemoryCache.get(apiUrl) || bitmapText);
+
+  const pattern = useMemo(() => {
+    return convertAsciiToArray(currentBitmapText);
+  }, [currentBitmapText]);
+
   useEffect(() => {
     const controller = new AbortController();
 
+    if (safeText?.bitmap) {
+      bitmapMemoryCache.set(apiUrl, safeText.bitmap);
+    }
+
+    if (currentBitmapText && currentBitmapText !== bitmapText) {
+      setBitmapText(currentBitmapText);
+    }
+
     const fetchBitmap = async () => {
       try {
-        const url = getApiUrl();
-        const response = await axios.get(url, { signal: controller.signal });
-        setBitmapText(response.data);
+        const response = await axios.get(apiUrl, { signal: controller.signal });
+        if (response.data) {
+          bitmapMemoryCache.set(apiUrl, response.data);
+          if (response.data !== currentBitmapText) {
+            setBitmapText(response.data);
+          }
+        }
       } catch (error: any) {
         if (axios.isCancel(error) || error?.name === "CanceledError" || error?.name === "AbortError") {
-          return; // Ignore intentional aborts
+          return;
         }
-        setBitmapText("");
       }
     };
 
-    const timer = setTimeout(() => {
-      fetchBitmap();
-    }, 300);
+    // If we don't have bitmap yet, fetch it with a snappy debounce for typing
+    if (!safeText?.bitmap && !bitmapMemoryCache.has(apiUrl)) {
+      const timer = setTimeout(() => {
+        fetchBitmap();
+      }, 50);
+      return () => {
+        clearTimeout(timer);
+        controller.abort();
+      };
+    }
 
     if (safeText?.scrollType === "Left To Right") {
       setIsScrolling(true);
@@ -175,72 +238,26 @@ const LEDBitmapSimulator = ({
     }
 
     return () => {
-      clearTimeout(timer);
       controller.abort();
     };
   }, [
-    safeText?.text,
-    (safeText as any)?.icon,
-    (safeText as any)?.iconPosition,
-    (safeText as any)?.iconSpacing,
-    (safeText as any)?.iconWidthScale,
-    (safeText as any)?.iconWordIndex,
+    apiUrl,
+    safeText?.bitmap,
     safeText?.scrollType,
     safeText?.position,
     safeText?.scrollSpeed,
     safeText?.fontSize,
     safeText?.fontWeight,
     safeText?.fontHeight,
-    (safeText as any)?.fontfile,
-    (safeText as any)?.x_offset,
-    (safeText as any)?.y_offset,
-    (safeText as any)?.spacing,
-    fontFamily,
     stopScroll,
   ]);
 
-  useEffect(() => {
-    setLedMatrix(processBitmapText(bitmapText, scrollOffset));
-  }, [bitmapText]);
-
-  const convertScrollTypeToMarqueeDirection = (scrollType: any) => {
-    switch (scrollType) {
-      case "Left To Right":
-        return "ltr";
-      case "Right To Left":
-        return "rtl";
-      case "Fixed":
-        return "none";
-      default:
-        return "none";
-    }
-  };
-
-  const convertPositionToAlignment = (position: any) => {
-    switch (position) {
-      case "Left":
-        return "start";
-      case "Right":
-        return "end";
-      case "Center":
-        return "center";
-      default:
-        return "center";
-    }
-  };
-
-  function convertAsciiToArray(ascii: string): string[] {
-    return ascii
-      .split("\n") // Split into lines
-      .map((line) => line.trim()) // Optionally trim whitespace
-      .filter((line) => line.length > 0); // Remove empty lines
-  }
 
   useEffect(() => {
-    if (onBitmapTextChange) {
-      onBitmapTextChange(bitmapText);
+    if (onBitmapTextChange && currentBitmapText && currentBitmapText !== safeText?.bitmap) {
+      onBitmapTextChange(currentBitmapText);
     }
-  }, [bitmapText, onBitmapTextChange]);
+  }, [currentBitmapText, safeText?.bitmap, onBitmapTextChange]);
 
   return (
     <div className="flex flex-col ">
@@ -253,11 +270,12 @@ const LEDBitmapSimulator = ({
       <LEDMatrix
         rows={rows}
         columns={cols}
-        pattern={convertAsciiToArray(bitmapText)}
+        pattern={pattern}
         marqueeDirection={convertScrollTypeToMarqueeDirection(safeText.scrollType)}
         scrollSpeed={parseInt(String(safeText.scrollSpeed || 1), 10)}
         alignment={convertPositionToAlignment(safeText.position)}
         paused={stopScroll}
+        onColor={ledColor}
       />
     </div>
   );
