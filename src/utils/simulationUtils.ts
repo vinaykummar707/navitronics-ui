@@ -1,4 +1,4 @@
-import { Simulation } from "@/types/routeConfigV2";
+import { Simulation, TextConfig } from "@/types/routeConfigV2";
 import { getDefaultTextConfig } from "@/constants/defaultRouteValues";
 
 /**
@@ -81,6 +81,107 @@ export const sanitizeRouteBoards = <T extends Record<string, any>>(data: T): T =
   return cleaned as T;
 };
 
+/** Route Setup values that drive the preset text of route slides. */
+export interface RouteFieldValues {
+  routeNumber?: string;
+  routeNumber1?: string;
+  routeNumber2?: string;
+  source?: string;
+  destination?: string;
+  via?: string;
+}
+
+const joinRouteParts = (...parts: (string | undefined)[]) => parts.filter(Boolean).join(" - ");
+
+// Texts the editor fills in when a Route Setup field is still empty.
+const ZONE_PLACEHOLDER_TEXTS: Record<string, string[]> = {
+  text: ["", "Single Route Text", "Main Text", "Text"],
+  sideText: ["", "Side Text"],
+  upperHalfText: ["", "Upper Text"],
+  lowerHalfText: ["", "Lower Text"],
+  routeNumber1: ["", "1", "Route 1"],
+  routeNumber2: ["", "2", "Route 2"],
+};
+
+/**
+ * Text a zone gets when a route slide is added (mirrors the Add Slide presets).
+ */
+export const getRoutePresetZoneText = (
+  format: Simulation["format"],
+  zoneKey: string,
+  values: RouteFieldValues
+): string | undefined => {
+  switch (zoneKey) {
+    case "text": {
+      const routeText = joinRouteParts(values.source, values.destination, values.via);
+      return format === "single" ? routeText || "Single Route Text" : routeText;
+    }
+    case "upperHalfText":
+      return joinRouteParts(values.source, values.destination);
+    case "lowerHalfText":
+      return values.via || "";
+    case "sideText":
+      return values.routeNumber || "";
+    case "routeNumber1":
+      return values.routeNumber1 || "Route 1";
+    case "routeNumber2":
+      return values.routeNumber2 || "Route 2";
+    default:
+      return undefined;
+  }
+};
+
+/**
+ * True when a zone still shows auto-generated text (preset or placeholder) rather than a manual edit.
+ */
+export const isAutoRouteZoneText = (
+  format: Simulation["format"],
+  zoneKey: string,
+  text: string | undefined,
+  values: RouteFieldValues
+): boolean => {
+  const value = text ?? "";
+  if (ZONE_PLACEHOLDER_TEXTS[zoneKey]?.includes(value)) return true;
+  const preset = getRoutePresetZoneText(format, zoneKey, values);
+  return preset !== undefined && value === preset;
+};
+
+/**
+ * Re-applies Route Setup changes to existing slides. Only zones whose text still matches the
+ * preset for the previous values are updated, so manual text edits are kept.
+ */
+export const syncSlidesWithRouteFields = (
+  slides: Simulation[],
+  prevValues: RouteFieldValues,
+  nextValues: RouteFieldValues
+): { slides: Simulation[]; changed: boolean } => {
+  if (!Array.isArray(slides)) return { slides: [], changed: false };
+  let changed = false;
+
+  const next = slides.map((slide) => {
+    // Only route slides carry Route Setup text; slogans, special messages and stops are user content.
+    if (!slide || !slide.texts || (slide.type && slide.type !== "route")) return slide;
+    let slideChanged = false;
+    const texts = { ...slide.texts } as Record<string, TextConfig | undefined>;
+
+    Object.keys(texts).forEach((zoneKey) => {
+      const zone = texts[zoneKey];
+      if (!zone || typeof zone !== "object") return;
+      if (!isAutoRouteZoneText(slide.format, zoneKey, zone.text, prevValues)) return;
+      const nextText = getRoutePresetZoneText(slide.format, zoneKey, nextValues);
+      if (nextText === undefined || nextText === zone.text) return;
+      texts[zoneKey] = { ...zone, text: nextText, bitmap: "" };
+      slideChanged = true;
+    });
+
+    if (!slideChanged) return slide;
+    changed = true;
+    return { ...slide, texts: texts as Simulation["texts"] } as Simulation;
+  });
+
+  return { slides: changed ? next : slides, changed };
+};
+
 /**
  * Migrates existing slides when toggling split route mode on/off in the studio editor.
  */
@@ -94,6 +195,11 @@ export const migrateSlidesOnSplitRouteToggle = (
   }
 ): Simulation[] => {
   if (!Array.isArray(slides)) return [];
+  const fieldValues: RouteFieldValues = {
+    routeNumber: routeNumbers?.routeNumber,
+    routeNumber1: routeNumbers?.routeNumber1,
+    routeNumber2: routeNumbers?.routeNumber2,
+  };
   return slides.map((slide) => {
     if (!slide || slide.format === "single") return slide;
     const texts = { ...slide.texts } as Record<string, any>;
@@ -101,10 +207,16 @@ export const migrateSlidesOnSplitRouteToggle = (
     if (isSplit) {
       // Switching to Split Route:
       // Set routeNumber1 and routeNumber2, remove sideText
+      const sideText = texts.sideText;
+      // An auto-filled route number badge takes the Route #1 value; a manually edited one is kept.
+      const sideIsAuto =
+        sideText && isAutoRouteZoneText(slide.format, "sideText", sideText.text, fieldValues);
       texts.routeNumber1 =
         texts.routeNumber1 ||
-        texts.sideText ||
-        getDefaultTextConfig(routeNumbers?.routeNumber1 || "1");
+        (sideText && !sideIsAuto ? sideText : undefined) ||
+        (sideText
+          ? { ...sideText, text: routeNumbers?.routeNumber1 || "1", bitmap: "" }
+          : getDefaultTextConfig(routeNumbers?.routeNumber1 || "1"));
       texts.routeNumber2 =
         texts.routeNumber2 ||
         getDefaultTextConfig(routeNumbers?.routeNumber2 || "2");
@@ -112,10 +224,15 @@ export const migrateSlidesOnSplitRouteToggle = (
     } else {
       // Switching to Standard (Single Route Number):
       // Set sideText, remove routeNumber1 and routeNumber2
+      const routeNumber1 = texts.routeNumber1;
+      const routeNumber1IsAuto =
+        routeNumber1 && isAutoRouteZoneText(slide.format, "routeNumber1", routeNumber1.text, fieldValues);
       texts.sideText =
         texts.sideText ||
-        texts.routeNumber1 ||
-        getDefaultTextConfig(routeNumbers?.routeNumber || "");
+        (routeNumber1 && !routeNumber1IsAuto ? routeNumber1 : undefined) ||
+        (routeNumber1
+          ? { ...routeNumber1, text: routeNumbers?.routeNumber || "", bitmap: "" }
+          : getDefaultTextConfig(routeNumbers?.routeNumber || ""));
       delete texts.routeNumber1;
       delete texts.routeNumber2;
     }

@@ -8,7 +8,7 @@ import {
 import LEDBitmapSimulator from "./LedSignBoard";
 import { Button } from "./ui/button";
 import useTabsStore from "@/store/useTabsStore";
-import { DisplayConfigPostRequest, Simulation } from "@/types/routeConfigV2";
+import { DisplayConfigPostRequest, Simulation, TextConfig } from "@/types/routeConfigV2";
 import { useFontFileByLanguage } from "@/utils/getFontFileByLanguage";
 
 interface DisplayEditorProps {
@@ -26,11 +26,10 @@ const LEDWrapper = React.memo(({
 }: any) => {
   const fieldPath = `${basePath}.texts.${fieldKey}`;
   const currentBitmap = textConfig?.bitmap || "";
+  // Synced during render (not in an effect): the wrapper is reused across slides, and the child's
+  // write-back runs before this wrapper's effects, so a stale ref would skip storing a cached bitmap.
   const currentBitmapRef = React.useRef(currentBitmap);
-
-  React.useEffect(() => {
-    currentBitmapRef.current = currentBitmap;
-  }, [currentBitmap]);
+  currentBitmapRef.current = currentBitmap;
 
   const handleBitmapChange = useCallback((text: string) => {
     if (text && text !== currentBitmapRef.current) {
@@ -70,10 +69,18 @@ export default function DisplayEditor({ listIndex, stopScroll, ledColor }: Displ
     ? Math.min(Math.max(0, listIndex), simulationsForTab.length - 1)
     : 0;
 
-  const basePath = `${selectedTab}[${safeListIndex}]`;
+  // Dot notation is required: RHF only re-renders `watch(selectedTab)` for child paths of the form `${selectedTab}.…`,
+  // so bracket paths would leave the route zone width stale after its bitmap is written back.
+  const basePath = `${selectedTab}.${safeListIndex}`;
   const screenConfig: Simulation = simulationsForTab[safeListIndex];
 
   if (!screenConfig) return null;
+
+  // RHF mutates zone objects in place, so pass a fresh copy to let the memoized LEDWrapper see edits.
+  const zoneConfig = (key: string): TextConfig | undefined => {
+    const zone = (screenConfig.texts as Record<string, TextConfig | undefined> | undefined)?.[key];
+    return zone ? { ...zone } : zone;
+  };
 
   const commonProps = {
     stopScroll: isScrollStopped,
@@ -120,7 +127,7 @@ export default function DisplayEditor({ listIndex, stopScroll, ledColor }: Displ
                 fieldKey={key}
                 rows={(screenConfig.height || 16) / 2}
                 cols={leftCols + 1}
-                textConfig={screenConfig.texts?.[key]}
+                textConfig={zoneConfig(key)}
                 isRouteNumber={true}
                 fontFamily={getFontFor(key)}
                 stopScroll={stopScroll}
@@ -134,7 +141,7 @@ export default function DisplayEditor({ listIndex, stopScroll, ledColor }: Displ
             fieldKey="sideText"
             rows={screenConfig.height || 16}
             cols={leftCols + 1}
-            textConfig={screenConfig.texts?.sideText}
+            textConfig={zoneConfig("sideText")}
             isRouteNumber={true}
             fontFamily={getFontFor("sideText")}
             stopScroll={stopScroll}
@@ -148,7 +155,7 @@ export default function DisplayEditor({ listIndex, stopScroll, ledColor }: Displ
             fieldKey="text"
             rows={screenConfig.height || 16}
             cols={ensureMin(availableWidth, 96)}
-            textConfig={screenConfig.texts?.text}
+            textConfig={zoneConfig("text")}
             fontFamily={getFontFor("text")}
             stopScroll={stopScroll}
           />
@@ -161,7 +168,7 @@ export default function DisplayEditor({ listIndex, stopScroll, ledColor }: Displ
                 fieldKey={key}
                 rows={(screenConfig.height || 16) / 2}
                 cols={ensureMin(availableWidth, 96)}
-                textConfig={screenConfig.texts?.[key]}
+                textConfig={zoneConfig(key)}
                 fontFamily={getFontFor(key)}
                 stopScroll={stopScroll}
               />
@@ -181,7 +188,7 @@ export default function DisplayEditor({ listIndex, stopScroll, ledColor }: Displ
           fieldKey="text"
           rows={screenConfig.height || 16}
           cols={ensureNumber(screenConfig.width, 96)}
-          textConfig={screenConfig.texts?.text}
+          textConfig={zoneConfig("text")}
           fontFamily={getFontFor("text")}
           stopScroll={stopScroll}
         />

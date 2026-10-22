@@ -193,7 +193,7 @@ export const defaultDisplayConfigPostRequest: IRouteCreate = {
   via: "",
   route_number_1: "",
   route_number_2: "",
-  separation: "",
+  separation: "-",
   is_split_route: false,
   front: [],
   side: [],

@@ -7,8 +7,7 @@ import LedCanvas from "./FullScreenBoard";
 import LEDMatrix from "./CanvasText";
 import axios from "axios";
 
-import { buildBitmapApiUrl } from "@/services/bitmapService";
-import { BitmapApiParams } from "@/types/bitmapApi";
+import { buildBitmapApiUrl, buildZoneBitmapParams } from "@/services/bitmapService";
 
 const bitmapMemoryCache = new Map<string, string>();
 
@@ -142,35 +141,17 @@ const LEDBitmapSimulator = ({
     return matrix;
   };
 
-  const getApiUrl = () => {
-    const params: BitmapApiParams = {
-      text: safeText?.text !== undefined && safeText?.text !== null ? safeText.text : " ",
-      icon: (safeText as any)?.icon || undefined,
-      iconPosition: (safeText as any)?.iconPosition || ((safeText as any)?.icon ? "start" : undefined),
-      iconWordIndex: (safeText as any)?.iconWordIndex || undefined,
-      iconSpacing: (safeText as any)?.iconSpacing !== undefined ? (safeText as any).iconSpacing : undefined,
-      iconWidthScale: (safeText as any)?.iconWidthScale !== undefined ? (safeText as any).iconWidthScale : undefined,
-      height: Math.min(safeText?.fontHeight || rows, rows),
-      weight: safeText?.fontWeight === "Bold" ? "Bold" : "Regular",
-      family: fontFamily,
-      vAlign: (safeText as any)?.vAlign || undefined,
-      threshold: (safeText as any)?.threshold || undefined,
-      spaceWidth: (safeText as any)?.spaceWidth || undefined,
-    };
-
-    if (isRouteNumber) {
-      params.padding = true;
-      params.pleft = safeText?.position === "Left" ? 1 : 2;
-      params.pright = safeText?.position === "Right" ? 1 : 2;
-    }
-
-    return buildBitmapApiUrl(params);
-  };
+  const getApiUrl = () =>
+    buildBitmapApiUrl(buildZoneBitmapParams(safeText, { rows, fontFamily, isRouteNumber }));
 
   const apiUrl = getApiUrl();
-  const currentBitmapText = (safeText?.bitmap && safeText.bitmap.trim().length > 0)
-    ? safeText.bitmap
-    : (bitmapMemoryCache.get(apiUrl) || bitmapText);
+  // A persisted bitmap is only valid for the render params it was loaded with; any edit must regenerate it.
+  const mountApiUrlRef = useRef(apiUrl);
+  const storedBitmap =
+    apiUrl === mountApiUrlRef.current && safeText?.bitmap && safeText.bitmap.trim().length > 0
+      ? safeText.bitmap
+      : "";
+  const currentBitmapText = storedBitmap || bitmapMemoryCache.get(apiUrl) || bitmapText;
 
   const pattern = useMemo(() => {
     return convertAsciiToArray(currentBitmapText);
@@ -179,8 +160,8 @@ const LEDBitmapSimulator = ({
   useEffect(() => {
     const controller = new AbortController();
 
-    if (safeText?.bitmap) {
-      bitmapMemoryCache.set(apiUrl, safeText.bitmap);
+    if (storedBitmap) {
+      bitmapMemoryCache.set(apiUrl, storedBitmap);
     }
 
     if (currentBitmapText && currentBitmapText !== bitmapText) {
@@ -204,7 +185,7 @@ const LEDBitmapSimulator = ({
     };
 
     // If we don't have bitmap yet, fetch it with a snappy debounce for typing
-    if (!safeText?.bitmap && !bitmapMemoryCache.has(apiUrl)) {
+    if (!storedBitmap && !bitmapMemoryCache.has(apiUrl)) {
       const timer = setTimeout(() => {
         fetchBitmap();
       }, 50);

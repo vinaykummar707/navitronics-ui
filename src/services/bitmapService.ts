@@ -1,5 +1,7 @@
 import axios from "axios";
 import { BitmapApiParams } from "@/types/bitmapApi";
+import { Simulation, TextConfig } from "@/types/routeConfigV2";
+import { getBitmapColumns } from "@/utils/measurements";
 
 const getInitialBitmapUrl = (): string => {
   // Check if Electron desktop bridge provides a configured backend URL
@@ -11,7 +13,7 @@ const getInitialBitmapUrl = (): string => {
   if (envUrl) return envUrl;
 
   // Default to local sidecar engine on 127.0.0.1:5288
-  return "http://127.0.0.1:5288/api/bitmap";
+  return "http://localhost:5288/api/bitmap";
 };
 
 export const BITMAP_API_BASE_URL = getInitialBitmapUrl();
@@ -155,6 +157,41 @@ export function buildBitmapApiUrl(
 }
 
 /**
+ * Bitmap API params for one slide text zone. Shared by the live preview and save-time
+ * generation so both request (and cache) exactly the same bitmap.
+ */
+export function buildZoneBitmapParams(
+  zone: Partial<TextConfig> | undefined,
+  options: { rows: number; fontFamily?: string; isRouteNumber?: boolean }
+): BitmapApiParams {
+  const { rows, fontFamily, isRouteNumber } = options;
+  const params: BitmapApiParams = {
+    text: zone?.text !== undefined && zone?.text !== null ? zone.text : " ",
+    icon: zone?.icon || undefined,
+    iconPosition: zone?.iconPosition || (zone?.icon ? "start" : undefined),
+    // Older configs may keep a stale word index after the icon moved off "center"; it would override iconPosition.
+    iconWordIndex: zone?.iconPosition === "center" ? zone?.iconWordIndex || undefined : undefined,
+    iconSpacing: zone?.iconSpacing !== undefined ? zone.iconSpacing : undefined,
+    iconWidthScale: zone?.iconWidthScale !== undefined ? zone.iconWidthScale : undefined,
+    height: Math.min(zone?.fontHeight || rows, rows),
+    weight: zone?.fontWeight === "Bold" ? "Bold" : "Regular",
+    family: fontFamily,
+    vAlign: zone?.vAlign || undefined,
+    threshold: zone?.threshold || undefined,
+    spaceWidth: zone?.spaceWidth || undefined,
+    autoFit: zone?.autoFit || undefined,
+  };
+
+  if (isRouteNumber) {
+    params.padding = true;
+    params.pleft = zone?.position === "Left" ? 1 : 2;
+    params.pright = zone?.position === "Right" ? 1 : 2;
+  }
+
+  return params;
+}
+
+/**
  * Fetches the multiline ASCII LED bitmap string from the Bitmap API.
  */
 export async function fetchBitmapMatrix(
@@ -166,4 +203,87 @@ export async function fetchBitmapMatrix(
     responseType: "text",
   });
   return response.data;
+}
+
+type FontFamilyResolver = (language: string, zoneKey: string, fontHeight?: number) => string;
+
+// Zone keys, rows and route-number padding for a slide, matching the DisplayEditor preview layout.
+const getSlideZoneLayout = (slide: Simulation, isSplitRoute: boolean) => {
+  const height = slide.height || 16;
+  if (slide.format === "single") return [{ key: "text", rows: height, isRouteNumber: false }];
+  const zones = isSplitRoute
+    ? [
+        { key: "routeNumber1", rows: height / 2, isRouteNumber: true },
+        { key: "routeNumber2", rows: height / 2, isRouteNumber: true },
+      ]
+    : [{ key: "sideText", rows: height, isRouteNumber: true }];
+  if (slide.format === "two") {
+    zones.push({ key: "text", rows: height, isRouteNumber: false });
+  } else {
+    zones.push(
+      { key: "upperHalfText", rows: height / 2, isRouteNumber: false },
+      { key: "lowerHalfText", rows: height / 2, isRouteNumber: false }
+    );
+  }
+  return zones;
+};
+
+/**
+ * Generates bitmaps for slide zones that have none yet. The preview only renders the selected slide,
+ * so slides that were never opened (or were updated in the background) would otherwise be saved
+ * without a bitmap. Zones whose request fails are left unchanged.
+ */
+export async function fillMissingSlideBitmaps(
+  slides: Simulation[],
+  options: { isSplitRoute: boolean; getFontFamily: FontFamilyResolver; concurrency?: number }
+): Promise<{ slides: Simulation[]; failed: number }> {
+  if (!Array.isArray(slides) || slides.length === 0) return { slides, failed: 0 };
+  const { isSplitRoute, getFontFamily, concurrency = 6 } = options;
+
+  const jobs: { slideIndex: number; key: string; params: BitmapApiParams }[] = [];
+  slides.forEach((slide, slideIndex) => {
+    if (!slide || !slide.texts) return;
+    const texts = slide.texts as Record<string, TextConfig | undefined>;
+    getSlideZoneLayout(slide, isSplitRoute).forEach(({ key, rows, isRouteNumber }) => {
+      const zone = texts[key];
+      if (!zone || (zone.bitmap && zone.bitmap.trim().length > 0)) return;
+      const fontFamily = getFontFamily(zone.language || "en", key, zone.fontHeight);
+      jobs.push({ slideIndex, key, params: buildZoneBitmapParams(zone, { rows, fontFamily, isRouteNumber }) });
+    });
+  });
+  if (jobs.length === 0) return { slides, failed: 0 };
+
+  const results = new Map<string, string>();
+  let failed = 0;
+  let cursor = 0;
+  const worker = async () => {
+    while (cursor < jobs.length) {
+      const job = jobs[cursor++];
+      try {
+        const bitmap = await fetchBitmapMatrix(job.params);
+        if (typeof bitmap === "string" && bitmap.trim().length > 0) {
+          results.set(`${job.slideIndex}.${job.key}`, bitmap);
+        } else {
+          failed++;
+        }
+      } catch {
+        failed++;
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(concurrency, jobs.length) }, worker));
+
+  const filled = slides.map((slide, slideIndex) => {
+    if (!slide || !slide.texts) return slide;
+    let texts: Record<string, TextConfig | undefined> | null = null;
+    for (const key of Object.keys(slide.texts)) {
+      const bitmap = results.get(`${slideIndex}.${key}`);
+      if (!bitmap) continue;
+      texts = texts || { ...(slide.texts as Record<string, TextConfig | undefined>) };
+      texts[key] = { ...(texts[key] as TextConfig), bitmap, fontWidth: getBitmapColumns(bitmap) };
+    }
+    return texts ? ({ ...slide, texts } as Simulation) : slide;
+  });
+
+  return { slides: filled, failed };
 }

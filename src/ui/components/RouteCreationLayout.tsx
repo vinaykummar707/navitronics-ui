@@ -15,7 +15,6 @@ import {
   FeatherLayers,
   FeatherMaximize2,
   FeatherMinus,
-  FeatherMonitor,
   FeatherMusic,
   FeatherPause,
   FeatherPlay,
@@ -24,10 +23,10 @@ import {
   FeatherRepeat,
   FeatherRotateCw,
   FeatherSearch,
-  FeatherShuffle,
   FeatherSliders,
   FeatherSparkle,
   FeatherSpeech,
+  FeatherMic2,
   FeatherTrash,
   FeatherVolume2,
   FeatherX,
@@ -60,21 +59,58 @@ import {
   AVAILABLE_LANGUAGES,
   DEFAULT_SIMULATION_TYPE,
   getDefaultSingleSimulation,
+  getDefaultTextConfig,
   getDefaultStopSingleSimulation,
   getDefaultThreeSimulation,
   getDefaultTwoSimulation,
+  stopStates,
 } from "@/constants/defaultRouteValues";
 import {
+  DEFAULT_SIMULATION_HEIGHTS,
+  DEFAULT_SIMULATION_WIDTHS,
   DisplayConfigPostRequest,
+  FONT_WEIGHTS,
+  FontWeight,
+  Position,
+  ScrollType,
   Simulation,
+  SimulationFormat,
   SimulationType,
+  TextConfig,
 } from "@/types/routeConfigV2";
-import { migrateSlidesOnSplitRouteToggle, sanitizeRouteBoards } from "@/utils/simulationUtils";
-import { useFontHeightForLanguage, useFontHeightsForLanguage } from "@/utils/getFontFileByLanguage";
+import {
+  getRoutePresetZoneText,
+  isAutoRouteZoneText,
+  migrateSlidesOnSplitRouteToggle,
+  RouteFieldValues,
+  sanitizeRouteBoards,
+  syncSlidesWithRouteFields,
+} from "@/utils/simulationUtils";
+import { useFontFileByLanguage, useFontHeightForLanguage, useFontHeightsForLanguage } from "@/utils/getFontFileByLanguage";
+import { fillMissingSlideBitmaps } from "@/services/bitmapService";
 import { handleSloganAudioGeneration } from "@/utils/fetchTTS";
 
-const HEIGHT_OPTIONS = [16, 32] as const;
-const WIDTH_OPTIONS = [64, 96, 128, 160, 192, 224] as const;
+const HEIGHT_OPTIONS = DEFAULT_SIMULATION_HEIGHTS;
+const WIDTH_OPTIONS = DEFAULT_SIMULATION_WIDTHS;
+
+// Zones rendered at half board height by DisplayEditor.
+const isHalfHeightZone = (format: SimulationFormat | undefined, key: string) =>
+  format !== "single" &&
+  (key === "routeNumber1" || key === "routeNumber2" || (format === "three" && (key === "upperHalfText" || key === "lowerHalfText")));
+
+// Clamps zone font heights to a board height, clearing bitmaps that must be regenerated.
+const fitSimulationToHeight = (s: Simulation, newHeight: number): Simulation => {
+  const newTexts: Record<string, any> = { ...(s.texts || {}) };
+  Object.keys(newTexts).forEach((k) => {
+    const item = newTexts[k];
+    if (!item) return;
+    const maxFont = isHalfHeightZone(s.format, k) ? Math.floor(newHeight / 2) : newHeight;
+    if (!item.fontHeight || item.fontHeight > maxFont) {
+      newTexts[k] = { ...item, fontHeight: maxFont, bitmap: "" };
+    }
+  });
+  return { ...s, height: newHeight as Simulation["height"], texts: newTexts as Simulation["texts"] };
+};
 
 const FONT_HEIGHT_GRID = [
   7, 8, 10, 12, 14, 16, 18,
@@ -88,6 +124,9 @@ const BOARD_ITEMS = [
   { id: Tab.INTERNAL, letter: "I", label: "CABIN" },
   { id: Tab.STOPS, letter: "P", label: "PAS/OP3" },
 ];
+
+const getBoardLabel = (board: string) =>
+  BOARD_ITEMS.find((b) => b.id === board)?.label ?? board.toUpperCase();
 
 const getFirstTextZone = (split: boolean) => (split ? "routeNumber1" : "routeNumber");
 
@@ -118,7 +157,7 @@ const ActionTooltip: React.FC<ActionTooltipProps> = ({
           style={{ zIndex: 99999 }}
           asChild={true}
         >
-          <div className="z-[99999] px-2.5 py-1 rounded-md bg-neutral-900 border border-neutral-800 text-white shadow-xl pointer-events-none select-none text-[11px] font-medium leading-tight">
+          <div className="z-[99999] px-2.5 py-1 rounded-md bg-sidebar-background border border-neutral-border text-default-font shadow-lg pointer-events-none select-none text-[11px] font-medium leading-tight">
             {content}
           </div>
         </SubframeCore.Tooltip.Content>
@@ -126,6 +165,101 @@ const ActionTooltip: React.FC<ActionTooltipProps> = ({
     </SubframeCore.Tooltip.Root>
   );
 };
+
+interface ToggleOption<T extends string | number> {
+  value: T;
+  label: React.ReactNode;
+  tip?: string;
+  disabled?: boolean;
+}
+
+interface ToggleGroupProps<T extends string | number> {
+  value: T | undefined;
+  options: readonly ToggleOption<T>[];
+  onChange: (value: T) => void;
+  columns?: number;
+}
+
+function ToggleGroup<T extends string | number>({ value, options, onChange, columns }: ToggleGroupProps<T>) {
+  return (
+    <div
+      className="grid gap-1 w-full p-1 rounded-lg bg-neutral-100"
+      style={{ gridTemplateColumns: `repeat(${columns ?? options.length}, minmax(0, 1fr))` }}
+    >
+      {options.map((opt) => {
+        const active = opt.value === value;
+        const button = (
+          <button
+            type="button"
+            disabled={opt.disabled}
+            aria-pressed={active}
+            onClick={() => !active && onChange(opt.value)}
+            className={SubframeUtils.twClassNames(
+              "h-7 px-1 flex items-center justify-center rounded-md text-xs transition-all cursor-pointer truncate",
+              active
+                ? "bg-brand-primary text-brand-primary-foreground font-semibold shadow-sm"
+                : "text-subtext-color hover:text-default-font",
+              opt.disabled ? "opacity-35 cursor-not-allowed hover:text-subtext-color" : ""
+            )}
+          >
+            {opt.label}
+          </button>
+        );
+        return opt.tip ? (
+          <ActionTooltip key={String(opt.value)} content={opt.tip} side="top">
+            {button}
+          </ActionTooltip>
+        ) : (
+          <React.Fragment key={String(opt.value)}>{button}</React.Fragment>
+        );
+      })}
+    </div>
+  );
+}
+
+const SettingRow: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
+  <div className="flex items-center gap-3">
+    <span className="w-24 flex-none text-xs font-medium text-neutral-800">{label}</span>
+    <div className="flex-1 min-w-0">{children}</div>
+  </div>
+);
+
+const NumberField: React.FC<{
+  value: number | "" | undefined;
+  min: number;
+  max: number;
+  step?: number;
+  placeholder?: string;
+  disabled?: boolean;
+  onChange: (value: number | undefined) => void;
+}> = ({ value, min, max, step, placeholder, disabled, onChange }) => (
+  <input
+    type="number"
+    min={min}
+    max={max}
+    step={step}
+    placeholder={placeholder}
+    disabled={disabled}
+    value={value ?? ""}
+    onChange={(e) => {
+      const raw = e.target.value;
+      onChange(raw === "" ? undefined : Math.min(Math.max(min, Number(raw) || min), max));
+    }}
+    className="h-9 w-full rounded-lg bg-neutral-100 px-3 text-xs font-mono text-neutral-900 outline-none focus:ring-1 focus:ring-neutral-400 disabled:opacity-40"
+  />
+);
+
+const SCROLL_SPEED_TOGGLES = [
+  { value: 6, label: "Slow", tip: "Slow scroll speed" },
+  { value: 4, label: "Normal", tip: "Normal scroll speed" },
+  { value: 1, label: "Fast", tip: "Fast scroll speed" },
+] as const;
+
+// Maps any stored speed onto the nearest of the three UI presets (lower value = faster).
+const toSpeedPreset = (speed: number) => (speed <= 2 ? 1 : speed <= 5 ? 4 : 6);
+
+const SLIDE_BOARDS = ["front", "side", "rear", "internal"] as const;
+const ROUTE_SYNC_FIELDS: string[] = ["route_number", "route_number_1", "route_number_2", "source", "destination", "via"];
 
 interface RouteCreationLayoutProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -170,10 +304,22 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
 
     // Local UI State
     const [hasBeenSaved, setHasBeenSaved] = useState(false);
+    const submitLockRef = useRef(false);
+    const [isPreparingSubmit, setIsPreparingSubmit] = useState(false);
+    const releaseSubmitLock = useCallback(() => {
+      submitLockRef.current = false;
+      setIsPreparingSubmit(false);
+    }, []);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [ledColor, setLedColor] = useState<"#ffbf00" | "#ff2222">("#ffbf00");
-    const [zoom, setZoom] = useState<number>(100);
+    // null = auto-fit the LED board to the stage width (legacy SignboardCanvasStage behaviour, 40–100%).
+    const [manualZoom, setManualZoom] = useState<number | null>(null);
+    const [fitZoom, setFitZoom] = useState<number>(100);
+    const zoom = manualZoom ?? fitZoom;
+    const [ledStageEl, setLedStageEl] = useState<HTMLDivElement | null>(null);
+    const [ledMatrixEl, setLedMatrixEl] = useState<HTMLDivElement | null>(null);
+    const [ledMatrixSize, setLedMatrixSize] = useState<{ width: number; height: number } | null>(null);
     const [isCycling, setIsCycling] = useState<boolean>(false);
     const [showAutoText, setShowAutoText] = useState(false);
     const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
@@ -184,11 +330,32 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
     const [isPlayingAudio, setIsPlayingAudio] = useState(false);
     const audioElementRef = useRef<HTMLAudioElement | null>(null);
 
+    useEffect(() => {
+      if (!ledStageEl || !ledMatrixEl || typeof ResizeObserver === "undefined") return;
+      // Bezel padding/borders around the matrix: p-3 + border + inner p-2 on both sides.
+      const BEZEL_CHROME_PX = 42;
+      const measure = () => {
+        // offsetWidth/Height ignore the scale transform, so this is the board's natural size.
+        const width = ledMatrixEl.offsetWidth;
+        const height = ledMatrixEl.offsetHeight;
+        setLedMatrixSize((prev) => (prev && prev.width === width && prev.height === height ? prev : { width, height }));
+        const available = ledStageEl.clientWidth - BEZEL_CHROME_PX;
+        if (width > 0 && available > 0) {
+          setFitZoom(Math.min(100, Math.max(40, Math.floor((available / width) * 100))));
+        }
+      };
+      measure();
+      const observer = new ResizeObserver(measure);
+      observer.observe(ledStageEl);
+      observer.observe(ledMatrixEl);
+      return () => observer.disconnect();
+    }, [ledStageEl, ledMatrixEl]);
+
     // Stops state (for Tab.STOPS)
     const [stopLanguage, setStopLanguage] = useState<string>("en");
     const [stopUpDown, setStopUpDown] = useState<"up" | "down">("up");
     const [selectedStop, setSelectedStop] = useState<IStopWithAudio | null>(null);
-    const [selectedStopTypes, setSelectedStopTypes] = useState<string[]>(["next", "arrived"]);
+    const [selectedStopTypes, setSelectedStopTypes] = useState<(typeof stopStates)[number][]>(["next"]);
 
     // Watch Form Values
     const isSplitRoute = watch("is_split_route");
@@ -203,6 +370,37 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
     const displayRouteNum = isSplitRoute
       ? `${routeNumber1 || "?"} / ${routeNumber2 || "?"}`
       : routeNumber || "---";
+
+    // Keep existing slides in step with Route Setup edits (only zones still showing auto text).
+    useEffect(() => {
+      const pickRouteFields = (values: object | undefined): RouteFieldValues => {
+        const fields = (values || {}) as Record<string, unknown>;
+        const read = (key: string) => (typeof fields[key] === "string" ? (fields[key] as string) : "");
+        return {
+          routeNumber: read("route_number"),
+          routeNumber1: read("route_number_1"),
+          routeNumber2: read("route_number_2"),
+          source: read("source"),
+          destination: read("destination"),
+          via: read("via"),
+        };
+      };
+      let prevFields = pickRouteFields(getValues());
+      const subscription = watch((values, { name }) => {
+        const nextFields = pickRouteFields(values);
+        const prev = prevFields;
+        prevFields = nextFields;
+        // Form resets (edit-mode load) have no field name and must not rewrite the loaded slides.
+        if (!name || !ROUTE_SYNC_FIELDS.includes(name)) return;
+        SLIDE_BOARDS.forEach((board) => {
+          const { slides, changed } = syncSlidesWithRouteFields(getValues(board) || [], prev, nextFields);
+          if (changed) {
+            setValue(board, slides as (DisplayConfigPostRequest & IRoute)[typeof board], { shouldDirty: true });
+          }
+        });
+      });
+      return () => subscription.unsubscribe();
+    }, [watch, getValues, setValue]);
 
     // Active board simulations with safe index boundary
     const simulations: Simulation[] = watch(selectedTab as any) || [];
@@ -307,6 +505,15 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
     const pathBase = safeSimulationIndex >= 0
       ? `${selectedTab}.${safeSimulationIndex}.texts.${activeTextZoneKey}`
       : "";
+    // Zone paths are built at runtime and can't be checked against the form type, so field names are checked instead.
+    const watchZoneField = <K extends keyof TextConfig>(field: K) =>
+      (pathBase ? (watch as unknown as (name: string) => unknown)(`${pathBase}.${field}`) : undefined) as TextConfig[K] | undefined;
+    const setZoneField = <K extends keyof TextConfig>(field: K, value: TextConfig[K] | undefined) =>
+      (setValue as unknown as (name: string, value: unknown, options: { shouldDirty: boolean }) => void)(
+        `${pathBase}.${field}`,
+        value,
+        { shouldDirty: true }
+      );
     const currentText = pathBase ? (watch(`${pathBase}.text`) as string) || "" : "";
     const currentLanguage = pathBase ? (watch(`${pathBase}.language`) as string) || "en" : "en";
     const currentFontHeight = pathBase ? Number(watch(`${pathBase}.fontHeight`)) || 14 : 14;
@@ -334,17 +541,13 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
     const currentWordIndex = Math.min(Math.max(1, rawWordIndex), maxWordIndex);
 
     const maxHeight = currentSimulation?.height || 16;
-    const isHalfLine = currentFormat === "three" && (activeTextZoneKey === "upperHalfText" || activeTextZoneKey === "lowerHalfText");
+    const isHalfLine = isHalfHeightZone(currentFormat, activeTextZoneKey);
     const maxAllowedFontHeight = isHalfLine ? Math.floor(maxHeight / 2) : maxHeight;
-
-    const availableFontSizes = useMemo(() => {
-      const set = new Set([...FONT_HEIGHT_GRID.filter((s) => s <= maxAllowedFontHeight), currentFontHeight]);
-      return Array.from(set).filter(Boolean).sort((a, b) => a - b);
-    }, [maxAllowedFontHeight, currentFontHeight]);
 
     // Font heights utility
     const getDefaultFontHeightForLanguage = useFontHeightForLanguage();
     const getConfiguredFontHeightsForLanguage = useFontHeightsForLanguage();
+    const getFontFileByLanguage = useFontFileByLanguage();
 
     // Memoize filter object so React Query doesn't cause unnecessary component re-renders
     const stopFilters = useMemo(
@@ -424,68 +627,68 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
       const w = currentSimulation.width;
       const h = currentSimulation.height;
       const t = currentSimulation.type;
-      const existingTexts: any = currentSimulation.texts || {};
+      const oldFormat = currentSimulation.format;
+      const existingTexts: Record<string, any> = currentSimulation.texts || {};
+      const routeValues: RouteFieldValues = {
+        routeNumber: getValues("route_number") || "",
+        routeNumber1: getValues("route_number_1") || "",
+        routeNumber2: getValues("route_number_2") || "",
+        source: getValues("source") || "",
+        destination: getValues("destination") || "",
+        via: getValues("via") || "",
+      };
+      const halfRows = Math.floor(h / 2);
+      const defaultFontHeight = getDefaultTextConfig().fontHeight || 14;
+      const isRouteSlide = !t || t === "route";
 
-      const routeNum = isSplitRoute
-        ? `${getValues("route_number_1") || ""}/${getValues("route_number_2") || ""}`
-        : getValues("route_number") || "";
-      const routeText = [getValues("source"), getValues("destination"), getValues("via")].filter(Boolean).join(" - ");
+      // Builds a zone for the new format from the first matching old zone, keeping its styling.
+      // Auto-generated text is replaced by the new format's preset; manually edited text is kept.
+      // Slogan / special message text is never replaced with Route Setup text.
+      const buildZone = (targetKey: string, sourceKeys: string[]) => {
+        const preset = isRouteSlide ? getRoutePresetZoneText(newFormat, targetKey, routeValues) ?? "" : "";
+        const sourceKey = sourceKeys.find((key) => existingTexts[key]);
+        const targetIsHalf = isHalfHeightZone(newFormat, targetKey);
+        const maxRows = targetIsHalf ? Math.max(7, halfRows) : h;
+        if (!sourceKey) {
+          const created = getDefaultTextConfig(preset);
+          return { ...created, fontHeight: Math.min(created.fontHeight || defaultFontHeight, maxRows) };
+        }
 
-      let updatedTexts: any = {};
+        let cfg = existingTexts[sourceKey];
+        if (isRouteSlide && cfg.text !== preset && isAutoRouteZoneText(oldFormat, sourceKey, cfg.text, routeValues)) {
+          cfg = { ...cfg, text: preset, bitmap: "" };
+        }
 
+        let fontHeight = Math.min(cfg.fontHeight || Math.min(defaultFontHeight, maxRows), maxRows);
+        // A half-height zone (three-line) moving to a full-height zone gets the full default height back
+        // unless the user picked a smaller font on purpose.
+        if (!targetIsHalf && isHalfHeightZone(oldFormat, sourceKey) && (!cfg.fontHeight || cfg.fontHeight >= halfRows)) {
+          fontHeight = Math.min(defaultFontHeight, h);
+        }
+        // Changing the font height invalidates the stored bitmap.
+        return fontHeight === cfg.fontHeight ? cfg : { ...cfg, fontHeight, bitmap: "" };
+      };
+
+      const routeNumberZones = isSplitRoute
+        ? {
+            routeNumber1: existingTexts.routeNumber1 || getDefaultTextConfig(getRoutePresetZoneText(newFormat, "routeNumber1", routeValues)),
+            routeNumber2: existingTexts.routeNumber2 || getDefaultTextConfig(getRoutePresetZoneText(newFormat, "routeNumber2", routeValues)),
+          }
+        : {
+            sideText: existingTexts.sideText || getDefaultTextConfig(getRoutePresetZoneText(newFormat, "sideText", routeValues)),
+          };
+
+      let updatedTexts: Record<string, any>;
       if (newFormat === "single") {
-        // Reuse existing text config if available (preserves bitmap, fontHeight, weight, language, icon)
-        const preservedText = existingTexts.text || existingTexts.upperHalfText;
-        updatedTexts = {
-          text: preservedText
-            ? { ...preservedText, fontHeight: Math.min(preservedText.fontHeight || 14, h) }
-            : getDefaultTextConfig(routeText || "Single Route Text"),
-        };
+        updatedTexts = { text: buildZone("text", ["text", "upperHalfText"]) };
       } else if (newFormat === "two") {
-        // Destination zone: reuse existing text config
-        const preservedDest = existingTexts.text || existingTexts.upperHalfText;
-        const destConfig = preservedDest
-          ? { ...preservedDest, fontHeight: Math.min(preservedDest.fontHeight || 14, h) }
-          : getDefaultTextConfig(routeText);
-
-        if (isSplitRoute) {
-          updatedTexts = {
-            text: destConfig,
-            routeNumber1: existingTexts.routeNumber1 || getDefaultTextConfig(getValues("route_number_1") || "Route 1"),
-            routeNumber2: existingTexts.routeNumber2 || getDefaultTextConfig(getValues("route_number_2") || "Route 2"),
-          };
-        } else {
-          updatedTexts = {
-            text: destConfig,
-            sideText: existingTexts.sideText || getDefaultTextConfig(routeNum),
-          };
-        }
+        updatedTexts = { text: buildZone("text", ["text", "upperHalfText"]), ...routeNumberZones };
       } else {
-        // Three line format: upper and lower half texts (font height usually floor(h/2) or 7)
-        const halfHeight = Math.max(7, Math.floor(h / 2));
-        const preservedUpper = existingTexts.upperHalfText || existingTexts.text;
-        const upperConfig = preservedUpper
-          ? { ...preservedUpper, fontHeight: Math.min(preservedUpper.fontHeight || halfHeight, halfHeight) }
-          : getDefaultTextConfig(getValues("source") || "Upper Text");
-
-        const lowerConfig = existingTexts.lowerHalfText
-          ? { ...existingTexts.lowerHalfText, fontHeight: Math.min(existingTexts.lowerHalfText.fontHeight || halfHeight, halfHeight) }
-          : getDefaultTextConfig(getValues("destination") || getValues("via") || "Lower Text");
-
-        if (isSplitRoute) {
-          updatedTexts = {
-            upperHalfText: upperConfig,
-            lowerHalfText: lowerConfig,
-            routeNumber1: existingTexts.routeNumber1 || getDefaultTextConfig(getValues("route_number_1") || "Route 1"),
-            routeNumber2: existingTexts.routeNumber2 || getDefaultTextConfig(getValues("route_number_2") || "Route 2"),
-          };
-        } else {
-          updatedTexts = {
-            upperHalfText: upperConfig,
-            lowerHalfText: lowerConfig,
-            sideText: existingTexts.sideText || getDefaultTextConfig(routeNum),
-          };
-        }
+        updatedTexts = {
+          upperHalfText: buildZone("upperHalfText", ["upperHalfText", "text"]),
+          lowerHalfText: buildZone("lowerHalfText", ["lowerHalfText"]),
+          ...routeNumberZones,
+        };
       }
 
       const updated: Simulation = {
@@ -494,11 +697,11 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
         width: w,
         height: h,
         type: t,
-        texts: updatedTexts,
+        texts: updatedTexts as Simulation["texts"],
       };
 
       const targetIndex = safeSimulationIndex >= 0 ? safeSimulationIndex : selectedSimulationIndex;
-      setValue(`${selectedTab}[${targetIndex}]`, updated, { shouldDirty: true });
+      setValue(`${selectedTab}.${targetIndex}` as any, updated, { shouldDirty: true });
       setUserTextZone(newFormat === "single" ? "text" : getFirstTextZone(isSplitRoute));
     };
 
@@ -506,19 +709,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
     const handleHeightChange = (newHeight: 16 | 32) => {
       const sims: Simulation[] = getValues(selectedTab as any) || [];
       if (sims.length === 0) return;
-      const updated = sims.map((s) => {
-        const texts = s.texts || {};
-        const newTexts = { ...texts };
-        if (newHeight === 16) {
-          Object.keys(newTexts).forEach((k) => {
-            const item = (newTexts as any)[k];
-            if (item && (item.fontHeight > 16 || !item.fontHeight)) {
-              newTexts[k] = { ...item, fontHeight: 16 };
-            }
-          });
-        }
-        return { ...s, height: newHeight, texts: newTexts };
-      });
+      const updated = sims.map((s) => fitSimulationToHeight(s, newHeight));
       setValue(selectedTab as any, updated, { shouldDirty: true });
     };
 
@@ -538,7 +729,13 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
       const routeText = [getValues("source"), getValues("destination"), getValues("via")].filter(Boolean).join(" - ");
 
       if (format === "single") {
-        newSim = getDefaultSingleSimulation(type === "slogan" ? "PLEASE WEAR SEAT BELT - ಸುರಕ್ಷಿತ ಪ್ರಯಾಣ" : routeText || "Single Route Text", type);
+        const singlePreset =
+          type === "slogan"
+            ? "PLEASE WEAR SEAT BELT - ಸುರಕ್ಷಿತ ಪ್ರಯಾಣ"
+            : type === "special message"
+              ? "THIS IS A SPECIAL MESSAGE SIMULATION"
+              : routeText || "Single Route Text";
+        newSim = getDefaultSingleSimulation(singlePreset, type);
       } else if (format === "two") {
         newSim = getDefaultTwoSimulation(routeNum, routeText, type, getValues("route_number_1"), getValues("route_number_2"), isSplitRoute);
       } else {
@@ -601,7 +798,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
       if (currentSims.length === 0 || !destBoard || destBoard === selectedTab) return;
       const cloned = JSON.parse(JSON.stringify(currentSims));
       setValue(destBoard as any, cloned, { shouldDirty: true });
-      toast.success(`Copied all ${currentSims.length} slides to ${destBoard.toUpperCase()} signboard!`);
+      toast.success(`Copied all ${currentSims.length} slides to ${getBoardLabel(destBoard)} signboard!`);
     };
 
     const handlePlayAudio = () => {
@@ -669,56 +866,17 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
 
     const handleCopySlideToBoard = (destBoard: string) => {
       if (!currentSimulation || destBoard === selectedTab) return;
-      const destSims = getValues(destBoard as any) || [];
-      const cloned = JSON.parse(JSON.stringify(currentSimulation));
+      const destSims: Simulation[] = getValues(destBoard as any) || [];
+      let cloned: Simulation = JSON.parse(JSON.stringify(currentSimulation));
+      // Match the destination board's dimensions so its slides stay uniform.
+      const destDims = destSims[0];
+      if (destDims?.width && destDims?.height) {
+        if (cloned.height !== destDims.height) cloned = fitSimulationToHeight(cloned, destDims.height);
+        cloned = { ...cloned, width: destDims.width };
+      }
       setValue(destBoard as any, [...destSims, cloned], { shouldDirty: true });
       setShowCopyDropdown(false);
-      toast.success(`Slide #${selectedSimulationIndex + 1} copied to ${destBoard.toUpperCase()} signboard!`);
-    };
-
-    // Chime Sound (synthetic two-tone bus chime + PAS playback)
-    const handlePlayChime = () => {
-      const audiopath = watch(`${selectedTab}[${selectedSimulationIndex}].audioFileUrl`);
-      const stopTypeAudioFileUrl = watch(`${selectedTab}[${selectedSimulationIndex}].stopTypeAudioFileUrl`);
-      const targetUrl = audiopath || stopTypeAudioFileUrl;
-
-      if (targetUrl) {
-        const audio = new Audio(targetUrl);
-        audio.play().catch(() => { });
-        toast.info("Playing PAS voice announcement");
-        return;
-      }
-
-      // Authentic transit bus chime (Web Audio API)
-      try {
-        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const now = ctx.currentTime;
-        const osc1 = ctx.createOscillator();
-        const gain1 = ctx.createGain();
-        osc1.type = "sine";
-        osc1.frequency.setValueAtTime(784, now); // G5
-        gain1.gain.setValueAtTime(0.2, now);
-        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-        osc1.connect(gain1);
-        gain1.connect(ctx.destination);
-        osc1.start(now);
-        osc1.stop(now + 0.35);
-
-        const osc2 = ctx.createOscillator();
-        const gain2 = ctx.createGain();
-        osc2.type = "sine";
-        osc2.frequency.setValueAtTime(523.25, now + 0.22); // C5
-        gain2.gain.setValueAtTime(0.25, now + 0.22);
-        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
-        osc2.connect(gain2);
-        gain2.connect(ctx.destination);
-        osc2.start(now + 0.22);
-        osc2.stop(now + 0.7);
-
-        toast.info("Transit bus chime triggered");
-      } catch (err) {
-        console.warn("Chime playback error:", err);
-      }
+      toast.success(`Slide #${selectedSimulationIndex + 1} copied to ${getBoardLabel(destBoard)} signboard!`);
     };
 
     // Fullscreen toggle
@@ -746,100 +904,130 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
 
     // Save Submit
     const onSubmit: SubmitHandler<IRoute> = async (data) => {
-      if (isCreatingRoute || isUpdatingRoute) return;
+      // The ref blocks re-entry synchronously; mutation isPending only flips after the async pre-checks below.
+      if (submitLockRef.current || isCreatingRoute || isUpdatingRoute) return;
+      submitLockRef.current = true;
+      setIsPreparingSubmit(true);
+      let handedOffToMutation = false;
+      try {
+        const trimmedRouteNum1 = (data.route_number_1 || "").trim();
+        const trimmedRouteNum2 = (data.route_number_2 || "").trim();
+        const separator = (data.separation || "").trim() || "-";
+        const trimmedRouteNum = data.is_split_route
+          ? `${trimmedRouteNum1}${separator}${trimmedRouteNum2}`
+          : (data.route_number || "").trim();
 
-      const trimmedRouteNum1 = (data.route_number_1 || "").trim();
-      const trimmedRouteNum2 = (data.route_number_2 || "").trim();
-      const trimmedRouteNum = data.is_split_route
-        ? `${trimmedRouteNum1}-${trimmedRouteNum2}`
-        : (data.route_number || "").trim();
-
-      if (data.is_split_route) {
-        if (!trimmedRouteNum1 || !trimmedRouteNum2) {
-          setError("route_number", { message: "Both Route #1 and Route #2 are required for Split Route" });
-          toast.error("Both Route #1 and Route #2 are required for Split Route");
-          return;
-        }
-      } else if (!trimmedRouteNum) {
-        setError("route_number", { message: "Route number is required" });
-        toast.error("Route number is required");
-        return;
-      }
-
-      if (trimmedRouteNum) {
-        const scopeFilter: Record<string, any> = {};
-        if (data.depot_id) {
-          scopeFilter.depot_id = data.depot_id;
-        } else if (data.created_by) {
-          scopeFilter.created_by = data.created_by;
-        }
-
-        const isDup = await checkActiveDuplicate(
-          "routes",
-          "route_number",
-          trimmedRouteNum,
-          scopeFilter,
-          mode === "edit" && data.id ? data.id : undefined
-        );
-
-        if (isDup) {
-          toast.error(`Route number "${trimmedRouteNum}" is already in use in this depot.`);
-          return;
-        }
-      }
-
-      // Auto-sync via stops to depot
-      if (data.via && data.depot_id) {
-        try {
-          const viaStops = data.via.split(/[,;]/).map((s) => s.trim()).filter(Boolean);
-          if (viaStops.length > 0) {
-            const { data: existingStops } = await supabase.from("stops").select("name").eq("depot_id", data.depot_id);
-            const existingSet = new Set((existingStops || []).map((s) => s.name?.toLowerCase().trim()));
-            const newStops = viaStops
-              .filter((s) => !existingSet.has(s.toLowerCase()))
-              .map((s) => ({ name: s, depot_id: data.depot_id, organization_id: data.organization_id || null }));
-            if (newStops.length > 0) {
-              await supabase.from("stops").insert(newStops);
-            }
+        if (data.is_split_route) {
+          if (!trimmedRouteNum1 || !trimmedRouteNum2) {
+            setError("route_number", { message: "Both Route #1 and Route #2 are required for Split Route" });
+            toast.error("Both Route #1 and Route #2 are required for Split Route");
+            return;
           }
-        } catch (e) {
-          console.warn("Could not auto-sync via stops:", e);
+        } else if (!trimmedRouteNum) {
+          setError("route_number", { message: "Route number is required" });
+          toast.error("Route number is required");
+          return;
         }
-      }
 
-      const cleanedData = sanitizeRouteBoards(data);
-      const payload = {
-        ...cleanedData,
-        route_number: trimmedRouteNum,
-        route_number_1: data.is_split_route ? trimmedRouteNum1 : "",
-        route_number_2: data.is_split_route ? trimmedRouteNum2 : "",
-      };
+        if (trimmedRouteNum) {
+          const scopeFilter: Record<string, any> = {};
+          if (data.depot_id) {
+            scopeFilter.depot_id = data.depot_id;
+          } else if (data.created_by) {
+            scopeFilter.created_by = data.created_by;
+          }
 
-      if (mode === "edit") {
-        updateRoute(
-          { id: data.id, payload },
-          {
+          const isDup = await checkActiveDuplicate(
+            "routes",
+            "route_number",
+            trimmedRouteNum,
+            scopeFilter,
+            mode === "edit" && data.id ? data.id : undefined
+          );
+
+          if (isDup) {
+            toast.error(`Route number "${trimmedRouteNum}" is already in use in this depot.`);
+            return;
+          }
+        }
+
+        // Auto-sync via stops to depot
+        if (data.via && data.depot_id) {
+          try {
+            const viaStops = data.via.split(/[,;]/).map((s) => s.trim()).filter(Boolean);
+            if (viaStops.length > 0) {
+              const { data: existingStops } = await supabase.from("stops").select("name").eq("depot_id", data.depot_id);
+              const existingSet = new Set((existingStops || []).map((s) => s.name?.toLowerCase().trim()));
+              const newStops = viaStops
+                .filter((s) => !existingSet.has(s.toLowerCase()))
+                .map((s) => ({ name: s, depot_id: data.depot_id, organization_id: data.organization_id || null }));
+              if (newStops.length > 0) {
+                await supabase.from("stops").insert(newStops);
+              }
+            }
+          } catch (e) {
+            console.warn("Could not auto-sync via stops:", e);
+          }
+        }
+
+        const cleanedData: Record<string, any> = sanitizeRouteBoards(data);
+        // Slides that were never shown in the preview (or were updated from Route Setup) have no bitmap yet.
+        const bitmapResults = await Promise.all(
+          SLIDE_BOARDS.map((board) =>
+            fillMissingSlideBitmaps(cleanedData[board], {
+              isSplitRoute: Boolean(data.is_split_route),
+              getFontFamily: getFontFileByLanguage,
+            })
+          )
+        );
+        let missingBitmaps = 0;
+        SLIDE_BOARDS.forEach((board, i) => {
+          if (Array.isArray(cleanedData[board])) cleanedData[board] = bitmapResults[i].slides;
+          missingBitmaps += bitmapResults[i].failed;
+        });
+        if (missingBitmaps > 0) {
+          toast.warning(`${missingBitmaps} slide text bitmap(s) could not be generated. Open those slides to regenerate them.`);
+        }
+
+        const payload = {
+          ...cleanedData,
+          route_number: trimmedRouteNum,
+          route_number_1: data.is_split_route ? trimmedRouteNum1 : "",
+          route_number_2: data.is_split_route ? trimmedRouteNum2 : "",
+          separation: separator,
+        };
+
+        if (mode === "edit") {
+          updateRoute(
+            { id: data.id, payload },
+            {
+              onSuccess: () => {
+                toast.success("Route updated successfully");
+                setHasBeenSaved(true);
+                navigate(-1);
+              },
+              onError: (err: any) => {
+                toast.error(`Error updating route: ${err.message || "Unknown error"}`);
+              },
+              onSettled: releaseSubmitLock,
+            }
+          );
+        } else {
+          createRoute(payload, {
             onSuccess: () => {
-              toast.success("Route updated successfully");
+              toast.success("Route created successfully");
               setHasBeenSaved(true);
               navigate(-1);
             },
             onError: (err: any) => {
-              toast.error(`Error updating route: ${err.message || "Unknown error"}`);
+              toast.error(`Error creating route: ${err.message || "Unknown error"}`);
             },
-          }
-        );
-      } else {
-        createRoute(payload, {
-          onSuccess: () => {
-            toast.success("Route created successfully");
-            setHasBeenSaved(true);
-            navigate(-1);
-          },
-          onError: (err: any) => {
-            toast.error(`Error creating route: ${err.message || "Unknown error"}`);
-          },
-        });
+            onSettled: releaseSubmitLock,
+          });
+        }
+        handedOffToMutation = true;
+      } finally {
+        if (!handedOffToMutation) releaseSubmitLock();
       }
     };
 
@@ -890,7 +1078,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                 </Button>
               </ActionTooltip>
 
-              <span className="px-2.5 py-1 rounded-md bg-neutral-900 text-white font-mono font-bold text-xs tracking-wider shadow-xs flex-none">
+              <span className="px-2.5 py-1 rounded-md bg-brand-primary text-brand-primary-foreground font-mono font-bold text-xs tracking-wider shadow-xs flex-none">
                 {displayRouteNum}
               </span>
 
@@ -899,12 +1087,12 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
               </span>
 
               {formState.isDirty && !hasBeenSaved ? (
-                <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-300 text-[11px] text-amber-900 font-semibold shrink-0" title="Unsaved changes">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" /> Unsaved
+                <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-warning-50 border border-warning-300 text-[11px] text-warning-800 font-semibold shrink-0" title="Unsaved changes">
+                  <span className="h-1.5 w-1.5 rounded-full bg-warning-500 animate-pulse" /> Unsaved
                 </span>
               ) : (
-                <span className="hidden md:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-300 text-[11px] text-emerald-900 font-semibold shrink-0">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Saved
+                <span className="hidden md:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-success-50 border border-success-300 text-[11px] text-success-800 font-semibold shrink-0">
+                  <span className="h-1.5 w-1.5 rounded-full bg-success-500" /> Saved
                 </span>
               )}
             </div>
@@ -920,8 +1108,8 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                     className={SubframeUtils.twClassNames(
                       "h-7 px-2.5 rounded text-xs font-bold transition-all cursor-pointer flex items-center justify-center",
                       ledColor === "#ffbf00"
-                        ? "bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs"
-                        : "text-neutral-600 hover:text-neutral-900"
+                        ? "bg-warning-100 text-warning-800 border border-warning-300 shadow-2xs"
+                        : "text-subtext-color hover:text-default-font"
                     )}
                   >
                     Amber
@@ -934,8 +1122,8 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                     className={SubframeUtils.twClassNames(
                       "h-7 px-2.5 rounded text-xs font-bold transition-all cursor-pointer flex items-center justify-center",
                       ledColor === "#ff2222"
-                        ? "bg-red-100 text-red-900 border border-red-300 shadow-2xs"
-                        : "text-neutral-600 hover:text-neutral-900"
+                        ? "bg-error-100 text-error-800 border border-error-300 shadow-2xs"
+                        : "text-subtext-color hover:text-default-font"
                     )}
                   >
                     Red
@@ -956,19 +1144,6 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                 </Button>
               </ActionTooltip>
 
-              {/* Chime */}
-              <ActionTooltip content="Test destination arrival chime announcement audio" side="bottom">
-                <Button
-                  variant="neutral-secondary"
-                  size="small"
-                  className="h-8 text-xs font-medium px-2.5"
-                  icon={<FeatherVolume2 className="h-3.5 w-3.5" />}
-                  onClick={handlePlayChime}
-                >
-                  Chime
-                </Button>
-              </ActionTooltip>
-
               {/* JSON Modal */}
               <RBAC roles={["master"]} features={[]}>
                 <ActionTooltip content="Inspect and edit raw JSON configuration" side="bottom">
@@ -983,43 +1158,6 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                   </div>
                 </ActionTooltip>
               </RBAC>
-
-              {/* Remix */}
-              <ActionTooltip content="Auto-generate signboard layouts and route text" side="bottom">
-                <Button
-                  variant="neutral-secondary"
-                  size="small"
-                  className="h-8 text-xs font-medium px-2.5"
-                  icon={<FeatherShuffle className="h-3.5 w-3.5" />}
-                  onClick={() => toast.info("Remix current configuration")}
-                >
-                  Remix
-                </Button>
-              </ActionTooltip>
-
-              {/* Device */}
-              <ActionTooltip content="Toggle hardware device preview" side="bottom">
-                <Button
-                  variant="neutral-secondary"
-                  size="small"
-                  className="h-8 text-xs font-medium px-2.5"
-                  icon={<FeatherMonitor className="h-3.5 w-3.5" />}
-                  onClick={() => toast.info("Device preview mode")}
-                >
-                  Device
-                </Button>
-              </ActionTooltip>
-
-              {/* Sync */}
-              <ActionTooltip content="Sync simulation display state" side="bottom">
-                <IconButton
-                  variant="neutral-secondary"
-                  size="small"
-                  className="h-8 w-8"
-                  icon={<FeatherRotateCw className="h-3.5 w-3.5" />}
-                  onClick={() => toast.info("Simulation state synced")}
-                />
-              </ActionTooltip>
 
               {/* Fullscreen */}
               <ActionTooltip content="Toggle fullscreen editor view" side="bottom">
@@ -1039,9 +1177,9 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                   onClick={handleSubmit(onSubmit)}
                   variant="brand-primary"
                   size="small"
-                  className="h-8 text-xs font-semibold px-3.5 bg-neutral-900 text-white hover:bg-neutral-800 border-none shadow-xs"
-                  disabled={isCreatingRoute || isUpdatingRoute}
-                  loading={isCreatingRoute || isUpdatingRoute}
+                  className="h-8 text-xs font-semibold px-3.5 border-none shadow-xs"
+                  disabled={isPreparingSubmit || isCreatingRoute || isUpdatingRoute}
+                  loading={isPreparingSubmit || isCreatingRoute || isUpdatingRoute}
                 >
                   {mode === "create" ? "Save Route" : "Update Route"}
                 </Button>
@@ -1056,30 +1194,42 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
             <div className="flex flex-col flex-none w-full border-b border-neutral-border bg-sidebar-background/60 px-4 py-2 shadow-2xs">
 
               {/* Centered Hardware Bezel LED Screen */}
-              <div className="flex flex-col items-center justify-center w-full py-1">
-                <div className="flex flex-col items-center w-fit max-w-full rounded-2xl bg-neutral-950 p-3 shadow-xl border border-neutral-800 ring-1 ring-black/70">
+              <div ref={setLedStageEl} className="flex flex-col items-center justify-center w-full py-1">
+                <div className="flex flex-col items-center w-fit max-w-full rounded-2xl bg-slate-950 p-3 shadow-xl border border-slate-800 ring-1 ring-black/70">
                   {/* Hardware Top Monospace Bezel Bar */}
-                  <div className="flex w-full items-center justify-between pb-2 mb-2 border-b border-neutral-800 text-[10px] font-mono text-neutral-400 gap-6">
+                  <div className="flex w-full items-center justify-between pb-2 mb-2 border-b border-slate-800 text-[10px] font-mono text-slate-400 gap-6">
                     <div className="flex items-center gap-1.5">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
                       <span className="uppercase font-bold tracking-wider text-emerald-400">ESC RS-485 • ONLINE</span>
                     </div>
-                    <div className="uppercase font-semibold tracking-wider text-neutral-300">
+                    <div className="uppercase font-semibold tracking-wider text-slate-300">
                       {currentBoardItem.label} SIGNBOARD • SLIDE {selectedSimulationIndex + 1} OF {simulations.length || 1}
                     </div>
-                    <div className="font-bold text-neutral-400">{activeWidth}×{activeHeight} DOTS</div>
+                    <div className="font-bold text-slate-400">{activeWidth}×{activeHeight} DOTS</div>
                   </div>
 
                   {/* Dot Matrix Screen */}
-                  <div
-                    className="flex items-center justify-center p-2 rounded-lg bg-black overflow-hidden shadow-inner ring-1 ring-black/50"
-                    style={{
-                      transform: `scale(${zoom / 100})`,
-                      transformOrigin: "center center",
-                      transition: "transform 0.15s ease-out",
-                    }}
-                  >
-                    <DisplayEditor listIndex={safeSimulationIndex} stopScroll={isPaused} ledColor={ledColor} />
+                  <div className="flex items-center justify-center p-2 rounded-lg bg-black overflow-hidden shadow-inner ring-1 ring-black/50">
+                    {/* Sized to the scaled board so zooming out actually frees up layout space. */}
+                    <div
+                      style={ledMatrixSize ? {
+                        width: (ledMatrixSize.width * zoom) / 100,
+                        height: (ledMatrixSize.height * zoom) / 100,
+                        transition: "width 0.15s ease-out, height 0.15s ease-out",
+                      } : undefined}
+                    >
+                      <div
+                        ref={setLedMatrixEl}
+                        className="w-max"
+                        style={{
+                          transform: `scale(${zoom / 100})`,
+                          transformOrigin: "top left",
+                          transition: "transform 0.15s ease-out",
+                        }}
+                      >
+                        <DisplayEditor listIndex={safeSimulationIndex} stopScroll={isPaused} ledColor={ledColor} />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1129,15 +1279,31 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
 
                 {/* Right Zoom & Reset */}
                 <div className="flex items-center gap-2">
+                  <IconButton
+                    variant="neutral-tertiary"
+                    size="small"
+                    className="h-7 w-7"
+                    icon={<FeatherMinus className="h-3.5 w-3.5" />}
+                    disabled={zoom <= 10}
+                    onClick={() => setManualZoom(Math.max(10, zoom - 15))}
+                  />
                   <span className="font-mono text-xs text-neutral-600 font-semibold flex items-center gap-1">
                     <FeatherSearch className="h-3.5 w-3.5" /> {zoom}%
                   </span>
-                  <ActionTooltip content="Reset display zoom to 100%" side="top">
+                  <IconButton
+                    variant="neutral-tertiary"
+                    size="small"
+                    className="h-7 w-7"
+                    icon={<FeatherPlus className="h-3.5 w-3.5" />}
+                    disabled={zoom >= 175}
+                    onClick={() => setManualZoom(Math.min(175, zoom + 15))}
+                  />
+                  <ActionTooltip content="Reset display zoom to fit the available width" side="top">
                     <Button
                       variant="neutral-secondary"
                       size="small"
                       className="h-7 text-xs font-medium px-2.5"
-                      onClick={() => setZoom(100)}
+                      onClick={() => setManualZoom(null)}
                     >
                       Reset
                     </Button>
@@ -1179,7 +1345,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                         className={SubframeUtils.twClassNames(
                           "flex flex-col items-center justify-center w-full py-2.5 rounded-xl transition-all cursor-pointer",
                           isActive
-                            ? "bg-neutral-900 text-white shadow-sm ring-1 ring-neutral-900"
+                            ? "bg-brand-primary text-brand-primary-foreground shadow-sm ring-1 ring-brand-primary"
                             : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-900 border border-neutral-border/60"
                         )}
                       >
@@ -1292,7 +1458,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
 
                 {/* Route Separator */}
                 <TextField size="small" label="Route Separator" variant="filled" className="w-full [&>div]:!h-8 [&>div]:!min-h-[32px] [&>span]:text-xs [&>span]:font-semibold [&>span]:text-neutral-700">
-                  <TextField.Input placeholder="-" className="text-xs font-medium" defaultValue="-" />
+                  <TextField.Input placeholder="-" maxLength={3} className="text-xs font-medium" {...register("separation")} />
                 </TextField>
               </div>
 
@@ -1335,58 +1501,6 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                     Slide #{selectedSimulationIndex + 1}/{simulations.length || 1}
                   </span>
                 </div>
-
-                {/* Format Presets Icons */}
-                <div className="flex items-center gap-1 p-0.5 rounded-lg bg-neutral-100 border border-neutral-border">
-                  <ActionTooltip content="Single Line format" side="bottom">
-                    <button
-                      type="button"
-                      onClick={() => handleFormatChange("single")}
-                      className={SubframeUtils.twClassNames(
-                        "h-6 w-6 flex items-center justify-center rounded transition-all cursor-pointer",
-                        currentFormat === "single"
-                          ? "bg-neutral-900 text-white shadow-2xs"
-                          : "text-neutral-600 hover:text-neutral-900"
-                      )}
-                    >
-                      <span className="h-2.5 w-3.5 rounded-[1px] border border-current" />
-                    </button>
-                  </ActionTooltip>
-                  <ActionTooltip content="Two Line format (Route No + Text)" side="bottom">
-                    <button
-                      type="button"
-                      onClick={() => handleFormatChange("two")}
-                      className={SubframeUtils.twClassNames(
-                        "h-6 w-6 flex items-center justify-center rounded transition-all cursor-pointer",
-                        currentFormat === "two"
-                          ? "bg-neutral-900 text-white shadow-2xs"
-                          : "text-neutral-600 hover:text-neutral-900"
-                      )}
-                    >
-                      <span className="flex gap-[2px] h-2.5 w-3.5">
-                        <span className="w-1.5 h-full rounded-[1px] border border-current" />
-                        <span className="w-2 h-full rounded-[1px] border border-current" />
-                      </span>
-                    </button>
-                  </ActionTooltip>
-                  <ActionTooltip content="Three Line format (Route No + Upper & Lower Line)" side="bottom">
-                    <button
-                      type="button"
-                      onClick={() => handleFormatChange("three")}
-                      className={SubframeUtils.twClassNames(
-                        "h-6 w-6 flex items-center justify-center rounded transition-all cursor-pointer",
-                        currentFormat === "three"
-                          ? "bg-neutral-900 text-white shadow-2xs"
-                          : "text-neutral-600 hover:text-neutral-900"
-                      )}
-                    >
-                      <span className="flex flex-col gap-[1.5px] h-2.5 w-3.5">
-                        <span className="w-full h-1 rounded-[1px] border border-current" />
-                        <span className="w-full h-1 rounded-[1px] border border-current" />
-                      </span>
-                    </button>
-                  </ActionTooltip>
-                </div>
               </div>
 
               {/* Content Body */}
@@ -1412,7 +1526,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                               className={SubframeUtils.twClassNames(
                                 "pb-1.5 text-xs font-semibold transition-all cursor-pointer truncate -mb-px",
                                 activeTextZone === "routeNumber1"
-                                  ? "border-b-2 border-neutral-900 text-neutral-900 font-bold"
+                                  ? "border-b-2 border-brand-primary text-brand-primary font-bold"
                                   : "border-b-2 border-transparent text-neutral-600 hover:text-neutral-900"
                               )}
                             >
@@ -1426,7 +1540,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                               className={SubframeUtils.twClassNames(
                                 "pb-1.5 text-xs font-semibold transition-all cursor-pointer truncate -mb-px",
                                 activeTextZone === "routeNumber2"
-                                  ? "border-b-2 border-neutral-900 text-neutral-900 font-bold"
+                                  ? "border-b-2 border-brand-primary text-brand-primary font-bold"
                                   : "border-b-2 border-transparent text-neutral-600 hover:text-neutral-900"
                               )}
                             >
@@ -1442,7 +1556,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                             className={SubframeUtils.twClassNames(
                               "pb-1.5 text-xs font-semibold transition-all cursor-pointer truncate -mb-px",
                               activeTextZone === "routeNumber"
-                                ? "border-b-2 border-neutral-900 text-neutral-900 font-bold"
+                                ? "border-b-2 border-brand-primary text-brand-primary font-bold"
                                 : "border-b-2 border-transparent text-neutral-600 hover:text-neutral-900"
                             )}
                           >
@@ -1459,7 +1573,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                             className={SubframeUtils.twClassNames(
                               "pb-1.5 text-xs font-semibold transition-all cursor-pointer truncate -mb-px",
                               activeTextZone === "text"
-                                ? "border-b-2 border-neutral-900 text-neutral-900 font-bold"
+                                ? "border-b-2 border-brand-primary text-brand-primary font-bold"
                                 : "border-b-2 border-transparent text-neutral-600 hover:text-neutral-900"
                             )}
                           >
@@ -1477,7 +1591,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                               className={SubframeUtils.twClassNames(
                                 "pb-1.5 text-xs font-semibold transition-all cursor-pointer truncate -mb-px",
                                 activeTextZone === "upperHalfText"
-                                  ? "border-b-2 border-neutral-900 text-neutral-900 font-bold"
+                                  ? "border-b-2 border-brand-primary text-brand-primary font-bold"
                                   : "border-b-2 border-transparent text-neutral-600 hover:text-neutral-900"
                               )}
                             >
@@ -1491,7 +1605,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                               className={SubframeUtils.twClassNames(
                                 "pb-1.5 text-xs font-semibold transition-all cursor-pointer truncate -mb-px",
                                 activeTextZone === "lowerHalfText"
-                                  ? "border-b-2 border-neutral-900 text-neutral-900 font-bold"
+                                  ? "border-b-2 border-brand-primary text-brand-primary font-bold"
                                   : "border-b-2 border-transparent text-neutral-600 hover:text-neutral-900"
                               )}
                             >
@@ -1529,9 +1643,9 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                         size="small"
                         value={currentLanguage}
                         onValueChange={(val) => {
-                          const nextHeight = getDefaultFontHeightForLanguage(val, activeTextZoneKey);
-                          setValue(`${pathBase}.fontHeight`, nextHeight);
-                          setValue(`${pathBase}.language`, val);
+                          const nextHeight = Math.min(getDefaultFontHeightForLanguage(val, activeTextZoneKey), maxAllowedFontHeight);
+                          setValue(`${pathBase}.fontHeight`, nextHeight, { shouldDirty: true });
+                          setValue(`${pathBase}.language`, val, { shouldDirty: true });
                         }}
                         className="h-8 flex-1 [&_button]:text-xs [&_button]:font-medium"
                       >
@@ -1549,7 +1663,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                               variant={showAutoText ? "brand-secondary" : "neutral-secondary"}
                               size="small"
                               className="h-8 text-xs font-medium px-2.5"
-                              icon={<FeatherSparkle className="h-3.5 w-3.5 text-amber-500" />}
+                              icon={<FeatherSparkle className="h-3.5 w-3.5 text-warning-500" />}
                             >
                               Auto Text
                             </Button>
@@ -1562,11 +1676,11 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                             sideOffset={6}
                             collisionPadding={16}
                             style={{ zIndex: 99999 }}
-                            className="z-[99999] w-80 max-h-[420px] rounded-xl bg-white dark:bg-neutral-900 border border-neutral-border shadow-2xl p-2 flex flex-col font-sans"
+                            className="z-[99999] w-80 max-h-[420px] rounded-xl bg-sidebar-background border border-neutral-border shadow-2xl p-2 flex flex-col font-sans"
                           >
                             <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-neutral-border px-1">
                               <span className="text-xs font-bold text-default-font uppercase tracking-wide flex items-center gap-1.5">
-                                <FeatherSparkle className="h-3.5 w-3.5 text-amber-500" />
+                                <FeatherSparkle className="h-3.5 w-3.5 text-warning-500" />
                                 Auto-Text Suggestions
                               </span>
                               <button
@@ -1617,37 +1731,6 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                         </div>
 
                         <div className="flex items-center gap-1.5">
-                          <div className="flex items-center p-0.5 rounded bg-neutral-200/70">
-                            {(["start", "center", "end"] as const).map((pos) => {
-                              const posLabels = {
-                                start: "Align icon before text",
-                                center: "Place icon in middle of text",
-                                end: "Align icon after text",
-                              };
-                              return (
-                                <ActionTooltip key={pos} content={posLabels[pos]} side="top">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setValue(`${pathBase}.iconPosition`, pos, { shouldDirty: true });
-                                      if (pos === "center") {
-                                        setValue(`${pathBase}.iconWordIndex`, Math.max(1, Math.floor(wordsCount / 2)), { shouldDirty: true });
-                                      }
-                                    }}
-                                    className={SubframeUtils.twClassNames(
-                                      "px-2 py-0.5 rounded text-xs font-medium capitalize transition-all cursor-pointer",
-                                      currentIconPos === pos
-                                        ? "bg-white text-neutral-900 font-bold shadow-2xs"
-                                        : "text-neutral-600 hover:text-neutral-900"
-                                    )}
-                                  >
-                                    {pos}
-                                  </button>
-                                </ActionTooltip>
-                              );
-                            })}
-                          </div>
-
                           <ActionTooltip content="Choose different icon symbol" side="top">
                             <Button
                               variant="neutral-secondary"
@@ -1660,14 +1743,62 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                           </ActionTooltip>
                           <ActionTooltip content="Remove icon from slide" side="top">
                             <IconButton
-                              variant="neutral-secondary"
+                              variant="destructive-secondary"
                               size="small"
-                              className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-50 flex-none"
+                              className="h-7 w-7 flex-none"
                               icon={<FeatherX className="h-3.5 w-3.5" />}
                               onClick={() => setValue(`${pathBase}.icon`, "", { shouldDirty: true })}
                             />
                           </ActionTooltip>
                         </div>
+                      </div>
+                    )}
+
+                    {currentIcon && (
+                      <div className="space-y-2 pt-1">
+                        <SettingRow label="Icon Position">
+                          <ToggleGroup<"start" | "center" | "end">
+                            value={currentIconPos as "start" | "center" | "end"}
+                            onChange={(pos) => {
+                              setZoneField("iconPosition", pos);
+                              // The bitmap API gives iconWordIndex precedence over iconPosition, so it must be cleared outside "center".
+                              setZoneField("iconWordIndex", pos === "center" ? Math.max(1, Math.floor(wordsCount / 2)) : undefined);
+                            }}
+                            options={[
+                              { value: "start", label: "Start", tip: "Place icon before text" },
+                              { value: "center", label: "Middle", tip: "Place icon between words" },
+                              { value: "end", label: "End", tip: "Place icon after text" },
+                            ]}
+                          />
+                        </SettingRow>
+                        {currentIconPos === "center" && (
+                          <SettingRow label="After Word">
+                            <ToggleGroup<number>
+                              value={currentWordIndex}
+                              columns={Math.min(maxWordIndex, 7)}
+                              onChange={(v) => setZoneField("iconWordIndex", v)}
+                              options={Array.from({ length: maxWordIndex }, (_, i) => ({
+                                value: i + 1,
+                                label: `${i + 1}`,
+                                tip: wordsList[i] ? `After "${wordsList[i]}"` : undefined,
+                              }))}
+                            />
+                          </SettingRow>
+                        )}
+                        <SettingRow label="Icon Spacing">
+                          <ToggleGroup<number>
+                            value={currentIconSpacing}
+                            onChange={(v) => setZoneField("iconSpacing", v)}
+                            options={[0, 1, 2, 3, 4, 6].map((v) => ({ value: v, label: `${v}` }))}
+                          />
+                        </SettingRow>
+                        <SettingRow label="Icon Width">
+                          <ToggleGroup<number>
+                            value={currentIconScale}
+                            onChange={(v) => setZoneField("iconWidthScale", v)}
+                            options={[0.75, 1, 1.25, 1.5, 2].map((v) => ({ value: v, label: `${v}×` }))}
+                          />
+                        </SettingRow>
                       </div>
                     )}
                   </div>
@@ -1680,190 +1811,153 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                     onSelectIcon={(iconName) => setValue(`${pathBase}.icon`, iconName, { shouldDirty: true })}
                   />
 
-                  {/* SECTION 2: TYPOGRAPHY & ALIGNMENT (Figma-style formatting toolbar) */}
-                  <div className="space-y-1.5 pt-2 border-t border-neutral-border/60">
-                    <div className="flex items-center justify-between text-xs font-semibold text-neutral-700">
-                      <span>Typography & Alignment</span>
-                    </div>
+                  {/* SIGNBOARD & TYPOGRAPHY SETTINGS */}
+                  <div className="space-y-2.5 pt-3 border-t border-neutral-border/60">
+                    <SettingRow label="Height">
+                      <ToggleGroup<number>
+                        value={activeHeight}
+                        onChange={(h) => handleHeightChange(h as (typeof HEIGHT_OPTIONS)[number])}
+                        options={HEIGHT_OPTIONS.map((h) => ({ value: h, label: h, tip: `Applies to all slides on this board` }))}
+                      />
+                    </SettingRow>
 
-                    <div className="flex items-center gap-2">
-                      {/* Font Size Select Dropdown */}
-                      <Select
-                        variant="filled"
-                        size="small"
-                        value={String(currentFontHeight)}
-                        onValueChange={(val) => {
-                          const size = Number(val);
-                          if (!isNaN(size) && size <= maxAllowedFontHeight) {
-                            setValue(`${pathBase}.fontHeight`, size, { shouldDirty: true });
-                          }
-                        }}
-                        className="h-8 flex-1 [&_button]:text-xs [&_button]:font-mono [&_button]:font-bold"
-                      >
-                        {availableFontSizes.map((size) => (
-                          <Select.Item key={size} value={String(size)}>
-                            {size} px Size
-                          </Select.Item>
-                        ))}
-                      </Select>
+                    <SettingRow label="Width">
+                      <ToggleGroup<number>
+                        value={activeWidth}
+                        columns={3}
+                        onChange={(w) => handleWidthChange(w as (typeof WIDTH_OPTIONS)[number])}
+                        options={WIDTH_OPTIONS.map((w) => ({ value: w, label: w }))}
+                      />
+                    </SettingRow>
 
-                      {/* Bold Toggle */}
-                      <ActionTooltip content={currentWeight === "Bold" ? "Bold active (click to set Regular)" : "Set font weight to Bold"} side="top">
-                        <button
-                          type="button"
-                          onClick={() => setValue(`${pathBase}.fontWeight`, currentWeight === "Bold" ? "Regular" : "Bold", { shouldDirty: true })}
-                          className={SubframeUtils.twClassNames(
-                            "h-8 w-8 flex items-center justify-center rounded-md border text-xs font-bold transition-all cursor-pointer shrink-0",
-                            currentWeight === "Bold"
-                              ? "bg-neutral-900 border-neutral-900 text-white shadow-2xs"
-                              : "border-neutral-border bg-neutral-100 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-900"
-                          )}
-                        >
-                          B
-                        </button>
-                      </ActionTooltip>
+                    <SettingRow label="Text Height">
+                      <ToggleGroup<number>
+                        value={currentFontHeight}
+                        columns={7}
+                        onChange={(size) => setZoneField("fontHeight", size)}
+                        options={Array.from(new Set([...FONT_HEIGHT_GRID, currentFontHeight]))
+                          .sort((a, b) => a - b)
+                          .map((size) => ({
+                            value: size,
+                            label: size,
+                            disabled: size > maxAllowedFontHeight,
+                            tip: size > maxAllowedFontHeight ? `Max ${maxAllowedFontHeight}px for this zone` : undefined,
+                          }))}
+                      />
+                    </SettingRow>
 
-                      {/* Alignment Segmented Control */}
-                      <div className="flex items-center h-8 p-0.5 rounded-md bg-neutral-100 border border-neutral-border shrink-0">
-                        {[
-                          { id: "Left", icon: <FeatherAlignLeft className="h-3.5 w-3.5" />, tip: "Align text to Left" },
-                          { id: "Center", icon: <FeatherAlignCenter className="h-3.5 w-3.5" />, tip: "Align text to Center" },
-                          { id: "Right", icon: <FeatherAlignRight className="h-3.5 w-3.5" />, tip: "Align text to Right" },
-                        ].map((pos) => (
-                          <ActionTooltip key={pos.id} content={pos.tip} side="top">
-                            <button
-                              key={pos.id}
-                              type="button"
-                              onClick={() => setValue(`${pathBase}.position`, pos.id, { shouldDirty: true })}
-                              className={SubframeUtils.twClassNames(
-                                "h-7 px-2.5 flex items-center justify-center rounded transition-all cursor-pointer",
-                                currentPosition === pos.id
-                                  ? "bg-neutral-900 text-white shadow-2xs"
-                                  : "text-neutral-600 hover:text-neutral-900"
-                              )}
-                            >
-                              {pos.icon}
-                            </button>
-                          </ActionTooltip>
-                        ))}
-                      </div>
-                    </div>
+                    <SettingRow label="Text Weight">
+                      <ToggleGroup<FontWeight>
+                        value={currentWeight as FontWeight}
+                        onChange={(w) => setZoneField("fontWeight", w)}
+                        options={FONT_WEIGHTS.map((w) => ({ value: w, label: w }))}
+                      />
+                    </SettingRow>
+
+                    <SettingRow label="Text Alignment">
+                      <ToggleGroup<Position>
+                        value={currentPosition as Position}
+                        onChange={(p) => setZoneField("position", p)}
+                        options={[
+                          { value: "Left", label: <FeatherAlignLeft className="h-3.5 w-3.5" />, tip: "Align left" },
+                          { value: "Center", label: <FeatherAlignCenter className="h-3.5 w-3.5" />, tip: "Align center" },
+                          { value: "Right", label: <FeatherAlignRight className="h-3.5 w-3.5" />, tip: "Align right" },
+                        ]}
+                      />
+                    </SettingRow>
+
+                    <SettingRow label="Scroll Direction">
+                      <ToggleGroup<ScrollType>
+                        value={currentScrollType as ScrollType}
+                        onChange={(s) => setZoneField("scrollType", s)}
+                        options={[
+                          { value: "Right To Left", label: <span className="text-sm leading-none">«</span>, tip: "Scroll right to left" },
+                          { value: "Fixed", label: <span className="text-sm leading-none tracking-tighter">⠿</span>, tip: "Fixed (no scrolling)" },
+                          { value: "Left To Right", label: <span className="text-sm leading-none">»</span>, tip: "Scroll left to right" },
+                        ]}
+                      />
+                    </SettingRow>
+
+                    <SettingRow label="Scroll Speed">
+                      <ToggleGroup<number>
+                        value={toSpeedPreset(currentSpeed)}
+                        onChange={(v) => setZoneField("scrollSpeed", v)}
+                        options={SCROLL_SPEED_TOGGLES.map((s) => ({
+                          ...s,
+                          disabled: currentScrollType === "Fixed",
+                        }))}
+                      />
+                    </SettingRow>
+
+                    <SettingRow label="Slide Format">
+                      <ToggleGroup<SimulationFormat>
+                        value={currentFormat}
+                        onChange={handleFormatChange}
+                        options={[
+                          { value: "single", label: "Single", tip: "Single line text" },
+                          { value: "two", label: "Two Line", tip: "Route number + text" },
+                          { value: "three", label: "Three Line", tip: "Route number + upper & lower lines" },
+                        ]}
+                      />
+                    </SettingRow>
                   </div>
 
-                  {/* SECTION 3: MOTION & SPEED (Side-by-side segmented controls) */}
-                  <div className="space-y-1.5 pt-2 border-t border-neutral-border/60">
-                    <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-neutral-700">
-                      <span>Scroll Motion</span>
-                      <span>Scroll Speed</span>
+                  {/* ADVANCED RENDERING */}
+                  <details className="pt-2 border-t border-neutral-border/60">
+                    <summary className="text-xs font-semibold text-neutral-700 cursor-pointer select-none">
+                      Advanced Rendering
+                    </summary>
+                    <div className="space-y-2.5 pt-2.5">
+                      <SettingRow label="Vertical Align">
+                        <ToggleGroup<"Top" | "Center" | "Bottom">
+                          value={watchZoneField("vAlign") || "Center"}
+                          onChange={(v) => setZoneField("vAlign", v)}
+                          options={[
+                            { value: "Top", label: "Top" },
+                            { value: "Center", label: "Center" },
+                            { value: "Bottom", label: "Bottom" },
+                          ]}
+                        />
+                      </SettingRow>
+
+                      <SettingRow label="Auto Fit">
+                        <ToggleGroup<"off" | "on">
+                          value={watchZoneField("autoFit") ? "on" : "off"}
+                          onChange={(v) => setZoneField("autoFit", v === "on")}
+                          options={[
+                            { value: "off", label: "Off" },
+                            { value: "on", label: "On", tip: "Shrink text to fit the zone width" },
+                          ]}
+                        />
+                      </SettingRow>
+
+                      <SettingRow label="Threshold">
+                        <NumberField
+                          min={0}
+                          max={255}
+                          placeholder="Auto (0–255)"
+                          value={watchZoneField("threshold")}
+                          onChange={(v) => setZoneField("threshold", v)}
+                        />
+                      </SettingRow>
+
+                      <SettingRow label="Space Width">
+                        <NumberField
+                          min={0}
+                          max={16}
+                          placeholder="Auto (px)"
+                          value={watchZoneField("spaceWidth")}
+                          onChange={(v) => setZoneField("spaceWidth", v)}
+                        />
+                      </SettingRow>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      {/* Direction */}
-                      <div className="flex items-center h-8 p-0.5 rounded-md bg-neutral-100 border border-neutral-border">
-                        {[
-                          { id: "Right To Left", label: "« Left", tip: "Scroll right-to-left" },
-                          { id: "Fixed", label: "Fixed", tip: "Static display without scrolling" },
-                          { id: "Left To Right", label: "Right »", tip: "Scroll left-to-right" },
-                        ].map((dir) => (
-                          <ActionTooltip key={dir.id} content={dir.tip} side="top">
-                            <button
-                              type="button"
-                              onClick={() => setValue(`${pathBase}.scrollType`, dir.id, { shouldDirty: true })}
-                              className={SubframeUtils.twClassNames(
-                                "flex-1 h-7 rounded text-xs font-medium transition-all cursor-pointer text-center leading-none",
-                                currentScrollType === dir.id
-                                  ? "bg-neutral-900 text-white font-bold shadow-2xs"
-                                  : "text-neutral-600 hover:text-neutral-900"
-                              )}
-                            >
-                              {dir.label}
-                            </button>
-                          </ActionTooltip>
-                        ))}
-                      </div>
-
-                      {/* Speed */}
-                      <div className="flex items-center h-8 p-0.5 rounded-md bg-neutral-100 border border-neutral-border">
-                        {[
-                          { val: 6, label: "Slow", tip: "Slow scroll speed (6 frames)" },
-                          { val: 4, label: "Normal", tip: "Normal scroll speed (4 frames)" },
-                          { val: 1, label: "Fast", tip: "Fast scroll speed (1 frame)" },
-                        ].map((spd) => {
-                          const active =
-                            (spd.label === "Fast" && currentSpeed <= 2) ||
-                            (spd.label === "Normal" && currentSpeed > 2 && currentSpeed <= 5) ||
-                            (spd.label === "Slow" && currentSpeed > 5);
-                          return (
-                            <ActionTooltip key={spd.label} content={spd.tip} side="top">
-                              <button
-                                type="button"
-                                onClick={() => setValue(`${pathBase}.scrollSpeed`, spd.val, { shouldDirty: true })}
-                                className={SubframeUtils.twClassNames(
-                                  "flex-1 h-7 rounded text-xs font-medium transition-all cursor-pointer text-center leading-none",
-                                  active
-                                    ? "bg-neutral-900 text-white font-bold shadow-2xs"
-                                    : "text-neutral-600 hover:text-neutral-900"
-                                )}
-                              >
-                                {spd.label}
-                              </button>
-                            </ActionTooltip>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* SECTION 4: SIGNBOARD DIMENSIONS (Height segmented + Width dropdown) */}
-                  <div className="space-y-1.5 pt-2 border-t border-neutral-border/60">
-                    <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-neutral-700">
-                      <span>Signboard Height</span>
-                      <span>Signboard Width</span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      {/* Height segmented control */}
-                      <div className="flex items-center h-8 p-0.5 rounded-md bg-neutral-100 border border-neutral-border">
-                        {HEIGHT_OPTIONS.map((h) => (
-                          <ActionTooltip key={h} content={`Set signboard height to ${h} pixels`} side="top">
-                            <button
-                              type="button"
-                              onClick={() => handleHeightChange(h)}
-                              className={SubframeUtils.twClassNames(
-                                "flex-1 h-7 rounded text-xs font-mono font-bold transition-all cursor-pointer text-center leading-none",
-                                activeHeight === h
-                                  ? "bg-neutral-900 text-white shadow-2xs"
-                                  : "text-neutral-600 hover:text-neutral-900"
-                              )}
-                            >
-                              {h} px
-                            </button>
-                          </ActionTooltip>
-                        ))}
-                      </div>
-
-                      {/* Width Select Dropdown */}
-                      <Select
-                        variant="filled"
-                        size="small"
-                        value={String(activeWidth)}
-                        onValueChange={(val) => handleWidthChange(Number(val) as any)}
-                        className="h-8 [&_button]:text-xs [&_button]:font-mono [&_button]:font-bold"
-                      >
-                        {WIDTH_OPTIONS.map((w) => (
-                          <Select.Item key={w} value={String(w)}>
-                            {w} px Width
-                          </Select.Item>
-                        ))}
-                      </Select>
-                    </div>
-                  </div>
+                  </details>
 
                   {/* SECTION 5: VOICE ANNOUNCEMENT (PAS) */}
                   <div className="space-y-1.5 pt-2 border-t border-neutral-border/60">
                     <div className="flex items-center justify-between text-xs font-semibold text-neutral-700">
                       <span className="flex items-center gap-1.5">
-                        <FeatherVolume2 className="h-3.5 w-3.5 text-amber-500" />
+                        <FeatherVolume2 className="h-3.5 w-3.5 text-warning-500" />
                         Voice Announcement (PAS)
                       </span>
                       {audioFileName && (
@@ -1880,7 +1974,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                             variant={isPlayingAudio ? "brand-secondary" : "neutral-secondary"}
                             size="small"
                             className="flex-1 h-8 text-xs font-medium"
-                            icon={<FeatherVolume2 className={SubframeUtils.twClassNames("h-3.5 w-3.5", isPlayingAudio ? "text-amber-500 animate-pulse" : "")} />}
+                            icon={<FeatherVolume2 className={SubframeUtils.twClassNames("h-3.5 w-3.5", isPlayingAudio ? "text-warning-500 animate-pulse" : "")} />}
                             onClick={handlePlayAudio}
                           >
                             {isPlayingAudio ? "Stop Audio" : "Play Announcement"}
@@ -1889,9 +1983,9 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                         {audiopath && !stopTypeAudioFileUrl && (
                           <ActionTooltip content="Delete voice announcement" side="top">
                             <IconButton
-                              variant="neutral-secondary"
+                              variant="destructive-secondary"
                               size="small"
-                              className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 flex-none"
+                              className="h-8 w-8 flex-none"
                               icon={<FeatherTrash className="h-3.5 w-3.5" />}
                               onClick={handleDeleteAudio}
                             />
@@ -1903,8 +1997,8 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                         <Button
                           variant="brand-primary"
                           size="small"
-                          className="w-full h-8 text-xs font-medium bg-neutral-900 text-white hover:bg-neutral-800"
-                          icon={<FeatherSparkle className="h-3.5 w-3.5 text-amber-400" />}
+                          className="w-full h-8 text-xs font-medium"
+                          icon={<FeatherSparkle className="h-3.5 w-3.5 text-warning-400" />}
                           disabled={generatingAudio || !currentText.trim()}
                           onClick={handleGenerateAudio}
                         >
@@ -1941,7 +2035,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                       size="small"
                       className={SubframeUtils.twClassNames(
                         "h-7 text-xs font-medium px-2.5",
-                        isCycling ? "bg-neutral-900 text-white" : ""
+                        ""
                       )}
                       icon={<FeatherRotateCw className={SubframeUtils.twClassNames("h-3 w-3", isCycling ? "animate-spin" : "")} />}
                       onClick={() => setIsCycling(!isCycling)}
@@ -1956,7 +2050,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                         <Button
                           variant="brand-primary"
                           size="small"
-                          className="h-7 text-xs font-semibold px-2.5 bg-neutral-900 text-white hover:bg-neutral-800"
+                          className="h-7 text-xs font-semibold px-2.5"
                           icon={<FeatherPlus className="h-3 w-3" />}
                         >
                           Add Slide
@@ -1998,8 +2092,16 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                           onClick={() => handleAddSlide("single", "slogan")}
                           className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left rounded-lg text-default-font hover:bg-neutral-100 cursor-pointer"
                         >
-                          <FeatherSpeech className="h-3.5 w-3.5 text-amber-500" />
+                          <FeatherSpeech className="h-3.5 w-3.5 text-warning-500" />
                           <span>Add Slogan / Announcement</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAddSlide("single", "special message")}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left rounded-lg text-default-font hover:bg-neutral-100 cursor-pointer"
+                        >
+                          <FeatherMic2 className="h-3.5 w-3.5 text-warning-500" />
+                          <span>Add Special Message</span>
                         </button>
                       </SubframeCore.DropdownMenu.Content>
                     </SubframeCore.DropdownMenu.Portal>
@@ -2046,9 +2148,9 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
 
                   <ActionTooltip content="Delete all slides from current signboard loop" side="bottom">
                     <Button
-                      variant="neutral-secondary"
+                      variant="destructive-secondary"
                       size="small"
-                      className="h-7 text-xs font-medium px-2.5 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="h-7 text-xs font-medium px-2.5"
                       icon={<FeatherTrash className="h-3 w-3" />}
                       onClick={handleClearAllSlides}
                     >
@@ -2102,13 +2204,13 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                       <Button
                         variant="brand-primary"
                         size="small"
-                        className="h-8 text-xs font-medium px-3 bg-neutral-900 text-white hover:bg-neutral-800"
+                        className="h-8 text-xs font-medium px-3"
                         disabled={!selectedStop || selectedStopTypes.length === 0}
                         onClick={() => {
                           if (!selectedStop || selectedStopTypes.length === 0) return;
                           const newSims = selectedStopTypes.map((stopType) => {
                             const text = `${stopType.toUpperCase()} STOP: ${selectedStop.name.toUpperCase()}`;
-                            return getDefaultStopSingleSimulation(text, "stop", stopType as any, selectedStop, stopLanguage, stopUpDown);
+                            return getDefaultStopSingleSimulation(text, "stop", stopType, selectedStop, stopLanguage, stopUpDown);
                           });
                           const curList: Simulation[] = getValues(selectedTab as any) || [];
                           const updatedList = [...curList, ...newSims];
@@ -2124,7 +2226,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                   {/* Stop types checkboxes */}
                   <div className="flex items-center gap-3 pt-1">
                     <span className="text-[11px] font-semibold text-neutral-700">Stop Types:</span>
-                    {["current", "next", "coming", "arrived"].map((st) => {
+                    {stopStates.map((st) => {
                       const checked = selectedStopTypes.includes(st);
                       return (
                         <label key={st} className="flex items-center gap-1.5 text-xs text-neutral-800 font-medium cursor-pointer capitalize">
@@ -2138,7 +2240,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                                 setSelectedStopTypes((prev) => prev.filter((x) => x !== st));
                               }
                             }}
-                            className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900 h-3.5 w-3.5"
+                            className="rounded border-neutral-300 accent-brand-600 focus:ring-brand-primary h-3.5 w-3.5"
                           />
                           {st}
                         </label>
@@ -2160,7 +2262,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                       <Button
                         variant="brand-primary"
                         size="small"
-                        className="h-8 text-xs font-medium px-3 bg-neutral-900 text-white hover:bg-neutral-800"
+                        className="h-8 text-xs font-medium px-3"
                         onClick={() => handleAddSlide("two")}
                       >
                         + Add Two-Line Route
@@ -2189,14 +2291,17 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                         className={SubframeUtils.twClassNames(
                           "flex flex-col rounded-xl border p-3 cursor-pointer transition-all shadow-xs",
                           isSelected
-                            ? "bg-sidebar-background border-neutral-900 ring-2 ring-neutral-900 shadow-md"
+                            ? "bg-sidebar-background border-brand-primary ring-2 ring-brand-primary shadow-md"
                             : "bg-sidebar-background border-neutral-border hover:border-neutral-400 hover:shadow-sm"
                         )}
                       >
                         {/* Slide Card Header */}
                         <div className="flex items-center justify-between pb-2 mb-2 border-b border-neutral-border">
                           <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                            <span className="px-2 py-0.5 rounded bg-neutral-900 text-white font-mono font-bold text-xs">
+                            <span className={SubframeUtils.twClassNames(
+                              "px-2 py-0.5 rounded font-mono font-bold text-xs",
+                              isSelected ? "bg-brand-primary text-brand-primary-foreground" : "bg-neutral-200 text-default-font"
+                            )}>
                               #{index + 1}
                             </span>
                             <span className="text-xs font-bold text-neutral-900 capitalize">
@@ -2205,7 +2310,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                             <span className="text-xs text-neutral-600 capitalize font-medium">• {simType}</span>
                             <span className="text-xs font-mono text-neutral-600 font-medium">• {w}×{h}</span>
                             {sim.audioFileUrl && (
-                              <span className="px-1.5 py-0.5 rounded bg-amber-100 border border-amber-300 text-amber-900 text-[10px] font-bold flex items-center gap-1">
+                              <span className="px-1.5 py-0.5 rounded bg-warning-100 border border-warning-300 text-warning-800 text-[10px] font-bold flex items-center gap-1">
                                 <FeatherVolume2 className="h-2.5 w-2.5" /> PAS Audio
                               </span>
                             )}
@@ -2244,9 +2349,9 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                             </ActionTooltip>
                             <ActionTooltip content="Delete this slide from loop" side="top">
                               <IconButton
-                                variant="neutral-secondary"
+                                variant="destructive-secondary"
                                 size="small"
-                                className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                className="h-7 w-7"
                                 icon={<FeatherTrash className="h-3.5 w-3.5" />}
                                 onClick={() => handleRemoveSlide(index)}
                               />
@@ -2298,8 +2403,8 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                             </div>
 
                             {sim.audioFileUrl && (
-                              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-amber-50 border border-amber-300 text-xs text-amber-900 font-mono">
-                                <FeatherVolume2 className="h-3 w-3 text-amber-600 flex-none" />
+                              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-warning-50 border border-warning-300 text-xs text-warning-800 font-mono">
+                                <FeatherVolume2 className="h-3 w-3 text-warning-600 flex-none" />
                                 <span className="truncate">
                                   TTS: {sim.texts?.text?.text} ({sim.audioFileName || "audio.mp3"})
                                 </span>
@@ -2347,9 +2452,9 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                   Keep Editing
                 </Button>
                 <Button
-                  variant="neutral-secondary"
+                  variant="destructive-secondary"
                   size="small"
-                  className="w-full h-8 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50"
+                  className="w-full h-8 text-xs font-medium"
                   onClick={() => {
                     setShowConfirmDialog(false);
                     navigate(-1);
@@ -2360,7 +2465,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                 <Button
                   variant="brand-primary"
                   size="small"
-                  className="w-full h-8 text-xs font-medium bg-neutral-900 text-white hover:bg-neutral-800"
+                  className="w-full h-8 text-xs font-medium"
                   onClick={() => {
                     setShowConfirmDialog(false);
                     handleSubmit(onSubmit)();
