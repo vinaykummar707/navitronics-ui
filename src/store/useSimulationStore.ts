@@ -7,16 +7,18 @@ type SimulationStore = {
   selectedSimulation: Screen | null;
   setSelectedSimulation: (value: Screen | null) => void;
   selectedSimulationIndex: number;
-  setSelectedSimulationIndex: (value: number) => void;
+  setSelectedSimulationIndex: (value: number | ((prev: number) => number)) => void;
   reset: () => void;
 };
 
-const useSimulationStore = create<SimulationStore>((set) => ({
+const useSimulationStore = create<SimulationStore>((set, get) => ({
   selectedSimulation: null,
   setSelectedSimulation: (value) => set({ selectedSimulation: value }),
   selectedSimulationIndex: 0,
   setSelectedSimulationIndex: (value) =>
-    set({ selectedSimulationIndex: value }),
+    set({
+      selectedSimulationIndex: typeof value === "function" ? value(get().selectedSimulationIndex) : value,
+    }),
   reset: () => set({ selectedSimulation: null, selectedSimulationIndex: 0 }),
 }));
 

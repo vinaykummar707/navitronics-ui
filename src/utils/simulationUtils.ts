@@ -89,7 +89,14 @@ export interface RouteFieldValues {
   source?: string;
   destination?: string;
   via?: string;
+  separation?: string;
 }
+
+export const ROUTE_SEPARATOR_OPTIONS = ["-", "to", "vice versa"] as const;
+
+/** Joins source and destination with the chosen route separator (default "-"). */
+export const joinSourceDestination = (source?: string, destination?: string, separation?: string) =>
+  [source, destination].filter(Boolean).join(` ${(separation || "").trim() || "-"} `);
 
 const joinRouteParts = (...parts: (string | undefined)[]) => parts.filter(Boolean).join(" - ");
 
@@ -113,11 +120,11 @@ export const getRoutePresetZoneText = (
 ): string | undefined => {
   switch (zoneKey) {
     case "text": {
-      const routeText = joinRouteParts(values.source, values.destination, values.via);
+      const routeText = joinRouteParts(joinSourceDestination(values.source, values.destination, values.separation), values.via);
       return format === "single" ? routeText || "Single Route Text" : routeText;
     }
     case "upperHalfText":
-      return joinRouteParts(values.source, values.destination);
+      return joinSourceDestination(values.source, values.destination, values.separation);
     case "lowerHalfText":
       return values.via || "";
     case "sideText":

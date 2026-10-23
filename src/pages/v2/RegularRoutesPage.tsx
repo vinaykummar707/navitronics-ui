@@ -27,7 +27,7 @@ import { convertV2ToV1 } from "@/utils/routeConfigMapper";
 import { Dialog } from "@/ui/components/Dialog";
 import { getUserRouteAccess } from "@/utils/featureFlags";
 import { isRegularCustomer, isSuperAdmin } from "@/utils/customerType";
-import { writeZipToDirectoryOrFallback } from "@/utils/fileSystemExport";
+import { exportRoutesInBatches, writeZipToDirectoryOrFallback } from "@/utils/fileSystemExport";
 import { sortByLatestCreated } from "@/utils/dateUtils";
 
 export default function RegularRoutesPage() {
@@ -79,6 +79,7 @@ export default function RegularRoutesPage() {
   const [versionFilter, setVersionFilter] = useState<"all" | "v1" | "v2">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [createdBySearch, setCreatedBySearch] = useState("");
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -100,6 +101,12 @@ export default function RegularRoutesPage() {
       result = result.filter((r) => r.version === "1.0");
     } else if (versionFilter === "v2") {
       result = result.filter((r) => r.version !== "1.0");
+    }
+
+    // Created-by filter
+    const createdByQuery = createdBySearch.trim().toLowerCase();
+    if (createdByQuery) {
+      result = result.filter((r) => (r.created_by_user?.email || "").toLowerCase().includes(createdByQuery));
     }
 
     // Search query filter
@@ -127,7 +134,7 @@ export default function RegularRoutesPage() {
     }
 
     return sortByLatestCreated(result);
-  }, [routes, routeAccess.isV1Only, routeAccess.isV2Only, versionFilter, debouncedSearchQuery]);
+  }, [routes, routeAccess.isV1Only, routeAccess.isV2Only, versionFilter, debouncedSearchQuery, createdBySearch]);
 
   const [selectedRouteIds, setSelectedRouteIds] = useState<string[]>([]);
 
@@ -455,12 +462,13 @@ export default function RegularRoutesPage() {
       try {
         const exportUrl = `${apiBase}/routes/export?areaId=&depotId=`;
 
-        const response = await axios.post(exportUrl, v1RoutesPayload, {
-          headers: { "Content-Type": "application/json" },
-          responseType: "blob",
+        const blob = await exportRoutesInBatches(v1RoutesPayload, async (batch) => {
+          const response = await axios.post(exportUrl, batch, {
+            headers: { "Content-Type": "application/json" },
+            responseType: "blob",
+          });
+          return new Blob([response.data], { type: "application/zip" });
         });
-
-        const blob = new Blob([response.data], { type: "application/zip" });
         await writeZipToDirectoryOrFallback(
           blob,
           `regular_routes_export_v1_${currentDate}.zip`
@@ -481,12 +489,13 @@ export default function RegularRoutesPage() {
       try {
         const exportUrl = `${apiBase}/routes/export-v2?areaId=&depotId=`;
 
-        const response = await axios.post(exportUrl, rawRoutesToExport, {
-          headers: { "Content-Type": "application/json" },
-          responseType: "blob",
+        const blob = await exportRoutesInBatches(rawRoutesToExport, async (batch) => {
+          const response = await axios.post(exportUrl, batch, {
+            headers: { "Content-Type": "application/json" },
+            responseType: "blob",
+          });
+          return new Blob([response.data], { type: "application/zip" });
         });
-
-        const blob = new Blob([response.data], { type: "application/zip" });
         await writeZipToDirectoryOrFallback(
           blob,
           `regular_routes_export_v2_${currentDate}.zip`
@@ -542,6 +551,34 @@ export default function RegularRoutesPage() {
               </div>
             )}
           </div>
+
+          {/* Created By Search Field (admin view lists routes from many customers) */}
+          {!isRegular && (
+            <div className="relative w-full sm:w-60">
+              <TextField
+                className="w-full h-9"
+                icon={<FeatherSearch className="h-4 w-4 text-subtext-color" />}
+              >
+                <TextField.Input
+                  placeholder="Search created by (email)..."
+                  value={createdBySearch}
+                  onChange={(e) => setCreatedBySearch(e.target.value)}
+                  className={createdBySearch ? "pr-8" : ""}
+                />
+              </TextField>
+              {createdBySearch && (
+                <div className="absolute right-2 top-2 z-10">
+                  <IconButton
+                    size="small"
+                    variant="neutral-tertiary"
+                    icon={<FeatherX className="h-3.5 w-3.5" />}
+                    onClick={() => setCreatedBySearch("")}
+                    title="Clear created by search"
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Dual User Version Filter Toggle */}
           {routeAccess.isDualUser && routes.length > 0 && (
@@ -661,7 +698,7 @@ export default function RegularRoutesPage() {
         <div className="flex flex-col items-center justify-center p-14 text-center gap-3 rounded-lg border border-neutral-border bg-sidebar-background w-full">
           <FeatherSearch className="h-8 w-8 text-neutral-300" />
           <span className="text-body font-medium text-default-font">
-            No routes match "{searchQuery}"
+            No routes match "{[searchQuery, createdBySearch].filter(Boolean).join(" / ")}"
           </span>
           <span className="text-caption text-subtext-color max-w-sm">
             Try searching for a different route number, terminal, or stop, or clear the search filter.
@@ -669,7 +706,10 @@ export default function RegularRoutesPage() {
           <Button
             variant="neutral-secondary"
             size="small"
-            onClick={() => setSearchQuery("")}
+            onClick={() => {
+              setSearchQuery("");
+              setCreatedBySearch("");
+            }}
           >
             Clear Search
           </Button>

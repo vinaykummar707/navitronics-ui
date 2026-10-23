@@ -17,6 +17,7 @@ import { IOrganization, organizationCrud } from "@/types/organization";
 interface SelectOrganizationComponentRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   collapsed?: boolean;
+  inline?: boolean;
   onExpand?: () => void;
 }
 
@@ -24,7 +25,7 @@ const SelectOrganizationComponentRoot = React.forwardRef<
   HTMLDivElement,
   SelectOrganizationComponentRootProps
 >(function SelectOrganizationComponentRoot(
-  { className, collapsed = false, onExpand, ...otherProps }: SelectOrganizationComponentRootProps,
+  { className, collapsed = false, inline = false, onExpand, ...otherProps }: SelectOrganizationComponentRootProps,
   ref,
 ) {
   const { selectedOrganization, setSelectedOrganization } =
@@ -76,12 +77,18 @@ const SelectOrganizationComponentRoot = React.forwardRef<
   const orgsToShow = isSuper ? orgs : orgs?.filter(org => org.id === user?.organization?.id);
 
   if (isLoading) {
+    if (inline) {
+      return <div className="h-8 w-32 animate-pulse rounded-md bg-neutral-200" />;
+    }
     return (
       <div className={collapsed ? "h-11 w-11 animate-pulse rounded-lg bg-neutral-200" : "text-caption text-subtext-color"}>
         {collapsed ? null : "Loading organizations..."}
       </div>
     );
   } else if (!orgsToShow || orgsToShow.length === 0) {
+    if (inline) {
+      return <span className="text-caption text-subtext-color whitespace-nowrap">No organizations</span>;
+    }
     if (collapsed) {
       return (
         <div
@@ -130,6 +137,24 @@ const SelectOrganizationComponentRoot = React.forwardRef<
 
   // Non-super-admin users belong to a fixed organization; render as a static badge
   if (!isSuper) {
+    if (inline) {
+      return (
+        <div
+          className={SubframeUtils.twClassNames(
+            "flex h-8 max-w-[160px] sm:max-w-[240px] items-center gap-1.5 rounded-md border border-neutral-border bg-neutral-100 px-2.5 select-none",
+            className
+          )}
+          ref={ref}
+          title={selectedOrganization?.name || user?.organization?.name || "Organization"}
+          {...otherProps}
+        >
+          <FeatherHotel className="w-3.5 h-3.5 text-brand-primary flex-none" />
+          <span className="text-caption-bold font-caption-bold text-default-font truncate">
+            {selectedOrganization?.name || user?.organization?.name || "Organization"}
+          </span>
+        </div>
+      );
+    }
     return (
       <div
         className={SubframeUtils.twClassNames(
@@ -155,7 +180,7 @@ const SelectOrganizationComponentRoot = React.forwardRef<
   return (
     <div
       className={SubframeUtils.twClassNames(
-        "flex w-full flex-col items-start gap-2",
+        inline ? "flex w-40 sm:w-56 flex-col items-start" : "flex w-full flex-col items-start gap-2",
         className,
       )}
       ref={ref}
@@ -163,7 +188,9 @@ const SelectOrganizationComponentRoot = React.forwardRef<
     >
       <Select
         className="h-auto w-full "
-        label="Select Organization"
+        label={inline ? undefined : "Select Organization"}
+        size={inline ? "small" : undefined}
+        icon={inline ? <FeatherHotel /> : undefined}
         placeholder="Select"
         variant="filled"
         helpText=""

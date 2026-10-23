@@ -235,10 +235,11 @@ const IMEInput = forwardRef<HTMLInputElement, IMEInputProps>(
   };
 
   const handleSuggestionClick = (suggestion: string) => {
-    replaceWordAtCursor(suggestion);
+    replaceWordAtCursor(suggestion, false);
   };
 
-  const replaceWordAtCursor = (suggestion: string) => {
+  // `appendSpace` re-inserts the space the user typed to accept the suggestion.
+  const replaceWordAtCursor = (suggestion: string, appendSpace = true) => {
     const words = value.split(" ");
     let wordStart = 0;
     let wordIndex = -1;
@@ -254,10 +255,12 @@ const IMEInput = forwardRef<HTMLInputElement, IMEInputProps>(
       wordStart += words[i].length + 1;
     }
 
+    let newCursorPos = cursorIndex;
     if (wordIndex !== -1) {
       words[wordIndex] = suggestion;
+      if (appendSpace && wordIndex === words.length - 1) words.push("");
       const newText = words.join(" ");
-      const newCursorPos = wordStart + suggestion.length + 1; // Move cursor to next position
+      newCursorPos = wordStart + suggestion.length + (appendSpace ? 1 : 0);
 
       if (onChange) {
         onChange({ target: { value: newText } } as any);
@@ -271,7 +274,7 @@ const IMEInput = forwardRef<HTMLInputElement, IMEInputProps>(
     setTimeout(() => {
       if (inputRef.current) {
         inputRef.current.focus();
-        inputRef.current.setSelectionRange(cursorIndex, cursorIndex);
+        inputRef.current.setSelectionRange(newCursorPos, newCursorPos);
       }
     }, 0);
   };
@@ -288,7 +291,7 @@ const IMEInput = forwardRef<HTMLInputElement, IMEInputProps>(
         setSelectedSuggestionIndex((prev) => (prev > 0 ? prev - 1 : -1));
       } else if (e.key === "Enter" && selectedSuggestionIndex !== -1) {
         e.preventDefault();
-        replaceWordAtCursor(suggestions[selectedSuggestionIndex]);
+        replaceWordAtCursor(suggestions[selectedSuggestionIndex], false);
       } else if (e.key === " " && suggestions.length > 0) {
         e.preventDefault();
         replaceWordAtCursor(suggestions[0]); // Auto-select first suggestion

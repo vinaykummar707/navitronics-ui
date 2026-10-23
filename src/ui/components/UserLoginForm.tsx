@@ -39,6 +39,26 @@ interface UserLoginFormRootProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
 }
 
+// Only the email is kept; passwords are never written to storage.
+const REMEMBERED_EMAIL_KEY = "navitronix-remembered-email";
+
+const readRememberedEmail = () => {
+  try {
+    return localStorage.getItem(REMEMBERED_EMAIL_KEY) || "";
+  } catch {
+    return "";
+  }
+};
+
+const writeRememberedEmail = (email: string | null) => {
+  try {
+    if (email) localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
+    else localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+  } catch {
+    // Ignore storage access errors
+  }
+};
+
 const UserLoginFormRoot = React.forwardRef<
   HTMLDivElement,
   UserLoginFormRootProps
@@ -55,7 +75,7 @@ const UserLoginFormRoot = React.forwardRef<
   );
   const navigate = useNavigate(); // React Router navigation
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => (rememberMe ? readRememberedEmail() : ""));
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -104,6 +124,8 @@ const UserLoginFormRoot = React.forwardRef<
       if (!authData?.user) {
         throw new Error("Authentication failed. No user returned from server.");
       }
+
+      writeRememberedEmail(rememberMe ? trimmedEmail : null);
 
       // 2. Fetch user profile from public.users with joined relations
       const { data: dbUser, error: dbError } = await supabase
@@ -304,7 +326,8 @@ const UserLoginFormRoot = React.forwardRef<
                   if (emailError) setEmailError("");
                 }}
                 autoComplete="email"
-                autoFocus
+                name="email"
+                autoFocus={!email}
               />
             </TextField>
             <TextField
@@ -342,12 +365,17 @@ const UserLoginFormRoot = React.forwardRef<
                   if (passwordError) setPasswordError("");
                 }}
                 autoComplete="current-password"
+                name="password"
+                autoFocus={!!email}
               />
             </TextField>
             <div className="flex w-full items-center justify-between pt-1">
               <Checkbox
                 checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked)}
+                onCheckedChange={(checked) => {
+                  setRememberMe(checked);
+                  if (!checked) writeRememberedEmail(null);
+                }}
                 label={
                   <span className="text-caption font-caption text-subtext-color select-none">
                     Remember me

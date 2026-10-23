@@ -81,7 +81,9 @@ import {
 import {
   getRoutePresetZoneText,
   isAutoRouteZoneText,
+  joinSourceDestination,
   migrateSlidesOnSplitRouteToggle,
+  ROUTE_SEPARATOR_OPTIONS,
   RouteFieldValues,
   sanitizeRouteBoards,
   syncSlidesWithRouteFields,
@@ -121,8 +123,7 @@ const BOARD_ITEMS = [
   { id: Tab.FRONT, letter: "F", label: "FRONT" },
   { id: Tab.SIDE, letter: "S", label: "SIDE" },
   { id: Tab.REAR, letter: "R", label: "REAR" },
-  { id: Tab.INTERNAL, letter: "I", label: "CABIN" },
-  { id: Tab.STOPS, letter: "P", label: "PAS/OP3" },
+  { id: Tab.INTERNAL, letter: "I", label: "IN BUS" },
 ];
 
 const getBoardLabel = (board: string) =>
@@ -259,7 +260,10 @@ const SCROLL_SPEED_TOGGLES = [
 const toSpeedPreset = (speed: number) => (speed <= 2 ? 1 : speed <= 5 ? 4 : 6);
 
 const SLIDE_BOARDS = ["front", "side", "rear", "internal"] as const;
-const ROUTE_SYNC_FIELDS: string[] = ["route_number", "route_number_1", "route_number_2", "source", "destination", "via"];
+const ROUTE_SYNC_FIELDS: string[] = ["route_number", "route_number_1", "route_number_2", "source", "destination", "via", "separation"];
+
+// Split-route number zones are half height, so icons render too small there and are not offered.
+const isSplitRouteNumberZone = (key: string) => key === "routeNumber1" || key === "routeNumber2";
 
 interface RouteCreationLayoutProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
@@ -323,7 +327,6 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
     const [isCycling, setIsCycling] = useState<boolean>(false);
     const [showAutoText, setShowAutoText] = useState(false);
     const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
-    const [showCopyDropdown, setShowCopyDropdown] = useState(false);
 
     // Audio state
     const [generatingAudio, setGeneratingAudio] = useState(false);
@@ -365,6 +368,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
     const source = watch("source");
     const destination = watch("destination");
     const via = watch("via");
+    const separation = watch("separation");
     const isReturn = watch("return");
 
     const displayRouteNum = isSplitRoute
@@ -383,6 +387,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
           source: read("source"),
           destination: read("destination"),
           via: read("via"),
+          separation: read("separation"),
         };
       };
       let prevFields = pickRouteFields(getValues());
@@ -452,7 +457,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
         return isSplitRoute ? "routeNumber1" : "routeNumber";
       }
       if (isSplitRoute) {
-        if (userTextZone === "routeNumber1" || userTextZone === "routeNumber2") return userTextZone;
+        if (userTextZone === "routeNumber1" || userTextZone === "routeNumber2" || userTextZone === "text") return userTextZone;
         return "routeNumber1";
       }
       if (userTextZone === "text") return "text";
@@ -531,6 +536,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
     const audioFileName = safeSimulationIndex >= 0 ? (watch(`${selectedTab}[${safeSimulationIndex}].audioFileName`) as string) : "";
 
     const currentIcon = pathBase ? (watch(`${pathBase}.icon`) as string) || "" : "";
+    const iconsAllowed = !isSplitRouteNumberZone(activeTextZoneKey);
     const currentIconPos = pathBase ? (watch(`${pathBase}.iconPosition`) as string) || "start" : "start";
     const currentIconSpacing = pathBase ? Number(watch(`${pathBase}.iconSpacing`) ?? 2) : 2;
     const currentIconScale = pathBase ? Number(watch(`${pathBase}.iconWidthScale`) ?? 1.0) : 1.0;
@@ -563,7 +569,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
     });
     const depotStops = (stopsData?.data as any[]) || [];
 
-    // Auto-Cycle Loop
+    // Auto-preview: steps the LED board through every slide in the loop.
     useEffect(() => {
       if (!isCycling || simulations.length <= 1) return;
       const interval = setInterval(() => {
@@ -572,7 +578,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
       return () => clearInterval(interval);
     }, [isCycling, simulations.length, setSelectedSimulationIndex]);
 
-    // Keyboard Shortcuts ('r' for swap/return, 'd' for duplicate)
+    // Keyboard shortcut: 'r' toggles the return trip
     useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent) => {
         const target = e.target as HTMLElement;
@@ -581,24 +587,34 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
         }
         if (e.key === "r" || e.key === "R") {
           e.preventDefault();
-          handleInvertEndpoints();
-        } else if (e.key === "d" || e.key === "D") {
-          e.preventDefault();
-          handleDuplicateSlide();
+          handleReturnRoute();
         }
       };
       window.addEventListener("keydown", handleKeyDown);
       return () => window.removeEventListener("keydown", handleKeyDown);
     }, [isReturn]);
 
-    // Invert endpoints
-    const handleInvertEndpoints = () => {
+    // Swap: only exchanges origin and terminus.
+    const handleSwapEndpoints = () => {
       const src = getValues("source");
       const dest = getValues("destination");
       setValue("source", dest, { shouldDirty: true });
       setValue("destination", src, { shouldDirty: true });
+      toast.info("Swapped origin & terminus");
+    };
+
+    // Return: toggles the return-trip flag, flipping the direction (endpoints and via order) with it.
+    const handleReturnRoute = () => {
+      const src = getValues("source");
+      const dest = getValues("destination");
+      const viaStops = (getValues("via") || "").split(/[,;]/).map((s) => s.trim()).filter(Boolean);
+      setValue("source", dest, { shouldDirty: true });
+      setValue("destination", src, { shouldDirty: true });
+      if (viaStops.length > 1) {
+        setValue("via", viaStops.reverse().join(", "), { shouldDirty: true });
+      }
       setValue("return", !isReturn, { shouldDirty: true });
-      toast.info(`Swapped origin & terminus (${!isReturn ? "Return mode" : "Standard mode"})`);
+      toast.info(!isReturn ? "Return trip: direction reversed" : "Outbound trip: direction restored");
     };
 
     // Toggle Split Route
@@ -636,6 +652,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
         source: getValues("source") || "",
         destination: getValues("destination") || "",
         via: getValues("via") || "",
+        separation: getValues("separation") || "",
       };
       const halfRows = Math.floor(h / 2);
       const defaultFontHeight = getDefaultTextConfig().fontHeight || 14;
@@ -726,7 +743,8 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
       const routeNum = isSplitRoute
         ? `${getValues("route_number_1") || ""}/${getValues("route_number_2") || ""}`
         : getValues("route_number") || "";
-      const routeText = [getValues("source"), getValues("destination"), getValues("via")].filter(Boolean).join(" - ");
+      const sourceDestination = joinSourceDestination(getValues("source"), getValues("destination"), getValues("separation"));
+      const routeText = [sourceDestination, getValues("via")].filter(Boolean).join(" - ");
 
       if (format === "single") {
         const singlePreset =
@@ -739,7 +757,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
       } else if (format === "two") {
         newSim = getDefaultTwoSimulation(routeNum, routeText, type, getValues("route_number_1"), getValues("route_number_2"), isSplitRoute);
       } else {
-        newSim = getDefaultThreeSimulation(routeNum, [getValues("source"), getValues("destination")].filter(Boolean).join(" - "), getValues("via") || "", type, getValues("route_number_1"), getValues("route_number_2"), isSplitRoute);
+        newSim = getDefaultThreeSimulation(routeNum, sourceDestination, getValues("via") || "", type, getValues("route_number_1"), getValues("route_number_2"), isSplitRoute);
       }
 
       if (currentSimulation) {
@@ -782,7 +800,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
     };
 
     const handleClearAllSlides = () => {
-      if (confirm(`Are you sure you want to delete all slides on ${selectedTab.toUpperCase()} display?`)) {
+      if (confirm(`Are you sure you want to delete all slides on ${getBoardLabel(selectedTab)} display?`)) {
         setValue(selectedTab as any, [], { shouldDirty: true });
         setSelectedSimulationIndex(-1);
       }
@@ -875,7 +893,6 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
         cloned = { ...cloned, width: destDims.width };
       }
       setValue(destBoard as any, [...destSims, cloned], { shouldDirty: true });
-      setShowCopyDropdown(false);
       toast.success(`Slide #${selectedSimulationIndex + 1} copied to ${getBoardLabel(destBoard)} signboard!`);
     };
 
@@ -913,8 +930,10 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
         const trimmedRouteNum1 = (data.route_number_1 || "").trim();
         const trimmedRouteNum2 = (data.route_number_2 || "").trim();
         const separator = (data.separation || "").trim() || "-";
+        // Word separators ("to", "vice versa") need spaces around them to stay readable.
+        const routeNumberJoiner = /^[a-z]/i.test(separator) ? ` ${separator} ` : separator;
         const trimmedRouteNum = data.is_split_route
-          ? `${trimmedRouteNum1}${separator}${trimmedRouteNum2}`
+          ? `${trimmedRouteNum1}${routeNumberJoiner}${trimmedRouteNum2}`
           : (data.route_number || "").trim();
 
         if (data.is_split_route) {
@@ -1197,16 +1216,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
               <div ref={setLedStageEl} className="flex flex-col items-center justify-center w-full py-1">
                 <div className="flex flex-col items-center w-fit max-w-full rounded-2xl bg-slate-950 p-3 shadow-xl border border-slate-800 ring-1 ring-black/70">
                   {/* Hardware Top Monospace Bezel Bar */}
-                  <div className="flex w-full items-center justify-between pb-2 mb-2 border-b border-slate-800 text-[10px] font-mono text-slate-400 gap-6">
-                    <div className="flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
-                      <span className="uppercase font-bold tracking-wider text-emerald-400">ESC RS-485 • ONLINE</span>
-                    </div>
-                    <div className="uppercase font-semibold tracking-wider text-slate-300">
-                      {currentBoardItem.label} SIGNBOARD • SLIDE {selectedSimulationIndex + 1} OF {simulations.length || 1}
-                    </div>
-                    <div className="font-bold text-slate-400">{activeWidth}×{activeHeight} DOTS</div>
-                  </div>
+                 
 
                   {/* Dot Matrix Screen */}
                   <div className="flex items-center justify-center p-2 rounded-lg bg-black overflow-hidden shadow-inner ring-1 ring-black/50">
@@ -1244,37 +1254,6 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                   <span className="font-mono">Frame #{(selectedSimulationIndex + 1) * 310}</span>
                   <span>•</span>
                   <span className="font-medium">{formatLabel}</span>
-                  <span>•</span>
-
-                  {/* Copy Slide to Board dropdown */}
-                  <div className="relative inline-block">
-                    <ActionTooltip content="Copy active slide configuration to another signboard" side="top">
-                      <Button
-                        variant="neutral-secondary"
-                        size="small"
-                        className="h-7 text-xs font-medium px-2.5"
-                        icon={<FeatherCopy className="h-3.5 w-3.5" />}
-                        onClick={() => setShowCopyDropdown(!showCopyDropdown)}
-                      >
-                        Copy Slide to Board...
-                      </Button>
-                    </ActionTooltip>
-                    {showCopyDropdown && (
-                      <div className="absolute left-0 bottom-8 z-50 w-44 rounded-xl bg-sidebar-background border border-neutral-border shadow-xl p-1">
-                        {BOARD_ITEMS.filter((b) => b.id !== selectedTab && b.id !== Tab.STOPS).map((b) => (
-                          <button
-                            key={b.id}
-                            type="button"
-                            onClick={() => handleCopySlideToBoard(b.id)}
-                            className="flex items-center gap-2 w-full px-2.5 py-1.5 text-xs text-left rounded-lg text-default-font hover:bg-neutral-100 transition-colors"
-                          >
-                            <span className="font-bold text-brand-primary">{b.letter}</span>
-                            <span>{b.label} Signboard</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
                 </div>
 
                 {/* Right Zoom & Reset */}
@@ -1315,7 +1294,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
 
           {/* Empty state banner when no slides added to current board */}
           {simulations.length === 0 && (
-            <div className="flex flex-1 items-center justify-center p-6 bg-sidebar-background/40 border-b border-neutral-border text-xs">
+            <div className="flex flex-none items-center justify-center p-6 bg-sidebar-background/40 border-b border-neutral-border text-xs">
               <div className="flex flex-col items-center gap-1 text-center">
                 <span className="font-semibold text-neutral-800 text-sm">No Slides Added to {currentBoardItem.label} Board</span>
                 <span className="text-xs text-neutral-600">Click "+ Add Slide" in the loop panel below to create your first display slide.</span>
@@ -1371,13 +1350,13 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
               {/* Header */}
               <div className="flex h-11 flex-none items-center justify-between border-b border-neutral-border px-4 bg-sidebar-background">
                 <span className="text-sm font-bold text-default-font">Route Setup</span>
-                <ActionTooltip content="Swap Origin and Terminus endpoints (Keyboard: R)" side="bottom">
+                <ActionTooltip content="Swap Origin and Terminus only" side="bottom">
                   <Button
                     variant="neutral-secondary"
                     size="small"
                     className="h-7 text-xs font-medium px-2.5"
                     icon={<FeatherRepeat className="h-3.5 w-3.5" />}
-                    onClick={handleInvertEndpoints}
+                    onClick={handleSwapEndpoints}
                   >
                     Swap
                   </Button>
@@ -1457,33 +1436,33 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                 </datalist>
 
                 {/* Route Separator */}
-                <TextField size="small" label="Route Separator" variant="filled" className="w-full [&>div]:!h-8 [&>div]:!min-h-[32px] [&>span]:text-xs [&>span]:font-semibold [&>span]:text-neutral-700">
-                  <TextField.Input placeholder="-" maxLength={3} className="text-xs font-medium" {...register("separation")} />
-                </TextField>
+                <Select
+                  variant="filled"
+                  size="small"
+                  label="Route Separator"
+                  value={separation || "-"}
+                  onValueChange={(val) => setValue("separation", val, { shouldDirty: true })}
+                  className="w-full [&>span]:text-xs [&>span]:font-semibold [&>span]:text-neutral-700 [&_button]:text-xs [&_button]:font-medium"
+                >
+                  {[...ROUTE_SEPARATOR_OPTIONS, ...(separation && !(ROUTE_SEPARATOR_OPTIONS as readonly string[]).includes(separation) ? [separation] : [])].map((opt) => (
+                    <Select.Item key={opt} value={opt}>
+                      {opt}
+                    </Select.Item>
+                  ))}
+                </Select>
               </div>
 
               {/* Bottom Buttons */}
               <div className="flex items-center gap-2 p-3 border-t border-neutral-border bg-sidebar-background">
-                <ActionTooltip content="Invert Origin and Terminus endpoints (Shortcut: R)" side="top">
+                <ActionTooltip content="Toggle return trip: reverses Origin, Terminus and Via order (Shortcut: R)" side="top">
                   <Button
-                    variant="neutral-secondary"
+                    variant={isReturn ? "brand-secondary" : "neutral-secondary"}
                     size="small"
                     className="flex-1 text-xs font-medium h-8"
                     icon={<FeatherRotateCw className="h-3.5 w-3.5" />}
-                    onClick={handleInvertEndpoints}
+                    onClick={handleReturnRoute}
                   >
-                    Return ('R')
-                  </Button>
-                </ActionTooltip>
-                <ActionTooltip content="Duplicate active slide in current loop (Shortcut: D)" side="top">
-                  <Button
-                    variant="neutral-secondary"
-                    size="small"
-                    className="flex-1 text-xs font-medium h-8"
-                    icon={<FeatherCopy className="h-3.5 w-3.5" />}
-                    onClick={() => handleDuplicateSlide()}
-                  >
-                    Duplicate ('D')
+                    {isReturn ? "Return Trip (On)" : "Return ('R')"}
                   </Button>
                 </ActionTooltip>
               </div>
@@ -1513,10 +1492,10 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                   </span>
                 </div>
               ) : (
-                <div className="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar">
-                  {/* Zone Sub-Tabs (Route No | Text | Upper Line | Lower Line) */}
+                <div className="flex flex-col flex-1 min-h-0">
+                  {/* Zone Sub-Tabs (Route No | Text | Upper Line | Lower Line) stay frozen while the rest scrolls */}
                   {currentSimulation && currentFormat !== "single" && (
-                    <div className="flex items-center gap-4 border-b border-neutral-200/80 w-full px-0.5">
+                    <div className="flex flex-none items-center gap-4 border-b border-neutral-200/80 w-full px-4 pt-3 bg-sidebar-background">
                       {isSplitRoute ? (
                         <>
                           <ActionTooltip content="Switch to Route #1 zone editor" side="top">
@@ -1617,6 +1596,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                     </div>
                   )}
 
+                  <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 no-scrollbar">
                   {/* SECTION 1: TEXT CONTENT */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs font-semibold text-neutral-700">
@@ -1705,17 +1685,19 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                         </SubframeCore.Popover.Portal>
                       </SubframeCore.Popover.Root>
 
-                      <ActionTooltip content="Select and insert transit symbol icon" side="top">
-                        <Button
-                          variant="neutral-secondary"
-                          size="small"
-                          className="h-8 text-xs font-medium px-2.5"
-                          icon={<span className="text-sm">☺</span>}
-                          onClick={() => setIsIconPickerOpen(true)}
-                        >
-                          Add Icon
-                        </Button>
-                      </ActionTooltip>
+                      {iconsAllowed && (
+                        <ActionTooltip content="Select and insert transit symbol icon" side="top">
+                          <Button
+                            variant="neutral-secondary"
+                            size="small"
+                            className="h-8 text-xs font-medium px-2.5"
+                            icon={<span className="text-sm">☺</span>}
+                            onClick={() => setIsIconPickerOpen(true)}
+                          >
+                            Add Icon
+                          </Button>
+                        </ActionTooltip>
+                      )}
                     </div>
 
                     {/* Selected Icon Settings Panel (Single-card row format) */}
@@ -1731,16 +1713,18 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                         </div>
 
                         <div className="flex items-center gap-1.5">
-                          <ActionTooltip content="Choose different icon symbol" side="top">
-                            <Button
-                              variant="neutral-secondary"
-                              size="small"
-                              className="h-7 text-xs px-2.5 font-medium"
-                              onClick={() => setIsIconPickerOpen(true)}
-                            >
-                              Change
-                            </Button>
-                          </ActionTooltip>
+                          {iconsAllowed && (
+                            <ActionTooltip content="Choose different icon symbol" side="top">
+                              <Button
+                                variant="neutral-secondary"
+                                size="small"
+                                className="h-7 text-xs px-2.5 font-medium"
+                                onClick={() => setIsIconPickerOpen(true)}
+                              >
+                                Change
+                              </Button>
+                            </ActionTooltip>
+                          )}
                           <ActionTooltip content="Remove icon from slide" side="top">
                             <IconButton
                               variant="destructive-secondary"
@@ -1753,9 +1737,10 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                         </div>
                       </div>
                     )}
+                  </div>
 
-                    {currentIcon && (
-                      <div className="space-y-2 pt-1">
+                    {currentIcon && iconsAllowed && (
+                      <div className="space-y-2">
                         <SettingRow label="Icon Position">
                           <ToggleGroup<"start" | "center" | "end">
                             value={currentIconPos as "start" | "center" | "end"}
@@ -1801,7 +1786,6 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                         </SettingRow>
                       </div>
                     )}
-                  </div>
 
                   {/* Material Symbol Picker Modal */}
                   <MaterialSymbolPicker
@@ -1812,38 +1796,22 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                   />
 
                   {/* SIGNBOARD & TYPOGRAPHY SETTINGS */}
-                  <div className="space-y-2.5 pt-3 border-t border-neutral-border/60">
-                    <SettingRow label="Height">
-                      <ToggleGroup<number>
-                        value={activeHeight}
-                        onChange={(h) => handleHeightChange(h as (typeof HEIGHT_OPTIONS)[number])}
-                        options={HEIGHT_OPTIONS.map((h) => ({ value: h, label: h, tip: `Applies to all slides on this board` }))}
-                      />
-                    </SettingRow>
-
-                    <SettingRow label="Width">
-                      <ToggleGroup<number>
-                        value={activeWidth}
-                        columns={3}
-                        onChange={(w) => handleWidthChange(w as (typeof WIDTH_OPTIONS)[number])}
-                        options={WIDTH_OPTIONS.map((w) => ({ value: w, label: w }))}
-                      />
-                    </SettingRow>
-
+                  <div className="space-y-2.5   border-neutral-border/60">
                     <SettingRow label="Text Height">
-                      <ToggleGroup<number>
-                        value={currentFontHeight}
-                        columns={7}
-                        onChange={(size) => setZoneField("fontHeight", size)}
-                        options={Array.from(new Set([...FONT_HEIGHT_GRID, currentFontHeight]))
-                          .sort((a, b) => a - b)
-                          .map((size) => ({
-                            value: size,
-                            label: size,
-                            disabled: size > maxAllowedFontHeight,
-                            tip: size > maxAllowedFontHeight ? `Max ${maxAllowedFontHeight}px for this zone` : undefined,
-                          }))}
-                      />
+                      {(() => {
+                        // Sizes above the zone's max are hidden; the current size stays so the selection is visible.
+                        const sizes = Array.from(new Set([...FONT_HEIGHT_GRID, currentFontHeight]))
+                          .filter((size) => size <= maxAllowedFontHeight || size === currentFontHeight)
+                          .sort((a, b) => a - b);
+                        return (
+                          <ToggleGroup<number>
+                            value={currentFontHeight}
+                            columns={Math.min(7, sizes.length)}
+                            onChange={(size) => setZoneField("fontHeight", size)}
+                            options={sizes.map((size) => ({ value: size, label: size }))}
+                          />
+                        );
+                      })()}
                     </SettingRow>
 
                     <SettingRow label="Text Weight">
@@ -2008,6 +1976,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                     )}
                   </div>
                 </div>
+                </div>
               )}
             </div>
 
@@ -2016,7 +1985,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
             {/* ------------------------------------------------------- */}
             <div className="flex flex-col flex-1 min-w-[340px] bg-default-background overflow-hidden">
               {/* Header */}
-              <div className="flex h-11 flex-none items-center justify-between border-b border-neutral-border px-4 bg-sidebar-background">
+              <div className="flex min-h-11 flex-none flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-b border-neutral-border px-4 py-1.5 bg-sidebar-background">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-sm font-bold text-default-font">Slides Loop</span>
                   <span className="px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-800 border border-neutral-border font-mono text-[11px] font-bold">
@@ -2029,18 +1998,19 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
 
                 {/* Actions */}
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <ActionTooltip content={isCycling ? "Stop slide cycling animation" : "Cycle through all slides in loop"} side="bottom">
+                  <ActionTooltip
+                    content={isCycling ? "Stop the automatic slide preview" : "Preview the loop: the LED board steps through each slide automatically (3.5s per slide)"}
+                    side="bottom"
+                  >
                     <Button
                       variant={isCycling ? "brand-primary" : "neutral-secondary"}
                       size="small"
-                      className={SubframeUtils.twClassNames(
-                        "h-7 text-xs font-medium px-2.5",
-                        ""
-                      )}
-                      icon={<FeatherRotateCw className={SubframeUtils.twClassNames("h-3 w-3", isCycling ? "animate-spin" : "")} />}
+                      className="h-7 text-xs font-medium px-2.5"
+                      icon={isCycling ? <FeatherPause className="h-3 w-3" /> : <FeatherPlay className="h-3 w-3" />}
+                      disabled={!isCycling && simulations.length <= 1}
                       onClick={() => setIsCycling(!isCycling)}
                     >
-                      Cycle Loop
+                      {isCycling ? "Stop Playing" : "Play Slides"}
                     </Button>
                   </ActionTooltip>
 
@@ -2065,19 +2035,19 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                       >
                         <button
                           type="button"
-                          onClick={() => handleAddSlide("two")}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left rounded-lg text-default-font hover:bg-neutral-100 cursor-pointer"
-                        >
-                          <FeatherColumns2 className="h-3.5 w-3.5 text-brand-primary" />
-                          <span>Add Two-Line Route</span>
-                        </button>
-                        <button
-                          type="button"
                           onClick={() => handleAddSlide("single")}
                           className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left rounded-lg text-default-font hover:bg-neutral-100 cursor-pointer"
                         >
                           <FeatherLayers className="h-3.5 w-3.5 text-brand-primary" />
                           <span>Add Single-Line Route</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAddSlide("two")}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left rounded-lg text-default-font hover:bg-neutral-100 cursor-pointer"
+                        >
+                          <FeatherColumns2 className="h-3.5 w-3.5 text-brand-primary" />
+                          <span>Add Two-Line Route</span>
                         </button>
                         <button
                           type="button"
@@ -2106,6 +2076,45 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                       </SubframeCore.DropdownMenu.Content>
                     </SubframeCore.DropdownMenu.Portal>
                   </SubframeCore.DropdownMenu.Root>
+
+                  {simulations.length > 0 && currentSimulation && (
+                    <SubframeCore.DropdownMenu.Root>
+                      <ActionTooltip content="Copy the selected slide to another signboard" side="bottom">
+                        <SubframeCore.DropdownMenu.Trigger asChild>
+                          <Button
+                            variant="neutral-secondary"
+                            size="small"
+                            className="h-7 text-xs font-medium px-2.5"
+                            icon={<FeatherCopy className="h-3 w-3" />}
+                          >
+                            Copy Slide
+                          </Button>
+                        </SubframeCore.DropdownMenu.Trigger>
+                      </ActionTooltip>
+                      <SubframeCore.DropdownMenu.Portal>
+                        <SubframeCore.DropdownMenu.Content
+                          side="bottom"
+                          align="end"
+                          className="z-50 min-w-[170px] rounded-xl border border-neutral-border bg-sidebar-background p-1 shadow-xl"
+                        >
+                          <span className="px-2 py-1 text-[10px] font-bold text-neutral-600 uppercase tracking-wider block">
+                            Copy Slide #{safeSimulationIndex + 1} To:
+                          </span>
+                          {BOARD_ITEMS.filter((b) => b.id !== selectedTab && b.id !== Tab.STOPS).map((b) => (
+                            <button
+                              key={b.id}
+                              type="button"
+                              onClick={() => handleCopySlideToBoard(b.id)}
+                              className="flex items-center gap-2 w-full px-2.5 py-1.5 text-xs text-left rounded-lg text-default-font hover:bg-neutral-100 cursor-pointer"
+                            >
+                              <span className="w-4 text-center font-bold text-[11px] text-neutral-700">{b.letter}</span>
+                              <span>{b.label} Signboard</span>
+                            </button>
+                          ))}
+                        </SubframeCore.DropdownMenu.Content>
+                      </SubframeCore.DropdownMenu.Portal>
+                    </SubframeCore.DropdownMenu.Root>
+                  )}
 
                   {simulations.length > 0 && (
                     <SubframeCore.DropdownMenu.Root>
@@ -2157,6 +2166,33 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                       Clear All
                     </Button>
                   </ActionTooltip>
+                </div>
+              </div>
+
+              {/* Board size: one setting for the whole signboard, not per slide */}
+              <div className="flex flex-none flex-wrap items-center gap-x-6 gap-y-2 border-b border-neutral-border bg-sidebar-background/60 px-4 py-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-600">
+                  {currentBoardItem.label} Board Size
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-neutral-800">Height</span>
+                  <div className="w-28">
+                    <ToggleGroup<number>
+                      value={activeHeight}
+                      onChange={(h) => handleHeightChange(h as (typeof HEIGHT_OPTIONS)[number])}
+                      options={HEIGHT_OPTIONS.map((h) => ({ value: h, label: h, disabled: simulations.length === 0, tip: "Applies to all slides on this board" }))}
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-neutral-800">Width</span>
+                  <div className="w-72">
+                    <ToggleGroup<number>
+                      value={activeWidth}
+                      onChange={(w) => handleWidthChange(w as (typeof WIDTH_OPTIONS)[number])}
+                      options={WIDTH_OPTIONS.map((w) => ({ value: w, label: w, disabled: simulations.length === 0, tip: "Applies to all slides on this board" }))}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -2258,16 +2294,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                     <p className="text-xs text-neutral-600 mb-4 max-w-xs">
                       Add your first destination slide to start the signboard playback loop.
                     </p>
-                    <ActionTooltip content="Create first destination slide" side="top">
-                      <Button
-                        variant="brand-primary"
-                        size="small"
-                        className="h-8 text-xs font-medium px-3"
-                        onClick={() => handleAddSlide("two")}
-                      >
-                        + Add Two-Line Route
-                      </Button>
-                    </ActionTooltip>
+                   
                   </div>
                 ) : (
                   simulations.map((sim, index) => {

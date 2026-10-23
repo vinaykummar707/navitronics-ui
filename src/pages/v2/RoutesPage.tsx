@@ -33,7 +33,7 @@ import { convertV2ToV1 } from "@/utils/routeConfigMapper";
 import { Dialog } from "@/ui/components/Dialog";
 import { getUserRouteAccess } from "@/utils/featureFlags";
 import { isRegularCustomer } from "@/utils/customerType";
-import { writeZipToDirectoryOrFallback } from "@/utils/fileSystemExport";
+import { exportRoutesInBatches, writeZipToDirectoryOrFallback } from "@/utils/fileSystemExport";
 import { sortByLatestCreated } from "@/utils/dateUtils";
 
 
@@ -618,14 +618,15 @@ export default function RoutesPage() {
         const depotId = selectedDepot?.id || "";
         const exportUrl = `${apiBase}/routes/export?areaId=${areaId}&depotId=${depotId}`;
 
-        const response = await axios.post(exportUrl, v1RoutesPayload, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          responseType: "blob",
+        const blob = await exportRoutesInBatches(v1RoutesPayload, async (batch) => {
+          const response = await axios.post(exportUrl, batch, {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            responseType: "blob",
+          });
+          return new Blob([response.data], { type: "application/zip" });
         });
-
-        const blob = new Blob([response.data], { type: "application/zip" });
         await writeZipToDirectoryOrFallback(
           blob,
           `routes_export_v1_${currentDate}.zip`
@@ -649,14 +650,15 @@ export default function RoutesPage() {
         const depotId = selectedDepot?.id || "";
         const exportUrl = `${apiBase}/routes/export-v2?areaId=${areaId}&depotId=${depotId}`;
 
-        const response = await axios.post(exportUrl, rawRoutesToExport, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          responseType: "blob",
+        const blob = await exportRoutesInBatches(rawRoutesToExport, async (batch) => {
+          const response = await axios.post(exportUrl, batch, {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            responseType: "blob",
+          });
+          return new Blob([response.data], { type: "application/zip" });
         });
-
-        const blob = new Blob([response.data], { type: "application/zip" });
         await writeZipToDirectoryOrFallback(
           blob,
           `routes_export_v2_${currentDate}.zip`

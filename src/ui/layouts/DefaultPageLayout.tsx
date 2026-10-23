@@ -30,8 +30,8 @@ import { SelectOrganizationComponent } from "../components/SelectOrganizationCom
 import { SidebarWithSections } from "../components/SidebarWithSections";
 import * as SubframeUtils from "../utils";
 import { useLocation, useNavigate } from "react-router-dom";
-import RBAC from "@/components/RBAC";
 import { ROLES, getRoleLabel } from "@/constants/roles";
+import { hasUserFeature } from "@/utils/featureFlags";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import useToggleStore from "@/store/useToggleStore";
 import useLoggedUserStore from "@/store/useLoggedUserStore";
@@ -145,82 +145,67 @@ const DefaultPageLayoutRoot = React.forwardRef<
       );
     }
 
+    interface NavLink {
+      path: string;
+      label: string;
+      icon: React.ReactNode;
+      roles: string[];
+      features: string[];
+    }
+    const link = (path: string, label: string, icon: React.ReactNode, roles: string[], features: string[] = []): NavLink => ({
+      path,
+      label,
+      icon,
+      roles,
+      features,
+    });
+    const ANY_MODULE = ["PIS", "PAS", "ITMS"];
+
+    const dashboard = link("dashboard", "Dashboard", <FeatherLayoutDashboard />, [ROLES.ORGANIZATION_ADMIN, ROLES.REGION_ADMIN]);
+    const organizations = link("organizations", "Organizations", <FeatherBuilding2 />, [ROLES.GUEST]);
+    const regions = link("regions", "Regions", <FeatherGlobe2 />, [ROLES.ORGANIZATION_ADMIN], ANY_MODULE);
+    const depots = link("depots", "Depots", <FeatherWarehouse />, [ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.GUEST], ANY_MODULE);
+    const users = link("users", isSuper ? "STU Users" : "Users", <FeatherUsers />, [ROLES.ORGANIZATION_ADMIN, ROLES.REGION_ADMIN]);
+    const routeConfiguration = link("route-configuration", "Route Configuration", <FeatherGitBranch />, [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.GUEST], ANY_MODULE);
+    const routes = link("routes", isSuper ? "STU Routes" : "Routes", <FeatherRoute />, [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN, ROLES.GUEST], ANY_MODULE);
+    const stops = link("stops", "Stops", <FeatherMapPin />, [ROLES.DEPOT_ADMIN, ROLES.REGION_ADMIN, ROLES.ORGANIZATION_ADMIN], ["PAS", "ITMS"]);
+
+    const canSee = (l: NavLink) =>
+      isSuper ||
+      (l.roles.includes(userRoleName) &&
+        (l.features.length === 0 || l.features.some((f) => hasUserFeature(user, f))));
+
+    const renderLinkSection = (label: string, links: NavLink[]) => {
+      const visible = links.filter(canSee);
+      if (visible.length === 0) return null;
+      return (
+        <SidebarWithSections.NavSection key={label} className="no-scrollbar" label={label}>
+          {visible.map((l) => (
+            <SidebarWithSections.NavItem
+              key={l.path}
+              selected={path.startsWith(`/home/${l.path}`)}
+              onClick={() => handleNavClick(`/home/${l.path}`)}
+              icon={l.icon}
+            >
+              {l.label}
+            </SidebarWithSections.NavItem>
+          ))}
+        </SidebarWithSections.NavSection>
+      );
+    };
+
+    const sharedSections = (
+      <>
+        {renderLinkSection("Organization", [dashboard, organizations, regions, depots])}
+        {renderLinkSection("PIS", [routes, users])}
+        {renderLinkSection("PAS", [stops, routeConfiguration])}
+      </>
+    );
+
     if (isSuper) {
       return (
         <>
-          <SidebarWithSections.NavSection className="no-scrollbar" label="STU Operations">
-            <SidebarWithSections.NavItem
-              selected={path.startsWith("/home/dashboard")}
-              onClick={() => handleNavClick("/home/dashboard")}
-              icon={<FeatherLayoutDashboard />}
-            >
-              Dashboard
-            </SidebarWithSections.NavItem>
-
-            <SidebarWithSections.NavItem
-              selected={path.startsWith("/home/organizations")}
-              onClick={() => handleNavClick("/home/organizations")}
-              icon={<FeatherBuilding2 />}
-            >
-              Organizations
-            </SidebarWithSections.NavItem>
-
-            <SidebarWithSections.NavItem
-              selected={path.startsWith("/home/regions")}
-              onClick={() => handleNavClick("/home/regions")}
-              icon={<FeatherGlobe2 />}
-            >
-              Regions
-            </SidebarWithSections.NavItem>
-
-            <SidebarWithSections.NavItem
-              selected={path.startsWith("/home/depots")}
-              onClick={() => handleNavClick("/home/depots")}
-              icon={<FeatherWarehouse />}
-            >
-              Depots
-            </SidebarWithSections.NavItem>
-
-            <SidebarWithSections.NavItem
-              selected={path.startsWith("/home/stops")}
-              onClick={() => handleNavClick("/home/stops")}
-              icon={<FeatherMapPin />}
-            >
-              Stops
-            </SidebarWithSections.NavItem>
-
-            <SidebarWithSections.NavItem
-              selected={path.startsWith("/home/route-configuration")}
-              onClick={() => handleNavClick("/home/route-configuration")}
-              icon={<FeatherGitBranch />}
-            >
-              Route Configuration
-            </SidebarWithSections.NavItem>
-
-            <SidebarWithSections.NavItem
-              selected={path.startsWith("/home/routes")}
-              onClick={() => handleNavClick("/home/routes")}
-              icon={<FeatherRoute />}
-            >
-              STU Routes
-            </SidebarWithSections.NavItem>
-
-            <SidebarWithSections.NavItem
-              selected={path.startsWith("/home/users")}
-              onClick={() => handleNavClick("/home/users")}
-              icon={<FeatherUsers />}
-            >
-              STU Users
-            </SidebarWithSections.NavItem>
-
-            {/* <SidebarWithSections.NavItem
-              selected={path.startsWith("/home/guests")}
-              onClick={() => handleNavClick("/home/guests")}
-              icon={<FeatherUserCheck />}
-            >
-              Guests
-            </SidebarWithSections.NavItem> */}
-          </SidebarWithSections.NavSection>
+          {sharedSections}
 
           <SidebarWithSections.NavSection className="no-scrollbar" label="Regular Customers">
             <SidebarWithSections.NavItem
@@ -254,137 +239,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
     }
 
     // STU Enterprise Users & Guests
-    return (
-      <SidebarWithSections.NavSection className="no-scrollbar" label="Menu">
-        <RBAC
-          roles={[
-            ROLES.ORGANIZATION_ADMIN,
-            ROLES.REGION_ADMIN,
-           
-          ]}
-          features={[]}
-        >
-          <SidebarWithSections.NavItem
-            selected={path.startsWith("/home/dashboard")}
-            onClick={() => handleNavClick("/home/dashboard")}
-            icon={<FeatherLayoutDashboard />}
-          >
-            Dashboard
-          </SidebarWithSections.NavItem>
-        </RBAC>
-
-        <RBAC roles={[ROLES.GUEST]} features={[]}>
-          <SidebarWithSections.NavItem
-            selected={path.startsWith("/home/organizations")}
-            onClick={() => handleNavClick("/home/organizations")}
-            icon={<FeatherBuilding2 />}
-          >
-            Organizations
-          </SidebarWithSections.NavItem>
-        </RBAC>
-
-        <RBAC
-          roles={[ROLES.ORGANIZATION_ADMIN]}
-          features={["PIS", "PAS", "ITMS"]}
-        >
-          <SidebarWithSections.NavItem
-            selected={path.startsWith("/home/regions")}
-            onClick={() => handleNavClick("/home/regions")}
-            icon={<FeatherGlobe2 />}
-          >
-            Regions
-          </SidebarWithSections.NavItem>
-        </RBAC>
-
-        <RBAC
-          roles={[
-           
-            ROLES.REGION_ADMIN,
-            ROLES.ORGANIZATION_ADMIN,
-            ROLES.GUEST,
-          ]}
-          features={["PIS", "PAS", "ITMS"]}
-        >
-          <SidebarWithSections.NavItem
-            selected={path.startsWith("/home/depots")}
-            onClick={() => handleNavClick("/home/depots")}
-            icon={<FeatherWarehouse />}
-          >
-            Depots
-          </SidebarWithSections.NavItem>
-        </RBAC>
-
-        <RBAC
-          roles={[
-            ROLES.DEPOT_ADMIN,
-            ROLES.REGION_ADMIN,
-            ROLES.ORGANIZATION_ADMIN
-          ]}
-          features={["PAS", "ITMS"]}
-        >
-          <SidebarWithSections.NavItem
-            selected={path.startsWith("/home/stops")}
-            onClick={() => handleNavClick("/home/stops")}
-            icon={<FeatherMapPin />}
-          >
-            Stops
-          </SidebarWithSections.NavItem>
-        </RBAC>
-
-        <RBAC
-          roles={[
-            ROLES.DEPOT_ADMIN,
-            ROLES.REGION_ADMIN,
-            ROLES.ORGANIZATION_ADMIN,
-            ROLES.GUEST,
-          ]}
-          features={["PIS", "PAS", "ITMS"]}
-        >
-          <SidebarWithSections.NavItem
-            selected={path.startsWith("/home/route-configuration")}
-            onClick={() => handleNavClick("/home/route-configuration")}
-            icon={<FeatherGitBranch />}
-          >
-            Route Configuration
-          </SidebarWithSections.NavItem>
-        </RBAC>
-
-        <RBAC
-          roles={[
-            ROLES.DEPOT_ADMIN,
-            ROLES.REGION_ADMIN,
-            ROLES.ORGANIZATION_ADMIN,
-            ROLES.GUEST,
-          ]}
-          features={["PIS", "PAS", "ITMS"]}
-        >
-          <SidebarWithSections.NavItem
-            selected={path.startsWith("/home/routes")}
-            onClick={() => handleNavClick("/home/routes")}
-            icon={<FeatherRoute />}
-          >
-            Routes
-          </SidebarWithSections.NavItem>
-        </RBAC>
-
-        <RBAC
-          roles={[
-            ROLES.ORGANIZATION_ADMIN,
-            ROLES.REGION_ADMIN,
-           
-          ]}
-          features={[]}
-        >
-          <SidebarWithSections.NavItem
-            selected={path.startsWith("/home/users")}
-            onClick={() => handleNavClick("/home/users")}
-            icon={<FeatherUsers />}
-          >
-            Users
-          </SidebarWithSections.NavItem>
-        </RBAC>
-      </SidebarWithSections.NavSection>
-    );
+    return sharedSections;
   };
 
   return (
@@ -430,6 +285,7 @@ const DefaultPageLayoutRoot = React.forwardRef<
 
         {/* Right side: Theme Switcher & Directly Visible Logged User Information */}
         <div className="flex items-center gap-2 sm:gap-3 flex-none">
+          {!isRegular && <SelectOrganizationComponent inline />}
           <ThemeToggle />
           <div className="flex items-center gap-2 sm:gap-2.5 pl-2 sm:pl-3 border-l border-neutral-border">
             
@@ -459,14 +315,6 @@ const DefaultPageLayoutRoot = React.forwardRef<
           <div className="hidden lg:flex h-full flex-none">
             <SidebarWithSections
               collapsed={false}
-              header={
-                !isRegular ? (
-                  <SelectOrganizationComponent
-                    className="shrink-0 w-full"
-                    collapsed={false}
-                  />
-                ) : null
-              }
               footer={
                 <button
                   type="button"
@@ -517,12 +365,6 @@ const DefaultPageLayoutRoot = React.forwardRef<
               title="Close navigation"
             />
           </div>
-
-          {!isRegular && (
-            <div className="pt-3 px-3 border-neutral-border/60 flex-none">
-              <SelectOrganizationComponent className="w-full" collapsed={false} />
-            </div>
-          )}
 
           <div className="flex-1 overflow-y-auto overflow-x-hidden px-3  no-scrollbar">
             {renderNavItems()}
