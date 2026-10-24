@@ -5,7 +5,8 @@ import { resolve } from "node:path";
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: "./",
+  // Absolute so deep links (e.g. /home/routes) load /assets/*; Electron builds pass --base=./ for file:// loading.
+  base: "/",
   build: {
     chunkSizeWarningLimit: 800,
     rollupOptions: {

@@ -55,7 +55,7 @@ if %ERRORLEVEL% NEQ 0 (
 
 :: 4. Build Vite React Frontend
 echo [3/4] Building Vite React frontend...
-call %PKG_MGR% run build
+call %PKG_MGR% run build:electron-web
 if %ERRORLEVEL% NEQ 0 (
     echo [ERROR] Vite build failed!
     exit /b 1

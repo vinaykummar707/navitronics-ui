@@ -10,9 +10,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "electron:dev": "concurrently -k \"vite\" \"wait-on tcp:9092 && electron .\"",
-    "electron:build": "vite build && electron-builder --win",
-    "electron:pack": "vite build && electron-builder --win --dir",
-    "build:win": "vite build && electron-builder --win"
+    "build:electron-web": "vite build --base=./",
+    "electron:build": "vite build --base=./ && electron-builder --win",
+    "electron:pack": "vite build --base=./ && electron-builder --win --dir",
+    "build:win": "vite build --base=./ && electron-builder --win"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.4.0",

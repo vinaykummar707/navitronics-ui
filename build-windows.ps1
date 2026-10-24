@@ -55,7 +55,7 @@ if ($LASTEXITCODE -ne 0) {
 
 # 4. Build Vite React Frontend
 Write-Host "`n[3/4] Building Vite React frontend..." -ForegroundColor Yellow
-& $pkgMgr run build
+& $pkgMgr run build:electron-web
 if ($LASTEXITCODE -ne 0) {
     Write-Error "[ERROR] Vite build failed!"
     Pop-Location
