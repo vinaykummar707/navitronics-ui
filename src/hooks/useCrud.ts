@@ -205,7 +205,8 @@ export async function checkActiveDuplicate(
   column: string,
   value: string,
   scopeFilter?: Record<string, any>,
-  excludeId?: string
+  excludeId?: string,
+  extraFilter?: (query: any) => any
 ): Promise<boolean> {
   const trimmed = value.trim()
   if (!trimmed) return false
@@ -213,7 +214,9 @@ export async function checkActiveDuplicate(
   let query = supabase
     .from(table)
     .select('id')
-    .ilike(column, trimmed)
+    // Escape LIKE wildcards so names containing "_" or "%" only match themselves.
+    .ilike(column, trimmed.replace(/[\\%_]/g, '\\$&'))
+    .not('deleted', 'is', true)
 
   if (excludeId) {
     query = query.neq('id', excludeId)
@@ -225,6 +228,10 @@ export async function checkActiveDuplicate(
         query = query.eq(k, v)
       }
     })
+  }
+
+  if (extraFilter) {
+    query = extraFilter(query)
   }
 
   const { data, error } = await query.limit(1)

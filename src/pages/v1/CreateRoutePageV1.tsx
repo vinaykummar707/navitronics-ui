@@ -23,15 +23,16 @@ export const CreateRoutePageV1: React.FC = () => {
   const isEdit = Boolean(routeId);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [loadTimedOut, setLoadTimedOut] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Determine V1 App URL: configurable via VITE_V1_APP_URL, defaulting to localhost:3090 in dev or navitronix.in in prod
-  const defaultHost =
-    window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-      ? "http://31.97.228.29:9091"
-      : "http://31.97.228.29:9091";
+  // V1 app URL: configurable via VITE_V1_APP_URL. It must be HTTPS when this app is served over HTTPS.
+  const defaultHost = "http://31.97.228.29:9091";
 
   const v1BaseUrl = (import.meta.env.VITE_V1_APP_URL || defaultHost).replace(/\/$/, "");
+  // Browsers silently block http:// iframes inside https:// pages, which renders as a blank screen.
+  const isMixedContentBlocked =
+    window.location.protocol === "https:" && v1BaseUrl.startsWith("http://");
 
   // Sanitize route parameters
   const cleanAreaId = areaId && areaId !== "undefined" && areaId !== "null" ? areaId.trim() : null;
@@ -93,6 +94,12 @@ export const CreateRoutePageV1: React.FC = () => {
     return () => window.removeEventListener("message", handleMessage);
   }, [navigate, queryClient, isEdit, targetRoutesPage, v1BaseUrl]);
 
+  useEffect(() => {
+    if (isMixedContentBlocked || !isLoading) return;
+    const timer = setTimeout(() => setLoadTimedOut(true), 20000);
+    return () => clearTimeout(timer);
+  }, [isLoading, isMixedContentBlocked]);
+
   return (
     <div className="flex h-[100dvh] min-h-[100dvh] w-full flex-col overflow-hidden bg-default-background pt-safe pb-safe">
       {/* Top Header Bar */}
@@ -133,7 +140,34 @@ export const CreateRoutePageV1: React.FC = () => {
 
       {/* Embedded V1 App Container */}
       <div className="relative flex-1 w-full h-full overflow-hidden bg-neutral-100">
-        {isLoading && (
+        {(isMixedContentBlocked || loadTimedOut) && (
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-default-background gap-3 p-6 text-center">
+            <span className="text-heading-3 font-heading-3 text-default-font">
+              V1 Route Simulator could not be displayed
+            </span>
+            <span className="max-w-lg text-body font-body text-subtext-color">
+              {isMixedContentBlocked
+                ? `The V1 simulator is hosted on an insecure (http) address (${v1BaseUrl}), which the browser blocks inside this secure page. Use "Open Standalone" for now, or ask the administrator to serve the V1 app over HTTPS.`
+                : `The V1 simulator at ${v1BaseUrl} is not responding. Please check that the V1 server is running and try again.`}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="brand-primary"
+                icon={<FeatherExternalLink className="h-3.5 w-3.5" />}
+                onClick={() => window.open(iframeSrc, "_blank", "noopener,noreferrer")}
+              >
+                Open Standalone
+              </Button>
+              {loadTimedOut && !isMixedContentBlocked && (
+                <Button variant="neutral-secondary" onClick={() => window.location.reload()}>
+                  Retry
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {isLoading && !isMixedContentBlocked && !loadTimedOut && (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-default-background gap-3">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-300 border-t-neutral-800" />
             <span className="text-caption font-caption text-subtext-color">
@@ -142,14 +176,19 @@ export const CreateRoutePageV1: React.FC = () => {
           </div>
         )}
 
-        <iframe
-          ref={iframeRef}
-          src={iframeSrc}
-          title="V1 Route Creation Simulator"
-          className="w-full h-full border-none"
-          allow="clipboard-read; clipboard-write"
-          onLoad={() => setIsLoading(false)}
-        />
+        {!isMixedContentBlocked && (
+          <iframe
+            ref={iframeRef}
+            src={iframeSrc}
+            title="V1 Route Creation Simulator"
+            className="w-full h-full border-none"
+            allow="clipboard-read; clipboard-write"
+            onLoad={() => {
+              setIsLoading(false);
+              setLoadTimedOut(false);
+            }}
+          />
+        )}
       </div>
     </div>
   );

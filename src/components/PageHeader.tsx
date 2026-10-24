@@ -9,7 +9,7 @@ interface PageHeaderProps {
   subtitle: string;
   count: number;
   onRefetch: () => void;
-  onAdd: () => void;
+  onAdd?: () => void;
   buttonLabel?: string;
   roles?: string[]; // Optional roles for RBAC
   extraActions?: React.ReactNode;
@@ -48,16 +48,18 @@ const PageHeader: React.FC<PageHeaderProps> = ({
             Refresh
           </Button>
           {extraActions}
-          <RBAC features={[]} roles={roles}>
-            <Button
-              variant="brand-primary"
-              className="h-9 flex-1 sm:flex-none"
-              icon={<FeatherPlus />}
-              onClick={onAdd}
-            >
-              {buttonLabel}
-            </Button>
-          </RBAC>
+          {onAdd && (
+            <RBAC features={[]} roles={roles}>
+              <Button
+                variant="brand-primary"
+                className="h-9 flex-1 sm:flex-none"
+                icon={<FeatherPlus />}
+                onClick={onAdd}
+              >
+                {buttonLabel}
+              </Button>
+            </RBAC>
+          )}
         </div>
       </div>
     </div>

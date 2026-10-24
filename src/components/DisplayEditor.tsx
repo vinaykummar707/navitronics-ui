@@ -32,7 +32,7 @@ const LEDWrapper = React.memo(({
   currentBitmapRef.current = currentBitmap;
 
   const handleBitmapChange = useCallback((text: string) => {
-    if (text && text !== currentBitmapRef.current) {
+    if (text !== currentBitmapRef.current) {
       currentBitmapRef.current = text;
       setValue(`${fieldPath}.bitmap`, text, { shouldDirty: false });
       setValue(`${fieldPath}.fontWidth`, getBitmapColumns(text), { shouldDirty: false });

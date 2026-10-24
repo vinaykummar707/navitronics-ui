@@ -12,6 +12,7 @@ import React from "react";
 import { toast } from "react-toastify";
 import { formatDate, sortByLatestCreated } from "@/utils/dateUtils";
 import RBAC from "@/components/RBAC";
+import { confirmRegionDelete } from "@/utils/deleteImpact";
 
 export default function AreasPage() {
   const [open, setOpen] = React.useState(false);
@@ -115,10 +116,8 @@ export default function AreasPage() {
                   <Table.Cell className="justify-end">
                     <RBAC features={[]} roles={["organization_admin", "master"]}>
                       <OptionsDropdown
-                        onDelete={() => {
-                          if (
-                            confirm("Are you sure you want to delete this region?")
-                          ) {
+                        onDelete={async () => {
+                          if (await confirmRegionDelete(region.id)) {
                             handleDeleteRegion(region);
                           }
                         }}

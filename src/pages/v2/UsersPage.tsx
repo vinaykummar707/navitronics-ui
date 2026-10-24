@@ -11,6 +11,7 @@ import { FeatherPlus, FeatherRefreshCw, FeatherUsers } from "@subframe/core";
 import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { sortByLatestCreated } from "@/utils/dateUtils";
+import { confirmUserDelete } from "@/utils/deleteImpact";
 import RBAC from "@/components/RBAC";
 
 export default function UsersPage() {
@@ -150,12 +151,9 @@ export default function UsersPage() {
       {stuUsers && stuUsers.length > 0 ? (
         <UsersTable
           users={stuUsers}
-          onDeleteUser={(id) => {
-            if (
-              confirm(
-                "Are you sure you want to delete this user? This action cannot be undone.",
-              )
-            ) {
+          onDeleteUser={async (id) => {
+            const target = stuUsers.find((u) => u.id === id);
+            if (await confirmUserDelete(target?.user_id || target?.id)) {
               handleDeleteUser(id);
             }
           }}

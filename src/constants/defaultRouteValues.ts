@@ -21,7 +21,7 @@ export const DEFAULT_SCROLL_TYPE: ScrollType = "Fixed";
 export const DEFAULT_POSITION: Position = "Center";
 export const DEFAULT_FONT_WEIGHT: FontWeight = "Bold";
 export const DEFAULT_SCROLL_SPEED = 4;
-export const DEFAULT_FONT_HEIGHT = 14;
+export const DEFAULT_FONT_HEIGHT = 16;
 export const DEFAULT_FONT_WIDTH = 12;
 export const DEFAULT_SIMULATION_HEIGHT = DEFAULT_SIMULATION_HEIGHTS[0];
 export const DEFAULT_SIMULATION_WIDTH = DEFAULT_SIMULATION_WIDTHS[3];
@@ -186,10 +186,11 @@ export const defaultStopRouteConfig: StopRouteConfig = {
 };
 
 // ---- Example overall default DisplayConfigPostRequest ----
+// Route Setup fields start empty so the inputs show their placeholder hints instead of text to delete.
 export const defaultDisplayConfigPostRequest: IRouteCreate = {
-  route_number: "123",
-  source: "SOURCE",
-  destination: "DESTINATION",
+  route_number: "",
+  source: "",
+  destination: "",
   via: "",
   route_number_1: "",
   route_number_2: "",

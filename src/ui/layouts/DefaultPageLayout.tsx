@@ -175,11 +175,11 @@ const DefaultPageLayoutRoot = React.forwardRef<
       (l.roles.includes(userRoleName) &&
         (l.features.length === 0 || l.features.some((f) => hasUserFeature(user, f))));
 
-    const renderLinkSection = (label: string, links: NavLink[]) => {
+    const renderLinkSection = (key: string, links: NavLink[], label?: string) => {
       const visible = links.filter(canSee);
       if (visible.length === 0) return null;
       return (
-        <SidebarWithSections.NavSection key={label} className="no-scrollbar" label={label}>
+        <SidebarWithSections.NavSection key={key} className="no-scrollbar" label={label}>
           {visible.map((l) => (
             <SidebarWithSections.NavItem
               key={l.path}
@@ -197,8 +197,8 @@ const DefaultPageLayoutRoot = React.forwardRef<
     const sharedSections = (
       <>
         {renderLinkSection("Organization", [dashboard, organizations, regions, depots])}
-        {renderLinkSection("PIS", [routes, users])}
-        {renderLinkSection("PAS", [stops, routeConfiguration])}
+        {renderLinkSection("PIS", [routes, users], "PIS")}
+        {renderLinkSection("PAS", [stops, routeConfiguration], "PAS")}
       </>
     );
 
@@ -261,25 +261,25 @@ const DefaultPageLayoutRoot = React.forwardRef<
             title="Toggle navigation"
           />
           <div className="h-5 w-px bg-neutral-border flex-none" />
-          <div
-            className="flex items-center gap-2 sm:gap-2.5 cursor-pointer select-none min-w-0"
-            onClick={() => {
-              navigate(getDefaultRouteForUser(user));
-            }}
-          >
-            <img
-              className="h-8 w-8 rounded-full object-cover ring-1 ring-neutral-border flex-none"
-              src="https://navitronix.in/assets/navitronix.jpeg"
-              alt="Navitronix"
-            />
-            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 select-none min-w-0">
+            <div
+              className="flex items-center gap-2 sm:gap-2.5 cursor-pointer min-w-0"
+              onClick={() => {
+                navigate(getDefaultRouteForUser(user));
+              }}
+            >
+              <img
+                className="h-8 w-8 rounded-full object-cover ring-1 ring-neutral-border flex-none"
+                src="https://navitronix.in/assets/navitronix.jpeg"
+                alt="Navitronix"
+              />
               <span className="text-body-bold font-body-bold tracking-tight text-default-font font-bold truncate">
                 NAVITRONIX
               </span>
-              <span className="inline-flex rounded px-1.5 py-0.5 text-micro font-micro-bold text-brand-primary bg-brand-50 border border-brand-200/40 flex-none">
-                RMS
-              </span>
             </div>
+            <span className="inline-flex rounded px-1.5 py-0.5 text-micro font-micro-bold text-brand-primary bg-brand-50 border border-brand-200/40 flex-none cursor-default">
+              RMS
+            </span>
           </div>
         </div>
 

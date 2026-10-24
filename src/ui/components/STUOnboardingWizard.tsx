@@ -143,12 +143,29 @@ export function STUOnboardingWizard({
 
   const validateCurrentStep = (): boolean => {
     if (currentStep === 1) {
-      if (!orgName.trim()) {
+      const name = orgName.trim();
+      if (!name) {
         toast.error("Organization name is required");
+        return false;
+      }
+      if (name.length < 2 || name.length > 100) {
+        toast.error("Organization name must be between 2 and 100 characters");
+        return false;
+      }
+      if (!/^[a-zA-Z0-9\s&.,'_-]+$/.test(name) || !/[a-zA-Z0-9]/.test(name)) {
+        toast.error("Organization name must contain valid alphanumeric characters");
         return false;
       }
       if (!orgEmail.trim() || !/^\S+@\S+\.\S+$/.test(orgEmail.trim())) {
         toast.error("Valid contact email is required");
+        return false;
+      }
+      if (!orgPhone.trim()) {
+        toast.error("Contact phone is required");
+        return false;
+      }
+      if (!/^[6-9]\d{9}$/.test(orgPhone.trim())) {
+        toast.error("Phone number must be a valid 10-digit Indian phone number (starts with 6-9)");
         return false;
       }
       return true;
@@ -205,26 +222,25 @@ export function STUOnboardingWizard({
       const trimmedOrgEmail = orgEmail.trim();
       const trimmedAdminEmail = adminEmail.trim();
 
-      // Check for duplicate organization name
+      // Check for duplicate organization name / email among active organizations
       const { data: existingOrgs } = await supabase
         .from("organizations")
         .select("id, name, email")
-        .ilike("name", trimmedOrgName);
+        .eq("deleted", false)
+        .or(`name.ilike."${trimmedOrgName}",email.ilike."${trimmedOrgEmail}"`);
 
       if (existingOrgs && existingOrgs.length > 0) {
-        throw new Error(
-          `An organization named "${trimmedOrgName}" already exists.`
-        );
+        throw new Error("The organization email address or name is already in use.");
       }
 
       // Check if admin user is already assigned to an organization
       const { data: existingUser } = await supabase
         .from("users")
-        .select("id, organization_id")
+        .select("id, organization_id, password, deleted")
         .eq("email", trimmedAdminEmail)
         .maybeSingle();
 
-      if (existingUser && existingUser.organization_id) {
+      if (existingUser && existingUser.organization_id && !existingUser.deleted) {
         throw new Error(
           `A user with email "${trimmedAdminEmail}" is already registered to another organization.`
         );
@@ -236,7 +252,7 @@ export function STUOnboardingWizard({
         .insert({
           name: trimmedOrgName,
           email: trimmedOrgEmail,
-          phone: orgPhone.trim() || null,
+          phone: orgPhone.trim(),
           logo: orgLogo.trim() || null,
           PIS: enablePIS,
           PAS: enablePAS,
@@ -307,6 +323,37 @@ export function STUOnboardingWizard({
       const orgAdminRoleId = roleRecord?.id || null;
 
       // 5. Create Org Admin User in Auth & Database
+      // Auth account already exists: sign in with the new password, or reclaim an account
+      // left over from a deleted organization using its stored password and reset it.
+      const reclaimExistingAuthUser = async (): Promise<string> => {
+        const { data: signInData } = await supabaseAuthHelper.auth.signInWithPassword({
+          email: trimmedAdminEmail,
+          password: adminPassword,
+        });
+        if (signInData?.user?.id) return signInData.user.id;
+
+        const isLeftover = existingUser && (existingUser.deleted || !existingUser.organization_id);
+        if (isLeftover && existingUser.password) {
+          const { data: oldSignIn } = await supabaseAuthHelper.auth.signInWithPassword({
+            email: trimmedAdminEmail,
+            password: existingUser.password,
+          });
+          if (oldSignIn?.user?.id) {
+            const { error: pwError } = await supabaseAuthHelper.auth.updateUser({
+              password: adminPassword,
+            });
+            if (pwError) {
+              throw new Error(`Failed to reset admin password: ${pwError.message}`);
+            }
+            return oldSignIn.user.id;
+          }
+        }
+
+        throw new Error(
+          "Admin email is already registered in authentication. Please verify password or use a different email."
+        );
+      };
+
       let authUserId = "";
       const { data: signUpData, error: signUpError } =
         await supabaseAuthHelper.auth.signUp({
@@ -322,37 +369,13 @@ export function STUOnboardingWizard({
           },
         });
 
-      if (signUpError) {
-        // If already registered in auth, attempt sign-in
-        const { data: signInData, error: signInErr } =
-          await supabaseAuthHelper.auth.signInWithPassword({
-            email: trimmedAdminEmail,
-            password: adminPassword,
-          });
-        if (signInData?.user?.id) {
-          authUserId = signInData.user.id;
-        } else {
-          throw new Error(
-            `Admin email is already registered: ${signInErr?.message || signUpError.message}`
-          );
-        }
-      } else if (
-        signUpData?.user &&
-        (!signUpData.user.identities || signUpData.user.identities.length === 0)
+      if (
+        signUpError ||
+        (signUpData?.user &&
+          (!signUpData.user.identities || signUpData.user.identities.length === 0))
       ) {
-        // Supabase email enumeration protection
-        const { data: signInData, error: signInErr } =
-          await supabaseAuthHelper.auth.signInWithPassword({
-            email: trimmedAdminEmail,
-            password: adminPassword,
-          });
-        if (signInData?.user?.id) {
-          authUserId = signInData.user.id;
-        } else {
-          throw new Error(
-            `Admin email is already registered in authentication. ${signInErr?.message ? `(${signInErr.message})` : "Please verify password or use a different email."}`
-          );
-        }
+        authUserId = await reclaimExistingAuthUser();
+        await supabaseAuthHelper.auth.signOut();
       } else if (signUpData?.user?.id) {
         authUserId = signUpData.user.id;
       }
@@ -372,6 +395,7 @@ export function STUOnboardingWizard({
             role_id: orgAdminRoleId,
             customer_type: "stu",
             active: true,
+            deleted: false,
             v1_routes: enableV1Routes,
             v2_routes: enableV2Routes,
           })
@@ -543,8 +567,12 @@ export function STUOnboardingWizard({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <TextField
                   className="w-full"
-                  label="Contact Phone (Optional)"
-                  placeholder="e.g. +91 9876543210"
+                  label={
+                    <span>
+                      Contact Phone <span className="text-red-500">*</span>
+                    </span>
+                  }
+                  placeholder="e.g. 9876543210"
                 >
                   <TextField.Input
                     value={orgPhone}

@@ -466,22 +466,9 @@ export default function DashboardPage() {
       {/* Dashboard Header */}
       <div className="flex w-full flex-col sm:flex-row sm:items-center justify-between gap-3 flex-none">
         <div className="flex flex-col items-start gap-0.5">
-          <div className="flex items-center gap-2">
-            <span className="text-heading-2 font-heading-2 text-default-font">
-              Dashboard & Route Explorer
-            </span>
-            <span className="inline-flex rounded px-2 py-0.5 text-micro font-caption-bold text-brand-primary bg-brand-50 border border-brand-200">
-              {isSuper
-                ? (selectedOrganization?.name || "All Transit Operations")
-                : isOrgAdmin
-                ? (loggedInUser?.organization?.name || "Organization Scope")
-                : isRegionAdmin
-                ? (loggedInUser?.region?.name || "Region Scope")
-                : isDepotAdmin
-                ? (loggedInUser?.depot?.name || "Depot Scope")
-                : "Transit Operations"}
-            </span>
-          </div>
+          <span className="text-heading-2 font-heading-2 text-default-font">
+            Dashboard & Route Explorer
+          </span>
           <span className="text-body font-body text-subtext-color">
             {isSuper
               ? "Search and inspect routes across STU enterprise fleets and regular customers"
@@ -502,13 +489,6 @@ export default function DashboardPage() {
             onClick={handleRefreshAll}
           >
             Refresh
-          </Button>
-          <Button
-            variant="brand-primary"
-            icon={<FeatherRoute className="h-4 w-4" />}
-            onClick={() => navigate("/home/routes")}
-          >
-            Manage Routes
           </Button>
         </div>
       </div>

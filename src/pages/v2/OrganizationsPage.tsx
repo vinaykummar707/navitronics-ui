@@ -41,7 +41,22 @@ function OrganizationsPage() {
   const [open, setOpen] = React.useState(false);
   const [wizardOpen, setWizardOpen] = React.useState(false);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    // Detach the org's users (keeping their login ids) so their emails can be re-onboarded later.
+    const { error: detachError } = await supabase
+      .from("users")
+      .update({
+        organization_id: null,
+        region_id: null,
+        depot_id: null,
+        deleted: true,
+        active: false,
+      })
+      .eq("organization_id", id);
+    if (detachError) {
+      console.warn("Failed to detach organization users:", detachError);
+    }
+
     deleteOrganization(id, {
       onSuccess: () => {
         refetch();
@@ -61,16 +76,11 @@ function OrganizationsPage() {
         subtitle="Manage your organizations and their details here."
         count={organizations.length}
         onRefetch={refetch}
-        onAdd={() => {
-          setEditData(null);
-          setOpen(true);
-        }}
-        buttonLabel="Add Organization"
         roles={["master"]}
         extraActions={
           <RBAC roles={["master"]} features={[]}>
             <Button
-              variant="brand-secondary-2"
+              variant="brand-primary"
               className="flex-1 sm:flex-none"
               icon={<FeatherPlus />}
               onClick={() => setWizardOpen(true)}

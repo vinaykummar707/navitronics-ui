@@ -19,6 +19,7 @@ import { IRegion, regionCrud } from "@/types/IRegion";
 import { depotCrud, IDepot } from "@/types/IDepot";
 import { toast } from "react-toastify";
 import { formatDate, sortByLatestCreated } from "@/utils/dateUtils";
+import { confirmDepotDelete } from "@/utils/deleteImpact";
 
 export default function DepotsPage() {
   const [open, setOpen] = useState(false);
@@ -257,10 +258,8 @@ export default function DepotsPage() {
                   <Table.Cell className="justify-end">
                     <RBAC features={[]} roles={["region_admin", "organization_admin", "master"]}>
                       <OptionsDropdown
-                        onDelete={() => {
-                          if (
-                            confirm("Are you sure you want to delete this depot?")
-                          ) {
+                        onDelete={async () => {
+                          if (await confirmDepotDelete(depot.id)) {
                             handleDeleteDepot(depot.id);
                           }
                         }}

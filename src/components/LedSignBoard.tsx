@@ -145,13 +145,17 @@ const LEDBitmapSimulator = ({
     buildBitmapApiUrl(buildZoneBitmapParams(safeText, { rows, fontFamily, isRouteNumber }));
 
   const apiUrl = getApiUrl();
+  // Cleared text must blank the board instead of keeping the last fetched bitmap on screen.
+  const isBlankText = !String(safeText?.text ?? "").trim() && !safeText?.icon;
   // A persisted bitmap is only valid for the render params it was loaded with; any edit must regenerate it.
   const mountApiUrlRef = useRef(apiUrl);
   const storedBitmap =
-    apiUrl === mountApiUrlRef.current && safeText?.bitmap && safeText.bitmap.trim().length > 0
+    !isBlankText && apiUrl === mountApiUrlRef.current && safeText?.bitmap && safeText.bitmap.trim().length > 0
       ? safeText.bitmap
       : "";
-  const currentBitmapText = storedBitmap || bitmapMemoryCache.get(apiUrl) || bitmapText;
+  const currentBitmapText = isBlankText
+    ? ""
+    : storedBitmap || bitmapMemoryCache.get(apiUrl) || bitmapText;
 
   const pattern = useMemo(() => {
     return convertAsciiToArray(currentBitmapText);
@@ -166,6 +170,9 @@ const LEDBitmapSimulator = ({
 
     if (currentBitmapText && currentBitmapText !== bitmapText) {
       setBitmapText(currentBitmapText);
+    }
+    if (isBlankText && bitmapText) {
+      setBitmapText("");
     }
 
     const fetchBitmap = async () => {
@@ -185,7 +192,7 @@ const LEDBitmapSimulator = ({
     };
 
     // If we don't have bitmap yet, fetch it with a snappy debounce for typing
-    if (!storedBitmap && !bitmapMemoryCache.has(apiUrl)) {
+    if (!isBlankText && !storedBitmap && !bitmapMemoryCache.has(apiUrl)) {
       const timer = setTimeout(() => {
         fetchBitmap();
       }, 50);
@@ -235,10 +242,15 @@ const LEDBitmapSimulator = ({
 
 
   useEffect(() => {
-    if (onBitmapTextChange && currentBitmapText && currentBitmapText !== safeText?.bitmap) {
+    if (!onBitmapTextChange) return;
+    if (isBlankText) {
+      if (safeText?.bitmap) onBitmapTextChange("");
+      return;
+    }
+    if (currentBitmapText && currentBitmapText !== safeText?.bitmap) {
       onBitmapTextChange(currentBitmapText);
     }
-  }, [currentBitmapText, safeText?.bitmap, onBitmapTextChange]);
+  }, [currentBitmapText, safeText?.bitmap, onBitmapTextChange, isBlankText]);
 
   return (
     <div className="flex flex-col ">

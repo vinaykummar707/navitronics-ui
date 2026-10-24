@@ -23,6 +23,7 @@ import { Switch } from "./Switch";
 import { TextField } from "./TextField";
 import { FeatureToggle } from "./FeatureToggle";
 import { IOrganization, organizationCrud } from "@/types/organization";
+import { supabase } from "@/supabaseClient";
 import { toast } from "react-toastify";
 
 // ----------------------------------------------------------------------
@@ -34,8 +35,8 @@ const organizationSchema = z
     name: z
       .string()
       .trim()
-      .min(3, "Organization name must be between 3 and 100 characters")
-      .max(100, "Organization name must be between 3 and 100 characters")
+      .min(2, "Organization name must be between 2 and 100 characters")
+      .max(100, "Organization name must be between 2 and 100 characters")
       .regex(
         /^[a-zA-Z0-9\s&.,'_-]+$/,
         "Organization name must contain valid alphanumeric characters",
@@ -55,6 +56,7 @@ const organizationSchema = z
     phone: z
       .string()
       .trim()
+      .min(1, "Phone number is required")
       .regex(
         /^[6-9]\d{9}$/,
         "Phone number must be a valid 10-digit Indian phone number (starts with 6-9)",
@@ -149,7 +151,8 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
     try {
       let checkQuery = supabase
         .from("organizations")
-        .select("id, name, email");
+        .select("id, name, email")
+        .eq("deleted", false);
 
       if (isEditMode && initialData?.id) {
         checkQuery = checkQuery.neq("id", initialData.id);
@@ -325,13 +328,17 @@ const CreateOrganizationDrawerRoot = React.forwardRef<
         {/* Phone Number */}
         <TextField
           className="h-auto w-full flex-none"
-          label="Phone Number"
-          helpText={errors.phone?.message || "Contact phone number (optional)"}
+          label={
+            <span>
+              Phone Number <span className="text-red-500">*</span>
+            </span>
+          }
+          helpText={errors.phone?.message || "10-digit mobile number"}
           icon={<FeatherPhone />}
           error={!!errors.phone}
         >
           <TextField.Input
-            placeholder="+91 98765 43210"
+            placeholder="9876543210"
             {...register("phone")}
           />
         </TextField>

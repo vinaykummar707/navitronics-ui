@@ -47,7 +47,7 @@ const OptionsDropdownRoot = React.forwardRef<
       {isDisabled || !hasActions ? (
         <IconButton disabled icon={<FeatherMoreHorizontal />} />
       ) : (
-        <SubframeCore.DropdownMenu.Root>
+        <SubframeCore.DropdownMenu.Root modal={false}>
           <SubframeCore.DropdownMenu.Trigger asChild={true}>
             <IconButton
               className={className}
@@ -63,11 +63,13 @@ const OptionsDropdownRoot = React.forwardRef<
               align="end"
               sideOffset={8}
               asChild={true}
+              // Returning focus to the trigger would make a just-opened Edit drawer dismiss itself.
+              onCloseAutoFocus={(e) => e.preventDefault()}
             >
               <DropdownMenu>
                 {onEdit && (
                   <DropdownMenu.DropdownItem
-                    onClick={onEdit}
+                    onSelect={() => setTimeout(onEdit, 0)}
                     icon={<FeatherPencil />}
                   >
                     Edit
@@ -75,7 +77,7 @@ const OptionsDropdownRoot = React.forwardRef<
                 )}
                 {onDelete && (
                   <DropdownMenu.DropdownItem
-                    onClick={onDelete}
+                    onSelect={() => setTimeout(onDelete, 0)}
                     icon={<FeatherTrash />}
                   >
                     Delete

@@ -90,7 +90,6 @@ import {
 } from "@/utils/simulationUtils";
 import { useFontFileByLanguage, useFontHeightForLanguage, useFontHeightsForLanguage } from "@/utils/getFontFileByLanguage";
 import { fillMissingSlideBitmaps } from "@/services/bitmapService";
-import { handleSloganAudioGeneration } from "@/utils/fetchTTS";
 
 const HEIGHT_OPTIONS = DEFAULT_SIMULATION_HEIGHTS;
 const WIDTH_OPTIONS = DEFAULT_SIMULATION_WIDTHS;
@@ -290,6 +289,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
       handleSubmit,
       formState,
       setError,
+      clearErrors,
       control,
     } = methods;
 
@@ -327,11 +327,6 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
     const [isCycling, setIsCycling] = useState<boolean>(false);
     const [showAutoText, setShowAutoText] = useState(false);
     const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
-
-    // Audio state
-    const [generatingAudio, setGeneratingAudio] = useState(false);
-    const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-    const audioElementRef = useRef<HTMLAudioElement | null>(null);
 
     useEffect(() => {
       if (!ledStageEl || !ledMatrixEl || typeof ResizeObserver === "undefined") return;
@@ -497,7 +492,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
         setValue(`${selectedTab}[${safeSimulationIndex}].texts.${activeTextZoneKey}`, {
           text: fallbackText,
           language: "en",
-          fontHeight: currentFormat === "three" && (activeTextZoneKey === "upperHalfText" || activeTextZoneKey === "lowerHalfText") ? 7 : 14,
+          fontHeight: currentFormat === "three" && (activeTextZoneKey === "upperHalfText" || activeTextZoneKey === "lowerHalfText") ? 8 : 16,
           fontWeight: "Bold",
           position: "Center",
           scrollType: "Fixed",
@@ -530,10 +525,6 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
     const activeWidth = currentSimulation?.width || 160;
     const activeHeight = currentSimulation?.height || 16;
     const currentSimulationType = currentSimulation?.type || "route";
-
-    const audiopath = safeSimulationIndex >= 0 ? (watch(`${selectedTab}[${safeSimulationIndex}].audioFileUrl`) as string) : "";
-    const stopTypeAudioFileUrl = safeSimulationIndex >= 0 ? (watch(`${selectedTab}[${safeSimulationIndex}].stopTypeAudioFileUrl`) as string) : "";
-    const audioFileName = safeSimulationIndex >= 0 ? (watch(`${selectedTab}[${safeSimulationIndex}].audioFileName`) as string) : "";
 
     const currentIcon = pathBase ? (watch(`${pathBase}.icon`) as string) || "" : "";
     const iconsAllowed = !isSplitRouteNumberZone(activeTextZoneKey);
@@ -600,7 +591,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
       const dest = getValues("destination");
       setValue("source", dest, { shouldDirty: true });
       setValue("destination", src, { shouldDirty: true });
-      toast.info("Swapped origin & terminus");
+      toast.info("Swapped Source and Destination (trip direction unchanged)");
     };
 
     // Return: toggles the return-trip flag, flipping the direction (endpoints and via order) with it.
@@ -764,6 +755,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
         newSim.height = currentSimulation.height;
         newSim.width = currentSimulation.width;
       }
+      newSim = fitSimulationToHeight(newSim, newSim.height);
 
       const curList: Simulation[] = getValues(selectedTab as any) || [];
       const updatedList = [...curList, newSim];
@@ -817,69 +809,6 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
       const cloned = JSON.parse(JSON.stringify(currentSims));
       setValue(destBoard as any, cloned, { shouldDirty: true });
       toast.success(`Copied all ${currentSims.length} slides to ${getBoardLabel(destBoard)} signboard!`);
-    };
-
-    const handlePlayAudio = () => {
-      if (!audioElementRef.current) return;
-      const targetUrl = audiopath || stopTypeAudioFileUrl;
-      if (!targetUrl) return;
-
-      if (isPlayingAudio) {
-        audioElementRef.current.pause();
-        setIsPlayingAudio(false);
-        return;
-      }
-
-      setIsPlayingAudio(true);
-      audioElementRef.current.src = targetUrl;
-      audioElementRef.current
-        .play()
-        .catch((err) => {
-          console.warn("Audio play prevented:", err);
-          setIsPlayingAudio(false);
-        });
-      audioElementRef.current.onended = () => setIsPlayingAudio(false);
-    };
-
-    const handleGenerateAudio = async () => {
-      const textToConvert =
-        currentSimulation?.texts?.text?.text ||
-        (currentSimulation?.texts as any)?.upperHalfText?.text ||
-        "";
-      if (!textToConvert.trim()) {
-        toast.warning("Please enter text content before generating audio.");
-        return;
-      }
-      if (!depotId) {
-        toast.warning("Depot ID is required for audio storage.");
-        return;
-      }
-      try {
-        setGeneratingAudio(true);
-        const { fileUrl, fileName } = await handleSloganAudioGeneration(textToConvert, depotId);
-        setValue(`${selectedTab}[${safeSimulationIndex}].audioFileUrl`, fileUrl, { shouldDirty: true });
-        setValue(`${selectedTab}[${safeSimulationIndex}].audioFileName`, fileName, { shouldDirty: true });
-        toast.success("Voice announcement generated successfully!");
-      } catch (err: any) {
-        console.error("Audio generation failed:", err);
-        toast.error(`Audio synthesis failed: ${err?.message || err}`);
-      } finally {
-        setGeneratingAudio(false);
-      }
-    };
-
-    const handleDeleteAudio = async () => {
-      if (!audiopath || !depotId) return;
-      const path = audiopath.split("/").pop();
-      if (!path) return;
-      try {
-        await supabase.storage.from("stops").remove([`${depotId}/${path}`]);
-        setValue(`${selectedTab}[${safeSimulationIndex}].audioFileUrl`, null, { shouldDirty: true });
-        setValue(`${selectedTab}[${safeSimulationIndex}].audioFileName`, null, { shouldDirty: true });
-        toast.info("Audio removed from slide.");
-      } catch (err: any) {
-        toast.error(`Failed to delete audio: ${err.message || err}`);
-      }
     };
 
     const handleCopySlideToBoard = (destBoard: string) => {
@@ -956,16 +885,21 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
             scopeFilter.created_by = data.created_by;
           }
 
+          // Outbound and return trips of the same route may share a route number.
+          const isReturnTrip = Boolean(data.return);
           const isDup = await checkActiveDuplicate(
             "routes",
             "route_number",
             trimmedRouteNum,
             scopeFilter,
-            mode === "edit" && data.id ? data.id : undefined
+            mode === "edit" && data.id ? data.id : undefined,
+            (query) => (isReturnTrip ? query.eq("return", true) : query.not("return", "is", true))
           );
 
           if (isDup) {
-            toast.error(`Route number "${trimmedRouteNum}" is already in use in this depot.`);
+            toast.error(
+              `A ${isReturnTrip ? "return" : "outbound"} route with number "${trimmedRouteNum}" already exists in this depot.`
+            );
             return;
           }
         }
@@ -1026,7 +960,11 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                 navigate(-1);
               },
               onError: (err: any) => {
-                toast.error(`Error updating route: ${err.message || "Unknown error"}`);
+                toast.error(
+                  err?.code === "23505"
+                    ? `Route number "${trimmedRouteNum}" is already used by another route in this depot.`
+                    : `Error updating route: ${err.message || "Unknown error"}`
+                );
               },
               onSettled: releaseSubmitLock,
             }
@@ -1039,7 +977,11 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
               navigate(-1);
             },
             onError: (err: any) => {
-              toast.error(`Error creating route: ${err.message || "Unknown error"}`);
+              toast.error(
+                err?.code === "23505"
+                  ? `Route number "${trimmedRouteNum}" is already used by another route in this depot.`
+                  : `Error creating route: ${err.message || "Unknown error"}`
+              );
             },
             onSettled: releaseSubmitLock,
           });
@@ -1077,8 +1019,6 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
           ref={ref}
           {...otherProps}
         >
-          <audio ref={audioElementRef} className="hidden" />
-
           {/* ========================================================= */}
           {/* TOP APPLICATION BAR                                      */}
           {/* ========================================================= */}
@@ -1350,7 +1290,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
               {/* Header */}
               <div className="flex h-11 flex-none items-center justify-between border-b border-neutral-border px-4 bg-sidebar-background">
                 <span className="text-sm font-bold text-default-font">Route Setup</span>
-                <ActionTooltip content="Swap Origin and Terminus only" side="bottom">
+                <ActionTooltip content="Correct a data-entry mix-up: swaps the Source and Destination text only. Via order and trip direction are unchanged." side="bottom">
                   <Button
                     variant="neutral-secondary"
                     size="small"
@@ -1376,17 +1316,59 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
 
                 {/* Route Number */}
                 {!isSplitRoute ? (
-                  <TextField size="small" label="Route No" variant="filled" className="w-full [&>div]:!h-8 [&>div]:!min-h-[32px] [&>span]:text-xs [&>span]:font-semibold [&>span]:text-neutral-700">
-                    <TextField.Input placeholder="e.g. 335-E" className="text-xs font-medium" {...register("route_number")} />
+                  <TextField
+                    size="small"
+                    label={<span>Route No <span className="text-red-500">*</span></span>}
+                    variant="filled"
+                    error={!!formState.errors.route_number}
+                    helpText={formState.errors.route_number?.message as string | undefined}
+                    className="w-full [&>div]:!h-8 [&>div]:!min-h-[32px] [&>span]:text-xs [&>span]:font-semibold [&>span]:text-neutral-700"
+                  >
+                    <TextField.Input
+                      placeholder="e.g. 335-E"
+                      className="text-xs font-medium"
+                      {...register("route_number", {
+                        onChange: () => formState.errors.route_number && clearErrors("route_number"),
+                      })}
+                    />
                   </TextField>
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
-                    <TextField size="small" label="Route #1" variant="filled" className="w-full [&>div]:!h-8 [&>div]:!min-h-[32px] [&>span]:text-xs [&>span]:font-semibold [&>span]:text-neutral-700">
-                      <TextField.Input placeholder="101" className="text-xs font-medium" {...register("route_number_1")} />
+                    <TextField
+                      size="small"
+                      label={<span>Route #1 <span className="text-red-500">*</span></span>}
+                      variant="filled"
+                      error={!!formState.errors.route_number}
+                      className="w-full [&>div]:!h-8 [&>div]:!min-h-[32px] [&>span]:text-xs [&>span]:font-semibold [&>span]:text-neutral-700"
+                    >
+                      <TextField.Input
+                        placeholder="e.g. 101"
+                        className="text-xs font-medium"
+                        {...register("route_number_1", {
+                          onChange: () => formState.errors.route_number && clearErrors("route_number"),
+                        })}
+                      />
                     </TextField>
-                    <TextField size="small" label="Route #2" variant="filled" className="w-full [&>div]:!h-8 [&>div]:!min-h-[32px] [&>span]:text-xs [&>span]:font-semibold [&>span]:text-neutral-700">
-                      <TextField.Input placeholder="102" className="text-xs font-medium" {...register("route_number_2")} />
+                    <TextField
+                      size="small"
+                      label={<span>Route #2 <span className="text-red-500">*</span></span>}
+                      variant="filled"
+                      error={!!formState.errors.route_number}
+                      className="w-full [&>div]:!h-8 [&>div]:!min-h-[32px] [&>span]:text-xs [&>span]:font-semibold [&>span]:text-neutral-700"
+                    >
+                      <TextField.Input
+                        placeholder="e.g. 102"
+                        className="text-xs font-medium"
+                        {...register("route_number_2", {
+                          onChange: () => formState.errors.route_number && clearErrors("route_number"),
+                        })}
+                      />
                     </TextField>
+                    {formState.errors.route_number && (
+                      <span className="col-span-2 text-[11px] text-error-600">
+                        {formState.errors.route_number.message as string}
+                      </span>
+                    )}
                   </div>
                 )}
 
@@ -1454,15 +1436,22 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
 
               {/* Bottom Buttons */}
               <div className="flex items-center gap-2 p-3 border-t border-neutral-border bg-sidebar-background">
-                <ActionTooltip content="Toggle return trip: reverses Origin, Terminus and Via order (Shortcut: R)" side="top">
+                <ActionTooltip
+                  content={
+                    isReturn
+                      ? "This route is saved as the RETURN trip. Click to switch back to the outbound trip (reverses Source, Destination and Via again). Shortcut: R"
+                      : "Make this the RETURN trip of the route: reverses Source, Destination and the Via stop order, and saves the route marked as a return trip. Shortcut: R"
+                  }
+                  side="top"
+                >
                   <Button
-                    variant={isReturn ? "brand-secondary" : "neutral-secondary"}
+                    variant={isReturn ? "brand-primary" : "neutral-secondary"}
                     size="small"
                     className="flex-1 text-xs font-medium h-8"
                     icon={<FeatherRotateCw className="h-3.5 w-3.5" />}
                     onClick={handleReturnRoute}
                   >
-                    {isReturn ? "Return Trip (On)" : "Return ('R')"}
+                    {isReturn ? "Return Trip: ON" : "Make Return Trip (R)"}
                   </Button>
                 </ActionTooltip>
               </div>
@@ -1857,7 +1846,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                       />
                     </SettingRow>
 
-                    <SettingRow label="Slide Format">
+                    <SettingRow label="Change Slide Format">
                       <ToggleGroup<SimulationFormat>
                         value={currentFormat}
                         onChange={handleFormatChange}
@@ -1920,61 +1909,6 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                       </SettingRow>
                     </div>
                   </details>
-
-                  {/* SECTION 5: VOICE ANNOUNCEMENT (PAS) */}
-                  <div className="space-y-1.5 pt-2 border-t border-neutral-border/60">
-                    <div className="flex items-center justify-between text-xs font-semibold text-neutral-700">
-                      <span className="flex items-center gap-1.5">
-                        <FeatherVolume2 className="h-3.5 w-3.5 text-warning-500" />
-                        Voice Announcement (PAS)
-                      </span>
-                      {audioFileName && (
-                        <span className="font-mono text-neutral-600 font-medium text-xs truncate max-w-[150px]" title={audioFileName}>
-                          {audioFileName}
-                        </span>
-                      )}
-                    </div>
-
-                    {(audiopath || stopTypeAudioFileUrl) ? (
-                      <div className="flex items-center gap-2">
-                        <ActionTooltip content={isPlayingAudio ? "Stop announcement audio playback" : "Play announcement audio preview"} side="top">
-                          <Button
-                            variant={isPlayingAudio ? "brand-secondary" : "neutral-secondary"}
-                            size="small"
-                            className="flex-1 h-8 text-xs font-medium"
-                            icon={<FeatherVolume2 className={SubframeUtils.twClassNames("h-3.5 w-3.5", isPlayingAudio ? "text-warning-500 animate-pulse" : "")} />}
-                            onClick={handlePlayAudio}
-                          >
-                            {isPlayingAudio ? "Stop Audio" : "Play Announcement"}
-                          </Button>
-                        </ActionTooltip>
-                        {audiopath && !stopTypeAudioFileUrl && (
-                          <ActionTooltip content="Delete voice announcement" side="top">
-                            <IconButton
-                              variant="destructive-secondary"
-                              size="small"
-                              className="h-8 w-8 flex-none"
-                              icon={<FeatherTrash className="h-3.5 w-3.5" />}
-                              onClick={handleDeleteAudio}
-                            />
-                          </ActionTooltip>
-                        )}
-                      </div>
-                    ) : (
-                      <ActionTooltip content="Synthesize voice announcement audio from current text" side="top">
-                        <Button
-                          variant="brand-primary"
-                          size="small"
-                          className="w-full h-8 text-xs font-medium"
-                          icon={<FeatherSparkle className="h-3.5 w-3.5 text-warning-400" />}
-                          disabled={generatingAudio || !currentText.trim()}
-                          onClick={handleGenerateAudio}
-                        >
-                          {generatingAudio ? "Generating..." : "Generate Audio (TTS)"}
-                        </Button>
-                      </ActionTooltip>
-                    )}
-                  </div>
                 </div>
                 </div>
               )}

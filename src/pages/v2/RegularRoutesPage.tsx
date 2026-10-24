@@ -27,7 +27,7 @@ import { convertV2ToV1 } from "@/utils/routeConfigMapper";
 import { Dialog } from "@/ui/components/Dialog";
 import { getUserRouteAccess } from "@/utils/featureFlags";
 import { isRegularCustomer, isSuperAdmin } from "@/utils/customerType";
-import { exportRoutesInBatches, writeZipToDirectoryOrFallback } from "@/utils/fileSystemExport";
+import { exportRoutesInBatches, getExportErrorMessage, writeZipToDirectoryOrFallback } from "@/utils/fileSystemExport";
 import { sortByLatestCreated } from "@/utils/dateUtils";
 
 export default function RegularRoutesPage() {
@@ -452,7 +452,6 @@ export default function RegularRoutesPage() {
     const currentDate = new Date().toISOString().split("T")[0];
 
     if (format === "v1") {
-      const v1RoutesPayload = rawRoutesToExport.map((route) => convertV2ToV1(route));
       toast.info("Requesting V1 export package...");
 
       const apiBase =
@@ -460,6 +459,7 @@ export default function RegularRoutesPage() {
         "https://api.navitronix.in/navitranix/api";
 
       try {
+        const v1RoutesPayload = rawRoutesToExport.map((route) => convertV2ToV1(route));
         const exportUrl = `${apiBase}/routes/export?areaId=&depotId=`;
 
         const blob = await exportRoutesInBatches(v1RoutesPayload, async (batch) => {
@@ -477,7 +477,7 @@ export default function RegularRoutesPage() {
         toast.success(`Exported ${selectedRouteObjects.length} route(s) in V1 format (.zip)`);
       } catch (error: any) {
         console.error("V1 Export API Error:", error);
-        toast.error(`V1 Export failed: ${error?.response?.data?.message || error.message || "Server error"}`);
+        toast.error(`V1 export failed. ${await getExportErrorMessage(error)}`, { autoClose: 8000 });
       }
     } else {
       toast.info("Requesting V2 export package...");
@@ -504,7 +504,7 @@ export default function RegularRoutesPage() {
         toast.success(`Exported ${selectedRouteObjects.length} route(s) in V2 format (.zip)`);
       } catch (error: any) {
         console.error("V2 Export API Error:", error);
-        toast.error(`V2 Export failed: ${error?.response?.data?.message || error.message || "Server error"}`);
+        toast.error(`V2 export failed. ${await getExportErrorMessage(error)}`, { autoClose: 8000 });
       }
     }
   };

@@ -35,15 +35,6 @@ const LEDMatrix: React.FC<LEDMatrixProps> = ({
   const animationFrameRef = useRef<number>();
   const currentScrollPositionRef = useRef(0); // Renamed for clarity
 
-  // Utility function to inverse scroll speed for a more intuitive feel
-  function inverseInRange(value: number, min: number, max: number): number {
-    if (value < min || value > max) {
-      // Clamping value to ensure it's within expected range for speed calculation
-      return Math.min(Math.max(value, min), max);
-    }
-    return max - (value - min);
-  }
-
   // Derive matrix synchronously on render to prevent blank/lagging frame flashes
   const baseMatrix = useMemo(() => {
     if (pattern && pattern.length > 0) {
@@ -237,25 +228,30 @@ const LEDMatrix: React.FC<LEDMatrixProps> = ({
       });
     };
 
-    const animate = () => {
+    // Time-based so the speed is identical on 60Hz/120Hz screens; 1 = fastest, 10 = slowest.
+    const clampedSpeed = Math.min(Math.max(scrollSpeed || 4, 1), 10);
+    const pixelsPerSecond = (4 * (11 - clampedSpeed) + 4) * totalDotSize;
+    let lastTime: number | null = null;
+
+    const animate = (now?: number) => {
       if (!paused && marqueeDirection !== "none") {
-        const speed = inverseInRange(scrollSpeed, 1, 10);
+        const timestamp = now ?? performance.now();
+        // Cap the step so returning to a background tab doesn't jump the text.
+        const elapsed = lastTime === null ? 0 : Math.min(timestamp - lastTime, 50);
+        lastTime = timestamp;
+        const step = (pixelsPerSecond * elapsed) / 1000;
         const scrollLoopLength = patternPixelWidth + canvasWidth; // Total distance for one full loop
 
         if (marqueeDirection === "ltr") {
-          currentScrollPositionRef.current += speed;
-          // When the beginning of the pattern has scrolled off the right edge of the canvas,
-          // reset its position to appear from the left, effectively looping.
+          currentScrollPositionRef.current += step;
           if (currentScrollPositionRef.current >= scrollLoopLength) {
-            currentScrollPositionRef.current = 0;
+            currentScrollPositionRef.current -= scrollLoopLength;
           }
         } else {
           // RTL
-          currentScrollPositionRef.current -= speed;
-          // When the end of the pattern has scrolled off the left edge of the canvas,
-          // reset its position to appear from the right, effectively looping.
+          currentScrollPositionRef.current -= step;
           if (currentScrollPositionRef.current <= -scrollLoopLength) {
-            currentScrollPositionRef.current = 0;
+            currentScrollPositionRef.current += scrollLoopLength;
           }
         }
         drawMatrix(currentScrollPositionRef.current);

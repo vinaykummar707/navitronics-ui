@@ -68,14 +68,15 @@ const CreateDepotFormRoot = React.forwardRef<
       return;
     }
 
-    const targetRegionId = values.region_id || region_id;
+    const targetRegionId = values.region_id || region_id || initialData?.region_id || "";
+    const targetOrganizationId = organizationId || initialData?.organization_id || "";
 
     // Pre-submission duplicate check for active depots within this region/organization
     const isDup = await checkActiveDuplicate(
       "depots",
       "name",
       trimmedName,
-      { region_id: targetRegionId, organization_id: organizationId },
+      { region_id: targetRegionId, organization_id: targetOrganizationId },
       isUpdate && initialData ? initialData.id : undefined
     );
 
@@ -93,8 +94,8 @@ const CreateDepotFormRoot = React.forwardRef<
           payload: {
             id: initialData.id,
             name: trimmedName,
-            region_id: targetRegionId,
-            organization_id: organizationId,
+            ...(targetRegionId ? { region_id: targetRegionId } : {}),
+            ...(targetOrganizationId ? { organization_id: targetOrganizationId } : {}),
           },
         },
         {
@@ -108,8 +109,8 @@ const CreateDepotFormRoot = React.forwardRef<
               const msg = `A depot named "${trimmedName}" already exists in this region.`;
               setApiError(msg);
               toast.error(msg);
-            } else if (error?.message?.includes("deleted or is no longer accessible")) {
-              toast.error("This depot was deleted by another user and cannot be updated.");
+            } else if (error?.message?.includes("no longer exists or is not accessible")) {
+              toast.error("This depot no longer exists or you don't have permission to update it.");
             } else {
               toast.error(`Failed to update depot: ${error.message || "Unknown error"}`);
             }
