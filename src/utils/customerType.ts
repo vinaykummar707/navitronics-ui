@@ -68,10 +68,10 @@ export function getCustomerTier(user: ILoggedUser | IUser | null | undefined): C
  */
 export function getDefaultRouteForUser(currentUser: any): string {
   if (!currentUser) return "/login";
-  if (isSuperAdmin(currentUser)) return "/home/organizations";
   if (isRegularCustomer(currentUser)) return "/home/regular-routes";
   const role = currentUser.role?.name?.toLowerCase();
   switch (role) {
+    case ROLES.SUPER_ADMIN:
     case ROLES.ORGANIZATION_ADMIN:
     case ROLES.REGION_ADMIN:
       return "/home/dashboard";

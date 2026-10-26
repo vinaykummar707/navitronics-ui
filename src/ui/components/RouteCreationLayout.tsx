@@ -1434,27 +1434,7 @@ export const RouteCreationLayout = React.forwardRef<HTMLDivElement, RouteCreatio
                 </Select>
               </div>
 
-              {/* Bottom Buttons */}
-              <div className="flex items-center gap-2 p-3 border-t border-neutral-border bg-sidebar-background">
-                <ActionTooltip
-                  content={
-                    isReturn
-                      ? "This route is saved as the RETURN trip. Click to switch back to the outbound trip (reverses Source, Destination and Via again). Shortcut: R"
-                      : "Make this the RETURN trip of the route: reverses Source, Destination and the Via stop order, and saves the route marked as a return trip. Shortcut: R"
-                  }
-                  side="top"
-                >
-                  <Button
-                    variant={isReturn ? "brand-primary" : "neutral-secondary"}
-                    size="small"
-                    className="flex-1 text-xs font-medium h-8"
-                    icon={<FeatherRotateCw className="h-3.5 w-3.5" />}
-                    onClick={handleReturnRoute}
-                  >
-                    {isReturn ? "Return Trip: ON" : "Make Return Trip (R)"}
-                  </Button>
-                </ActionTooltip>
-              </div>
+              
             </div>
 
             {/* ------------------------------------------------------- */}

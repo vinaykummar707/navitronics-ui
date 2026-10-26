@@ -243,35 +243,7 @@ const UserLoginFormRoot = React.forwardRef<
       {...otherProps}
     >
       {/* Top Bar with safe area */}
-      <header className="flex h-14 w-full flex-none items-center justify-between border-b border-solid border-neutral-border bg-sidebar-background/90 px-3 sm:px-6 backdrop-blur-md z-20 pt-safe">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <img
-            className="h-8 w-8 rounded-full object-cover ring-1 ring-neutral-border flex-none"
-            src="https://navitronix.in/assets/navitronix.jpeg"
-            alt="Navitronix"
-          />
-          <div className="flex items-center gap-2">
-            <span className="text-body-bold font-body-bold tracking-tight text-default-font font-bold">
-              NAVITRONIX
-            </span>
-            <span className="rounded px-1.5 py-0.5 text-[10px] font-caption-bold text-brand-primary bg-brand-50 border border-brand-200/40">
-              RMS v2
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-            </span>
-            <span className="text-[10px] font-mono font-semibold text-emerald-300 uppercase tracking-wider">
-              Systems Online
-            </span>
-          </div>
-        </div>
-      </header>
+    
 
       {/* Main Centered Content Area */}
       <main className="relative flex flex-1 w-full items-center justify-center p-4 sm:p-6 lg:p-8 overflow-y-auto">
@@ -290,13 +262,7 @@ const UserLoginFormRoot = React.forwardRef<
           <div className="flex flex-col items-center text-center gap-2 mb-6">
             <div className="relative flex items-center justify-center mb-1">
               <div className="absolute -inset-1 rounded-2xl bg-brand-primary/20 blur-sm" />
-              <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 border border-brand-primary/30 shadow-md">
-                <img
-                  src="https://navitronix.in/assets/navitronix.jpeg"
-                  alt="Navitronix"
-                  className="h-8 w-8 rounded-xl object-cover"
-                />
-              </div>
+            
             </div>
             <span className="text-xl sm:text-2xl font-bold tracking-tight text-default-font">
               Sign In
@@ -369,19 +335,8 @@ const UserLoginFormRoot = React.forwardRef<
                 autoFocus={!!email}
               />
             </TextField>
-            <div className="flex w-full items-center justify-between pt-1">
-              <Checkbox
-                checked={rememberMe}
-                onCheckedChange={(checked) => {
-                  setRememberMe(checked);
-                  if (!checked) writeRememberedEmail(null);
-                }}
-                label={
-                  <span className="text-caption font-caption text-subtext-color select-none">
-                    Remember me
-                  </span>
-                }
-              />
+            {/* <div className="flex w-full items-center justify-between pt-1">
+              
               <LinkButton
                 variant="brand"
                 size="small"
@@ -390,7 +345,7 @@ const UserLoginFormRoot = React.forwardRef<
               >
                 Forgot Password?
               </LinkButton>
-            </div>
+            </div> */}
             <Button
               className="h-11 mt-1 w-full flex-none text-body-bold font-body-bold"
               size="large"

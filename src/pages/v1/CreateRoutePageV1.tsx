@@ -140,32 +140,7 @@ export const CreateRoutePageV1: React.FC = () => {
 
       {/* Embedded V1 App Container */}
       <div className="relative flex-1 w-full h-full overflow-hidden bg-neutral-100">
-        {(isMixedContentBlocked || loadTimedOut) && (
-          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-default-background gap-3 p-6 text-center">
-            <span className="text-heading-3 font-heading-3 text-default-font">
-              V1 Route Simulator could not be displayed
-            </span>
-            <span className="max-w-lg text-body font-body text-subtext-color">
-              {isMixedContentBlocked
-                ? `The V1 simulator is hosted on an insecure (http) address (${v1BaseUrl}), which the browser blocks inside this secure page. Use "Open Standalone" for now, or ask the administrator to serve the V1 app over HTTPS.`
-                : `The V1 simulator at ${v1BaseUrl} is not responding. Please check that the V1 server is running and try again.`}
-            </span>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="brand-primary"
-                icon={<FeatherExternalLink className="h-3.5 w-3.5" />}
-                onClick={() => window.open(iframeSrc, "_blank", "noopener,noreferrer")}
-              >
-                Open Standalone
-              </Button>
-              {loadTimedOut && !isMixedContentBlocked && (
-                <Button variant="neutral-secondary" onClick={() => window.location.reload()}>
-                  Retry
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
+        
 
         {isLoading && !isMixedContentBlocked && !loadTimedOut && (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-default-background gap-3">
@@ -176,7 +151,7 @@ export const CreateRoutePageV1: React.FC = () => {
           </div>
         )}
 
-        {!isMixedContentBlocked && (
+       
           <iframe
             ref={iframeRef}
             src={iframeSrc}
@@ -188,7 +163,7 @@ export const CreateRoutePageV1: React.FC = () => {
               setLoadTimedOut(false);
             }}
           />
-        )}
+        
       </div>
     </div>
   );

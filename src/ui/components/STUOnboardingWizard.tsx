@@ -148,7 +148,7 @@ export function STUOnboardingWizard({
         toast.error("Organization name is required");
         return false;
       }
-      if (name.length < 2 || name.length > 100) {
+      if (name.length <= 1 || name.length > 100) {
         toast.error("Organization name must be between 2 and 100 characters");
         return false;
       }
@@ -700,18 +700,37 @@ export function STUOnboardingWizard({
                   </span>
                   <div className="flex flex-wrap gap-2">
                     {regionsList.map((region, idx) => (
-                      <div
+                      // <div
+                      //   key={idx}
+                      //   className="flex items-center gap-2 rounded-md border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs text-brand-900 font-medium"
+                      // >
+                      //   <FeatherGlobe className="h-3.5 w-3.5 text-brand-600" />
+                      //   <span>{region}</span>
+                      //   <button
+                      //     type="button"
+                      //     onClick={() => handleRemoveRegion(idx)}
+                      //     className="text-brand-400 hover:text-red-600 transition-colors"
+                      //   >
+                      //     <FeatherX className="h-3.5 w-3.5" />
+                      //   </button>
+                      // </div>
+                        <div
                         key={idx}
-                        className="flex items-center gap-2 rounded-md border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs text-brand-900 font-medium"
+                        className="flex w-full justify-between items-center gap-2 rounded-md border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs text-brand-900 font-medium"
                       >
-                        <FeatherGlobe className="h-3.5 w-3.5 text-brand-600" />
-                        <span>{region}</span>
+                        <div className="flex items-center gap-2">
+                          <FeatherMapPin className="h-3.5 w-3.5 text-brand-600" />
+                          <span className="font-semibold text-default-font">
+                            {region}
+                          </span>
+                        
+                        </div>
                         <button
                           type="button"
                           onClick={() => handleRemoveRegion(idx)}
-                          className="text-brand-400 hover:text-red-600 transition-colors"
+                          className="text-subtext-color hover:text-red-600 transition-colors p-1"
                         >
-                          <FeatherX className="h-3.5 w-3.5" />
+                          <FeatherTrash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     ))}
@@ -738,6 +757,22 @@ export function STUOnboardingWizard({
               </div>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2 w-full">
+                 <div className="w-full sm:w-56">
+                  <Select
+                    className="h-auto w-full"
+                    label="Assigned Region"
+                    placeholder="Select Region"
+                    value={newDepotRegion}
+                    onValueChange={setNewDepotRegion}
+                  >
+                    {regionsList.map((r) => (
+                      <Select.Item key={r} value={r}>
+                        {r}
+                      </Select.Item>
+                    ))}
+                  </Select>
+                </div>
+
                 <TextField
                   className="flex-1"
                   label="Depot Name"
@@ -755,21 +790,7 @@ export function STUOnboardingWizard({
                   />
                 </TextField>
 
-                <div className="w-full sm:w-56">
-                  <Select
-                    className="h-auto w-full"
-                    label="Assigned Region"
-                    placeholder="Select Region"
-                    value={newDepotRegion}
-                    onValueChange={setNewDepotRegion}
-                  >
-                    {regionsList.map((r) => (
-                      <Select.Item key={r} value={r}>
-                        {r}
-                      </Select.Item>
-                    ))}
-                  </Select>
-                </div>
+               
 
                 <Button
                   className="h-9 flex-none"
@@ -789,7 +810,7 @@ export function STUOnboardingWizard({
                     {depotsList.map((depot, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-between py-2 text-xs"
+                        className="flex items-center justify-between rounded-md border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs text-brand-900 font-medium"
                       >
                         <div className="flex items-center gap-2">
                           <FeatherMapPin className="h-3.5 w-3.5 text-brand-600" />

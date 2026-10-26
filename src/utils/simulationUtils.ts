@@ -92,7 +92,7 @@ export interface RouteFieldValues {
   separation?: string;
 }
 
-export const ROUTE_SEPARATOR_OPTIONS = ["-", "to", "vice versa"] as const;
+export const ROUTE_SEPARATOR_OPTIONS = ["-", "TO", "↔"] as const;
 
 /** Joins source and destination with the chosen route separator (default "-"). */
 export const joinSourceDestination = (source?: string, destination?: string, separation?: string) =>

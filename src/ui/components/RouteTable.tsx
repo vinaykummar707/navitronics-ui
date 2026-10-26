@@ -102,7 +102,7 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
               <Table.HeaderCell className="min-w-[120px]">Source</Table.HeaderCell>
               <Table.HeaderCell className="min-w-[120px]">Destination</Table.HeaderCell>
               <Table.HeaderCell className="hidden md:table-cell min-w-[110px] justify-center text-center">Split Route</Table.HeaderCell>
-              <Table.HeaderCell className="hidden md:table-cell min-w-[90px] justify-center text-center">Return</Table.HeaderCell>
+              
               <Table.HeaderCell className="hidden sm:table-cell min-w-[90px] justify-center text-center">Version</Table.HeaderCell>
               <Table.HeaderCell className="hidden lg:table-cell min-w-[110px]">Created At</Table.HeaderCell>
               <Table.HeaderCell className="hidden xl:table-cell min-w-[140px]">Created By</Table.HeaderCell>
@@ -164,14 +164,7 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
                 </Badge>
               </Table.Cell>
 
-              <Table.Cell className="hidden md:table-cell min-w-[90px] justify-center text-center">
-                <Badge
-                  variant={route.return ? "brand" : "neutral"}
-                  icon={route.return ? <FeatherCheck className="h-3 w-3" /> : <FeatherX className="h-3 w-3" />}
-                >
-                  {route.return ? "Yes" : "No"}
-                </Badge>
-              </Table.Cell>
+             
               <Table.Cell className="hidden sm:table-cell min-w-[100px] justify-center text-center">
                 <Badge
                   variant={route.version === "1.0" ? "warning" : "brand"}
@@ -230,12 +223,6 @@ const RouteTableRoot = React.forwardRef<HTMLDivElement, RouteTableRootProps>(
                               icon={<SubframeCore.FeatherCopy />}
                             >
                               Duplicate
-                            </DropdownMenu.DropdownItem>
-                            <DropdownMenu.DropdownItem
-                              onClick={() => onReturn(route.id, "(Return)")}
-                              icon={<SubframeCore.FeatherRepeat />}
-                            >
-                              Make Return Route
                             </DropdownMenu.DropdownItem>
                             <DropdownMenu.DropdownDivider />
                             <DropdownMenu.DropdownItem

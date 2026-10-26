@@ -24,7 +24,7 @@ function startBackendSidecar() {
   const candidatePaths = [
     // 1. Packaged Electron extraResources path
     path.join(process.resourcesPath, 'bin', exeName),
-    // 2. Local resources/bin in navitronics-ui
+    // 2. Local resources/bin in navitronix-ui
     path.join(__dirname, '..', 'resources', 'bin', exeName),
     // 3. Directly inside bitmapapi project build output
     path.join(__dirname, '..', '..', 'bitmapapi', 'bin', 'Release', 'net8.0', 'win-x64', 'publish', exeName),

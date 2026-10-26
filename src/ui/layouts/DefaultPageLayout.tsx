@@ -264,16 +264,16 @@ const DefaultPageLayoutRoot = React.forwardRef<
           <div className="flex items-center gap-1.5 sm:gap-2 select-none min-w-0">
             <div
               className="flex items-center gap-2 sm:gap-2.5 cursor-pointer min-w-0"
-              onClick={() => {
-                navigate(getDefaultRouteForUser(user));
-              }}
+             
             >
               <img
                 className="h-8 w-8 rounded-full object-cover ring-1 ring-neutral-border flex-none"
                 src="https://navitronix.in/assets/navitronix.jpeg"
                 alt="Navitronix"
               />
-              <span className="text-body-bold font-body-bold tracking-tight text-default-font font-bold truncate">
+              <span  onClick={() => {
+                navigate(getDefaultRouteForUser(user));
+              }} className="text-body-bold font-body-bold tracking-tight text-default-font font-bold truncate">
                 NAVITRONIX
               </span>
             </div>
